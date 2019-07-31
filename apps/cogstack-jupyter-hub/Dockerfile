@@ -4,7 +4,10 @@ FROM jupyter/datascience-notebook:307ad2bb5fce
 USER root
 
 RUN apt-get update && \
-    apt-get install -y gnupg
+    apt-get install -y \
+    gnupg \
+    libssl1.0.0 \
+    libssl-dev
 
 # using Ubuntu 18.04 as base image
 RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
