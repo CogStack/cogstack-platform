@@ -2,7 +2,7 @@ version: '3.5'
 
 services:
   jupyter-hub:
-    image: lrog/custom-jupyter-hub:latest
+    image: lrog/cogstack-jupyter-hub:latest
     #build: .
     restart: always
     environment:
