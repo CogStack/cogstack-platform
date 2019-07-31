@@ -1,4 +1,5 @@
-FROM jupyter/datascience-notebook:latest
+FROM jupyter/datascience-notebook:307ad2bb5fce
+#FROM jupyter/datascience-notebook:latest
 
 USER root
 
