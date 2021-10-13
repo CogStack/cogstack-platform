@@ -2,12 +2,37 @@ version: '3.5'
 
 services:
   jupyter-hub:
-    image: lrog/cogstack-jupyter-hub:latest
-    #build: .
+    build: .
+    container_name: cogstack-jupyter-hub
     restart: always
     environment:
       - JUPYTER_ENABLE_LAB=yes
     volumes:
-       - "./notebooks/:/home/jovyan/notebooks"
+      - notebooks:/home/jovyan/notebooks
+      - "./security/jupyter.pem:/etc/ssl/notebook/jupyter.pem:ro"
+      - "./security/jupyter.key:/etc/ssl/notebook/jupyter.key:ro"
+      - "./security/root-ca.pem:/etc/ssl/notebook/root-ca.pem:ro"
+      - ${LOCAL_MODELS_PATH}/:/cogstack/models/
+      - ${LOCAL_DATA_PATH}/:/cogstack/data/
+      - ${LOCAL_MODELS_PATH}/:/home/jovyan/models/
+      - ${LOCAL_DATA_PATH}/:/home/jovyan/data/
+    command: "start-notebook.sh \
+                --keyfile=/etc/ssl/notebook/jupyter.key \
+                --certfile=/etc/ssl/notebook/jupyter.pem \
+                --NotebookApp.password=${HUB_PASSWORD}"
+                #--client-ca=/etc/ssl/notebook/root-ca.pem
     ports:
       - "10000:8888"
+      - "5000:5000"
+      - "8080:8080"
+    networks:
+      - jupyter-net
+
+networks:
+  jupyter-net:
+    name: cogstack-net
+    driver: bridge
+
+volumes:
+  notebooks:
+    driver: local
