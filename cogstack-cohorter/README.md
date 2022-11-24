@@ -5,7 +5,7 @@ Unstructured data processed using [MedCAT](https://github.com/CogStack/MedCAT) a
 
 The frontend of the app is in the `client` folder. It is adapted from [Windmill Dashboard](https://windmillui.com/dashboard-html) with [tailwindcss](https://tailwindcss.com/) and [alpine.js](https://alpinejs.dev/) for 
 interactivity. The runtime dependencies are [ECharts](https://echarts.apache.org/en/index.html) for charts and [popper.js](https://popper.js.org/) for tooltips. The `client` folder can be left untouched for running the app. If you 
-want to change the frontend, run `cd client && npm install`. Run `npm run tailwind` in the `client` after adding any tailwindcss classes.
+want to change the frontend, run `cd client && npm install`. Run `npm run tailwind` in the `client` folder after adding any tailwindcss classes.
 
 The backend of the app is a [node.js](https://nodejs.org/en/) server using [express.js](https://expressjs.com/) for web/api server and [flexsearch](https://github.com/nextapps-de/flexsearch) for indexing and search for SNOMED 
 terms. In order to run the app, the data has to be prepared. First, extract the snomed terms by `cd server/data && tar xzvf snomed_terms_data.tar.gz`, it will extract 2 files, `snomed_terms.json` is an array of SNOMED terms while 
