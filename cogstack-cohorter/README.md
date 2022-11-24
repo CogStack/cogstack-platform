@@ -20,5 +20,5 @@ terms. In order to run the app, the data has to be prepared. First, extract the 
 There is a script `gen_random_data.js` in `server/data/` folder to generate the above 6 files completely randomly so you can still try the app without any data files. Run `cd server/data && node --max-old-space-size=32768 
 gen_random_data.js`.
 
-Please make sure to have the 6 data files before starting the server. To start the server, run `cd server && npm run start`. There is alos a Dockerfile in the app folder if using docker, run `docker build --tag 
+Please make sure to have the 6 data files before starting the server. To start the server, run `cd server && npm run start`. There is also a Dockerfile in the app folder if using docker, run `docker build --tag 
 cohortingtool/webapp . && docker run  -p 3000:3000 cohortingtool/webapp`.
