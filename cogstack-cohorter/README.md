@@ -19,14 +19,14 @@ There is a script `gen_random_data.js` in `server/data/` folder to generate the 
 
 Please make sure to have the 6 data files ready before starting the server. To start the server, in the app folder run `cd server && npm install && npm run start`. There is also a Dockerfile in the app folder if using docker, run `docker build --tag cohortingtool/webapp . && docker run  -p 3000:3000 cohortingtool/webapp`.
 
-With MedCAT annotaion output (e.g., part_0.pickle), `cui2ptt_pos.jsonl` and `cui2ptt_tsp.jsonl` can be generated with python script similar to below.
+With MedCAT annotation output (e.g., part_0.pickle), `cui2ptt_pos.jsonl` and `cui2ptt_tsp.jsonl` can be generated with python script similar to below.
 
 ```python
 import pandas as pd
 from collections import defaultdict, Counter
 
 cui2ptt_pos = defaultdict(Counter) # store the count of a SNOMED term for a patient
-cui2ptt_tsp = defaultdict(lambda: defaultdict(int)) # store the first mention of a SNOMED term for a pateint
+cui2ptt_tsp = defaultdict(lambda: defaultdict(int)) # store the first mention timestamp of a SNOMED term for a pateint
 
 # doc2ptt is a dictionary {<doc_id> : <patient_id>, ...}
 
