@@ -14,8 +14,8 @@ terms. In order to run the app, the data has to be prepared. First, extract the 
 - `ptt2sex.json` a dictionary for gender of each patient `{<patient_id>:<gender>, ...}`
 - `ptt2dod.json` a dictionary for dod if the patient has died `{<patient_id>:<dod>, ...}`
 - `ptt2eth.json` a dictionary for ethnicity of each patient `{<patient_id>:<ethnicity>, ...}`
-- `cui2ptt_pos.jsonl` each line is a dictionary of cui where each cui contains a dictionary of patients with a count `{<cui>: {<patient_id>:<count>, ...}, ...}`
-- `cui2ptt_tsp.jsonl` each line a dictionary of cui where each cui contains a dictionary of patients with a timestamp `{<cui>: {<patient_id>:<tsp>, ...}, ...}`
+- `cui2ptt_pos.jsonl` each line is a dictionary of cui and the value is a dictionary of patients with a count `{<cui>: {<patient_id>:<count>, ...}}\n...`
+- `cui2ptt_tsp.jsonl` each line is a dictionary of cui and teh value is a dictionary of patients with a timestamp `{<cui>: {<patient_id>:<tsp>, ...}}\n`
 
 There is a script `gen_random_data.js` in `server/data/` folder to generate the above 6 files completely randomly so you can still try the app without any data files. Run `cd server/data && node --max-old-space-size=32768 
 gen_random_data.js`.
