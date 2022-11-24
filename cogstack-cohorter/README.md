@@ -23,6 +23,7 @@ With MedCAT annotaion output (e.g., part_0.pickle), `cui2ptt_pos.jsonl` and `cui
 
 ```python
 import pandas as pd
+from collections import defaultdict, Counter
 
 cui2ptt_pos = defaultdict(Counter) # store the count of a SNOMED term for a patient
 cui2ptt_tsp = defaultdict(lambda: defaultdict(int)) # store the first mention of a SNOMED term for a pateint
