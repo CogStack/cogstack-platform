@@ -159,7 +159,7 @@ for (let i=0;i<all_ptt_cnt;i++) ptt2cui_tsp_arr[i] = {};
 
 //========================================================
 // api to handle keywords search for snomed terms
-app.post("/keywords", async (req, res) => {
+app.post("/keywords", (req, res) => {
     try {
         let text = req.body.text.replace(/\W/g, ' ').replace(/\s+/g, ' ').trim();
         let flexresult = snomed_terms_index.search(text, 500);
@@ -244,7 +244,7 @@ const all_ptt_set = new Set([...Array(all_ptt_cnt).keys()]);
 
 //========================================================
 // api to handle get_query_result
-app.post("/get_query_result", async (req, res) => {
+app.post("/get_query_result", (req, res) => {
     try {
         console.log('In /get_query_result', new Date());
         console.time('/get_query_result');
@@ -382,7 +382,7 @@ app.post("/get_query_result", async (req, res) => {
 
 //========================================================
 // api to handle get_filter_result
-app.post("/get_filter_result", async (req, res) => {
+app.post("/get_filter_result", (req, res) => {
     try {
         console.time('/get_filter_result');
         console.log('In /get_filter_result');
@@ -426,7 +426,7 @@ app.post("/get_filter_result", async (req, res) => {
 
 //========================================================
 // api to handle get_age
-app.post('/get_age', async (req, res) => {
+app.post('/get_age', (req, res) => {
     try {
         console.time('/get_age');
         console.log('In /get_age');
@@ -452,7 +452,7 @@ app.post('/get_age', async (req, res) => {
 
 //========================================================
 // api to handle get_top_terms
-app.post('/get_top_terms', async (req, res) => {
+app.post('/get_top_terms', (req, res) => {
     try {
         console.log('In /get_top_terms');
         console.time('/get_top_terms');
@@ -491,7 +491,7 @@ app.post('/get_top_terms', async (req, res) => {
 
 //========================================================
 // api to handle get_top_terms
-app.post('/compare_query', async (req, res) => {
+app.post('/compare_query', (req, res) => {
     try {
         console.log('In /compare_query');
         console.time('/compare_query');
@@ -522,7 +522,7 @@ app.post('/compare_query', async (req, res) => {
 
 //========================================================
 // api to handle remove_temp_table
-app.post('/remove_result', async (req, res) => {
+app.post('/remove_result', (req, res) => {
     try {
         console.log('In /remove_result');
         const data = req.body;
