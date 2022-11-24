@@ -89,7 +89,7 @@ let ptt2age_arr = {};
 let ptt2eth_arr = {};
 let ptt2dod_arr = {};
 Object.entries(ptt2sex).forEach(e => { if (e[0] in ptt_code2id) ptt2sex_arr[ptt_code2id[e[0]]] = sex_code2id[e[1]]; });
-Object.entries(ptt2age).forEach(e => { if (e[0] in ptt_code2id) ptt2age_arr[ptt_code2id[e[0]]] = parseInt(e[1]); });
+Object.entries(ptt2age).forEach(e => { if (e[0] in ptt_code2id) ptt2age_arr[ptt_code2id[e[0]]] = Math.floor(e[1]); });
 Object.entries(ptt2eth).forEach(e => { if (e[0] in ptt_code2id) ptt2eth_arr[ptt_code2id[e[0]]] = eth_code2id[e[1]]; });
 for (let i=0;i<all_ptt_cnt;i++) ptt2dod_arr[i] = 0;
 Object.entries(ptt2dod).forEach(e => { if (e[0] in ptt_code2id) ptt2dod_arr[ptt_code2id[e[0]]] = e[1]; });
@@ -199,8 +199,8 @@ app.post("/keywords", async (req, res) => {
 let global_results = {};
 let global_cache = {};
 
-const seconds_in_a_year = 31536000;
-let cur_time = parseInt(Date.now() / 1000);
+const seconds_in_a_year = 60*60*24*365;
+let cur_time = Math.floor(Date.now() / 1000);
 
 function age_custom_filter(constraint, age) {
     if (constraint['min'] != '' && constraint['max'] != '') return (age >= constraint['min'] && age <= constraint['max']);
@@ -216,9 +216,9 @@ function time_filter(constraint, tsp) {
     if (constraint['1'] == true) c1 = (tsp >= (cur_time - (seconds_in_a_year*5)));
     if (constraint['2'] == true) c2 = (tsp >= (cur_time - (seconds_in_a_year*10)));
     if (constraint['3'] == true) {
-        if (constraint['min'] != '' && constraint['max'] != '') c3 = (tsp >= parseInt(Date.parse(constraint['min']))/1000 && tsp <= parseInt(Date.parse(constraint['max'])/1000));
-        else if (constraint['min'] != '') c3 = (tsp >= parseInt(Date.parse(constraint['min']))/1000);
-        else if (constraint['max'] != '') c3 = (tsp <= parseInt(Date.parse(constraint['max']))/1000);
+        if (constraint['min'] != '' && constraint['max'] != '') c3 = (tsp >= Math.floor(Date.parse(constraint['min']))/1000 && tsp <= Math.floor(Date.parse(constraint['max'])/1000));
+        else if (constraint['min'] != '') c3 = (tsp >= Math.floor(Date.parse(constraint['min']))/1000);
+        else if (constraint['max'] != '') c3 = (tsp <= Math.floor(Date.parse(constraint['max']))/1000);
     }
    return (c1 || c2 || c3);
 }
@@ -543,8 +543,8 @@ app.listen(3000, () => {
 
 // update everyday
 setTimeout(() => {
-    cur_tsp = Date.now() / 1000;
-    cur_time = parseInt(cur_tsp);
+    cur_tsp = Math.floor(Date.now() / 1000);
+    cur_time = cur_tsp;
     Object.keys(global_results).forEach(qid => {
         if (cur_tsp - global_results[qid]['tsp'] > (60*60*24)) delete global_results[qid];
     });
