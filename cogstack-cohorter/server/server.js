@@ -168,26 +168,19 @@ app.post("/keywords", (req, res) => {
         // rank flexresult
         let suggestions = [];
         flexresult.forEach(id => {
-            let score = 0.0;
-            text.split(' ').forEach( w => {
-                const re = new RegExp(w, 'gi');
-                if (re.exec(snomed_terms[id]['str']) != null) score += 1.0;
-            });
-            score += 1.0 / snomed_terms[id]['str'].length;
-            suggestions.push({cui:snomed_terms[id]['cui'], str:snomed_terms[id]['str'], score: score});
-        });
-        suggestions.sort((a,b) => b.score - a.score);
-        suggestions.forEach( suggestion => {
+            const term = snomed_terms[id]['str'];
             let matches = new Set();
             text.split(' ').forEach( w => {
                 const re = new RegExp(w, 'gi');
                 let match = null;
-                while ((match = re.exec(suggestion['str'])) != null) for (let pos=0;pos<w.length;pos++) matches.add(pos+match.index);
+                while ((match = re.exec(term)) != null) for (let pos=0;pos<w.length;pos++) matches.add(pos+match.index);
             });
+            const score = matches.size / term.length;
             let hl = "";
-            suggestion['str'].split('').forEach((c,i) => { if (matches.has(i)) hl += "<b>" + c + "</b>"; else hl += c; });
-            suggestion['hl'] = hl;
+            term.split('').forEach((c,i) => { if (matches.has(i)) hl += "<b>" + c + "</b>"; else hl += c; });
+            suggestions.push({cui:snomed_terms[id]['cui'], str:term, score:score, hl:hl});
         });
+        suggestions.sort((a,b) => b.score - a.score);
         res.status(200).json(suggestions).end();
     } catch (err) {
         console.log('/keywords err:', err)
@@ -536,23 +529,6 @@ app.post('/compare_query', (req, res) => {
     } catch (err) {
         console.log('/compare_query err:', err);
         res.status(200).json({data:[]}).end();
-    }
-});
-//========================================================
-
-//========================================================
-// api to handle remove_temp_table
-app.post('/remove_result', (req, res) => {
-    try {
-        console.log('In /remove_result');
-        const data = req.body;
-        if (data.qid in global_results) {
-            delete global_results[data.qid];
-        }
-        res.status(200).json({qid:data.qid, msg:'OK'}).end();
-    } catch (err) {
-        console.log('/remove_result err:', err);
-        res.status(200).json({msg:'Error'}).end();
     }
 });
 //========================================================
