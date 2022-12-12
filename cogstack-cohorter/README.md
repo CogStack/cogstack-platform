@@ -86,7 +86,7 @@ for part in range(parts):
             continue
         ptt = doc2ptt[docid]
         for _, ent in annotations[str(docid)]['entities'].items():
-            'if ent['meta_anns']['Subject']['value'] == 'Patient' and ent['meta_anns']['Presence']['value'] == 'True' and ent['meta_anns']['Time']['value'] != 'Future':'
+            if ent['meta_anns']['Subject']['value'] == 'Patient' and ent['meta_anns']['Presence']['value'] == 'True' and ent['meta_anns']['Time']['value'] != 'Future':
                 cui = ent['cui']
                 cui2ptt_pos[cui][ptt] += 1
                 if 'document_timestamp' in ent:
