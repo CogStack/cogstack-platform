@@ -7,7 +7,7 @@
     "build": "env NODE_ENV=production postcss public/assets/css/tailwind.css -o public/assets/css/tailwind.output.css"
   },
   "author": "Jack Wu",
-  "license": "MIT",
+  "license": "",
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.3",
     "autoprefixer": "^10.4.12",
