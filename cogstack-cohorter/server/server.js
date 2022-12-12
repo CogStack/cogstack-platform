@@ -8,7 +8,7 @@ const app = express();
 
 app.use(express.static(path.join(__dirname, '../client/public')));
 app.use(express.json());
-app.use(express.urlencoded({extended: false}));
+//app.use(express.urlencoded({extended: false}));
 
 // index all the snomed concepts
 const snomed_terms = require('./data/snomed_terms.json');
@@ -33,6 +33,7 @@ const eth_code2id = {
 let cui_code2id = {};
 snomed_terms.forEach((t, i)=>{ cui_code2id[t['cui']] = i });
 
+// returns an array of cuis containing all the child terms and including the input cui
 function get_cui_child_terms(cui) {
     if (!(cui in cui_pt2ch)) return [cui];
     let s = new Set([cui]);
@@ -366,7 +367,7 @@ app.post("/get_query_result", (req, res) => {
             s_filter = fil((x) => s.has(x), s_filter);
         }
 
-        global_results[data.qid]['all'] = new Set([...s_filter]);
+        global_results[data.qid]['all'] = new Set(s_filter);
 
         const query_result = {
             all: global_results[data.qid]['all'].size,
@@ -396,25 +397,44 @@ app.post("/get_filter_result", (req, res) => {
         };
         const all = [...global_results[data.qid]['all']];
         filter_result['gender']['0'] = all.length;
-        filter_result['gender']['1'] = fil_cnt((x) => ptt2sex_arr[x]==1, all);
-        filter_result['gender']['2'] = fil_cnt((x) => ptt2sex_arr[x]==2, all);
-        filter_result['gender']['3'] = fil_cnt((x) => ptt2sex_arr[x]==3, all);
         filter_result['alive']['0'] = all.length;
-        filter_result['alive']['1'] = fil_cnt((x) => ptt2dod_arr[x]==0, all);
-        filter_result['alive']['2'] = fil_cnt((x) => ptt2dod_arr[x]!=0, all);
-        filter_result['age']['0'] = fil_cnt((x) => ptt2dod_arr[x]==0, all);
-        filter_result['age']['1'] = fil_cnt((x) => ptt2dod_arr[x]==0 && ptt2age_arr[x] >=0 && ptt2age_arr[x] <=20, all);
-        filter_result['age']['2'] = fil_cnt((x) => ptt2dod_arr[x]==0 && ptt2age_arr[x] >20 && ptt2age_arr[x] <=40, all);
-        filter_result['age']['3'] = fil_cnt((x) => ptt2dod_arr[x]==0 && ptt2age_arr[x] >40 && ptt2age_arr[x] <=60, all);
-        filter_result['age']['4'] = fil_cnt((x) => ptt2dod_arr[x]==0 && ptt2age_arr[x] >60, all);
-        filter_result['age']['5'] = fil_cnt((x) => ptt2dod_arr[x]==0 && age_custom_filter(data.filter['age'], ptt2age_arr[x]), all); 
         filter_result['ethnicity']['0'] = all.length;
-        filter_result['ethnicity']['1'] = fil_cnt((x) => ptt2eth_arr[x]==1, all);
-        filter_result['ethnicity']['2'] = fil_cnt((x) => ptt2eth_arr[x]==2, all);
-        filter_result['ethnicity']['3'] = fil_cnt((x) => ptt2eth_arr[x]==3, all);
-        filter_result['ethnicity']['4'] = fil_cnt((x) => ptt2eth_arr[x]==4, all);
-        filter_result['ethnicity']['5'] = fil_cnt((x) => ptt2eth_arr[x]==5, all);
-        filter_result['ethnicity']['6'] = fil_cnt((x) => ptt2eth_arr[x]==6, all);
+        filter_result['gender']['1'] = 0;
+        filter_result['gender']['2'] = 0;
+        filter_result['gender']['3'] = 0;
+        filter_result['alive']['1'] = 0;
+        filter_result['alive']['2'] = 0;
+        filter_result['age']['0'] = 0;
+        filter_result['age']['1'] = 0;
+        filter_result['age']['2'] = 0;
+        filter_result['age']['3'] = 0;
+        filter_result['age']['4'] = 0;
+        filter_result['age']['5'] = 0;
+        filter_result['ethnicity']['1'] = 0;
+        filter_result['ethnicity']['2'] = 0;
+        filter_result['ethnicity']['3'] = 0;
+        filter_result['ethnicity']['4'] = 0;
+        filter_result['ethnicity']['5'] = 0;
+        filter_result['ethnicity']['6'] = 0;
+        for (let x=0;x<all.length;x++) {
+            if (ptt2sex_arr[x]==1) filter_result['gender']['1'] += 1;
+            if (ptt2sex_arr[x]==2) filter_result['gender']['2'] += 1;
+            if (ptt2sex_arr[x]==3) filter_result['gender']['3'] += 1;
+            if (ptt2dod_arr[x]==0) filter_result['alive']['1'] += 1;
+            if (ptt2dod_arr[x]!=0) filter_result['alive']['2'] += 1;
+            if (ptt2dod_arr[x]==0) filter_result['age']['0'] += 1;
+            if (ptt2dod_arr[x]==0 && ptt2age_arr[x]>=0 && ptt2age_arr[x]<=20) filter_result['age']['1'] += 1;
+            if (ptt2dod_arr[x]==0 && ptt2age_arr[x]>20 && ptt2age_arr[x]<=40) filter_result['age']['2'] += 1;
+            if (ptt2dod_arr[x]==0 && ptt2age_arr[x]>40 && ptt2age_arr[x]<=60) filter_result['age']['3'] += 1;
+            if (ptt2dod_arr[x]==0 && ptt2age_arr[x] >60) filter_result['age']['4'] += 1;
+            if (ptt2dod_arr[x]==0 && age_custom_filter(data.filter['age'], ptt2age_arr[x])) filter_result['age']['5'] += 1;
+            if (ptt2eth_arr[x]==1) filter_result['ethnicity']['1'] += 1;
+            if (ptt2eth_arr[x]==2) filter_result['ethnicity']['2'] += 1;
+            if (ptt2eth_arr[x]==3) filter_result['ethnicity']['3'] += 1;
+            if (ptt2eth_arr[x]==4) filter_result['ethnicity']['4'] += 1;
+            if (ptt2eth_arr[x]==5) filter_result['ethnicity']['5'] += 1;
+            if (ptt2eth_arr[x]==6) filter_result['ethnicity']['6'] += 1;
+        }
         console.timeEnd('/get_filter_result');
         res.status(200).json({qid:data.qid, filter_result:filter_result}).end();
     } catch (err) {
