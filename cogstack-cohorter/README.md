@@ -21,8 +21,7 @@ The following code snippet can be used to generate the 4 data (json) files if yo
 from datetime import datetime
 from medcat.utils.ethnicity_map import ethnicity_map
 
-# function to convert a dictionary to json and write to file
-# d: dictionary, fn: string (filename)
+# function to convert a dictionary to json and write to file (d: dictionary, fn: string (filename))
 def dict2json_file(d, fn)
     # convert pickle object to json object
     json_obj = json.loads(json.dumps(d))
