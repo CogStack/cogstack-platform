@@ -409,7 +409,8 @@ app.post("/get_filter_result", (req, res) => {
         filter_result['ethnicity']['4'] = 0;
         filter_result['ethnicity']['5'] = 0;
         filter_result['ethnicity']['6'] = 0;
-        for (let x=0;x<all.length;x++) {
+        for (let i=0;i<all.length;i++) {
+            x = all[i];
             if (ptt2sex_arr[x]==1) filter_result['gender']['1'] += 1;
             if (ptt2sex_arr[x]==2) filter_result['gender']['2'] += 1;
             if (ptt2sex_arr[x]==3) filter_result['gender']['3'] += 1;
@@ -419,7 +420,7 @@ app.post("/get_filter_result", (req, res) => {
             if (ptt2dod_arr[x]==0 && ptt2age_arr[x]>=0 && ptt2age_arr[x]<=20) filter_result['age']['1'] += 1;
             if (ptt2dod_arr[x]==0 && ptt2age_arr[x]>20 && ptt2age_arr[x]<=40) filter_result['age']['2'] += 1;
             if (ptt2dod_arr[x]==0 && ptt2age_arr[x]>40 && ptt2age_arr[x]<=60) filter_result['age']['3'] += 1;
-            if (ptt2dod_arr[x]==0 && ptt2age_arr[x] >60) filter_result['age']['4'] += 1;
+            if (ptt2dod_arr[x]==0 && ptt2age_arr[x]>60) filter_result['age']['4'] += 1;
             if (ptt2dod_arr[x]==0 && age_custom_filter(data.filter['age'], ptt2age_arr[x])) filter_result['age']['5'] += 1;
             if (ptt2eth_arr[x]==1) filter_result['ethnicity']['1'] += 1;
             if (ptt2eth_arr[x]==2) filter_result['ethnicity']['2'] += 1;
