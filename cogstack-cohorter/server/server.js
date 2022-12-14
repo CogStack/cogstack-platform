@@ -536,8 +536,10 @@ app.post('/compare_query', (req, res) => {
 });
 //========================================================
 
-app.listen(3000, () => {
-    console.log("Server listening on localhost port 3000");
+let port = process.env.PORT || 3000;
+
+app.listen(port, () => {
+    console.log(`Server listening on localhost port ${port}`);
 });
 
 // update everyday
