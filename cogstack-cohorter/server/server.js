@@ -31,7 +31,7 @@ const eth_code2id = {
 }
 // snomed terms code2id
 let cui_code2id = {};
-snomed_terms.forEach((t, i)=>{ cui_code2id[t['cui']] = i });
+snomed_terms.forEach((t, i)=>{ cui_code2id[t['cui']] = i; t['search'] = t['str'] + ' - '  + t['cui']; });
 
 // returns an array of cuis containing all the child terms and including the input cui
 function get_cui_child_terms(cui) {
@@ -52,7 +52,7 @@ console.time('flexsearch index');
 const snomed_terms_index = new Document({
     document: {
         id: "cui",
-        index: ["str"]
+        index: ["search"]
     },
     optimize: true,
     preset: "performance",
@@ -178,6 +178,8 @@ app.post("/keywords", (req, res) => {
             const score = matches.size / term.length;
             let hl = "";
             term.split('').forEach((c,i) => { if (matches.has(i)) hl += "<b>" + c + "</b>"; else hl += c; });
+            hl = hl.replace(/<\/b><b>/g, '');
+            if (hl.search('<b>') == -1) hl += ' - ' + snomed_terms[id]['cui'];
             suggestions.push({cui:snomed_terms[id]['cui'], str:term, score:score, hl:hl});
         });
         suggestions.sort((a,b) => b.score - a.score);
@@ -410,7 +412,7 @@ app.post("/get_filter_result", (req, res) => {
         filter_result['ethnicity']['5'] = 0;
         filter_result['ethnicity']['6'] = 0;
         for (let i=0;i<all.length;i++) {
-            x = all[i];
+            const x = all[i];
             if (ptt2sex_arr[x]==1) filter_result['gender']['1'] += 1;
             if (ptt2sex_arr[x]==2) filter_result['gender']['2'] += 1;
             if (ptt2sex_arr[x]==3) filter_result['gender']['3'] += 1;

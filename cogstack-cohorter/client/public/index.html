@@ -486,7 +486,7 @@
                   <div class="absolute inset-y-0 flex items-center pl-2">
                     <svg class="w-4 h-4" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path></svg>
                   </div>
-                  <input x-model="search_bar_text" @input.debounce="handle_search_bar_text_input" class="w-full pl-8 pr-2 text-sm text-gray-700 placeholder-gray-600 bg-gray-100 border shadow-sm rounded-md focus:border-purple-600 focus:ring focus:ring-purple-600 focus:ring-opacity-50" type="text" placeholder="Search for SNOMED terms" aria-label="Search"/>
+                  <input x-model="search_bar_text" @input.debounce="handle_search_bar_text_input" class="w-full pl-8 pr-2 text-sm text-gray-700 placeholder-gray-600 bg-gray-100 border shadow-sm rounded-md focus:border-purple-600 focus:ring focus:ring-purple-600 focus:ring-opacity-50" type="text" placeholder="Search for SNOMED terms or enter a term ID" aria-label="Search"/>
                   <div class="absolute w-full p-2 border bg-white border-gray-500 h-screen overflow-y-auto rounded z-50" :class="search_bar_suggestions.length > 0 ? '' : 'hidden'" @click.outside="cancel_suggestions" @keydown.escape.window="cancel_suggestions">
                     <template x-for="suggestion in search_bar_suggestions">
                       <div class="w-full hover:bg-green-200 cursor-pointer" @click="handle_select_suggestion(suggestion)" >
@@ -633,24 +633,42 @@
               </div>
             </div>
 
+
+            <div class="text-md font-bold text-center text-gray-500 border-b border-gray-200">
+              <ul class="flex flex-wrap -mb-px">
+                <li class="mr-2">
+                    <div class="inline-block p-4 rounded-t-lg border-b-2 border-transparent hover:text-gray-600  cursor-pointer" :class="show_disorders_table ? 'border-blue-600' : 'hover:border-gray-300'" @click="change_table('disorders')">Top Disorders</div>
+                </li>
+                <li class="mr-2">
+                    <div class="inline-block p-4 rounded-t-lg border-b-2 border-transparent hover:text-gray-600 cursor-pointer" :class="show_findings_table ? 'border-blue-600' : 'hover:border-gray-300'" @click="change_table('findings')">Top Findings</div>
+                </li>
+                <li class="mr-2">
+                    <div class="inline-block p-4 rounded-t-lg border-b-2 border-transparent hover:text-gray-600 cursor-pointer" :class="show_procedures_table ? 'border-blue-600' : 'hover:border-gray-300'" @click="change_table('procedures')">Top Procedures</div>
+                </li>
+                <li class="mr-2">
+                    <div class="inline-block p-4 rounded-t-lg border-b-2 border-transparent hover:text-gray-600 cursor-pointer" :class="show_substances_table ? 'border-blue-600' : 'hover:border-gray-300'" @click="change_table('substances')">Top Substances</div>
+                </li>
+              </ul>
+            </div>
+
+
             <!-- Tables -->
             <!-- Table 1 (disorders)-->
-            <h4 class="mb-4 text-lg font-semibold text-gray-600 dark:text-gray-300">Top 10 disorders among patients found <span class="text-xs font-thin" :class="top_terms_chart_updating ? '' : 'hidden'">Updating...</span></h4>
-            <div class="w-full mb-8 overflow-hidden rounded-lg shadow-xs">
+            <div class="w-full mb-8 overflow-hidden rounded-lg shadow-xs" :class="show_disorders_table ? '' : 'hidden'">
               <div class="w-full overflow-x-auto">
                 <table class="border w-full whitespace-no-wrap transition-all">
                   <thead>
-                    <tr class="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase border-b dark:border-gray-700 bg-gray-50 dark:text-gray-400 dark:bg-gray-800">
+                    <tr class="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase border-b dark:border-gray-700 bg-gray-50">
                       <th class="px-4 py-3">Rank</th>
                       <th class="px-4 py-3">Name</th>
                       <th class="px-4 py-3">Count</th>
                       <th class="px-4 py-3">Percentage</th>
                     </tr>
                   </thead>
-                  <tbody class="bg-white divide-y dark:divide-gray-700 dark:bg-gray-800">
-                    <template x-for="(t,i) in top_disorders">
-                      <tr class="text-gray-700 dark:text-gray-400 hover:bg-cool-gray-200 transition-all">
-                        <td class="w-14 px-4 py-3 text-sm" x-text="i+1"></td>
+                  <tbody class="bg-white divide-y">
+                    <template x-for="(t,i) in top_disorders.slice((page-1)*10, page*10)">
+                      <tr class="text-gray-700 hover:bg-cool-gray-200 transition-all">
+                        <td class="w-14 px-4 py-3 text-sm" x-text="(page-1)*10+i+1"></td>
                         <td class="w-full px-4 py-3 text-sm" x-text="t['str']"></td>
                         <td class="w-14 px-4 py-3 text-sm" x-text="t['cnt'].toLocaleString()"></td>
                         <td class="w-14 px-4 py-3 text-sm" x-text="Math.round(100*t['cnt']/query_result['all']).toString()"></td>
@@ -658,26 +676,41 @@
                     </template>
                   </tbody>
                 </table>
+                <div class="grid px-4 py-3 text-xs font-semibold tracking-wide text-gray-500 uppercase border-t bg-gray-50 sm:grid-cols-9">
+                  <span class="flex items-center col-span-3">Showing<span class="mx-1" x-text="top_disorders.length==0 ? '' : `${(page-1)*10+1}`"></span> - <span class="mx-1" x-text="top_disorders.length==0 ? '' : `${page==Math.ceil(top_disorders.length/10) ? top_disorders.length : page*10}`"></span> of <span class="mx-2" x-text="top_disorders.length"></span> </span>
+                  <span class="col-span-2"></span>
+                  <!-- Pagination -->
+                  <span class="flex col-span-4 mt-2 sm:mt-auto sm:justify-end">
+                    <nav aria-label="Table navigation">
+                      <ul class="inline-flex items-center">
+                        <li><button class="px-3 py-1 rounded-md rounded-l-lg focus:outline-none focus:shadow-outline-purple" aria-label="Previous" @click="if (page>1) page--;"><svg aria-hidden="true" class="w-4 h-4" :class="page<=1 ? 'fill-gray-300' : 'fill-current'" viewBox="0 0 20 20"><path d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" fill-rule="evenodd"></path></svg></button></li>
+                        <template x-for="page_i in (Math.ceil(top_disorders.length/10))">
+                          <li><button class="px-3 py-1 rounded-md focus:outline-none focus:shadow-outline-purple transition-colors duration-150" :class="page==page_i? 'text-white bg-purple-600 border border-r-0 border-purple-600 ' : ''" x-text="page_i" @click="page=page_i"></button></li>
+                        </template>
+                        <li><button class="px-3 py-1 rounded-md rounded-r-lg focus:outline-none focus:shadow-outline-purple" aria-label="Next" @click="if (page<Math.ceil(top_disorders.length/10)) page++;"><svg class="w-4 h-4" :class="page>=Math.ceil(top_disorders.length/10) ? 'fill-gray-300' : 'fill-current'" aria-hidden="true" viewBox="0 0 20 20"><path d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" fill-rule="evenodd"></path></svg></button></li>
+                      </ul>
+                    </nav>
+                  </span>
+                </div>
               </div>
             </div>
 
             <!-- Table 2 (findings)-->
-            <h4 class="mb-4 text-lg font-semibold text-gray-600 dark:text-gray-300">Top 10 findings among patients found <span class="text-xs font-thin" :class="top_terms_chart_updating ? '' : 'hidden'">Updating...</span></h4>
-            <div class="w-full mb-8 overflow-hidden rounded-lg shadow-xs">
+            <div class="w-full mb-8 overflow-hidden rounded-lg shadow-xs" :class="show_findings_table ? '' : 'hidden'">
               <div class="w-full overflow-x-auto">
                 <table class="border w-full whitespace-no-wrap transition-all">
                   <thead>
-                    <tr class="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase border-b dark:border-gray-700 bg-gray-50 dark:text-gray-400 dark:bg-gray-800">
+                    <tr class="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase border-b dark:border-gray-700 bg-gray-50">
                       <th class="px-4 py-3">Rank</th>
                       <th class="px-4 py-3">Name</th>
                       <th class="px-4 py-3">Count</th>
                       <th class="px-4 py-3">Percentage</th>
                     </tr>
                   </thead>
-                  <tbody class="bg-white divide-y dark:divide-gray-700 dark:bg-gray-800">
-                    <template x-for="(t,i) in top_findings">
-                      <tr class="text-gray-700 dark:text-gray-400 hover:bg-cool-gray-200 transition-all">
-                        <td class="w-14 px-4 py-3 text-sm" x-text="i+1"></td>
+                  <tbody class="bg-white divide-y">
+                    <template x-for="(t,i) in top_findings.slice((page-1)*10, page*10)">
+                      <tr class="text-gray-700 hover:bg-cool-gray-200 transition-all">
+                        <td class="w-14 px-4 py-3 text-sm" x-text="(page-1)*10+i+1"></td>
                         <td class="w-full px-4 py-3 text-sm" x-text="t['str']"></td>
                         <td class="w-14 px-4 py-3 text-sm" x-text="t['cnt'].toLocaleString()"></td>
                         <td class="w-14 px-4 py-3 text-sm" x-text="Math.round(100*t['cnt']/query_result['all']).toString()"></td>
@@ -685,26 +718,41 @@
                     </template>
                   </tbody>
                 </table>
+                <div class="grid px-4 py-3 text-xs font-semibold tracking-wide text-gray-500 uppercase border-t bg-gray-50 sm:grid-cols-9">
+                  <span class="flex items-center col-span-3">Showing<span class="mx-1" x-text="top_findings.length==0 ? '' : `${(page-1)*10+1}`"></span> - <span class="mx-1" x-text="top_findings.length==0 ? '' : `${page==Math.ceil(top_findings.length/10) ? top_findings.length : page*10}`"></span> of <span class="mx-2" x-text="top_findings.length"></span> </span>
+                  <span class="col-span-2"></span>
+                  <!-- Pagination -->
+                  <span class="flex col-span-4 mt-2 sm:mt-auto sm:justify-end">
+                    <nav aria-label="Table navigation">
+                      <ul class="inline-flex items-center">
+                        <li><button class="px-3 py-1 rounded-md rounded-l-lg focus:outline-none focus:shadow-outline-purple" aria-label="Previous" @click="if (page>1) page--;"><svg aria-hidden="true" class="w-4 h-4" :class="page<=1 ? 'fill-gray-300' : 'fill-current'" viewBox="0 0 20 20"><path d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" fill-rule="evenodd"></path></svg></button></li>
+                        <template x-for="page_i in (Math.ceil(top_findings.length/10))">
+                          <li><button class="px-3 py-1 rounded-md focus:outline-none focus:shadow-outline-purple transition-colors duration-150" :class="page==page_i? 'text-white bg-purple-600 border border-r-0 border-purple-600 ' : ''" x-text="page_i" @click="page=page_i"></button></li>
+                        </template>
+                        <li><button class="px-3 py-1 rounded-md rounded-r-lg focus:outline-none focus:shadow-outline-purple" aria-label="Next" @click="if (page<Math.ceil(top_findings.length/10)) page++;"><svg class="w-4 h-4" :class="page>=Math.ceil(top_findings.length/10) ? 'fill-gray-300' : 'fill-current'" aria-hidden="true" viewBox="0 0 20 20"><path d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" fill-rule="evenodd"></path></svg></button></li>
+                      </ul>
+                    </nav>
+                  </span>
+                </div>
               </div>
             </div>
 
             <!-- Table 3 (procedures)-->
-            <h4 class="mb-4 text-lg font-semibold text-gray-600 dark:text-gray-300">Top 10 procedures among patients found <span class="text-xs font-thin" :class="top_terms_chart_updating ? '' : 'hidden'">Updating...</span></h4>
-            <div class="w-full mb-8 overflow-hidden rounded-lg shadow-xs">
+            <div class="w-full mb-8 overflow-hidden rounded-lg shadow-xs" :class="show_procedures_table ? '' : 'hidden'">
               <div class="w-full overflow-x-auto">
                 <table class="border w-full whitespace-no-wrap transition-all">
                   <thead>
-                    <tr class="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase border-b dark:border-gray-700 bg-gray-50 dark:text-gray-400 dark:bg-gray-800">
+                    <tr class="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase border-b dark:border-gray-700 bg-gray-50">
                       <th class="px-4 py-3">Rank</th>
                       <th class="px-4 py-3">Name</th>
                       <th class="px-4 py-3">Count</th>
                       <th class="px-4 py-3">Percentage</th>
                     </tr>
                   </thead>
-                  <tbody class="bg-white divide-y dark:divide-gray-700 dark:bg-gray-800">
-                    <template x-for="(t,i) in top_procedures">
-                      <tr class="text-gray-700 dark:text-gray-400 hover:bg-cool-gray-200 transition-all">
-                        <td class="w-14 px-4 py-3 text-sm" x-text="i+1"></td>
+                  <tbody class="bg-white divide-y">
+                    <template x-for="(t,i) in top_procedures.slice((page-1)*10, page*10)">
+                      <tr class="text-gray-700 hover:bg-cool-gray-200 transition-all">
+                        <td class="w-14 px-4 py-3 text-sm" x-text="(page-1)*10+i+1"></td>
                         <td class="w-full px-4 py-3 text-sm" x-text="t['str']"></td>
                         <td class="w-14 px-4 py-3 text-sm" x-text="t['cnt'].toLocaleString()"></td>
                         <td class="w-14 px-4 py-3 text-sm" x-text="Math.round(100*t['cnt']/query_result['all']).toString()"></td>
@@ -712,26 +760,41 @@
                     </template>
                   </tbody>
                 </table>
+                <div class="grid px-4 py-3 text-xs font-semibold tracking-wide text-gray-500 uppercase border-t bg-gray-50 sm:grid-cols-9">
+                  <span class="flex items-center col-span-3">Showing<span class="mx-1" x-text="top_procedures.length==0 ? '' : `${(page-1)*10+1}`"></span> - <span class="mx-1" x-text="top_procedures.length==0 ? '' : `${page==Math.ceil(top_procedures.length/10) ? top_procedures.length : page*10}`"></span> of <span class="mx-2" x-text="top_procedures.length"></span> </span>
+                  <span class="col-span-2"></span>
+                  <!-- Pagination -->
+                  <span class="flex col-span-4 mt-2 sm:mt-auto sm:justify-end">
+                    <nav aria-label="Table navigation">
+                      <ul class="inline-flex items-center">
+                        <li><button class="px-3 py-1 rounded-md rounded-l-lg focus:outline-none focus:shadow-outline-purple" aria-label="Previous" @click="if (page>1) page--;"><svg aria-hidden="true" class="w-4 h-4" :class="page<=1 ? 'fill-gray-300' : 'fill-current'" viewBox="0 0 20 20"><path d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" fill-rule="evenodd"></path></svg></button></li>
+                        <template x-for="page_i in (Math.ceil(top_procedures.length/10))">
+                          <li><button class="px-3 py-1 rounded-md focus:outline-none focus:shadow-outline-purple transition-colors duration-150" :class="page==page_i? 'text-white bg-purple-600 border border-r-0 border-purple-600 ' : ''" x-text="page_i" @click="page=page_i"></button></li>
+                        </template>
+                        <li><button class="px-3 py-1 rounded-md rounded-r-lg focus:outline-none focus:shadow-outline-purple" aria-label="Next" @click="if (page<Math.ceil(top_procedures.length/10)) page++;"><svg class="w-4 h-4" :class="page>=Math.ceil(top_procedures.length/10) ? 'fill-gray-300' : 'fill-current'" aria-hidden="true" viewBox="0 0 20 20"><path d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" fill-rule="evenodd"></path></svg></button></li>
+                      </ul>
+                    </nav>
+                  </span>
+                </div>
               </div>
             </div>
 
-            <!-- Table 3 (substances)-->
-            <h4 class="mb-4 text-lg font-semibold text-gray-600 dark:text-gray-300">Top 10 substances among patients found <span class="text-xs font-thin" :class="top_terms_chart_updating ? '' : 'hidden'">Updating...</span></h4>
-            <div class="w-full mb-8 overflow-hidden rounded-lg shadow-xs">
+            <!-- Table 4 (substances)-->
+            <div class="w-full mb-8 overflow-hidden rounded-lg shadow-xs" :class="show_substances_table ? '' : 'hidden'">
               <div class="w-full overflow-x-auto">
-                <table class="border w-full whitespace-no-wrap">
+                <table class="border w-full whitespace-no-wrap transition-all">
                   <thead>
-                    <tr class="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase border-b dark:border-gray-700 bg-gray-50 dark:text-gray-400 dark:bg-gray-800">
+                    <tr class="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase border-b dark:border-gray-700 bg-gray-50">
                       <th class="px-4 py-3">Rank</th>
                       <th class="px-4 py-3">Name</th>
                       <th class="px-4 py-3">Count</th>
                       <th class="px-4 py-3">Percentage</th>
                     </tr>
                   </thead>
-                  <tbody class="bg-white divide-y dark:divide-gray-700 dark:bg-gray-800">
-                    <template x-for="(t,i) in top_substances">
-                      <tr class="text-gray-700 dark:text-gray-400 hover:bg-cool-gray-200 transition-all">
-                        <td class="w-14 px-4 py-3 text-sm" x-text="i+1"></td>
+                  <tbody class="bg-white divide-y">
+                    <template x-for="(t,i) in top_substances.slice((page-1)*10, page*10)">
+                      <tr class="text-gray-700 hover:bg-cool-gray-200 transition-all">
+                        <td class="w-14 px-4 py-3 text-sm" x-text="(page-1)*10+i+1"></td>
                         <td class="w-full px-4 py-3 text-sm" x-text="t['str']"></td>
                         <td class="w-14 px-4 py-3 text-sm" x-text="t['cnt'].toLocaleString()"></td>
                         <td class="w-14 px-4 py-3 text-sm" x-text="Math.round(100*t['cnt']/query_result['all']).toString()"></td>
@@ -739,6 +802,22 @@
                     </template>
                   </tbody>
                 </table>
+                <div class="grid px-4 py-3 text-xs font-semibold tracking-wide text-gray-500 uppercase border-t bg-gray-50 sm:grid-cols-9">
+                  <span class="flex items-center col-span-3">Showing<span class="mx-1" x-text="top_substances.length==0 ? '' : `${(page-1)*10+1}`"></span> - <span class="mx-1" x-text="top_substances.length==0 ? '' : `${page==Math.ceil(top_substances.length/10) ? top_substances.length : page*10}`"></span> of <span class="mx-2" x-text="top_substances.length"></span> </span>
+                  <span class="col-span-2"></span>
+                  <!-- Pagination -->
+                  <span class="flex col-span-4 mt-2 sm:mt-auto sm:justify-end">
+                    <nav aria-label="Table navigation">
+                      <ul class="inline-flex items-center">
+                        <li><button class="px-3 py-1 rounded-md rounded-l-lg focus:outline-none focus:shadow-outline-purple" aria-label="Previous" @click="if (page>1) page--;"><svg aria-hidden="true" class="w-4 h-4" :class="page<=1 ? 'fill-gray-300' : 'fill-current'" viewBox="0 0 20 20"><path d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" fill-rule="evenodd"></path></svg></button></li>
+                        <template x-for="page_i in (Math.ceil(top_substances.length/10))">
+                          <li><button class="px-3 py-1 rounded-md focus:outline-none focus:shadow-outline-purple transition-colors duration-150" :class="page==page_i? 'text-white bg-purple-600 border border-r-0 border-purple-600 ' : ''" x-text="page_i" @click="page=page_i"></button></li>
+                        </template>
+                        <li><button class="px-3 py-1 rounded-md rounded-r-lg focus:outline-none focus:shadow-outline-purple" aria-label="Next" @click="if (page<Math.ceil(top_substances.length/10)) page++;"><svg class="w-4 h-4" :class="page>=Math.ceil(top_substances.length/10) ? 'fill-gray-300' : 'fill-current'" aria-hidden="true" viewBox="0 0 20 20"><path d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" fill-rule="evenodd"></path></svg></button></li>
+                      </ul>
+                    </nav>
+                  </span>
+                </div>
               </div>
             </div>
 
