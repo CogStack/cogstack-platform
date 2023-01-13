@@ -1,5 +1,4 @@
-# RetCAT - A MedCAT annotations retrieval tool for cohort identification
-
+# CogStack Cohort
 This webapp is a cohort identification app for users to obtain the number of patients satifying the search query. Both structured and unstructured data are used. Structured data include age, gender, dod and ethnicity. Unstructured (text) data are processed using [MedCAT](https://github.com/CogStack/MedCAT) and the MedCAT annotations are used for searching.
 
 The frontend of the app is in the `client` folder. It is adapted from [Windmill Dashboard](https://windmillui.com/dashboard-html) with [tailwindcss](https://tailwindcss.com/) for styling and [alpine.js](https://alpinejs.dev/) for interactivity. The other runtime dependencies are [ECharts](https://echarts.apache.org/en/index.html) for charts and [popper.js](https://popper.js.org/) for tooltips. The `client` folder can be left untouched for running the app. If you want to change the frontend, in the app folder run `cd client && npm install`. Run `npm run tailwind` in the `client` folder after adding any tailwindcss classes.
