@@ -1,3 +1,7 @@
+# Archived
+
+This repo is not maintained. The custom jupyter-hub image is specified in the [CogStack-Nifi](https://github.com/CogStack/CogStack-NiFi/tree/master/services/jupyter-hub) project. 
+
 # Introduction
 This repository contains a custom Jupyter Hub Docker image with example notebooks to play with.
 
