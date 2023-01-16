@@ -1,10 +1,10 @@
 # CogStack Cohort
 This webapp is a cohort identification app for users to obtain the number of patients satifying the search query. Both structured and unstructured data are used. Structured data include age, gender, dod and ethnicity. Unstructured (text) data are processed using [MedCAT](https://github.com/CogStack/MedCAT) and the MedCAT annotations are used for searching.
 
-#### Frontend
+### Frontend
 The frontend of the app is in the `client` folder. It is adapted from [Windmill Dashboard](https://windmillui.com/dashboard-html) with [tailwindcss](https://tailwindcss.com/) for styling and [alpine.js](https://alpinejs.dev/) for interactivity. The other runtime dependencies are [ECharts](https://echarts.apache.org/en/index.html) for charts and [popper.js](https://popper.js.org/) for tooltips. The `client` folder can be left untouched for running the app. If you want to change the frontend, in the app folder run `cd client && npm install`. Run `npm run tailwind` in the `client` folder after adding any tailwindcss classes.
 
-#### Backend
+### Backend
 The backend of the app is in the `server` folder which is a [node.js](https://nodejs.org/en/) application (v14 or higher) using [express.js](https://expressjs.com/) for the web/api server and [flexsearch](https://github.com/nextapps-de/flexsearch) for indexing and searching SNOMED terms. In order to run the app, the required data has to be prepared. First, extract the snomed terms by running `cd server/data && tar xzvf snomed_terms_data.tar.gz` from the app folder, it will extract 2 files, `snomed_terms.json` is an array of SNOMED terms while  `cui_pt2ch.json` contains the parent-to-child relationships of the SNOMED terms. For patients data, 6 files are needed in the `server/data/` folder:
 - `ptt2age.json` a dictionary for age of each patient `{<patient_id>:<age>, ...}`
 - `ptt2sex.json` a dictionary for gender of each patient `{<patient_id>:<gender>, ...}`
@@ -17,14 +17,14 @@ There is a script `gen_random_data.js` in `server/data/` folder to generate the 
 
 Please make sure to have the 6 data files ready in the `server/data/` folder before starting the server. To start the server, in the app folder run `cd server && npm install && npm run start`. There is also a Dockerfile in the app folder if using docker, to build and run the container, run `docker build --tag cohortingtool/webapp . && docker run  -p 3000:3000 cohortingtool/webapp`.
 
-#### Run using Docker with random data
+### Run using Docker with random data
 The following code can be used to run the app using Docker with random data:
 ```bash
 docker build --tag cohortingtool/webapp --build-arg random=true .
 docker run -p 3000:3000 cohortingtool/webapp
 ```
 
-#### Generate data from CogStack
+### Generate data from CogStack
 The following code snippet can be used to generate the 4 data (json) files if you have access to [Cogstack](https://github.com/CogStack).
 ```python
 from datetime import datetime
