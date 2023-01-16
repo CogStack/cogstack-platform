@@ -21,7 +21,7 @@ let ptt2dod = {};
 let cui2ptt_pos = {};
 let cui2ptt_tsp = {};
 
-let ptt_num = 1000000;
+let ptt_num = 100000;
 let max_ptt = 1000; // max. number of ptt a term can have
 let max_age = 100;
 let die_pct = 10; // percentage of died ptt = 1 / die_pct
@@ -37,6 +37,9 @@ for (let i=0;i<ptt_num;i++) {
 
 // for each snomed terms, generate some random mention data
 for (let i=0;i<snomed_terms.length;i++) {
+    if (snomed_terms[i]['str'].search('(disorder)')==-1 && snomed_terms[i]['str'].search('(finding)')==-1 &&
+        snomed_terms[i]['str'].search('(procedure)')==-1 && snomed_terms[i]['str'].search('(substance)')==-1)
+        continue;
     let picked = {};
     cui2ptt_pos[i] = {};
     cui2ptt_tsp[i] = {};

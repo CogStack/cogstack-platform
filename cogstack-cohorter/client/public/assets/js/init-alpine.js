@@ -661,7 +661,7 @@ function data() {
         xAxis: [ { type: 'value', name: 'Age' } ],
         yAxis: [ { type: 'value', name: 'Count'  } ],
         tooltip: [{show: true}],
-        series: [ { name: 'Age', type: 'bar', barWidth: '99%', data: resp.data.map((x,i) => [(i*10)+4.5, x]) } ]
+        series: [ { name: 'Age', type: 'bar', barWidth: '99%', data: resp.data.map((x,i) => [(i*10)+5, x]) } ]
       };
       age_chart.setOption(option);
       this.age_chart_updating = false;
@@ -705,6 +705,18 @@ function data() {
       this.top_terms_chart_updating = false;
     },
 
+    show_disorders_table: true,
+    show_findings_table: false,
+    show_procedures_table: false,
+    show_substances_table: false,
+    page: 1,
+    change_table(tab) {
+      if (tab == 'disorders') {this.show_disorders_table=true; this.show_findings_table=false; this.show_procedures_table=false; this.show_substances_table=false; this.page=1;}
+      else if (tab == 'findings') {this.show_disorders_table=false; this.show_findings_table=true; this.show_procedures_table=false; this.show_substances_table=false; this.page=1;}
+      else if (tab == 'procedures') {this.show_disorders_table=false; this.show_findings_table=false; this.show_procedures_table=true; this.show_substances_table=false; this.page=1;}
+      else if (tab == 'substances') {this.show_disorders_table=false; this.show_findings_table=false; this.show_procedures_table=false; this.show_substances_table=true; this.page=1;}
+    },
+
     top_disorder_table_updating: false,
     top_disorders: [],
     fill_top_disorder_table(qid) {
@@ -713,7 +725,7 @@ function data() {
       for (let i = 0; i < this.result_arr.length; i++) {
         if (this.result_arr[i]['str'].search('(disorder)') != -1) {
           this.top_disorders.push({...this.result_arr[i]});
-          if (this.top_disorders.length >= 10) {
+          if (this.top_disorders.length >= 50) {
             break;
           }
         }
@@ -729,7 +741,7 @@ function data() {
       for (let i = 0; i < this.result_arr.length; i++) {
         if (this.result_arr[i]['str'].search('(finding)') != -1) {
           this.top_findings.push({...this.result_arr[i]});
-          if (this.top_findings.length >= 10) {
+          if (this.top_findings.length >= 50) {
             break;
           }
         }
@@ -745,7 +757,7 @@ function data() {
       for (let i = 0; i < this.result_arr.length; i++) {
         if (this.result_arr[i]['str'].search('(procedure)') != -1) {
           this.top_procedures.push({...this.result_arr[i]});
-          if (this.top_procedures.length >= 10) {
+          if (this.top_procedures.length >= 50) {
             break;
           }
         }
@@ -761,7 +773,7 @@ function data() {
       for (let i = 0; i < this.result_arr.length; i++) {
         if (this.result_arr[i]['str'].search('(substance)') != -1) {
           this.top_substances.push({...this.result_arr[i]});
-          if (this.top_substances.length >= 10) {
+          if (this.top_substances.length >= 50) {
             break;
           }
         }

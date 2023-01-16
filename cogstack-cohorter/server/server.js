@@ -10,6 +10,9 @@ app.use(express.static(path.join(__dirname, '../client/public')));
 app.use(express.json());
 //app.use(express.urlencoded({extended: false}));
 
+let port = process.env.PORT || 3000;
+console.log('Loading data...');
+
 // index all the snomed concepts
 const snomed_terms = require('./data/snomed_terms.json');
 const cui_pt2ch = require('./data/cui_pt2ch.json');
@@ -155,6 +158,8 @@ for (let i=0;i<all_ptt_cnt;i++) ptt2cui_tsp_arr[i] = {};
     }
     console.log('Finished reading cui2ptt_tsp');
     console.timeEnd('cui2ptt_tsp');
+    console.log('Loading data...Finsihed');
+    console.log(`Access the app on port ${port}`);
 })();
 //========================================================
 
@@ -535,8 +540,6 @@ app.post('/compare_query', (req, res) => {
     }
 });
 //========================================================
-
-let port = process.env.PORT || 3000;
 
 app.listen(port, () => {
     console.log(`Server listening on localhost port ${port}`);
