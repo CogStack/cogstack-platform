@@ -2,6 +2,8 @@ const fs = require('fs');
 const path = require("path");
 const readline = require("readline");
 const express = require("express");
+const session = require('express-session')
+const MemoryStore = require('memorystore')(session)
 const { Document } = require("flexsearch");
 
 const app = express();
@@ -9,6 +11,15 @@ const app = express();
 app.use(express.static(path.join(__dirname, '../client/public')));
 app.use(express.json());
 //app.use(express.urlencoded({extended: false}));
+app.use(session({
+    cookie: { maxAge: 86400000 },
+    store: new MemoryStore({
+      checkPeriod: 86400000 // prune expired entries every 24h
+    }),
+    resave: false,
+    saveUninitialized: false,
+    secret: Math.random().toString().replace('.', '')
+}))
 
 let port = process.env.PORT || 3000;
 console.log('Loading data...');
@@ -16,6 +27,9 @@ console.log('Loading data...');
 // index all the snomed concepts
 const snomed_terms = require('./data/snomed_terms.json');
 const cui_pt2ch = require('./data/cui_pt2ch.json');
+
+// for admin login
+const admin_pwd = process.env.PASSWORD || 'admin_pass';
 
 //========================================================
 // db variables
@@ -538,6 +552,47 @@ app.post('/compare_query', (req, res) => {
         console.log('/compare_query err:', err);
         res.status(200).json({data:[]}).end();
     }
+});
+//========================================================
+
+//========================================================
+// api to handle admin_login
+app.post("/admin_login", (req, res) => {
+    console.log('/admin_login')
+    const pwd = req.body.password;
+    if (pwd == admin_pwd) {
+        req.session.logged_in = true;
+        res.status(200).json({'msg':'ok'}).end();
+    } else {
+        req.session.destroy((err) => console.log(err));
+        res.status(200).json({'msg':'error'}).end();
+    }
+});
+//========================================================
+
+//========================================================
+// api to handle admin_logout
+app.post("/admin_logout", (req, res) => {
+    console.log('/admin_logout')
+    req.session.destroy((err) => console.log(err));
+    res.status(200).json({'msg':'ok'}).end();
+});
+//========================================================
+
+//========================================================
+// api to handle export patient list
+app.post("/export", (req, res) => {
+    console.log('/export')
+    if (!req.session.logged_in || req.session.logged_in !== true) {
+        res.status(200).json({'msg':'error'}).end();
+        return;
+    } else {
+        const data = req.body;
+        console.log(data);
+        const ptt_ids = [...global_results[data.qid]['all']];
+        const ptt_codes = ptt_ids.map((id) => ptt_id2code[id]);
+        res.status(200).json({ptt_codes}).end();
+    } 
 });
 //========================================================
 

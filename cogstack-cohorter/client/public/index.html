@@ -18,9 +18,17 @@
     </style>
   </head>
   <body>
-    <div id="load_query_panel" class="flex items-center justify-center h-screen w-screen" x-show="load_query_panel_show">
+    <div id="load_query_panel" class="flex flex-col items-center justify-center h-screen w-screen" x-show="load_query_panel_show">
       <input type="file" id="file_selector" name="file_selector" accept=".txt">
       <button @click="load_query_panel_show = false;"> Cancel </button>
+    </div>
+    <div id="admin_login_panel" class="flex flex-col items-center justify-center h-screen w-screen" x-show="admin_login_panel_show">
+      <div class="flex flex-row">
+        <input x-model="admin_password_input" type="password" id="password" name="password" placeholder="admin password">
+        <button @click="handle_admin_login" class="mx-2"> Login </button>
+        <button @click="admin_login_panel_show = false;" class="mx-2"> Cancel </button>
+      </div>
+      <div x-text="admin_login_message" class="text-orange-600"></div>
     </div>
     <div class="flex h-screen bg-gray-50" :class="{ 'overflow-hidden': isSideMenuOpen}">
       <!-- Desktop sidebar -->
@@ -512,6 +520,21 @@
                       <li class="flex">
                         <div @click="load_query" class="cursor-pointer inline-flex items-center w-full px-2 py-1 text-sm font-semibold transition-colors duration-150 rounded-md hover:bg-gray-100 hover:text-gray-800">
                           <span>Load Query</span>
+                        </div>
+                      </li>
+                      <li class="flex" x-show="!admin_logged_in">
+                        <div @click="admin_login" class="cursor-pointer inline-flex items-center w-full px-2 py-1 text-sm font-semibold transition-colors duration-150 rounded-md hover:bg-gray-100 hover:text-gray-800">
+                          <span>Admin Login</span>
+                        </div>
+                      </li>
+                      <li class="flex" x-show="admin_logged_in">
+                        <div @click="admin_logout" class="cursor-pointer inline-flex items-center w-full px-2 py-1 text-sm font-semibold transition-colors duration-150 rounded-md hover:bg-gray-100 hover:text-gray-800">
+                          <span>Admin Logout</span>
+                        </div>
+                      </li>
+                      <li class="flex" x-show="admin_logged_in">
+                        <div @click="export_patients" class="cursor-pointer inline-flex items-center w-full px-2 py-1 text-sm font-semibold transition-colors duration-150 rounded-md hover:bg-gray-100 hover:text-gray-800">
+                          <span>Export patients</span>
                         </div>
                       </li>
                     </ul>
