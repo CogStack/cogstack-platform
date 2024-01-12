@@ -9,10 +9,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Build Docker Image with Random Data
-      run: docker build --tag cohortingtool/webapp:random --build-arg random=true .
+      run: |
+        docker build -t cogstacksystems/cogstackcohort-randomdata:latest --build-arg random=true .
+        docker build -t cogstacksystems/cogstackcohort:latest --build-arg random=false .
 
-    - name: Run Docker Container
-      run: docker run --name cogstackcohort-random -d -p 3000:3000 cohortingtool/webapp:random
+    - name: Login to DockerHub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+        
+    - name: Push to DockerHub
+      env:
+        IMAGE_TAG: ${{ env.RELEASE_VERSION }}
+      run: |
+        docker push cogstacksystems/cogstackcohort-randomdata:latest
+        docker push cogstacksystems/cogstackcohort:latest
