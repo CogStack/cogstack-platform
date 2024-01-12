@@ -23,8 +23,6 @@ jobs:
         password: ${{ secrets.DOCKERHUB_TOKEN }}
         
     - name: Push to DockerHub
-      env:
-        IMAGE_TAG: ${{ env.RELEASE_VERSION }}
       run: |
         docker push cogstacksystems/cogstackcohort-randomdata:latest
         docker push cogstacksystems/cogstackcohort:latest
