@@ -599,17 +599,17 @@
               <!-- Card -->
               <div class="flex items-center p-4 border bg-white rounded-lg shadow-xs">
                 <div>
-                  <p class="mb-2 text-sm font-medium text-gray-600 dark:text-gray-400">No. of patients satisfying your query</p>
-                  <p class="text-4xl font-semibold text-gray-700 dark:text-gray-200" x-text="query_result['all'].toLocaleString()"></p>
+                  <p class="mb-2 text-sm font-medium text-gray-600">No. of patients satisfying your query</p>
+                  <p class="text-4xl font-semibold text-gray-700" x-text="query_result['all'].toLocaleString()"></p>
                 </div>
               </div>
               <template x-if="query_result['individual'] && query_result['individual'].length > 0">
                 <template x-for="(q, q_ind) in query">
                   <template x-if="q_ind % 2 == 0">
-                    <div class="flex items-center p-4 border bg-white rounded-lg shadow-xs dark:bg-gray-800">
+                    <div class="flex items-center p-4 border bg-white rounded-lg shadow-xs">
                       <div class="w-full relative">
                         <p x-text="'No. of patients ' + q['with'] + ' ' + q['str'] + ' in database'" class="truncate overflow-hidden w-full mb-2 text-sm font-thin text-gray-600 dark:text-gray-400" data-bs-toggle="tooltip" :title="'No. of patients ' + q['with'] + ' ' + q['str'] + ' in database'"></p>
-                        <p class="text-4xl font-semibold text-gray-700 dark:text-gray-200" x-text="query_result['individual'].slice(parseInt(q_ind/2), parseInt(q_ind/2)+1).toLocaleString()"></p>
+                        <p class="text-4xl font-semibold text-gray-700" x-text="query_result['individual'].slice(parseInt(q_ind/2), parseInt(q_ind/2)+1).toLocaleString()"></p>
                       </div>
                     </div>
                   </template>
@@ -627,31 +627,31 @@
 
             <div class="grid gap-6 mb-8 md:grid-cols-2">
               <!-- Gender Chart -->
-              <div class="min-w-0 p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800 border">
-                <h4 class="mb-4 font-semibold text-gray-800 dark:text-gray-300">Gender</h4>
+              <div class="min-w-0 p-4 bg-white rounded-lg shadow-xs border">
+                <h4 class="mb-4 font-semibold text-gray-800">Gender</h4>
                 <div class="w-full h-96" id="gender_chart"></div>
               </div>
               <!-- Alive Chart -->
-              <div class="min-w-0 p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800 border">
-                <h4 class="mb-4 font-semibold text-gray-800 dark:text-gray-300">Alive / Died</h4>
+              <div class="min-w-0 p-4 bg-white rounded-lg shadow-xs border">
+                <h4 class="mb-4 font-semibold text-gray-800">Alive / Died</h4>
                 <div class="w-full h-96" id="alive_chart"></div>
               </div>
               <!-- Age Chart -->
-              <div class="min-w-0 p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800 border">
-                <h4 class="mb-4 font-semibold text-gray-800 dark:text-gray-300">Age <span class="text-xs font-thin" :class="age_chart_updating ? '' : 'hidden'">Updating...</span></h4>
+              <div class="min-w-0 p-4 bg-white rounded-lg shadow-xs border">
+                <h4 class="mb-4 font-semibold text-gray-800">Age <span class="text-xs font-thin" :class="age_chart_updating ? '' : 'hidden'">Updating...</span></h4>
                 <div class="w-full h-96" id="age_chart"></div>
               </div>
               <!-- Ethnicity Chart -->
-              <div class="min-w-0 p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800 border">
-                <h4 class="mb-4 font-semibold text-gray-800 dark:text-gray-300">Ethnicity</h4>
+              <div class="min-w-0 p-4 bg-white rounded-lg shadow-xs border">
+                <h4 class="mb-4 font-semibold text-gray-800">Ethnicity</h4>
                 <div class="w-full h-96" id="ethnicity_chart"></div>
               </div>
             </div>
 
             <div class="grid gap-6 mb-8 md:grid-cols-1">
               <!-- Top Terms Chart -->
-              <div class="min-w-0 p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800 border">
-                <h4 class="mb-4 font-semibold text-gray-800 dark:text-gray-300">Most common SNOMED terms among patients found <span class="text-xs font-thin" :class="top_terms_chart_updating ? '' : 'hidden'">Updating...</span></h4>
+              <div class="min-w-0 p-4 bg-white rounded-lg shadow-xs border">
+                <h4 class="mb-4 font-semibold text-gray-800">Most common SNOMED terms among patients found <span class="text-xs font-thin" :class="top_terms_chart_updating ? '' : 'hidden'">Updating...</span></h4>
                 <div class="w-full h-96" id="top_terms_chart"></div>
               </div>
             </div>
@@ -681,7 +681,7 @@
               <div class="w-full overflow-x-auto">
                 <table class="border w-full whitespace-no-wrap transition-all">
                   <thead>
-                    <tr class="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase border-b dark:border-gray-700 bg-gray-50">
+                    <tr class="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase border-b bg-gray-50">
                       <th class="px-4 py-3">Rank</th>
                       <th class="px-4 py-3">Name</th>
                       <th class="px-4 py-3">Count</th>
@@ -723,7 +723,7 @@
               <div class="w-full overflow-x-auto">
                 <table class="border w-full whitespace-no-wrap transition-all">
                   <thead>
-                    <tr class="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase border-b dark:border-gray-700 bg-gray-50">
+                    <tr class="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase border-b bg-gray-50">
                       <th class="px-4 py-3">Rank</th>
                       <th class="px-4 py-3">Name</th>
                       <th class="px-4 py-3">Count</th>
@@ -765,7 +765,7 @@
               <div class="w-full overflow-x-auto">
                 <table class="border w-full whitespace-no-wrap transition-all">
                   <thead>
-                    <tr class="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase border-b dark:border-gray-700 bg-gray-50">
+                    <tr class="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase border-b bg-gray-50">
                       <th class="px-4 py-3">Rank</th>
                       <th class="px-4 py-3">Name</th>
                       <th class="px-4 py-3">Count</th>
@@ -807,7 +807,7 @@
               <div class="w-full overflow-x-auto">
                 <table class="border w-full whitespace-no-wrap transition-all">
                   <thead>
-                    <tr class="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase border-b dark:border-gray-700 bg-gray-50">
+                    <tr class="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase border-b bg-gray-50">
                       <th class="px-4 py-3">Rank</th>
                       <th class="px-4 py-3">Name</th>
                       <th class="px-4 py-3">Count</th>
@@ -847,8 +847,8 @@
             <!-- Compare SNOMED terms -->
             <!-- Search input -->
             <div class="grid gap-6 mb-8 md:grid-cols-1 h-screen">
-              <div class="min-w-0 p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800 border">
-                <h4 class="mb-4 font-semibold text-gray-800 dark:text-gray-300">Compare SNOMED terms among patients found <span class="text-xs font-thin" :class="compare_query_updating ? '' : 'hidden'">Updating...</span></h4>
+              <div class="min-w-0 p-4 bg-white rounded-lg shadow-xs border">
+                <h4 class="mb-4 font-semibold text-gray-800">Compare SNOMED terms among patients found <span class="text-xs font-thin" :class="compare_query_updating ? '' : 'hidden'">Updating...</span></h4>
                 <div class="flex justify-center items-center flex-1 h-16">
                   <div class="relative mr-2">Add terms:
                     <!--
@@ -893,8 +893,8 @@
                   </div>
                 </div>
 
-                <div class="min-w-0 p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800 border">
-                  <h4 class="mb-4 font-semibold text-gray-800 dark:text-gray-300"></h4>
+                <div class="min-w-0 p-4 bg-white rounded-lg shadow-xs border">
+                  <h4 class="mb-4 font-semibold text-gray-800"></h4>
                   <div class="w-full h-96" id="compare_chart"></div>
                 </div>
               </div>
