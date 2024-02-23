@@ -501,7 +501,7 @@ function data() {
         this.clear_charts();
         return;
       }
-      if (query_result_resp.query_result['all'] <= 20) {
+      if (query_result_resp.query_result['all'] <= 10) { // todo: change to env var
         this.running_status = 'The patient count is too low, please try another query.';
         this.reset_results();
         this.clear_charts();
