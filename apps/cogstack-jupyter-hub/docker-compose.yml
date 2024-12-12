@@ -1,38 +1,48 @@
-version: '3.5'
-
 services:
-  jupyter-hub:
+  cogstack-jupyter-hub:
     build: .
     container_name: cogstack-jupyter-hub
     restart: always
     environment:
-      - JUPYTER_ENABLE_LAB=yes
+      - http_proxy=$HTTP_PROXY
+      - https_proxy=$HTTPS_PROXY
+      - no_proxy=$NO_PROXY
+      - JUPYTERHUB_INTERNAL_PORT=${JUPYTERHUB_INTERNAL_PORT:-8888}
+      - JUPYTERHUB_INTERNAL_PROXY_API_PORT=${JUPYTERHUB_INTERNAL_PROXY_API_PORT:-8887}
+      - JUPYTERHUB_SSL_PORT=${JUPYTERHUB_SSL_PORT:-443}
+    env_file:
+      - ./env/jupyter.env
     volumes:
-      - notebooks:/home/jovyan/notebooks
-      - "./security/jupyter.pem:/etc/ssl/notebook/jupyter.pem:ro"
-      - "./security/jupyter.key:/etc/ssl/notebook/jupyter.key:ro"
-      - "./security/root-ca.pem:/etc/ssl/notebook/root-ca.pem:ro"
-      - ${LOCAL_MODELS_PATH}/:/cogstack/models/
-      - ${LOCAL_DATA_PATH}/:/cogstack/data/
-      - ${LOCAL_MODELS_PATH}/:/home/jovyan/models/
-      - ${LOCAL_DATA_PATH}/:/home/jovyan/data/
-    command: "start-notebook.sh \
-                --keyfile=/etc/ssl/notebook/jupyter.key \
-                --certfile=/etc/ssl/notebook/jupyter.pem \
-                --NotebookApp.password=${HUB_PASSWORD}"
-                #--client-ca=/etc/ssl/notebook/root-ca.pem
+      - jupyter-hub-shared-scratch:/home/jovyan/scratch
+      - jupyter-hub-vol:/etc/jupyterhub
+      # Security configs
+      - ./${DEFAULT_SECURITY_DIR:-./security/}root-ca.key:/etc/jupyterhub/root-ca.key:ro
+      - ./${DEFAULT_SECURITY_DIR:-./security/}root-ca.pem:/etc/jupyterhub/root-ca.pem:ro
+      - ./config/jupyterhub_cookie_secret:/etc/jupyterhub/jupyterhub_cookie_secret:ro
+      # User list and jupyter config
+      - ./config/jupyterhub_config.py:/etc/jupyterhub/jupyterhub_config.py:ro
+      - ./config/userlist:/etc/jupyterhub/userlist:ro
+      - ./config/teamlist:/etc/jupyterhub/teamlist:ro
+      # Give access to Docker socket
+      - /var/run/docker.sock:/var/run/docker.sock
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 262144
     ports:
-      - "10000:8888"
-      - "5000:5000"
-      - "8080:8080"
+      - "${JUPYTERHUB_INTERNAL_PORT:-8888}:${JUPYTERHUB_SSL_PORT:-443}"
     networks:
-      - jupyter-net
+      - cognet
+    extra_hosts:
+      - ${ELASTICSEARCH_1_HOST_NAME:-test-1:0.0.0.0}
+      - ${ELASTICSEARCH_2_HOST_NAME:-test-2:0.0.0.0}
+      - ${ELASTICSEARCH_3_HOST_NAME:-test-3:0.0.0.0}
+      - ${KIBANA_HOST_NAME:-test-4:0.0.0.0}
+      - ${NIFI_HOST_NAME:-test-5:0.0.0.0}
 
 networks:
-  jupyter-net:
+  cognet:
     name: cogstack-net
-    driver: bridge
-
-volumes:
-  notebooks:
-    driver: local

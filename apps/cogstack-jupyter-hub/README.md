@@ -1,13 +1,55 @@
-# Archived
-
-This repo is not maintained. The custom jupyter-hub image is specified in the [CogStack-Nifi](https://github.com/CogStack/CogStack-NiFi/tree/master/services/jupyter-hub) project. 
-
 # Introduction
-This repository contains a custom Jupyter Hub Docker image with example notebooks to play with.
 
-The ElasticSearch and PostgreSQL databases have been set up and made availabe as described in [CogStack-NiFi](https://github.com/cogstack/cogstack-nifi).
+This repo has been reinstated. The custom jupyter-hub image is specified in the [CogStack-Nifi](https://github.com/CogStack/CogStack-NiFi/tree/master/services/jupyter-hub) project.
 
-The example data was been generated using Synthea and MTSamples. 
+This repository contains a custom Jupyter Hub Docker image with example notebooks to play with. \
+The notebooks provided are usually kept up to date with the example data that has been generated using Synthea and MTSamples in the [CogStack-NiFi](https://github.com/cogstack/cogstack-nifi) repository. Additionally, the [working with cogstack](https://github.com/CogStack/working_with_cogstack) scripts are included for production use.
 
-# Status
-Work in progress...
+All notebooks are available in the [notebooks](./notebooks/) folder.
+
+The previous version of the jupyter notebook provided a simple but common environment for people to work on, the new version operaties in a centralised manner, the hub docker container starts individual containers for each user, it also allows for easier sharing of data between users via groups (this feature needs testing).
+
+There are 3 images built in this repo:
+
+    - jupyter-hub: the hub from which individual user containers are started.
+    - jupyter-singleuser: image used for each user's container, an isolated environment.
+    - jupyter-singleuser-gpu: same as `jupyter-singleuser` but has GPU packages.
+
+Images are available for both x86/ARM architectures.
+
+# Usage & configuration
+
+ENV variables are located in: [env/jupyter.env](./env/jupyter.env).\
+Please check the ENV file for additional information, every variable is commented and described.
+
+Full and more in-depth knowledge on the configuration itself is available in the primary repository [official documentation](https://cogstack-nifi.readthedocs.io/en/latest/deploy/services.html#id12).
+
+## Enabling GPU support
+
+Pre-requisites (for Linux and Windows): - for Linux, you need to install the nvidia-docker2 package / nvidia toolkit package that adds gpu spport for docker, official documentation here - this also needs to be done for Windows machines, please read the the documentation for WSL2 [here](https://docs.nvidia.com/cuda/wsl-user-guide/index.html).
+
+In [env/jupyter.env](./env/jupyter.env):
+
+    - change `DOCKER_ENABLE_GPU_SUPPORT` from `false` to `true`.
+    - change `DOCKER_NOTEBOOK_IMAGE` from `cogstacksystems/jupyter-singleuser:latest` to `cogstacksystems/jupyter-singleuser-gpu:latest`.
+    - in the main repo folder, execute the following command in terminal: `source env/jupyter.env`, then `docker compose up -d`.
+
+*Use any release version you want instead of `latest` as necessary .
+
+## User resource limits
+
+Users can have their resources limited (currently only CPU + RAM), there is a default `USER` and `ADMIN` role, future work will add more configurable roles.\
+Change the coresponding variables in [env/jupyter.env](./env/jupyter.env):
+
+    *   General user resource cap per container, default 2 cores, 2GB ram:
+        - `RESOURCE_ALLOCATION_USER_CPU_LIMIT`="2"
+        - `RESOURCE_ALLOCATION_USER_RAM_LIMIT`="2.0G"
+
+    *   Admin resource cap per container, default 2 cores, 4 GB RAM:
+        - `RESOURCE_ALLOCATION_ADMIN_CPU_LIMIT`="2"
+        - `RESOURCE_ALLOCATION_ADMIN_RAM_LIMIT`="4.0G"
+
+## Sharing storage between users
+
+It is possible to configure a `scratch` folder/partition that is just a volume that will be shared by multiple users belonging to the same group.
+This feature is currently experiemntal, it requires admins to add users to the same group and then define a folder to be shared (difficult as it is mainly done via config file at present) .
