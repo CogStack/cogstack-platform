@@ -24,6 +24,17 @@ Please check the ENV file for additional information, every variable is commente
 
 Full and more in-depth knowledge on the configuration itself is available in the primary repository [official documentation](https://cogstack-nifi.readthedocs.io/en/latest/deploy/services.html#id12).
 
+## Access and account control
+To access Jupyter Hub on the host machine (e.g.localhost), one can type in the browser `https://localhost:8888`.
+
+Creating accounts for other users is possible, just go to the admin page `https://localhost:8888/hub/admin#/`, click on add users and follow the instructions (make sure usernames are lower-cased and DO NOT contain symbols, if usernames contain uppercase they will be converted to lower case in the creation process).
+
+The default password is blank, you can set the password for the admin user the first time you LOG IN, remember it.
+
+Or you can set the password is defined by a local variable `JUPYTERHUB_PASSWORD` in `.env` file that is the password SHA-1 value if the authenticator is set to either LocalAuthenticator or Native read more in [jupyter doc](https://jupyterhub.readthedocs.io/en/stable/api/auth.html?highlight#) about this.
+
+<strong><u>Users must use the "/work/"directory for their work, otherwise files might not get saved!</u></strong>
+
 ## Enabling GPU support
 
 Pre-requisites (for Linux and Windows): - for Linux, you need to install the nvidia-docker2 package / nvidia toolkit package that adds gpu spport for docker, official documentation here - this also needs to be done for Windows machines, please read the the documentation for WSL2 [here](https://docs.nvidia.com/cuda/wsl-user-guide/index.html).
