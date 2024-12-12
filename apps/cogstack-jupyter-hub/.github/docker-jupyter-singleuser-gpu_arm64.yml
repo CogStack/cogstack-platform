@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     
     env:
-      working-directory: ./services/jupyter-hub
+      working-directory: ./
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -80,8 +80,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           platforms: linux/arm64
-          context : ./services/jupyter-hub
-          file : "./services/jupyter-hub/Dockerfile_singleuser_gpu"
+          context : ./
+          file : "./Dockerfile_singleuser_gpu"
           allow: network.host
           github-token: ${{ github.token }}
           tags: cogstacksystems/jupyter-singleuser-gpu:${{ env.RELEASE_VERSION }}
