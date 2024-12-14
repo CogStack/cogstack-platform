@@ -72,6 +72,8 @@ jobs:
         with:
           platforms: linux/arm64
           context : ./
+          build-args: | 
+            CPU_ARCHITECTURE=arm64
           file : "./Dockerfile"
           allow: network.host
           github-token: ${{ github.token }}
