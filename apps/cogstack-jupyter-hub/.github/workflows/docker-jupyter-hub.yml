@@ -66,12 +66,18 @@ jobs:
         id: set_release_version_latest
         if: ${{ env.RELEASE_VERSION == 'master' }}
         run: echo "RELEASE_VERSION=latest" >> $GITHUB_ENV
+      
+      - name: set CPU architecture
+        id: set_cpu_architecture
+        run: echo "CPU_ARCHITECTURE=amd64" >> $GITHUB_ENV
 
       - name: Build and push Docker Jupyter image
         uses: docker/build-push-action@v6
         with:
           platforms: linux/amd64
           context : ./
+          build-args: | 
+            CPU_ARCHITECTURE=amd64
           file : "./Dockerfile"
           allow: network.host
           github-token: ${{ github.token }}

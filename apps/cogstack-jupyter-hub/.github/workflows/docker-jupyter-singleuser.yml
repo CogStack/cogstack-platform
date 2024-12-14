@@ -80,7 +80,7 @@ jobs:
         id: set_cpu_architecture
         run: echo "CPU_ARCHITECTURE=amd64" >> $GITHUB_ENV
 
-      - name: Build and push Docker Jupyter singleuser image with GPU support
+      - name: Build and push Docker Jupyter singleuser image
         uses: docker/build-push-action@v6
         env:
           CPU_ARCHITECTURE: "amd64"
@@ -89,10 +89,10 @@ jobs:
           platforms: linux/amd64
           build-args: | 
             CPU_ARCHITECTURE=amd64
-          file : "./Dockerfile_singleuser_gpu"
+          file : "./Dockerfile_singleuser"
           allow: network.host
           github-token: ${{ github.token }}
-          tags: cogstacksystems/jupyter-singleuser-gpu:${{ env.RELEASE_VERSION }}
+          tags: cogstacksystems/jupyter-singleuser:${{ env.RELEASE_VERSION }}
           push: true
 
       - name: Image digest
