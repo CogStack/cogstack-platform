@@ -43,6 +43,12 @@ services:
       - ${KIBANA_HOST_NAME:-test-4:0.0.0.0}
       - ${NIFI_HOST_NAME:-test-5:0.0.0.0}
 
+volumes:
+  jupyter-hub-vol:
+    driver: local
+  jupyter-hub-shared-scratch:
+    driver: local
+
 networks:
   cognet:
     name: cogstack-net

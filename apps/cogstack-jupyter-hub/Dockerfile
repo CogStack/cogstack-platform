@@ -1,4 +1,4 @@
-FROM jupyterhub/jupyterhub:4
+FROM jupyterhub/jupyterhub:5
 
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
@@ -17,6 +17,9 @@ ENV no_proxy=$NO_PROXY
 ENV DEBIAN_FRONTEND=noninteractive
 ENV DEBIAN_PRIORITY=critical
 
+ARG CPU_ARCHITECTURE
+ENV CPU_ARCHITECTURE ${CPU_ARCHITECTURE}
+
 USER root
 
 RUN apt-get update && apt-get upgrade -y && \
@@ -32,19 +35,19 @@ RUN apt-add-repository multiverse && \
 RUN echo "deb http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list
 RUN echo "deb-src http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list
 
-# add arm64 arch
-RUN echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list
-RUN echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted universe multiverse" | tee -a /etc/apt/sources.list
-RUN echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list
-RUN echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list
+# add arch
+RUN echo "deb [arch=${CPU_ARCHITECTURE}] http://ports.ubuntu.com/ubuntu-ports jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list
+RUN echo "deb [arch=${CPU_ARCHITECTURE}] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted universe multiverse" | tee -a /etc/apt/sources.list
+RUN echo "deb [arch=${CPU_ARCHITECTURE}] http://ports.ubuntu.com/ubuntu-ports jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list
+RUN echo "deb [arch=${CPU_ARCHITECTURE}] http://ports.ubuntu.com/ubuntu-ports jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list
 
-RUN echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list
-RUN echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted universe multiverse" | tee -a /etc/apt/sources.list
-RUN echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list
-RUN echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list
+RUN echo "deb-src [arch=${CPU_ARCHITECTURE}] http://ports.ubuntu.com/ubuntu-ports jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list
+RUN echo "deb-src [arch=${CPU_ARCHITECTURE}] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted universe multiverse" | tee -a /etc/apt/sources.list
+RUN echo "deb-src [arch=${CPU_ARCHITECTURE}] http://ports.ubuntu.com/ubuntu-ports jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list
+RUN echo "deb-src [arch=${CPU_ARCHITECTURE}] http://ports.ubuntu.com/ubuntu-ports jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list
 
 RUN apt-get update && apt-get upgrade -y && \
-    apt-get  --force-yes -o Dpkg::Options::="--force-confold" --force-yes -o Dpkg::Options::="--force-confdef" -fuy  dist-upgrade  && \
+    apt-get --force-yes -o Dpkg::Options::="--force-confold" --force-yes -o Dpkg::Options::="--force-confdef" -fuy  dist-upgrade  && \
     apt-get install -y \
     gnupg \
     libssl-dev \

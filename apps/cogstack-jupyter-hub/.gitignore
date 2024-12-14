@@ -11,10 +11,10 @@
 docs/build/*
 
 # IDE envs and system folders
-.DS_Store
-.idea
-.vscode
-.ipynb_checkpoints
+**.DS_Store
+**.idea
+**.vscode
+**.ipynb_checkpoints
 **__pycache__
 
 # env files with passwords or local paths

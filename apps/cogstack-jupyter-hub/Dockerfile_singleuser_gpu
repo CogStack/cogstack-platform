@@ -1,4 +1,4 @@
-FROM jupyterhub/singleuser:4
+FROM jupyterhub/singleuser:5
 
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
@@ -16,6 +16,9 @@ ENV no_proxy=$NO_PROXY
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV DEBIAN_PRIORITY=critical
+
+ARG CPU_ARCHITECTURE
+ENV CPU_ARCHITECTURE ${CPU_ARCHITECTURE}
 
 ENV NVIDIA_DRIVER_VERSION=510
 
@@ -38,33 +41,38 @@ RUN apt-add-repository multiverse && \
 RUN echo "deb http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list
 RUN echo "deb-src http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list
 
-# add arm64 arch
-RUN echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list
-RUN echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted universe multiverse" | tee -a /etc/apt/sources.list
-RUN echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list
-RUN echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list
+RUN if [ "${CPU_ARCHITECTURE}" = "amd64" ]; then \
+        echo "deb http://archive.ubuntu.com/ubuntu/ jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list \
+        echo "deb-src http://archive.ubuntu.com/ubuntu/ jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list \
+        echo "deb http://archive.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list \
+        echo "deb-src http://archive.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list \
+        echo "deb http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list \
+        echo "deb-src http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list \
+        echo "deb http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list \
+        echo "deb-src http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list \
+    elif [ "${CPU_ARCHITECTURE}" = "arm64" ]; then \
+        echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list \
+        echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted universe multiverse" | tee -a /etc/apt/sources.list \
+        echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list \
+        echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list \
+        echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list \
+        echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted universe multiverse" | tee -a /etc/apt/sources.list \
+        echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list \
+        echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list \
+    else \
+        echo "No valid CPU_ARCHITECTURE specified"; \
+    fi
 
-RUN echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list
-RUN echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted universe multiverse" | tee -a /etc/apt/sources.list
-RUN echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list
-RUN echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list
-# remove newer python version, freeze other versions for max compatibility before updates
-# RUN apt-mark hold python3.10 python3.9 python3.8 python3 python3-gi python3-dev python3-distutils python3-lib2to3
-#RUN apt-get purge --auto-remove python3.10
-
-RUN apt-get update && apt-get upgrade -y && \
-    apt-get  --force-yes -o Dpkg::Options::="--force-confold" --force-yes -o Dpkg::Options::="--force-confdef" -fuy  dist-upgrade  && \
+# run updates
+RUN apt-get update && apt-get upgrade -y && dpkg --configure -a && \
+    apt-get --force-yes -o Dpkg::Options::="--force-confold" --force-yes -o Dpkg::Options::="--force-confdef" -fuy full-upgrade && \
     apt-get autoremove -y && \
     apt-get clean -y && \
     apt-get install -y \
     gnupg \
     ssl-cert \ 
-    libsqlite3-dev \
     libevent-dev \
-    python3-dev \
-    python3.10-dev \
-    python3-all-dev \
-    python3-pip \
+    libsqlite3-dev \
     libxml2-dev \
     libbz2-dev \
     libxslt1-dev \
@@ -93,24 +101,36 @@ RUN apt-get update && apt-get upgrade -y && \
     ssh \
     jq \
     htop \
-    libcurl4 libcurl4-openssl-dev \
     libgl1-mesa-glx libegl1-mesa libxrandr2 libxrandr2 libxss1 \
     libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6 \
     r-base
 
+
+# remove newer python version, freeze other versions for max compatibility before updates
+RUN apt --fix-missing purge $(dpkg -l | grep 'python3\.1[01]' | awk '{print $2}')
+RUN apt --fix-broken install
+RUN apt-get purge --auto-remove python3.10
+
+# python 3.11 repo
+RUN add-apt-repository ppa:deadsnakes/ppa
+RUN apt-get update -y && apt-get upgrade -y
+
 # python 3.11
-RUN apt-get install -y python3.11-full python3.11-dev
+RUN apt-get install -y python3.11-full python3.11-dev python3-pip python3-venv
 
 # be careful, this conflicts
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
 
 RUN apt-get update && apt-get upgrade -y 
 
-# GPU requirements
+
+################################################################################################################################################################
+# GPU requirements section
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ocl-icd-dev ocl-icd-opencl-dev ocl-icd-libopencl1 oclgrind opencl-headers libtiff-dev build-essential dkms 
 
 # Not necessary, will corrupt nvidia-doker on install, use with care
-# RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends apnvidia-driver-$NVIDIA_DRIVER_VERSION pocl-opencl-icd intel-opencl-icd mesa-opencl-icd nvidia-opencl-dev libpocl-dev beignet-opencl-icd libnvidia-egl-wayland-dev nvidia-cuda-dev nvidia-cuda-toolkit nvidia-headless-$NVIDIA_DRIVER_VERSION
+# RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends apnvidia-driver-$NVIDIA_DRIVER_VERSION pocl-opencl-icd intel-opencl-icd \
+#   mesa-opencl-icd nvidia-opencl-dev libpocl-dev beignet-opencl-icd libnvidia-egl-wayland-dev nvidia-cuda-dev nvidia-cuda-toolkit nvidia-headless-$NVIDIA_DRIVER_VERSION
 
 # NVIDIA Docker
 RUN export distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
@@ -122,11 +142,12 @@ RUN curl -s -L https://nvidia.github.io/libnvidia-container/experimental/$(. /et
 RUN apt-get update && apt-get upgrade -y 
 
 RUN apt-get install -y nvidia-docker2 nvidia-container-toolkit
+################################################################################################################################################################
 
 # Microsoft repos
 RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
-RUN curl https://packages.microsoft.com/config/ubuntu/21.04/prod.list > /etc/apt/sources.list.d/mssql-release.list
 RUN curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list >> /etc/apt/sources.list.d/mssql-release.list
+RUN echo "deb [arch=arm64] https://packages.microsoft.com/ubuntu/22.04/prod jammy main" | tee -a /etc/apt/sources.list
 
 # install remaining packages
 RUN apt-get update && apt-get upgrade -y
@@ -138,22 +159,18 @@ RUN echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' >> ~/.bashrc
 # deps for psycopg2
 RUN apt-get install -y postgresql-server-dev-all --no-install-recommends
 
-# install rust, medcat requirement
-# RUN curl -y --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-
-# needed for rust & cargo
-# RUN bash $HOME/.cargo/env
-
 # clean up apt
 RUN apt-get clean autoclean && apt-get autoremove --purge -y
 
 ######################################## Python / PIP SECTION ########################################
 RUN conda update conda
 RUN conda install --quiet --yes \
+    ipykernel \
+    pip \
     elasticsearch \
+    opensearch-py \
     psycopg2 \
-    pyodbc \
-    pymssql
+    pyodbc
 
 RUN conda clean --all -f -y
 
@@ -173,7 +190,7 @@ RUN pip3 install --no-cache-dir jupyterhub-nanowireauthenticator jupyterhub-ldap
 RUN pip3 install --no-cache-dir pytesseract ipyparallel py7zr cython isort html2text jsoncsv simplejson detect wheel nltk keras bokeh seaborn matplotlib graphviz plotly tqdm
 RUN pip3 install --no-cache-dir pymssql mysql-connector-python cx-Oracle dataclasses numpy matplotlib pandas dill jsonpickle jsonext psycopg2 psycopg2-binary pyodbc openpyxl
 RUN pip3 install --no-cache-dir dvc flask GitPython elasticsearch opensearch-py neo4j eland --ignore-installed PyYAML
-RUN pip3 install --no-cache-dir opencv-python torchvision
+RUN pip3 install --no-cache-dir opencv-python torchvision eland plotly
 
 # XNAT
 RUN pip3 install --no-cache-dir xnat
@@ -186,9 +203,9 @@ RUN pip3 install --no-cache-dir -U spacy click torch thinc
 #RUN for spacy_model in ${SPACY_MODELS}; do python3 -m spacy download $spacy_model; done
 
 # install requirements for working with cogstack scripts
-# RUN pip3 isntall --no-cache-dir -r notebooks/demo_working_with_cogstack/requirements.txt
+# RUN pip3 install --no-cache-dir -r notebooks/demo_working_with_cogstack/requirements.txt
 
-RUN pip3 install --no-cache-dir medcat==1.12.0 eland plotly
+RUN pip3 install --no-cache-dir medcat==1.14.0
 
 # clean up pip
 RUN pip3 cache purge
