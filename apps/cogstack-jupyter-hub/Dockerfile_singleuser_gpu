@@ -133,12 +133,18 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends oc
 #   mesa-opencl-icd nvidia-opencl-dev libpocl-dev beignet-opencl-icd libnvidia-egl-wayland-dev nvidia-cuda-dev nvidia-cuda-toolkit nvidia-headless-$NVIDIA_DRIVER_VERSION
 
 # NVIDIA Docker
-RUN export distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
+#################################### PREVIOUS
+#RUN export distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
 
-RUN curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
-RUN curl -s -L https://nvidia.github.io/nvidia-docker/$(. /etc/os-release;echo $ID$VERSION_ID)/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
-RUN curl -s -L https://nvidia.github.io/libnvidia-container/experimental/$(. /etc/os-release;echo $ID$VERSION_ID)/libnvidia-container-experimental.list | sudo tee /etc/apt/sources.list.d/libnvidia-container-experimental.list
+#RUN curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | apt-key add -
+#RUN curl -s -L https://nvidia.github.io/nvidia-docker/$(. /etc/os-release;echo $ID$VERSION_ID)/nvidia-docker.list | tee /etc/apt/sources.list.d/nvidia-docker.list
+#RUN curl -s -L https://nvidia.github.io/libnvidia-container/experimental/$(. /etc/os-release;echo $ID$VERSION_ID)/libnvidia-container-experimental.list | tee /etc/apt/sources.list.d/libnvidia-container-experimental.list
+####################################
 
+RUN curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
+  && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
+    sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+    tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
 RUN apt-get update && apt-get upgrade -y 
 
 RUN apt-get install -y nvidia-docker2 nvidia-container-toolkit

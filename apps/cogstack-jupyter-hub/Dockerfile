@@ -32,19 +32,30 @@ RUN apt-add-repository multiverse && \
     apt-get update && apt-get upgrade -y 
 
 # Add latest ubuntu repos to sources.list
-RUN echo "deb http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list
-RUN echo "deb-src http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list
-
 # add arch
-RUN echo "deb [arch=${CPU_ARCHITECTURE}] http://ports.ubuntu.com/ubuntu-ports jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list
-RUN echo "deb [arch=${CPU_ARCHITECTURE}] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted universe multiverse" | tee -a /etc/apt/sources.list
-RUN echo "deb [arch=${CPU_ARCHITECTURE}] http://ports.ubuntu.com/ubuntu-ports jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list
-RUN echo "deb [arch=${CPU_ARCHITECTURE}] http://ports.ubuntu.com/ubuntu-ports jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list
-
-RUN echo "deb-src [arch=${CPU_ARCHITECTURE}] http://ports.ubuntu.com/ubuntu-ports jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list
-RUN echo "deb-src [arch=${CPU_ARCHITECTURE}] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted universe multiverse" | tee -a /etc/apt/sources.list
-RUN echo "deb-src [arch=${CPU_ARCHITECTURE}] http://ports.ubuntu.com/ubuntu-ports jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list
-RUN echo "deb-src [arch=${CPU_ARCHITECTURE}] http://ports.ubuntu.com/ubuntu-ports jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list
+RUN if [ "${CPU_ARCHITECTURE}" = "amd64" ]; then \
+        echo "deb http://archive.ubuntu.com/ubuntu/ jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb-src http://archive.ubuntu.com/ubuntu/ jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb http://archive.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb-src http://archive.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb-src http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list ; \
+        echo "deb-src http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list ; \
+    elif [ "${CPU_ARCHITECTURE}" = "arm64" ]; then \
+        echo "deb [arch=arm64] http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list ; \
+        echo "deb-src [arch=arm64] http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list ; \
+        echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+    else \
+        echo "No valid CPU_ARCHITECTURE specified"; \
+    fi
 
 RUN apt-get update && apt-get upgrade -y && \
     apt-get --force-yes -o Dpkg::Options::="--force-confold" --force-yes -o Dpkg::Options::="--force-confdef" -fuy  dist-upgrade  && \
