@@ -1,4 +1,4 @@
-name: docker-jupyter-hub
+name: docker-jupyter-hub-hybrid-architecture
 
 on:
 
@@ -84,17 +84,6 @@ jobs:
         run: |
           docker build --platform linux/${{ matrix.platform }} -t cogstacksystems/jupyter-hub:latest-${{ matrix.platform }} -f Dockerfile_hub .
           docker push cogstacksystems/jupyter-hub:latest-${{ matrix.platform }}
-        #uses: docker/build-push-action@v6
-        #with:
-        #  platforms: linux/amd64
-        #  context : ./
-        #  build-args: | 
-        #    CPU_ARCHITECTURE=amd64
-        #  file : "./Dockerfile_hub"
-        #  allow: network.host
-        #  github-token: ${{ github.token }}
-        #  tags: cogstacksystems/jupyter-hub:${{ env.RELEASE_VERSION }}
-        #  push: true
 
-      # - name: Image digest
-      #   run: echo ${{ steps.docker_build.outputs.digest }}
+      - name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
