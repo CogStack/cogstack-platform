@@ -17,8 +17,17 @@ jobs:
 
   build:
 
-    runs-on: ubuntu-22.04
-    
+    runs-on: ${{ matrix.runner }}
+
+    strategy:
+      matrix:
+        platform: [amd64, arm64]
+        include:
+          - platform: amd64
+            runner: ubuntu-latest
+          - platform: arm64
+            runner: ubuntu-latest
+  
     env:
       working-directory: ./
 
@@ -71,18 +80,21 @@ jobs:
         id: set_cpu_architecture
         run: echo "CPU_ARCHITECTURE=amd64" >> $GITHUB_ENV
 
-      - name: Build and push Docker Jupyter image
-        uses: docker/build-push-action@v6
-        with:
-          platforms: linux/amd64
-          context : ./
-          build-args: | 
-            CPU_ARCHITECTURE=amd64
-          file : "./Dockerfile_hub"
-          allow: network.host
-          github-token: ${{ github.token }}
-          tags: cogstacksystems/jupyter-hub:${{ env.RELEASE_VERSION }}
-          push: true
+      - name: Build and push Docker Jupyter Hub image
+        run: |
+          docker build --platform linux/${{ matrix.platform }} -t cogstacksystems/jupyter-hub:latest-${{ matrix.platform }} -f Dockerfile_hub .
+          docker push cogstacksystems/jupyter-hub:latest-${{ matrix.platform }}
+        #uses: docker/build-push-action@v6
+        #with:
+        #  platforms: linux/amd64
+        #  context : ./
+        #  build-args: | 
+        #    CPU_ARCHITECTURE=amd64
+        #  file : "./Dockerfile_hub"
+        #  allow: network.host
+        #  github-token: ${{ github.token }}
+        #  tags: cogstacksystems/jupyter-hub:${{ env.RELEASE_VERSION }}
+        #  push: true
 
-      - name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
+      # - name: Image digest
+      #   run: echo ${{ steps.docker_build.outputs.digest }}
