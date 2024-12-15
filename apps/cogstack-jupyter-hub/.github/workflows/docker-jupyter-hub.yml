@@ -78,12 +78,12 @@ jobs:
       
       - name: set CPU architecture
         id: set_cpu_architecture
-        run: echo "CPU_ARCHITECTURE=amd64" >> $GITHUB_ENV
+        run: echo "CPU_ARCHITECTURE=${{ matrix.platform }}" >> $GITHUB_ENV
 
       - name: Build and push Docker Jupyter Hub image
         run: |
-          docker build --platform linux/${{ matrix.platform }} -t cogstacksystems/jupyter-hub:latest-${{ matrix.platform }} -f Dockerfile_hub .
-          docker push cogstacksystems/jupyter-hub:latest-${{ matrix.platform }}
+          docker build --platform linux/${{ matrix.platform }} -t cogstacksystems/jupyter-hub:latest -f Dockerfile_hub --build-arg CPU_ARCHITECTURE=${{ matrix.platform }} .
+          docker push cogstacksystems/jupyter-hub:latest
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
