@@ -78,7 +78,7 @@ jobs:
           context : ./
           build-args: | 
             CPU_ARCHITECTURE=arm64
-          file : "./Dockerfile"
+          file : "./Dockerfile_hub"
           allow: network.host
           github-token: ${{ github.token }}
           tags: cogstacksystems/jupyter-hub:${{ env.RELEASE_VERSION }}
