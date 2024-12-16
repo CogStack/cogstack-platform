@@ -24,9 +24,9 @@ jobs:
         platform: [amd64, arm64]
         include:
           - platform: amd64
-            runner: ubuntu-latest
+            runner: ubuntu-22.04
           - platform: arm64
-            runner: ubuntu-latest
+            runner: ubuntu-22.04
   
     env:
       working-directory: ./
@@ -82,8 +82,8 @@ jobs:
 
       - name: Build and push Docker Jupyter Hub image
         run: |
-          docker build --platform linux/${{ matrix.platform }} -t cogstacksystems/jupyter-hub:latest -f Dockerfile_hub --build-arg CPU_ARCHITECTURE=${{ matrix.platform }} .
-          docker push cogstacksystems/jupyter-hub:latest
+          docker build --platform linux/${{ matrix.platform }} -t cogstacksystems/jupyter-hub:${{ env.RELEASE_VERSION }}-${{ matrix.platform }} -f Dockerfile_hub --build-arg CPU_ARCHITECTURE=${{ matrix.platform }} .
+          docker push cogstacksystems/jupyter-hub:${{ env.RELEASE_VERSION }}-${{ matrix.platform }}
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}

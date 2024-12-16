@@ -17,7 +17,16 @@ jobs:
 
   build:
 
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.runner }}
+
+    strategy:
+      matrix:
+        platform: [amd64, arm64]
+        include:
+          - platform: amd64
+            runner: ubuntu-22.04
+          - platform: arm64
+            runner: ubuntu-22.04
     
     env:
       working-directory: ./
@@ -82,8 +91,8 @@ jobs:
 
       - name: Build and push Docker Jupyter singleuser image
         run: |
-          docker build --platform linux/${{ matrix.platform }} -t cogstacksystems/jupyter-singleuser:latest -f Dockerfile_singleuser --build-arg CPU_ARCHITECTURE=${{ matrix.platform }} .
-          docker push cogstacksystems/jupyter-singleuser:latest
+          docker build --platform linux/${{ matrix.platform }} -t cogstacksystems/jupyter-singleuser:${{ env.RELEASE_VERSION }}-${{ matrix.platform }} -f Dockerfile_singleuser --build-arg CPU_ARCHITECTURE=${{ matrix.platform }} .
+          docker push cogstacksystems/jupyter-singleuser:${{ env.RELEASE_VERSION }}-${{ matrix.platform }}
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}

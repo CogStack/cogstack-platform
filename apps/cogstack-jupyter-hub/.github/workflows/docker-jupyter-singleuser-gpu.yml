@@ -92,7 +92,7 @@ jobs:
           file : "./Dockerfile_singleuser_gpu"
           allow: network.host
           github-token: ${{ github.token }}
-          tags: cogstacksystems/jupyter-singleuser-gpu:${{ env.RELEASE_VERSION }}
+          tags: cogstacksystems/jupyter-singleuser-gpu:${{ env.RELEASE_VERSION }}-amd64
           push: true
 
       - name: Image digest

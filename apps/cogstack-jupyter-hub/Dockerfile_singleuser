@@ -186,7 +186,7 @@ RUN pip3 cache purge
 #######################################################################################################
 
 # install R and other dependencies
-COPY r_kernel_install.sh /etc/jupyterhub/
+COPY ./scripts/r_kernel_install.sh /etc/jupyterhub/
 # RUN Rscript /etc/jupyterhub/r_kernel_install.sh
 
 # create jupyterhub shared folder

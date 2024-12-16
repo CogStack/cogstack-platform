@@ -2,6 +2,7 @@
 
 This repo has been reinstated. The custom jupyter-hub image is specified in the [CogStack-Nifi](https://github.com/CogStack/CogStack-NiFi/tree/master/services/jupyter-hub) project.
 
+
 This repository contains a custom Jupyter Hub Docker image with example notebooks to play with. \
 The notebooks provided are usually kept up to date with the example data that has been generated using Synthea and MTSamples in the [CogStack-NiFi](https://github.com/cogstack/cogstack-nifi) repository. Additionally, the [working with cogstack](https://github.com/CogStack/working_with_cogstack) scripts are included for production use.
 
@@ -15,14 +16,39 @@ There are 3 images built in this repo:
     - jupyter-singleuser: image used for each user's container, an isolated environment.
     - jupyter-singleuser-gpu: same as `jupyter-singleuser` but has GPU packages.
 
-Images are available for both x86/ARM architectures.
+Images are available for both x86/ARM architectures (post version 1.2.7):
+
+    - jupyter-hub ARM64/AMD64: `cogstacksystems/jupyter-hub:latest-arm64`, `cogstacksystems/jupyter-hub:latest-amd64`
+    - minimal official image ARM64/AMD64: `jupyterhub/singleuser:latest`
+    - jupyter-singleuser ARM64/AMD64: `cogstacksystems/jupyter-singleuser:latest-arm64`, `cogstacksystems/jupyter-singleuser:latest-amd64`
+    - jupyter-singleuser-gpu AMD64: `cogstacksystems/jupyter-singleuser-gpu:latest-amd64`
+
+Full and more in-depth knowledge on the configuration itself is available in the primary repository [official documentation](https://cogstack-nifi.readthedocs.io/en/latest/deploy/services.html#id12).
 
 # Usage & configuration
 
-ENV variables are located in: [env/jupyter.env](./env/jupyter.env).\
+ENV variables are located in: [env/jupyter.env](./env/jupyter.env) and [env/general.env](./env/general.env).\
 Please check the ENV file for additional information, every variable is commented and described.
 
-Full and more in-depth knowledge on the configuration itself is available in the primary repository [official documentation](https://cogstack-nifi.readthedocs.io/en/latest/deploy/services.html#id12).
+## Setting up your own hub
+
+There are two docker compose files:
+`docker-compose-dev.yml` - this will build the build the hub image from scratch, it will not build the singleuser one however.
+`docker-compose.yml` - default, for production.
+
+Check the [env/general.env](./env/general.env), set the `CPU_ARCHITECTURE` variable to whatever you need, the default for most Laptops/PCs is `amd64`, if you have an ARM laptop/device then set to `arm64`, that should suffice.
+
+Execute the following in the main repo directory:
+```
+    source envs/*
+    docker compose up -d
+```
+
+Updating certificates and env settings from the main repo:
+
+    - sometimes it is necessary to grab new certificates if the old ones expired (from the main Cogstack-NiFi repo)
+    - from the main repo directory, execute `bash scripts/update_env_cert_from_nifi_repo.sh`
+
 
 ## Access and account control
 To access Jupyter Hub on the host machine (e.g.localhost), one can type in the browser `https://localhost:8888`.

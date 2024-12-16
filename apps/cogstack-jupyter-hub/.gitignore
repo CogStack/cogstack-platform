@@ -18,5 +18,8 @@ docs/build/*
 **__pycache__
 
 # env files with passwords or local paths
-*.env
+**.env
+env**
+
+# cert files
 security**
