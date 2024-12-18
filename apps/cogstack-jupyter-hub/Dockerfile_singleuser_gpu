@@ -48,6 +48,7 @@ RUN apt-add-repository multiverse && \
 
 # Microsoft repos
 RUN wget -q -O- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/packages.microsoft.gpg
+RUN echo "deb [arch=amd64,armhf,arm64] https://packages.microsoft.com/ubuntu/22.04/prod jammy main" | tee -a /etc/apt/sources.list
 
 # Add latest ubuntu repos to sources.list
 # add arch
@@ -60,7 +61,6 @@ RUN if [ "${CPU_ARCHITECTURE}" = "amd64" ]; then \
         echo "deb-src http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
         echo "deb http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list ; \
         echo "deb-src http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list ; \
-        echo "deb [arch=amd64] https://packages.microsoft.com/ubuntu/22.04/prod jammy main" | tee -a /etc/apt/sources.list \
     elif [ "${CPU_ARCHITECTURE}" = "arm64" ]; then \
         echo "deb [arch=arm64] http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list ; \
         echo "deb-src [arch=arm64] http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list ; \
@@ -72,7 +72,6 @@ RUN if [ "${CPU_ARCHITECTURE}" = "amd64" ]; then \
         echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
         echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
         echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
-        echo "deb [arch=arm64] https://packages.microsoft.com/ubuntu/22.04/prod jammy main" | tee -a /etc/apt/sources.list \
     else \
         echo "No valid CPU_ARCHITECTURE specified"; \
     fi
