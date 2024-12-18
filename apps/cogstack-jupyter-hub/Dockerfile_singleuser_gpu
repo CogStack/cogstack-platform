@@ -35,19 +35,25 @@ RUN apt-get update && apt-get upgrade -y && \
 RUN apt-add-repository multiverse && \
     apt-add-repository universe && \
     add-apt-repository ppa:graphics-drivers/ppa && \
+    add-apt-repository ppa:deadsnakes/ppa && \
     apt-get update && apt-get upgrade -y 
 
-# Add latest ubuntu repos to sources.list
+# Microsoft repos
+RUN wget -q -O- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/packages.microsoft.gpg
+RUN curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list >> /etc/apt/sources.list.d/mssql-release.list
+RUN echo "deb [arch=arm64] https://packages.microsoft.com/ubuntu/22.04/prod jammy main" | tee -a /etc/apt/sources.list
 
+# Add latest ubuntu repos to sources.list
+# add arch
 RUN if [ "${CPU_ARCHITECTURE}" = "amd64" ]; then \
         echo "deb http://archive.ubuntu.com/ubuntu/ jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
-        echo "deb-src http://archive.ubuntu.com/ubuntu/ jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list  ; \
-        echo "deb http://archive.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list  ; \
-        echo "deb-src http://archive.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list  ; \
-        echo "deb http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list  ; \
-        echo "deb-src http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list  ; \
-        echo "deb http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list  ; \
-        echo "deb-src http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list  ; \
+        echo "deb-src http://archive.ubuntu.com/ubuntu/ jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb http://archive.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb-src http://archive.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb-src http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list ; \
+        echo "deb-src http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list ; \
     elif [ "${CPU_ARCHITECTURE}" = "arm64" ]; then \
         echo "deb [arch=arm64] http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list ; \
         echo "deb-src [arch=arm64] http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list ; \
@@ -62,6 +68,9 @@ RUN if [ "${CPU_ARCHITECTURE}" = "amd64" ]; then \
     else \
         echo "No valid CPU_ARCHITECTURE specified"; \
     fi
+
+# python 3.11 repo
+RUN apt-get update -y && apt-get upgrade -y
 
 # run updates
 RUN apt-get update && apt-get upgrade -y && dpkg --configure -a && \
@@ -111,10 +120,6 @@ RUN apt --fix-missing purge $(dpkg -l | grep 'python3\.1[01]' | awk '{print $2}'
 RUN apt --fix-broken install
 RUN apt-get purge --auto-remove python3.10
 
-# python 3.11 repo
-RUN add-apt-repository ppa:deadsnakes/ppa
-RUN apt-get update -y && apt-get upgrade -y
-
 # python 3.11
 RUN apt-get install -y python3.11-full python3.11-dev python3-pip python3-venv
 
@@ -149,11 +154,6 @@ RUN apt-get update && apt-get upgrade -y
 
 RUN apt-get install -y nvidia-docker2 nvidia-container-toolkit
 ################################################################################################################################################################
-
-# Microsoft repos
-RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/packages.microsoft.gpg
-RUN curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list >> /etc/apt/sources.list.d/mssql-release.list
-RUN echo "deb [arch=arm64] https://packages.microsoft.com/ubuntu/22.04/prod jammy main" | tee -a /etc/apt/sources.list
 
 # install remaining packages
 RUN apt-get update && apt-get upgrade -y
