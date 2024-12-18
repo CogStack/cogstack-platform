@@ -36,49 +36,15 @@ RUN apt-add-repository multiverse && \
     apt-add-repository universe && \
     add-apt-repository ppa:graphics-drivers/ppa && \
     add-apt-repository ppa:deadsnakes/ppa && \
-    apt-get update && apt-get upgrade -y 
-
-# run updates
-RUN apt-get update && apt-get upgrade -y && dpkg --configure -a && \
+    apt-get update && apt-get upgrade -y && \
     apt-get --force-yes -o Dpkg::Options::="--force-confold" --force-yes -o Dpkg::Options::="--force-confdef" -fuy full-upgrade && \
     apt-get autoremove -y && \
     apt-get clean -y && \
     apt-get install -y \
-    gnupg \
-    ssl-cert \ 
-    libevent-dev \
-    libsqlite3-dev \
-    libxml2-dev \
-    libbz2-dev \
-    libxslt1-dev \
-    zlib1g-dev \
-    libssl-dev \
     wget \
     curl \
-    gnupg-agent \
-    dirmngr \
     ca-certificates \
-    apt-transport-https \
-    apt-utils \
-    fonts-dejavu \
-    nano \
-    iputils-ping \
-    cmake \
-    make \
-    build-essential \
-    unixodbc \
-    unixodbc-dev \
-    r-cran-rodbc \
-    gfortran \
-    gcc \
-    g++ \
-    git \
-    ssh \
-    jq \
-    htop \
-    libgl1-mesa-glx libegl1-mesa libxrandr2 libxrandr2 libxss1 \
-    libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6 \
-    r-base
+    apt-transport-https
 
 # Microsoft repos
 RUN wget -q -O- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/packages.microsoft.gpg
@@ -110,6 +76,48 @@ RUN if [ "${CPU_ARCHITECTURE}" = "amd64" ]; then \
     else \
         echo "No valid CPU_ARCHITECTURE specified"; \
     fi
+
+# python 3.11 repo
+RUN apt-get update -y && apt-get upgrade -y
+
+# run updates
+RUN apt-get update && apt-get upgrade -y && dpkg --configure -a && \
+    apt-get --force-yes -o Dpkg::Options::="--force-confold" --force-yes -o Dpkg::Options::="--force-confdef" -fuy full-upgrade && \
+    apt-get autoremove -y && \
+    apt-get clean -y && \
+    apt-get install -y \
+    gnupg \
+    ssl-cert \ 
+    libevent-dev \
+    libsqlite3-dev \
+    libxml2-dev \
+    libbz2-dev \
+    libxslt1-dev \
+    zlib1g-dev \
+    libssl-dev \
+    gnupg-agent \
+    dirmngr \
+    apt-utils \
+    fonts-dejavu \
+    nano \
+    iputils-ping \
+    cmake \
+    make \
+    build-essential \
+    unixodbc \
+    unixodbc-dev \
+    r-cran-rodbc \
+    gfortran \
+    gcc \
+    g++ \
+    git \
+    ssh \
+    jq \
+    htop \
+    libgl1-mesa-glx libegl1-mesa libxrandr2 libxrandr2 libxss1 \
+    libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6 \
+    r-base
+
 
 # remove newer python version, freeze other versions for max compatibility before updates
 RUN apt --fix-missing purge $(dpkg -l | grep 'python3\.1[01]' | awk '{print $2}')
