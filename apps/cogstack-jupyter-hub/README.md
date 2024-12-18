@@ -39,8 +39,9 @@ There are two docker compose files:
 Check the [env/general.env](./env/general.env), set the `CPU_ARCHITECTURE` variable to whatever you need, the default for most Laptops/PCs is `amd64`, if you have an ARM laptop/device then set to `arm64`, that should suffice.
 
 Execute the following in the main repo directory:
+
 ```
-    source envs/*
+    bash export_env_vars.sh
     docker compose up -d
 ```
 

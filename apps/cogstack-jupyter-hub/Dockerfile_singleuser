@@ -172,7 +172,7 @@ RUN pip3 install --no-cache-dir dvc flask GitPython elasticsearch opensearch-py 
 RUN pip3 install --no-cache-dir opencv-python torchvision eland plotly
 
 # XNAT
-RUN pip3 install --no-cache-dir xnat
+RUN pip3 install --no-cache-dir xnat    
 
 # medcat & models
 RUN pip3 install --no-cache-dir -U spacy click torch thinc

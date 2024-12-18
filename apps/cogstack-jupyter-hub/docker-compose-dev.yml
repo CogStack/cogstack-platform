@@ -1,7 +1,7 @@
 services:
   cogstack-jupyter-hub:
     build: ./Dockerfile_hub
-    container_name: cogstack-jupyter-hub
+    container_name: cogstack-jupyter-hub-dev
     restart: always
     environment:
       - http_proxy=$HTTP_PROXY
@@ -11,19 +11,19 @@ services:
       - JUPYTERHUB_INTERNAL_PROXY_API_PORT=${JUPYTERHUB_INTERNAL_PROXY_API_PORT:-8887}
       - JUPYTERHUB_SSL_PORT=${JUPYTERHUB_SSL_PORT:-443}
     env_file:
-      - ./env/jupyter.env
       - ./env/general.env
+      - ./env/jupyter.env
     volumes:
       - jupyter-hub-shared-scratch:/home/jovyan/scratch
-      - jupyter-hub-vol:/etc/jupyterhub
+      - jupyter-hub-vol:/srv/jupyterhub
       # Security configs
-      - ./${DEFAULT_SECURITY_DIR:-./security/}root-ca.key:/etc/jupyterhub/root-ca.key:ro
-      - ./${DEFAULT_SECURITY_DIR:-./security/}root-ca.pem:/etc/jupyterhub/root-ca.pem:ro
-      - ./config/jupyterhub_cookie_secret:/etc/jupyterhub/jupyterhub_cookie_secret:ro
+      - ./${DEFAULT_SECURITY_DIR:-./security/}root-ca.key:/srv/jupyterhub/root-ca.key:ro
+      - ./${DEFAULT_SECURITY_DIR:-./security/}root-ca.pem:/srv/jupyterhub/root-ca.pem:ro
+      - ./config/jupyterhub_cookie_secret:/srv/jupyterhub/jupyterhub_cookie_secret:ro
       # User list and jupyter config
-      - ./config/jupyterhub_config.py:/etc/jupyterhub/jupyterhub_config.py:ro
-      - ./config/userlist:/etc/jupyterhub/userlist:ro
-      - ./config/teamlist:/etc/jupyterhub/teamlist:ro
+      - ./config/jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py:ro
+      - ./config/userlist:/srv/jupyterhub/userlist:ro
+      - ./config/teamlist:/srv/jupyterhub/teamlist:ro
       # Give access to Docker socket
       - /var/run/docker.sock:/var/run/docker.sock
     ulimits:

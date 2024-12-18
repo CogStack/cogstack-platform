@@ -66,7 +66,7 @@ shared_content_dir = os.environ.get("DOCKER_SHARED_DIR", "/home/jovyan/scratch")
 #c.DockerSpawner.notebook_dir = notebook_dir
 # Mount the real user"s Docker volume on the host to the notebook user"s
 # notebook directory in the container
-c.DockerSpawner.volumes = { "jupyterhub-user-{username}": notebook_dir, "jupyter-hub-shared-scratch": shared_content_dir}
+c.DockerSpawner.volumes = {"jupyterhub-user-{username}": notebook_dir, "jupyter-hub-shared-scratch": shared_content_dir}
 # volume_driver is no longer a keyword argument to create_container()
 
 
@@ -134,12 +134,14 @@ c.Authenticator.admin_users = admin = {"admin"}
 # need an admin approval so they can actually log in the system.
 c.Authenticator.open_signup = False
 
-c.NotebookApp.allow_root=False
+c.NotebookApp.allow_root = False
 
 c.LocalAuthenticator.create_system_users = True
 c.SystemdSpawner.dynamic_users = True
 c.PAMAuthenticator.admin_groups = {"wheel"}
 c.Authenticator.whitelist = whitelist = set()
+
+#c.Authenticator.allow_all = True
 
 curr_dir = os.path.dirname(__file__)
 
@@ -270,12 +272,12 @@ jupyter_hub_proxy_url = str(os.environ.get("JUPYTERHUB_PROXY_API_URL", "http://1
 c.ConfigurableHTTPProxy.api_url = jupyter_hub_proxy_url + str(jupyter_hub_proxy_api_port)
 # ideally a private network address
 # c.JupyterHub.proxy_api_ip = "10.0.1.4"
-c.JupyterHub.proxy_api_port = jupyter_hub_proxy_api_port
+# c.JupyterHub.proxy_api_port = jupyter_hub_proxy_api_port
 
 # TLS config
 c.JupyterHub.port = jupyter_hub_ssl_port
-c.JupyterHub.ssl_key = os.environ.get("SSL_KEY", "/etc/jupyterhub/root-ca.key")
-c.JupyterHub.ssl_cert = os.environ.get("SSL_CERT", "/etc/jupyterhub/root-ca.pem")
+c.JupyterHub.ssl_key = os.environ.get("SSL_KEY", "/srv/jupyterhub/root-ca.key")
+c.JupyterHub.ssl_cert = os.environ.get("SSL_CERT", "/srv/jupyterhub/root-ca.pem")
 
 # Persist hub data on volume mounted inside container
 data_dir = os.environ.get("DATA_VOLUME_CONTAINER", "./")
