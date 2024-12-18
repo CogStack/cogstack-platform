@@ -38,40 +38,6 @@ RUN apt-add-repository multiverse && \
     add-apt-repository ppa:deadsnakes/ppa && \
     apt-get update && apt-get upgrade -y 
 
-# Microsoft repos
-RUN wget -q -O- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/packages.microsoft.gpg
-RUN curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list >> /etc/apt/sources.list.d/mssql-release.list
-RUN echo "deb [arch=arm64] https://packages.microsoft.com/ubuntu/22.04/prod jammy main" | tee -a /etc/apt/sources.list
-
-# Add latest ubuntu repos to sources.list
-# add arch
-RUN if [ "${CPU_ARCHITECTURE}" = "amd64" ]; then \
-        echo "deb http://archive.ubuntu.com/ubuntu/ jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
-        echo "deb-src http://archive.ubuntu.com/ubuntu/ jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
-        echo "deb http://archive.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
-        echo "deb-src http://archive.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
-        echo "deb http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
-        echo "deb-src http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
-        echo "deb http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list ; \
-        echo "deb-src http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list ; \
-    elif [ "${CPU_ARCHITECTURE}" = "arm64" ]; then \
-        echo "deb [arch=arm64] http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list ; \
-        echo "deb-src [arch=arm64] http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list ; \
-        echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
-        echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
-        echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
-        echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
-        echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
-        echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
-        echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
-        echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
-    else \
-        echo "No valid CPU_ARCHITECTURE specified"; \
-    fi
-
-# python 3.11 repo
-RUN apt-get update -y && apt-get upgrade -y
-
 # run updates
 RUN apt-get update && apt-get upgrade -y && dpkg --configure -a && \
     apt-get --force-yes -o Dpkg::Options::="--force-confold" --force-yes -o Dpkg::Options::="--force-confdef" -fuy full-upgrade && \
@@ -114,6 +80,36 @@ RUN apt-get update && apt-get upgrade -y && dpkg --configure -a && \
     libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6 \
     r-base
 
+# Microsoft repos
+RUN wget -q -O- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/packages.microsoft.gpg
+RUN curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list >> /etc/apt/sources.list.d/mssql-release.list
+RUN echo "deb [arch=arm64] https://packages.microsoft.com/ubuntu/22.04/prod jammy main" | tee -a /etc/apt/sources.list
+
+# Add latest ubuntu repos to sources.list
+# add arch
+RUN if [ "${CPU_ARCHITECTURE}" = "amd64" ]; then \
+        echo "deb http://archive.ubuntu.com/ubuntu/ jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb-src http://archive.ubuntu.com/ubuntu/ jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb http://archive.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb-src http://archive.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb-src http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list ; \
+        echo "deb-src http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list ; \
+    elif [ "${CPU_ARCHITECTURE}" = "arm64" ]; then \
+        echo "deb [arch=arm64] http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list ; \
+        echo "deb-src [arch=arm64] http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list ; \
+        echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+    else \
+        echo "No valid CPU_ARCHITECTURE specified"; \
+    fi
 
 # remove newer python version, freeze other versions for max compatibility before updates
 RUN apt --fix-missing purge $(dpkg -l | grep 'python3\.1[01]' | awk '{print $2}')
