@@ -25,10 +25,19 @@ Images are available for both x86/ARM architectures (post version 1.2.7):
 
 Full and more in-depth knowledge on the configuration itself is available in the primary repository [official documentation](https://cogstack-nifi.readthedocs.io/en/latest/deploy/services.html#id12).
 
+
 # Usage & configuration
 
 ENV variables are located in: [env/jupyter.env](./env/jupyter.env) and [env/general.env](./env/general.env).\
 Please check the ENV file for additional information, every variable is commented and described.
+
+## Python packages installed
+
+Full list found in [requirements.txt](./requirements.txt).
+
+## Security
+
+Certificates used are located in the `./security/` folder, taken from the [Cogstack-NiFi](https://github.com/CogStack-NiFi) security folder, [root-ca.key](https://raw.githubusercontent.com/CogStack/CogStack-NiFi/refs/heads/master/security/root-ca.key) and [root-ca.pem](https://raw.githubusercontent.com/CogStack/CogStack-NiFi/refs/heads/master/security/root-capem), read the [security section](https://cogstack-nifi.readthedocs.io/en/latest/security.html) for more info on how to generate them from the main NiFi repository.
 
 ## Setting up your own hub
 
@@ -49,7 +58,6 @@ Updating certificates and env settings from the main repo:
 
     - sometimes it is necessary to grab new certificates if the old ones expired (from the main Cogstack-NiFi repo)
     - from the main repo directory, execute `bash scripts/update_env_cert_from_nifi_repo.sh`
-
 
 ## Access and account control
 To access Jupyter Hub on the host machine (e.g.localhost), one can type in the browser `https://localhost:8888`.

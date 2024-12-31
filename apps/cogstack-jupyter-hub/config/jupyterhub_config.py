@@ -2,33 +2,26 @@
 # source : https://github.com/jupyterhub/jupyterhub-deploy-docker/blob/main/basic-example/jupyterhub_config.py
 
 import os
-import pwd
-import subprocess
 import sys
 import docker
-import dockerspawner 
+import dockerspawner
+import traceback
+#import traitlets
 from jupyterhub.auth import LocalAuthenticator
 from nativeauthenticator import NativeAuthenticator
+from traitlets.config import Config
 
 
 class LocalNativeAuthenticator(NativeAuthenticator, LocalAuthenticator):
     pass
 
 
-def pre_spawn_hook(spawner):
-    username = str(spawner.user.name).lower()
-    try:
-        pwd.getpwnam(username)
-    except KeyError:
-        subprocess.check_call(["useradd", "-ms", "/bin/bash", username])
-
-
-c = get_config()
+c: Config = get_config()
 
 # Spawn containers from this image
 # Either use the CoGstack one from the repo which is huge and contains all the stuff needed or,
 # use the default official one which is clean.
-c.DockerSpawner.image = os.getenv("DOCKER_NOTEBOOK_IMAGE", "cogstacksystems:jupyterhub/singleuser:latest")
+c.DockerSpawner.image = os.getenv("DOCKER_NOTEBOOK_IMAGE", "cogstacksystems:jupyterhub/singleuser:latest-amd64")
 
 # JupyterHub requires a single-user instance of the Notebook server, so we
 # default to using the `start-singleuser.sh` script included in the
@@ -61,7 +54,7 @@ c.DockerSpawner.extra_host_config = {"network_mode": network_name}
 # We follow the same convention.
 notebook_dir = os.environ.get("DOCKER_NOTEBOOK_DIR", "/home/jovyan/work")
 shared_content_dir = os.environ.get("DOCKER_SHARED_DIR", "/home/jovyan/scratch")
-
+work_dir = os.environ.get("JUPYTER_WORK_DIR", "/lab/workspaces/auto-b/tree/" + str(notebook_dir.split("/")[-1]))
 
 #c.DockerSpawner.notebook_dir = notebook_dir
 # Mount the real user"s Docker volume on the host to the notebook user"s
@@ -78,9 +71,9 @@ select_notebook_image_allowed = os.environ.get("DOCKER_SELECT_NOTEBOOK_IMAGE_ALL
 if select_notebook_image_allowed == "true":
     # c.DockerSpawner.image_whitelist has been deprecated for allowed_images
     c.DockerSpawner.allowed_images = {
-        'minimal': 'jupyterhub/singleuser:latest',
-        'cogstack': 'cogstacksystems/jupyter-singleuser:latest',
-        'cogstack-gpu': 'cogstacksystems/jupyter-singleuser-gpu:latest'
+        "minimal": "jupyterhub/singleuser:latest-amd64",
+        "cogstack": "cogstacksystems/jupyter-singleuser:latest-amd64",
+        "cogstack-gpu": "cogstacksystem s/jupyter-singleuser-gpu:latest-amd64"
     }
     # https://github.com/jupyterhub/dockerspawner/issues/423
     c.DockerSpawner.remove = True
@@ -103,27 +96,71 @@ ENV_PROXIES = {
     "no_proxy": ",".join(list(filter(len, os.environ.get("no_proxy", "").split(",") + [hub_container_ip_or_name]))),
 }
 
-os.environ['NO_PROXY'] = ''
-os.environ['no_proxy'] = ''
-os.environ['HTTP_PROXY'] = ''
-os.environ['HTTPS_PROXY'] = ''
-os.environ['http_proxy'] = ''
-os.environ['https_proxy'] = ''
+os.environ["NO_PROXY"] = ""
+os.environ["no_proxy"] = ""
+os.environ["HTTP_PROXY"] = ""
+os.environ["HTTPS_PROXY"] = ""
+os.environ["http_proxy"] = ""
+os.environ["https_proxy"] = ""
 
 
-def post_spawn_hook(spawner):
+"""
+    def pre_spawn_hook(spawner):
+        username = str(spawner.user.name).lower()
+        try:
+            pwd.getpwnam(username)
+        except KeyError:
+            subprocess.check_call(["useradd", "-ms", "/bin/bash", username])
+"""
+
+
+# Spawn single-user servers as Docker containers
+class DockerSpawner(dockerspawner.DockerSpawner):
+    def start(self):
+        # username is self.user.name
+        self.volumes = {"jupyterhub-user-{}".format(self.user.name): notebook_dir}
+
+        if self.user.name not in whitelist:
+            whitelist.add(self.user.name)
+            with open(userlist_path, "a") as f:
+                f.write("\n")
+                f.write(self.user.name)
+
+        if self.user.name in list(team_map.keys()):
+            for team in team_map[self.user.name]:
+                team_dir_path = os.path.join(shared_content_dir, team)
+                self.volumes["jupyterhub-team-{}".format(team)] = {
+                    "bind": team_dir_path,
+                    "mode": "rw",  # or ro for read-only
+                }
+
+        # this is a temporary fix, need to actually check permissions
+        self.mem_limit = resource_allocation_user_ram_limit
+        self.post_start_cmd = "chmod -R 777 " + shared_content_dir
+
+        return super().start()
+
+
+def pre_spawn_hook(spawner: DockerSpawner):
+    #username = spawner.user.name
+    #spawner.environment["GREETING"] = f"Hello {username}"
     try:
-        with open("/etc/environment", "w+") as f:
+        for key, value in ENV_PROXIES.items():
+            spawner.environment[str(key)] = str(value)
+        with open("/home/jovyan/test.txt", "w+") as f:
             for key, value in ENV_PROXIES.items():
-                f.write(str(key) + "=" + str(value) + "\n")
-    except KeyError:
-        pass
+                f.write("export" + " " + str(key) + "=" + str(value) + "\n")
+    except Exception:
+        traceback.print_exc()
 
 
-c.Spawner.post_spawn_hook = post_spawn_hook
+c.Spawner.default_url = work_dir
+c.Spawner.pre_spawn_hook = pre_spawn_hook
 
-#c.Spawner.pre_spawn_hook = pre_spawn_hook
 #c.Spawner.ip = "127.0.0.1"
+
+# This is buggy, setting the HTTP(s)_PROXY & NO_PROXY variables via pre/post
+#  spawn hook is better
 #c.Spawner.environment = ENV_PROXIES
 
 # AUTHENTICATION
@@ -139,7 +176,10 @@ c.NotebookApp.allow_root = False
 c.LocalAuthenticator.create_system_users = True
 c.SystemdSpawner.dynamic_users = True
 c.PAMAuthenticator.admin_groups = {"wheel"}
-c.Authenticator.whitelist = whitelist = set()
+c.Authenticator.allowed_users = whitelist = set()
+
+
+#c.Authenticator.manage_groups = True
 
 #c.Authenticator.allow_all = True
 
@@ -162,32 +202,6 @@ def per_user_limit(role):
                    "admin": (int(resource_allocation_admin_cpu_limit), resource_allocation_admin_ram_limit)}
     return ram_limits.get(role)
 
-
-# Spawn single-user servers as Docker containers
-class DockerSpawner(dockerspawner.DockerSpawner):
-    def start(self):
-        # username is self.user.name
-        self.volumes = {"jupyterhub-user-{}".format(self.user.name): notebook_dir}
-
-        if self.user.name not in whitelist:
-            whitelist.add(self.user.name)
-            with open(userlist_path , "a") as f:
-                f.write("\n")
-                f.write(self.user.name)
-
-        if self.user.name in list(team_map.keys()):
-            for team in team_map[self.user.name]:
-                team_dir_path = os.path.join(shared_content_dir, team)
-                self.volumes["jupyterhub-team-{}".format(team)] = {
-                    "bind": team_dir_path,
-                    "mode": "rw",  # or ro for read-only
-                }
-
-        # this is a temporary fix, need to actually check permissions
-        self.mem_limit = resource_allocation_user_ram_limit
-        self.post_start_cmd = "chmod -R 777 " + shared_content_dir
-
-        return super().start()
 
 
 # Spawn single-user servers as Docker containers
@@ -252,11 +266,13 @@ c.DockerSpawner.environment = {
 }
 c.DockerSpawner.environment.update(ENV_PROXIES)
 
+# Alternative, use: "nativeauthenticator.NativeAuthenticator"
 #c.JupyterHub.authenticator_class = LocalNativeAuthenticator
 
 c.FirstUseAuthenticator.create_users = True
 c.JupyterHub.authenticator_class = "firstuseauthenticator.FirstUseAuthenticator" 
-# Alternative, use: "nativeauthenticator.NativeAuthenticator"
+
+
 
 # User containers will access hub by container name on the Docker network
 c.JupyterHub.ip = "0.0.0.0"
@@ -327,7 +343,7 @@ c.Application.log_level = jupyter_log_level
 #  Default: False
 # c.Application.show_config_json = False
 
-# Let's start with the least privilege, especially on a single host having limited resources
+# Let"s start with the least privilege, especially on a single host having limited resources
 c.JupyterHub.allow_named_servers = False
 
 # Timeout (in seconds) to wait for spawners to initialize
