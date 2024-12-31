@@ -49,7 +49,7 @@ psycopg2==2.9.9
 psycopg2-binary==2.9.10
 pyodbc==5.2.0
 openpyxl==3.1.5
-dvc==3.58.0+
+dvc==3.58.0
 GitPython==3.1.43
 elasticsearch==8.17.0
 opensearch-py==2.8.0
