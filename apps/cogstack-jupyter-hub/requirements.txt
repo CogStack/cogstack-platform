@@ -2,7 +2,6 @@ wheel==0.44.0
 virtualenv==20.28.0
 ipywidgets==7.8.5
 jupyter==1.1.1
-jupyterhub==5.2.1
 jupyterlab==4.2.5
 jupyterlab_widgets==1.1.11
 jupyter_contrib_core==0.4.2
@@ -64,5 +63,5 @@ thinc==8.2.5
 click==8.1.7
 xnat==0.6.2
 spacy==3.7.5
-plotly==5.24.1
-medcat==1.14.0
+plotly>=5.24.1
+medcat>=1.14.0
