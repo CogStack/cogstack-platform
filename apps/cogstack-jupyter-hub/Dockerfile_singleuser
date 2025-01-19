@@ -18,7 +18,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV DEBIAN_PRIORITY=critical
 
 ARG CPU_ARCHITECTURE
-ENV CPU_ARCHITECTURE ${CPU_ARCHITECTURE}
+ENV CPU_ARCHITECTURE=${CPU_ARCHITECTURE}
 
 USER root
 
@@ -70,7 +70,7 @@ RUN if [ "${CPU_ARCHITECTURE}" = "amd64" ]; then \
         echo "No valid CPU_ARCHITECTURE specified"; \
     fi
 
-# python 3.11 repo
+# python 3.11 repo 
 RUN apt-get update -y && apt-get upgrade -y
 
 # run updates
@@ -111,16 +111,14 @@ RUN apt-get update && apt-get upgrade -y && dpkg --configure -a && \
     ssh \
     jq \
     htop \
-    libgl1-mesa-glx libegl1-mesa libxrandr2 libxrandr2 libxss1 \
-    libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6 \
+    libglx-mesa0 libegl1 libxrandr2 libxrandr2 libxss1 \
+    libxcursor1 libxcomposite1 libasound2-dev libxi6 libxtst6 \
     r-base
-
 
 # remove newer python version, freeze other versions for max compatibility before updates
 RUN apt --fix-missing purge $(dpkg -l | grep 'python3\.1[01]' | awk '{print $2}')
 RUN apt --fix-broken install
 RUN apt-get purge --auto-remove python3.10
-
 
 # python 3.11
 RUN apt-get install -y python3.11-full python3.11-dev python3-pip python3-venv

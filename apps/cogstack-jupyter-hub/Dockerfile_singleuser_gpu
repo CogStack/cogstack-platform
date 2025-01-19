@@ -18,13 +18,13 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV DEBIAN_PRIORITY=critical
 
 ARG CPU_ARCHITECTURE
-ENV CPU_ARCHITECTURE ${CPU_ARCHITECTURE}
+ENV CPU_ARCHITECTURE=${CPU_ARCHITECTURE}
 
 ENV NVIDIA_DRIVER_VERSION=510
 
 # nvidia-container-runtime
-ENV NVIDIA_VISIBLE_DEVICES all
-ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
 USER root
 
@@ -76,9 +76,6 @@ RUN if [ "${CPU_ARCHITECTURE}" = "amd64" ]; then \
         echo "No valid CPU_ARCHITECTURE specified"; \
     fi
 
-# python 3.11 repo
-RUN apt-get update -y && apt-get upgrade -y
-
 # run updates
 RUN apt-get update && apt-get upgrade -y && dpkg --configure -a && \
     apt-get --force-yes -o Dpkg::Options::="--force-confold" --force-yes -o Dpkg::Options::="--force-confdef" -fuy full-upgrade && \
@@ -113,8 +110,8 @@ RUN apt-get update && apt-get upgrade -y && dpkg --configure -a && \
     ssh \
     jq \
     htop \
-    libgl1-mesa-glx libegl1-mesa libxrandr2 libxrandr2 libxss1 \
-    libxcursor1 libxcomposite1 libasound2 libxi6 libxtst6 \
+    libglx-mesa0 libegl1 libxrandr2 libxrandr2 libxss1 \
+    libxcursor1 libxcomposite1 libasound2-dev libxi6 libxtst6 \
     r-base
 
 
