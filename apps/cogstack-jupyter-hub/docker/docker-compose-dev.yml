@@ -1,6 +1,8 @@
 services:
   cogstack-jupyter-hub-dev:
-    build: ../Dockerfile_hub
+    build:
+      context: ../
+      dockerfile: "Dockerfile_hub"
     container_name: cogstack-jupyter-hub-dev
     restart: always
     environment:
