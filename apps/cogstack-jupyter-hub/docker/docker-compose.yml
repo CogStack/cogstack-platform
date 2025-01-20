@@ -17,8 +17,8 @@ services:
       - jupyter-hub-shared-scratch:/home/jovyan/scratch
       - jupyter-hub-vol:/srv/jupyterhub
       # Security configs
-      - ../${DEFAULT_SECURITY_DIR:-./security/}root-ca.key:/srv/jupyterhub/root-ca.key:ro
-      - ../${DEFAULT_SECURITY_DIR:-./security/}root-ca.pem:/srv/jupyterhub/root-ca.pem:ro
+      - ./${DEFAULT_SECURITY_DIR:-../security/}root-ca.key:/srv/jupyterhub/root-ca.key:ro
+      - ./${DEFAULT_SECURITY_DIR:-../security/}root-ca.pem:/srv/jupyterhub/root-ca.pem:ro
       - ../config/jupyterhub_cookie_secret:/srv/jupyterhub/jupyterhub_cookie_secret:ro
       # User list and jupyter config
       - ../config/jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py:ro
