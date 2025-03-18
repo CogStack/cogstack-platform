@@ -296,9 +296,9 @@ c.JupyterHub.ssl_key = os.environ.get("SSL_KEY", "/srv/jupyterhub/root-ca.key")
 c.JupyterHub.ssl_cert = os.environ.get("SSL_CERT", "/srv/jupyterhub/root-ca.pem")
 
 # Persist hub data on volume mounted inside container
-data_dir = os.environ.get("DATA_VOLUME_CONTAINER", "./")
+data_dir = os.environ.get("DATA_VOLUME_CONTAINER", "")
 
-c.JupyterHub.cookie_secret_file = os.path.join(data_dir, "jupyterhub_cookie_secret")
+c.JupyterHub.cookie_secret_file = data_dir + "jupyterhub_cookie_secret"
 
 c.JupyterHub.services = []
 if int(notebook_idle_timeout) > 0:
