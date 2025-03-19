@@ -1,6 +1,6 @@
 services:
   cogstack-jupyter-hub:
-    image: cogstacksystems/jupyter-hub:latest-${CPU_ARCHITECTURE:-amd64}
+    image: cogstacksystems/jupyter-hub:2.0.0-${CPU_ARCHITECTURE:-amd64}
     container_name: cogstack-jupyter-hub
     restart: always
     environment:
@@ -22,8 +22,8 @@ services:
       - ../config/jupyterhub_cookie_secret:/srv/jupyterhub/jupyterhub_cookie_secret:ro
       # User list and jupyter config
       - ../config/jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py:ro
-      - ../config/userlist:/srv/jupyterhub/userlist:ro
-      - ../config/teamlist:/srv/jupyterhub/teamlist:ro
+      - ../config/userlist:/srv/jupyterhub/userlist:rw
+      - ../config/teamlist:/srv/jupyterhub/teamlist:rw
       # Give access to Docker socket
       - /var/run/docker.sock:/var/run/docker.sock
     ulimits:

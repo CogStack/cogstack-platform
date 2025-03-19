@@ -317,8 +317,8 @@ if int(notebook_idle_timeout) > 0:
 #------------------------------------------------------------------------------
 # This is an application.
 
-c.JupyterHub.pid_file = "/etc/jupyterhub/jupyter_hub.pid"
-c.ConfigurableHTTPProxy.pid_file = "/etc/jupyterhub/jupyter_hub_proxy.pid"
+c.JupyterHub.pid_file = "/srv/jupyterhub/jupyter_hub.pid"
+c.ConfigurableHTTPProxy.pid_file = "/srv/jupyterhub/jupyter_hub_proxy.pid"
 
 # The date format used by logging formatters for %(asctime)s
 #  Default: "%Y-%m-%d %H:%M:%S"
