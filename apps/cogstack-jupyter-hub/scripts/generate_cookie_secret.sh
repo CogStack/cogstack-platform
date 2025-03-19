@@ -2,4 +2,4 @@
 
 set -e
 
-openssl rand -hex 32 > ./config/jupyterhub_cookie_secret
+openssl rand -hex 32 > ../config/jupyterhub_cookie_secret
