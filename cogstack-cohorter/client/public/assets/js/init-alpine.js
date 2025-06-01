@@ -699,9 +699,10 @@ function data() {
             { value: this.filter_result['gender']['1'], name: 'Male'},
             { value: this.filter_result['gender']['2'], name: 'Female'},
             { value: this.filter_result['gender']['3'], name: 'Unknown'}],
-          radius: ['50%', '80%'],
+          radius: ['20%', '80%'],
           label: {
-            formatter: '{b}: ({d}%)'
+            formatter: '{b}: ({d}%)',
+            color: 'gray'
           }
         }]
       };
@@ -715,9 +716,10 @@ function data() {
           data: [
             { value: this.filter_result['alive']['1'], name: 'Alive'},
             { value: this.filter_result['alive']['2'], name: 'Died'}],
-          radius: ['50%', '80%'],
+          radius: ['20%', '80%'],
           label: {
-            formatter: '{b}: ({d}%)'
+            formatter: '{b}: ({d}%)',
+            color: 'gray'
           }
         }]
       };
@@ -743,7 +745,7 @@ function data() {
         xAxis: [ { type: 'value', name: 'Age' } ],
         yAxis: [ { type: 'value', name: 'Count'  } ],
         tooltip: [{show: true}],
-        series: [ { name: 'Age', type: 'bar', barWidth: '99%', data: resp.data.map((x,i) => [(i*10)+5, x]) } ]
+        series: [ { name: 'Age', type: 'bar', barWidth: '80%', data: resp.data.map((x,i) => [(i*10)+5, x]) } ]
       };
       age_chart.setOption(option);
       this.age_chart_updating = false;
@@ -755,7 +757,7 @@ function data() {
         xAxis: [ { type: 'category', name: 'ethnicity', data: ['Asian', 'Black', 'White', 'Mixed', 'Other', 'Unknown'] } ],
         yAxis: [ { type: 'value', name: 'Count'  } ],
         tooltip: [{show: true}],
-        series: [ { name: 'ethnicity', type: 'bar', barWidth: '60%', data:  [...Array(6).keys()].map(x => this.filter_result['ethnicity'][`${x+1}`])} ]
+        series: [ { name: 'ethnicity', type: 'bar', barWidth: '80%', data:  [...Array(6).keys()].map(x => this.filter_result['ethnicity'][`${x+1}`])} ]
       };
       ethnicity_chart.setOption(option);
     },

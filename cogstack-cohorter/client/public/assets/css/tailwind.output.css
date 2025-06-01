@@ -933,6 +933,11 @@ select {
   width: 100%;
 }
 
+.w-100 {
+  width: 20rem;
+}
+
+
 .w-5 {
   width: 1.25rem;
 }
@@ -1158,6 +1163,16 @@ select {
 .bg-gray-100 {
   --tw-bg-opacity: 1;
   background-color: rgb(244 245 247 / var(--tw-bg-opacity));
+}
+
+.bg-gray-700 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(36 38 35 / var(--tw-bg-opacity));
+}
+
+.bg-gray-800 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(26 28 25 / var(--tw-bg-opacity));
 }
 
 .bg-purple-500 {
@@ -1439,6 +1454,11 @@ select {
 .hover\:bg-cool-gray-200:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(226 232 240 / var(--tw-bg-opacity));
+}
+
+.hover\:bg-cool-gray-600:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(126 132 140 / var(--tw-bg-opacity));
 }
 
 .hover\:text-gray-800:hover {

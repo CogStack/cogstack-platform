@@ -1,8 +1,8 @@
 # CogStack Cohort
 
-![demo](cogstack-cohort-demo.gif)
+![demo](cohort_dark_mode_demo.gif)
 
-This webapp is a cohort identification app for users to obtain the number of patients satifying the search query. Both structured and unstructured data are used. Structured data include age, gender, dod and ethnicity. Unstructured (text) data are processed using [MedCAT](https://github.com/CogStack/MedCAT) and the MedCAT annotations are used for searching.
+This webapp is a cohort app for users to obtain the number of patients satifying the search query. Both structured and unstructured data are used. Structured data include age, gender, dod and ethnicity. Unstructured (text) data are processed using [MedCAT](https://github.com/CogStack/MedCAT) and the MedCAT annotations are used for searching.
 
 ### Frontend
 The frontend of the app is in the `client` folder. It is adapted from [Windmill Dashboard](https://windmillui.com/dashboard-html) with [tailwindcss](https://tailwindcss.com/) for styling and [alpine.js](https://alpinejs.dev/) for interactivity. The other runtime dependencies are [ECharts](https://echarts.apache.org/en/index.html) for charts and [popper.js](https://popper.js.org/) for tooltips. The `client` folder can be left untouched for running the app. If you want to change the frontend, in the app folder run `cd client && npm install`. Run `npm run tailwind` in the `client` folder after adding any tailwindcss classes.
@@ -18,7 +18,9 @@ The backend of the app is in the `server` folder which is a [node.js](https://no
 
 There is a script `gen_random_data.js` in `server/data/` folder to generate the above 6 files completely randomly so you can still try the app without any real data. In the app folder run `cd server/data && node --max-old-space-size=32768  gen_random_data.js`.
 
-Please make sure to have the 6 data files ready in the `server/data/` folder before starting the server. To start the server, in the app folder run `cd server && npm install && npm run start`. There is also a Dockerfile in the app folder if using docker, to build and run the container, run `docker build --tag cohortingtool/webapp . && docker run  -p 3000:3000 cohortingtool/webapp`.
+Please make sure to have the 6 data files ready in the `server/data/` folder before starting the server. To start the server, in the app folder run `cd server && npm install && npm run start`. 
+
+There is also a Dockerfile in the app folder if using docker, to build and run the container, run `docker build --tag cohortingtool/webapp . && docker run  -p 3000:3000 cohortingtool/webapp`.
 
 ### Run using Docker with random data
 The following code can be used to run the app using Docker with random data:
