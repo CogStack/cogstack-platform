@@ -3,9 +3,9 @@ name: docker-jupyter-singleuser-gpu
 on:
 
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
     
   release:
     types: [published]
@@ -40,7 +40,7 @@ jobs:
       - name: Git Sumbodule Update
         run: |
              git submodule update --init --recursive
-             git pull --recurse-submodules origin master
+             git pull --recurse-submodules origin main
              git submodule update --remote --recursive
 
       - name: Log in to Docker Hub
@@ -68,12 +68,12 @@ jobs:
              
       - name: set docker release tag name
         id: set_release_version
-        if: ${{ env.RELEASE_VERSION != 'master' }}
+        if: ${{ env.RELEASE_VERSION != 'main' }}
         run: echo "RELEASE_VERSION=${RELEASE_VERSION#?}" >> $GITHUB_ENV
 
       - name: set docker release tag name
         id: set_release_version_latest
-        if: ${{ env.RELEASE_VERSION == 'master' }}
+        if: ${{ env.RELEASE_VERSION == 'main' }}
         run: echo "RELEASE_VERSION=latest" >> $GITHUB_ENV
 
       - name: set CPU architecture
