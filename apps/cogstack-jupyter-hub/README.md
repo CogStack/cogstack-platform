@@ -1,6 +1,6 @@
 # Introduction
 
-This repo has been reinstated. The custom jupyter-hub image is specified in the [CogStack-Nifi](https://github.com/CogStack/CogStack-NiFi/tree/master/services/jupyter-hub) project.
+This repo has been reinstated. The custom jupyter-hub image is specified in the [CogStack-Nifi](https://github.com/CogStack/CogStack-NiFi/tree/main/services/jupyter-hub) project.
 
 
 This repository contains a custom Jupyter Hub Docker image with example notebooks to play with. \
@@ -37,7 +37,7 @@ Full list found in [requirements.txt](./requirements.txt).
 
 ## Security
 
-Certificates used are located in the `./security/` folder, taken from the [Cogstack-NiFi](https://github.com/CogStack-NiFi) security folder, [root-ca.key](https://raw.githubusercontent.com/CogStack/CogStack-NiFi/refs/heads/master/security/root-ca.key) and [root-ca.pem](https://raw.githubusercontent.com/CogStack/CogStack-NiFi/refs/heads/master/security/root-capem), read the [security section](https://cogstack-nifi.readthedocs.io/en/latest/security.html) for more info on how to generate them from the main NiFi repository.
+Certificates used are located in the `./security/` folder, taken from the [Cogstack-NiFi](https://github.com/CogStack-NiFi) security folder, [root-ca.key](https://raw.githubusercontent.com/CogStack/CogStack-NiFi/refs/heads/main/security/root-ca.key) and [root-ca.pem](https://raw.githubusercontent.com/CogStack/CogStack-NiFi/refs/heads/main/security/root-capem), read the [security section](https://cogstack-nifi.readthedocs.io/en/latest/security.html) for more info on how to generate them from the main NiFi repository.
 
 ## Setting up your own hub
 

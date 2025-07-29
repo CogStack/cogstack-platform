@@ -53,7 +53,7 @@ jobs:
       - name: Git Sumbodule Update
         run: |
              git submodule update --init --recursive
-             git pull --recurse-submodules origin master
+             git pull --recurse-submodules origin main
              git submodule update --remote --recursive
 
       - name: Log in to Docker Hub

@@ -30,9 +30,6 @@ c.DockerSpawner.image = os.getenv("DOCKER_NOTEBOOK_IMAGE", "cogstacksystems:jupy
 # using the DOCKER_SPAWN_CMD environment variable.
 spawn_cmd = os.environ.get("DOCKER_SPAWN_CMD", "start-singleuser.sh")
 
-c.DockerSpawner.extra_create_kwargs.update({"command": spawn_cmd})
-# c.DockerSpawner.extra_create_kwargs.update({ "volume_driver": "local" })
-
 # Connect containers to this Docker network
 # IMPORTANT, THIS MUST MATCH THE NETWORK DECLARED in "services.yml", by default: "cogstack-net"
 network_name = os.environ.get("DOCKER_NETWORK_NAME", "cogstack-net")
@@ -178,9 +175,7 @@ c.SystemdSpawner.dynamic_users = True
 c.PAMAuthenticator.admin_groups = {"wheel"}
 c.Authenticator.allowed_users = whitelist = set()
 
-
 #c.Authenticator.manage_groups = True
-
 #c.Authenticator.allow_all = True
 
 curr_dir = os.path.dirname(__file__)
@@ -206,6 +201,10 @@ def per_user_limit(role):
 
 # Spawn single-user servers as Docker containers
 c.JupyterHub.spawner_class = DockerSpawner
+
+# set DockerSpawner args
+c.DockerSpawner.extra_create_kwargs.update({"command": spawn_cmd})
+# c.DockerSpawner.extra_create_kwargs.update({ "volume_driver": "local" })
 c.DockerSpawner.extra_create_kwargs = {"user": "root"}
 
 with open(userlist_path) as f:
@@ -264,6 +263,7 @@ c.DockerSpawner.environment = {
     "GRANT_SUDO": "1",
     "UID": "0", # workaround https://github.com/jupyter/docker-stacks/pull/420,
 }
+
 c.DockerSpawner.environment.update(ENV_PROXIES)
 
 # Alternative, use: "nativeauthenticator.NativeAuthenticator"
