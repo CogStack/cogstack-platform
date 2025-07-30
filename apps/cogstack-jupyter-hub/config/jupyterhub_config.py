@@ -16,107 +16,104 @@ class LocalNativeAuthenticator(NativeAuthenticator, LocalAuthenticator):
     pass
 
 
-c: Config = get_config()
-
-# Spawn containers from this image
-# Either use the CoGstack one from the repo which is huge and contains all the stuff needed or,
-# use the default official one which is clean.
-c.DockerSpawner.image = os.getenv("DOCKER_NOTEBOOK_IMAGE", "cogstacksystems:jupyterhub/singleuser:latest-amd64")
+DOCKER_NOTEBOOK_IMAGE = os.getenv("DOCKER_NOTEBOOK_IMAGE", "cogstacksystems:jupyterhub/singleuser:latest-amd64")
 
 # JupyterHub requires a single-user instance of the Notebook server, so we
 # default to using the `start-singleuser.sh` script included in the
 # jupyter/docker-stacks *-notebook images as the Docker run command when
 # spawning containers.  Optionally, you can override the Docker run command
 # using the DOCKER_SPAWN_CMD environment variable.
-spawn_cmd = os.environ.get("DOCKER_SPAWN_CMD", "start-singleuser.sh")
+SPAWN_CMD = os.environ.get("DOCKER_SPAWN_CMD", "start-singleuser.sh")
 
 # Connect containers to this Docker network
 # IMPORTANT, THIS MUST MATCH THE NETWORK DECLARED in "services.yml", by default: "cogstack-net"
-network_name = os.environ.get("DOCKER_NETWORK_NAME", "cogstack-net")
+NETWORK_NAME = os.environ.get("DOCKER_NETWORK_NAME", "cogstack-net")
 
 # The IP address or hostname of the JupyterHub container in the Docker network
-hub_container_ip_or_name = os.environ.get("DOCKER_JUPYTER_HUB_CONTAINER_NAME", "cogstack-jupyter-hub")
+HUB_CONTAINER_IP_OR_NAME = os.environ.get("DOCKER_JUPYTER_HUB_CONTAINER_NAME", "cogstack-jupyter-hub")
 
 # The timeout in seconds after which the idle notebook container will be shutdown
-notebook_idle_timeout = os.environ.get("DOCKER_NOTEBOOK_IDLE_TIMEOUT", "7200")
+NOTEBOOK_IDLE_TIMEOUT = int(os.environ.get("DOCKER_NOTEBOOK_IDLE_TIMEOUT", "7200"))
 
-c.DockerSpawner.use_internal_ip = True
-c.DockerSpawner.network_name = network_name
-# Pass the network name as argument to spawned containers
-c.DockerSpawner.extra_host_config = {"network_mode": network_name}
+SELECT_NOTEBOOK_IMAGE_ALLOWED = str(os.environ.get("DOCKER_SELECT_NOTEBOOK_IMAGE_ALLOWED", "false")).lower()
+
+RUN_IN_DEBUG_MODE = str(os.environ.get("DOCKER_NOTEBOOK_DEBUG_MODE", "false")).lower()
 
 # Explicitly set notebook directory because we"ll be mounting a host volume to
 # it.  Most jupyter/docker-stacks *-notebook images run the Notebook server as
 # user `jovyan`, and set the notebook directory to `/home/jovyan/work`.
 # We follow the same convention.
-notebook_dir = os.environ.get("DOCKER_NOTEBOOK_DIR", "/home/jovyan/work")
-shared_content_dir = os.environ.get("DOCKER_SHARED_DIR", "/home/jovyan/scratch")
-work_dir = os.environ.get("JUPYTER_WORK_DIR", "/lab/workspaces/auto-b/tree/" + str(notebook_dir.split("/")[-1]))
-
-#c.DockerSpawner.notebook_dir = notebook_dir
-# Mount the real user"s Docker volume on the host to the notebook user"s
-# notebook directory in the container
-c.DockerSpawner.volumes = {"jupyterhub-user-{username}": notebook_dir, "jupyter-hub-shared-scratch": shared_content_dir}
-# volume_driver is no longer a keyword argument to create_container()
-
-
-# Remove containers once they are stopped
-# c.DockerSpawner.remove_containers = False # Deprected for c.DockerSpawner.remove
-c.DockerSpawner.remove = False
-
-select_notebook_image_allowed = os.environ.get("DOCKER_SELECT_NOTEBOOK_IMAGE_ALLOWED", "false")
-if select_notebook_image_allowed == "true":
-    # c.DockerSpawner.image_whitelist has been deprecated for allowed_images
-    c.DockerSpawner.allowed_images = {
-        "minimal": "jupyterhub/singleuser:latest-amd64",
-        "cogstack": "cogstacksystems/jupyter-singleuser:latest-amd64",
-        "cogstack-gpu": "cogstacksystem s/jupyter-singleuser-gpu:latest-amd64"
-    }
-    # https://github.com/jupyterhub/dockerspawner/issues/423
-    c.DockerSpawner.remove = True
-
-run_in_debug_mode = os.environ.get("DOCKER_NOTEBOOK_DEBUG_MODE", "false")
-
-if run_in_debug_mode == "true":
-    # For debugging arguments passed to spawned containers
-    c.DockerSpawner.debug = True
-    c.Spawner.debug = True
-    # Enable debug-logging of the single-user server
-    c.LocalProcessSpawner.debug = True
+NOTEBOOK_DIR = os.environ.get("DOCKER_NOTEBOOK_DIR", "/home/jovyan/work")
+SHARED_CONTENT_DIR = os.environ.get("DOCKER_SHARED_DIR", "/home/jovyan/scratch")
+#WORK_DIR = os.environ.get("DOCKER_JUPYTER_WORK_DIR", "/lab/workspaces/auto-b/tree/" + str(NOTEBOOK_DIR.split("/")[-1]))
+WORK_DIR = "/lab/"
 
 ENV_PROXIES = {
     "HTTP_PROXY": os.environ.get("HTTP_PROXY", ""),
     "HTTPS_PROXY": os.environ.get("HTTPS_PROXY", ""),
-    "NO_PROXY": ",".join(list(filter(len, os.environ.get("NO_PROXY", "").split(",") + [hub_container_ip_or_name]))),
+    "NO_PROXY": ",".join(list(filter(len, os.environ.get("NO_PROXY", "").split(",") + [HUB_CONTAINER_IP_OR_NAME]))),
     "http_proxy": os.environ.get("HTTP_PROXY", os.environ.get("http_proxy", "")),
     "https_proxy": os.environ.get("HTTPS_PROXY", os.environ.get("https_proxy", "")),
-    "no_proxy": ",".join(list(filter(len, os.environ.get("no_proxy", "").split(",") + [hub_container_ip_or_name]))),
+    "no_proxy": ",".join(list(filter(len, os.environ.get("no_proxy", "").split(",") + [HUB_CONTAINER_IP_OR_NAME]))),
 }
 
 os.environ["NO_PROXY"] = ""
 os.environ["no_proxy"] = ""
 os.environ["HTTP_PROXY"] = ""
 os.environ["HTTPS_PROXY"] = ""
-os.environ["http_proxy"] = ""
+os.environ["http_proxy"] = ""   
 os.environ["https_proxy"] = ""
 
+c: Config = get_config()
 
-"""
-    def pre_spawn_hook(spawner):
-        username = str(spawner.user.name).lower()
-        try:
-            pwd.getpwnam(username)
-        except KeyError:
-            subprocess.check_call(["useradd", "-ms", "/bin/bash", username])
-"""
+# Spawn containers from this image
+# Either use the CoGstack one from the repo which is huge and contains all the stuff needed or,
+# use the default official one which is clean.
+c.DockerSpawner.image = DOCKER_NOTEBOOK_IMAGE
+
+c.DockerSpawner.use_internal_ip = True
+c.DockerSpawner.network_name = NETWORK_NAME
+# Pass the network name as argument to spawned containers
+c.DockerSpawner.extra_host_config = {"network_mode": NETWORK_NAME}
+
+# # Mount the real users Docker volume on the host to the notebook user"s
+# # notebook directory in the container
+c.DockerSpawner.volumes = {"jupyterhub-user-{username}": NOTEBOOK_DIR, "jupyter-hub-shared-scratch": SHARED_CONTENT_DIR}
+
+# volume_driver is no longer a keyword argument to create_container()
+
+# Remove containers once they are stopped
+c.DockerSpawner.remove = False
+
+
+if SELECT_NOTEBOOK_IMAGE_ALLOWED == "true":
+    # c.DockerSpawner.image_whitelist has been deprecated for allowed_images
+    c.DockerSpawner.allowed_images = {
+        "minimal": "jupyterhub/singleuser:latest-amd64",
+        "cogstack": "cogstacksystems/jupyter-singleuser:latest-amd64",
+        "cogstack-gpu": "cogstacksystems/jupyter-singleuser-gpu:latest-amd64"
+    }
+    # https://github.com/jupyterhub/dockerspawner/issues/423
+    c.DockerSpawner.remove = True
+
+if RUN_IN_DEBUG_MODE == "true":
+    # For debugging arguments passed to spawned containers
+    c.DockerSpawner.debug = True
+    c.Spawner.debug = True
+    # Enable debug-logging of the single-user server
+    c.LocalProcessSpawner.debug = True
 
 
 # Spawn single-user servers as Docker containers
 class DockerSpawner(dockerspawner.DockerSpawner):
     def start(self):
         # username is self.user.name
-        self.volumes = {"jupyterhub-user-{}".format(self.user.name): notebook_dir}
+        self.volumes = {"jupyterhub-user-{}".format(self.user.name): NOTEBOOK_DIR}
 
+        # Mount the real users Docker volume on the host to the notebook user"s
+        # # notebook directory in the container
+        #self.volumes = {f"jupyterhub-user-{self.user.name}": NOTEBOOK_DIR, "jupyter-hub-shared-scratch": SHARED_CONTENT_DIR}
+        
         if self.user.name not in whitelist:
             whitelist.add(self.user.name)
             with open(userlist_path, "a") as f:
@@ -125,7 +122,7 @@ class DockerSpawner(dockerspawner.DockerSpawner):
 
         if self.user.name in list(team_map.keys()):
             for team in team_map[self.user.name]:
-                team_dir_path = os.path.join(shared_content_dir, team)
+                team_dir_path = os.path.join(SHARED_CONTENT_DIR, team)
                 self.volumes["jupyterhub-team-{}".format(team)] = {
                     "bind": team_dir_path,
                     "mode": "rw",  # or ro for read-only
@@ -133,7 +130,7 @@ class DockerSpawner(dockerspawner.DockerSpawner):
 
         # this is a temporary fix, need to actually check permissions
         self.mem_limit = resource_allocation_user_ram_limit
-        self.post_start_cmd = "chmod -R 777 " + shared_content_dir
+        self.post_start_cmd = "chmod -R 777 " + SHARED_CONTENT_DIR
 
         return super().start()
 
@@ -151,7 +148,17 @@ def pre_spawn_hook(spawner: DockerSpawner):
         traceback.print_exc()
 
 
-c.Spawner.default_url = work_dir
+"""
+    def pre_spawn_hook(spawner):
+        username = str(spawner.user.name).lower()
+        try:
+            pwd.getpwnam(username)
+        except KeyError:
+            subprocess.check_call(["useradd", "-ms", "/bin/bash", username])
+"""
+
+
+c.Spawner.default_url = WORK_DIR
 c.Spawner.pre_spawn_hook = pre_spawn_hook
 
 #c.Spawner.ip = "127.0.0.1"
@@ -203,9 +210,11 @@ def per_user_limit(role):
 c.JupyterHub.spawner_class = DockerSpawner
 
 # set DockerSpawner args
-c.DockerSpawner.extra_create_kwargs.update({"command": spawn_cmd})
+c.DockerSpawner.extra_create_kwargs.update({"command": SPAWN_CMD})
 # c.DockerSpawner.extra_create_kwargs.update({ "volume_driver": "local" })
 c.DockerSpawner.extra_create_kwargs = {"user": "root"}
+
+c.DockerSpawner.notebook_dir = NOTEBOOK_DIR
 
 with open(userlist_path) as f:
     for line in f:
@@ -277,7 +286,7 @@ c.JupyterHub.authenticator_class = "firstuseauthenticator.FirstUseAuthenticator"
 # User containers will access hub by container name on the Docker network
 c.JupyterHub.ip = "0.0.0.0"
 c.JupyterHub.hub_ip = "0.0.0.0"
-c.JupyterHub.hub_connect_ip = hub_container_ip_or_name
+c.JupyterHub.hub_connect_ip = HUB_CONTAINER_IP_OR_NAME
 
 
 jupyter_hub_port = int(os.environ.get("JUPYTERHUB_INTERNAL_PORT", 8888))
@@ -301,14 +310,15 @@ data_dir = os.environ.get("DATA_VOLUME_CONTAINER", "")
 c.JupyterHub.cookie_secret_file = data_dir + "jupyterhub_cookie_secret"
 
 c.JupyterHub.services = []
-if int(notebook_idle_timeout) > 0:
+
+if NOTEBOOK_IDLE_TIMEOUT > 0:
     c.JupyterHub.services.append({
         "name": "idle-culler",
         "admin": True,
         "command": [
             sys.executable,
             "-m", "jupyterhub_idle_culler",
-            f"--timeout={notebook_idle_timeout}",
+            f"--timeout={NOTEBOOK_IDLE_TIMEOUT}",
         ],
     })
 

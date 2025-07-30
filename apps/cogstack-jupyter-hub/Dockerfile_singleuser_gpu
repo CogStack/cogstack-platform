@@ -220,6 +220,8 @@ COPY notebooks /home/jovyan/work/
 WORKDIR /home/jovyan
 USER jovyan
 
+RUN echo "cd /home/jovyan/work" >> /home/jovyan/.bashrc
+
 # Configure container startup
 ENTRYPOINT ["tini", "-g", "--"]
 

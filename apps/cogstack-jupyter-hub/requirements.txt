@@ -46,3 +46,4 @@ plotly==6.1.1
 click==8.2.1
 medcat==1.16.0
 torchvision>=0.20.1
+traitlets==5.14.3
