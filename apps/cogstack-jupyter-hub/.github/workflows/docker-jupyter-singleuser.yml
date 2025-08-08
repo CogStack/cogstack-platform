@@ -68,13 +68,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Build and Push CPU Image
-        run: |
-          docker build --platform linux/${{ matrix.platform }} \
-            -t cogstacksystems/jupyter-singleuser:${{ needs.setup.outputs.release_version }}-${{ matrix.platform }} \
-            -f Dockerfile_singleuser --build-arg CPU_ARCHITECTURE=${{ matrix.platform }} .
-          docker push cogstacksystems/jupyter-singleuser:${{ needs.setup.outputs.release_version }}-${{ matrix.platform }}
+        uses: docker/build-push-action@v6
+        with:
+          platforms: linux/${{ matrix.platform }}
+          file: Dockerfile_singleuser
+          build-args: |
+            CPU_ARCHITECTURE=${{ matrix.platform }}
+          tags: cogstacksystems/jupyter-singleuser:${{ needs.setup.outputs.release_version }}-${{ matrix.platform }}
+          push: true
 
   build-gpu:
     needs: setup
