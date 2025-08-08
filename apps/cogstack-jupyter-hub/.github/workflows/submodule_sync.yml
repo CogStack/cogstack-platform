@@ -3,15 +3,18 @@ name: submodules-sync
 on:
 
   push:
-    branches: [main]
+    branches: ['**']
+    tags: ['v*.*.*']
   pull_request:
-    branches: [main]
-  
+    branches: ['**']
   release:
     types: [published]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+
+env:
+  CONTEXT: ./
 
 jobs:
   sync:
