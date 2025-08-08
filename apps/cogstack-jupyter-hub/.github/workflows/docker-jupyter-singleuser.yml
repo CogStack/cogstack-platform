@@ -66,6 +66,9 @@ jobs:
       matrix:
         platform: [amd64, arm64]
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
       - name: Build and Push CPU Image
         run: |
           docker build --platform linux/${{ matrix.platform }} \
