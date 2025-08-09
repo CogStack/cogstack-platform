@@ -51,7 +51,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
+  
       - name: Log in to Docker Hub
         if: ${{ github.actor != 'dependabot[bot]' }}
         uses: docker/login-action@v3
@@ -59,8 +59,18 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
+      - name: Debug login
+        run: docker info
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+
+
+
+      # Optional: mark that login ran successfully
+      - name: Flag login success
+        if: ${{ github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false) }}
+        run: echo "DOCKER_AUTH=1" >> $GITHUB_ENV  
 
       - name: Build and Push CPU Image
         uses: docker/build-push-action@v6
@@ -70,7 +80,7 @@ jobs:
           build-args: |
             CPU_ARCHITECTURE=${{ matrix.platform }}
           tags: cogstacksystems/jupyter-singleuser:${{ needs.setup.outputs.release_version }}-${{ matrix.platform }}
-          push: ${{ github.actor != 'dependabot[bot]' }}
+          push: ${{ env.DOCKER_AUTH == '1' }}
 
   build-gpu:
     needs: setup
