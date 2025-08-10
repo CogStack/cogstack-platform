@@ -52,6 +52,9 @@ volumes:
   jupyter-hub-shared-scratch:
     driver: local
 
+#---------------------------------------------------------------------------#
+# Docker networks.                                                          #
+#---------------------------------------------------------------------------#
 networks:
   cognet:
     name: cogstack-net

@@ -1,6 +1,6 @@
 services:
   cogstack-jupyter-hub:
-    image: cogstacksystems/jupyter-hub:2.0.1-${CPU_ARCHITECTURE:-amd64}
+    image: cogstacksystems/jupyter-hub:2.0.2-${CPU_ARCHITECTURE:-amd64}
     container_name: cogstack-jupyter-hub
     restart: always
     environment:
@@ -50,6 +50,9 @@ volumes:
   jupyter-hub-shared-scratch:
     driver: local
 
+#---------------------------------------------------------------------------#
+# Docker networks.                                                          #
+#---------------------------------------------------------------------------#
 networks:
   cognet:
     driver: bridge
