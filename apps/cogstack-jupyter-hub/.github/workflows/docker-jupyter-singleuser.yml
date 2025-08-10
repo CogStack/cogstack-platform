@@ -44,10 +44,15 @@ jobs:
 
   build-cpu:
     needs: setup
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
         platform: [amd64, arm64]
+        include:
+          - platform: amd64
+            runner: ubuntu-22.04
+          - platform: arm64
+            runner: ubuntu-22.04-arm
     steps:
       - name: Checkout
         uses: actions/checkout@v3
