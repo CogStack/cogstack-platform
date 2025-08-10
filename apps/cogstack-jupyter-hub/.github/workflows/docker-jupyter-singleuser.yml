@@ -65,7 +65,8 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
       # Optional: mark that login ran successfully
       - name: Flag login success
