@@ -17,7 +17,7 @@ jsoncsv==2.2.5
 simplejson==3.20.1
 detect==2020.12.3
 nltk==3.9.1
-keras==3.10.0
+keras==3.11.2
 bokeh==3.7.3
 seaborn==0.13.2
 matplotlib==3.10.3
