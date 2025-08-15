@@ -58,5 +58,5 @@ volumes:
 #---------------------------------------------------------------------------#
 networks:
   cognet:
-    driver: bridge
+    external: true
     name: cogstack-net

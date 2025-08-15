@@ -58,4 +58,6 @@ volumes:
 #---------------------------------------------------------------------------#
 networks:
   cognet:
+    external: true
     name: cogstack-net
+
