@@ -13,6 +13,7 @@ services:
     env_file:
       - ${JUPYTERHUB_ENV_FILE_PATH_GENERAL:-../env/general.env}
       - ${JUPYTERHUB_ENV_FILE_PATH_CONFIG:-../env/jupyter.env}
+      
     volumes:
       - jupyter-hub-shared-scratch:/home/jovyan/scratch
       - jupyter-hub-vol:/srv/jupyterhub
