@@ -39,16 +39,20 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      - name: Compute release tag
+      - name: Get and Set Release Version
         id: release_version
         run: |
-          if [[ "${GITHUB_REF#refs/heads/}" == "${GITHUB_REF}" ]]; then
-            VERSION="${GITHUB_REF#refs/*/}"
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          elif [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/}"
+          elif [[ "$GITHUB_REF" == refs/heads/* ]]; then
+            VERSION="${GITHUB_REF#refs/heads/}"
           else
             VERSION="latest"
           fi
-          echo "RELEASE_VERSION=$VERSION" >> "$GITHUB_ENV"
-          echo "release_version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "release_version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Build and push Jupyter Hub image
         uses: docker/build-push-action@v6
