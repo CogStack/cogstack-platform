@@ -11,7 +11,7 @@ services:
       - JUPYTERHUB_INTERNAL_PROXY_API_PORT=${JUPYTERHUB_INTERNAL_PROXY_API_PORT:-8887}
       - JUPYTERHUB_SSL_PORT=${JUPYTERHUB_SSL_PORT:-443}
     env_file:
-      - ${JUPYTERHUB_ENV_FILE_PATH_GENERAL:-../env/general.env}
+      - ${DEPLOYMENT_ENV_FILE_PATH_GENERAL:-../env/general.env}
       - ${JUPYTERHUB_ENV_FILE_PATH_CONFIG:-../env/jupyter.env}
       
     volumes:
