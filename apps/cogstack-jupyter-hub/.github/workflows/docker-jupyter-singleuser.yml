@@ -17,7 +17,7 @@ jobs:
       release_version: ${{ steps.release_version.outputs.release_version }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         with:
           submodules: true
 
@@ -34,11 +34,6 @@ jobs:
       - name: Get and Set Release Version
         id: release_version
         run: |
-          # Extract version from ref:
-          # - If tag starts with "v" (e.g. refs/tags/v1.2.3), strip the "v" → 1.2.3
-          # - If tag doesn't start with "v" (e.g. refs/tags/1.2.3), just strip the prefix → 1.2.3
-          # - If it's a branch (e.g. refs/heads/main), use the branch name → main
-          # - Fallback to "latest" for unrecognized refs
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
             VERSION="${GITHUB_REF#refs/tags/v}"
           elif [[ "$GITHUB_REF" == refs/tags/* ]]; then
@@ -64,7 +59,7 @@ jobs:
             runner: ubuntu-22.04-arm
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
   
       - name: Log in to Docker Hub
         if: ${{ github.actor != 'dependabot[bot]' }}
@@ -102,7 +97,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
 
       - name: Log in to Docker Hub
         if: ${{ github.actor != 'dependabot[bot]' }}

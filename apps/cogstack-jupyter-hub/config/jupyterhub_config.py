@@ -6,6 +6,7 @@ import sys
 import docker
 import dockerspawner
 import traceback
+import logging
 #import traitlets
 from jupyterhub.auth import LocalAuthenticator
 from nativeauthenticator import NativeAuthenticator
@@ -85,7 +86,6 @@ c.DockerSpawner.volumes = {"jupyterhub-user-{username}": NOTEBOOK_DIR, "jupyter-
 # Remove containers once they are stopped
 c.DockerSpawner.remove = False
 
-
 if SELECT_NOTEBOOK_IMAGE_ALLOWED == "true":
     # c.DockerSpawner.image_whitelist has been deprecated for allowed_images
     c.DockerSpawner.allowed_images = {
@@ -108,12 +108,12 @@ if RUN_IN_DEBUG_MODE == "true":
 class DockerSpawner(dockerspawner.DockerSpawner):
     def start(self):
         # username is self.user.name
-        self.volumes = {"jupyterhub-user-{}".format(self.user.name): NOTEBOOK_DIR}
+        #self.volumes = {"jupyterhub-user-{}".format(self.user.name): NOTEBOOK_DIR}
 
         # Mount the real users Docker volume on the host to the notebook user"s
         # # notebook directory in the container
         #self.volumes = {f"jupyterhub-user-{self.user.name}": NOTEBOOK_DIR, "jupyter-hub-shared-scratch": SHARED_CONTENT_DIR}
-        
+
         if self.user.name not in whitelist:
             whitelist.add(self.user.name)
             with open(userlist_path, "a") as f:
@@ -156,7 +156,6 @@ def pre_spawn_hook(spawner: DockerSpawner):
         except KeyError:
             subprocess.check_call(["useradd", "-ms", "/bin/bash", username])
 """
-
 
 c.Spawner.default_url = WORK_DIR
 c.Spawner.pre_spawn_hook = pre_spawn_hook
@@ -205,14 +204,15 @@ def per_user_limit(role):
     return ram_limits.get(role)
 
 
-
 # Spawn single-user servers as Docker containers
 c.JupyterHub.spawner_class = DockerSpawner
 
 # set DockerSpawner args
-c.DockerSpawner.extra_create_kwargs.update({"command": SPAWN_CMD})
-# c.DockerSpawner.extra_create_kwargs.update({ "volume_driver": "local" })
 c.DockerSpawner.extra_create_kwargs = {"user": "root"}
+c.DockerSpawner.cmd = [SPAWN_CMD] if isinstance(SPAWN_CMD, str) else SPAWN_CMD
+
+c.DockerSpawner.extra_create_kwargs.update({ "volume_driver": "local"})
+
 
 c.DockerSpawner.notebook_dir = NOTEBOOK_DIR
 
