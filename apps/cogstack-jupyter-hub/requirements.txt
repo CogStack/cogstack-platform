@@ -40,10 +40,10 @@ neo4j==5.28.1
 PyYAML==6.0.2
 opencv-python==4.11.0.86
 elasticsearch==8.18.1
-eland==8.18.2
 xnat==0.7.1
 plotly==6.1.1
 click==8.2.1
-medcat==1.16.5
 torchvision>=0.20.1
 traitlets==5.14.3
+eland>=8.12.1
+medcat==1.16.5
