@@ -46,4 +46,4 @@ click==8.2.1
 torchvision>=0.20.1
 traitlets==5.14.3
 eland>=8.12.1
-medcat==1.16.5
+medcat==1.16.0
