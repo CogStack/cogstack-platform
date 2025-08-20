@@ -191,7 +191,7 @@ COPY ./requirements.txt /srv/jupyterhub/
 RUN pip3 install --no-cache-dir -r /srv/jupyterhub/requirements.txt
 
 # install requirements for working with cogstack scripts
-#RUN pip3 install --no-cache-dir -r notebooks/demo_working_with_cogstack/requirements.txt
+RUN pip3 install --no-cache-dir -r notebooks/demo_working_with_cogstack/requirements.txt
 
 # Get the spacy model
 #ARG SPACY_MODELS="en_core_web_sm en_core_web_md en_core_web_lg"
