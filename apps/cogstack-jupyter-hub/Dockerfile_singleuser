@@ -113,7 +113,8 @@ RUN apt-get update && apt-get upgrade -y && dpkg --configure -a && \
     htop \
     libglx-mesa0 libegl1 libxrandr2 libxrandr2 libxss1 \
     libxcursor1 libxcomposite1 libasound2-dev libxi6 libxtst6 \
-    r-base
+    r-base \
+    libopenblas-dev
 
 # remove newer python version, freeze other versions for max compatibility before updates
 RUN apt --fix-missing purge $(dpkg -l | grep 'python3\.1[01]' | awk '{print $2}')
