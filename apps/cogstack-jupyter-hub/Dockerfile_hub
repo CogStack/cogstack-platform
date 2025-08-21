@@ -20,6 +20,10 @@ ENV DEBIAN_PRIORITY=critical
 ARG CPU_ARCHITECTURE
 ENV CPU_ARCHITECTURE=${CPU_ARCHITECTURE}
 
+# prefer prebuilt wheels, never build from sdist for known heavy libs
+ENV PIP_PREFER_BINARY=1
+ENV PIP_ONLY_BINARY=:all:
+
 USER root
 
 RUN apt-get update && apt-get upgrade -y && \

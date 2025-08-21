@@ -29,6 +29,10 @@ ENV NVIDIA_DRIVER_VERSION=510
 ENV NVIDIA_VISIBLE_DEVICES=all
 ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
+# prefer prebuilt wheels, never build from sdist for known heavy libs
+ENV PIP_PREFER_BINARY=1
+ENV PIP_ONLY_BINARY=:all:
+
 USER root
 
 RUN apt-get update && apt-get upgrade -y && \
