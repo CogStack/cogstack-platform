@@ -31,7 +31,6 @@ ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
 # prefer prebuilt wheels, never build from sdist for known heavy libs
 ENV PIP_PREFER_BINARY=1
-ENV PIP_ONLY_BINARY=:all:
 
 USER root
 
