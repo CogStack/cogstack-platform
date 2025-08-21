@@ -114,8 +114,9 @@ jobs:
         with:
           context: ./
           platforms: linux/amd64
-          file: Dockerfile_singleuser_gpu
+          file: Dockerfile_singleuser
           build-args: |
             CPU_ARCHITECTURE=amd64
+            GPU_BUILD=true
           tags: cogstacksystems/jupyter-singleuser-gpu:${{ needs.setup.outputs.release_version }}-amd64
           push: ${{ github.actor != 'dependabot[bot]' }}
