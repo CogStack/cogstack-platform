@@ -159,7 +159,6 @@ RUN if [ "$GPU_BUILD" = "true" ] && [ "$CPU_ARCHITECTURE" = "amd64" ]; then \
 
 
 RUN apt --fix-broken install
-RUN apt-get purge --auto-remove python3.10
 
 # Install Python 3.11 system-wide
 RUN apt-get update && apt-get install -y python3.11-full python3.11-dev python3.11-venv python3-pip \
