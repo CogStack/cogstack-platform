@@ -80,7 +80,7 @@ RUN apt-get update && apt-get upgrade -y && dpkg --configure -a && \
     apt-get clean -y && \
     apt-get install -y \
     gnupg \
-    ssl-cert \ 
+    ssl-cert \
     libevent-dev \
     libsqlite3-dev \
     libxml2-dev \
@@ -111,21 +111,22 @@ RUN apt-get update && apt-get upgrade -y && dpkg --configure -a && \
     ssh \
     jq \
     htop \
-    libglx-mesa0 libegl1 libxrandr2 libxrandr2 libxss1 \
+    libglx-mesa0 libegl1 libxrandr2 libxss1 \
     libxcursor1 libxcomposite1 libasound2-dev libxi6 libxtst6 \
     r-base \
     libopenblas-dev
 
 # remove newer python version, freeze other versions for max compatibility before updates
-RUN apt --fix-missing purge $(dpkg -l | grep 'python3\.1[01]' | awk '{print $2}')
+# RUN apt --fix-missing purge $(dpkg -l | grep 'python3\.1[01]' | awk '{print $2}')
+
+
 RUN apt --fix-broken install
 RUN apt-get purge --auto-remove python3.10
 
-# python 3.11
-RUN apt-get install -y python3.11-full python3.11-dev python3-pip python3-venv
-
-# be careful, this conflicts
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+# Install Python 3.11 system-wide
+RUN apt-get update && apt-get install -y python3.11-full python3.11-dev python3.11-venv python3-pip \
+ && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 2 \
+ && update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 2
 
 # install remaining packages
 RUN apt-get update && apt-get upgrade -y
@@ -142,6 +143,12 @@ RUN apt-get clean autoclean && apt-get autoremove --purge -y
 
 ######################################## Python / PIP SECTION ########################################
 RUN conda update conda
+
+# Create a Python 3.11 env and make it the default for builds & kernels
+RUN conda create -y -n py311 python=3.11 ipykernel && conda clean --all -f -y
+ENV CONDA_DEFAULT_ENV=py311
+ENV PATH=/opt/conda/envs/py311/bin:$PATH
+
 RUN conda install --quiet --yes \
     ipykernel \
     pip \
@@ -155,7 +162,7 @@ RUN conda clean --all -f -y
 RUN fix-permissions $CONDA_DIR && fix-permissions /home/$NB_USER
 
 # update pip and install basic utilities
-RUN pip3 install --no-cache-dir --upgrade pip wheel
+RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel
 
 # install the rest of the packages including medcat
 COPY ./requirements.txt /srv/jupyterhub/
