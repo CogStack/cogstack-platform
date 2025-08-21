@@ -19,11 +19,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
         with:
-          submodules: true
-
-      - name: Git Submodule Update
-        run: |
-          git submodule update --init --remote --recursive
+          submodules: recursive
+          fetch-depth: 0
 
       - name: Metadata for Docker
         id: meta
