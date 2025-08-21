@@ -184,7 +184,7 @@ RUN conda clean --all -f -y
 RUN fix-permissions $CONDA_DIR && fix-permissions /home/$NB_USER
 
 # update pip and install basic utilities
-RUN pip3 install --no-cache-dir --upgrade pip
+RUN pip3 install --no-cache-dir --upgrade pip wheel
 
 # install the rest of the packages including medcat
 COPY ./requirements.txt /srv/jupyterhub/
