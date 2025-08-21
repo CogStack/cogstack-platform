@@ -115,14 +115,11 @@ RUN apt-get update && apt-get upgrade -y && dpkg --configure -a && \
     htop \
     libglx-mesa0 libegl1 libxrandr2 libxss1 \
     libxcursor1 libxcomposite1 libasound2-dev libxi6 libxtst6 \
-    ocl-icd-dev ocl-icd-opencl-dev ocl-icd-libopencl1 oclgrind opencl-headers libtiff-dev\
     r-base \
     libopenblas-dev
 
 # remove newer python version, freeze other versions for max compatibility before updates
 # RUN apt --fix-missing purge $(dpkg -l | grep 'python3\.1[01]' | awk '{print $2}')
-
-
 
 ################################################################################################################################################################
 # GPU requirements section
@@ -132,15 +129,19 @@ RUN apt-get update && apt-get upgrade -y && dpkg --configure -a && \
 # If you need CuDNN or CUDA user-space libs inside the container, add them here.
 # This block only runs for amd64 when GPU_BUILD=true.
 RUN if [ "$GPU_BUILD" = "true" ] && [ "$CPU_ARCHITECTURE" = "amd64" ]; then \
-      echo "GPU build: installing minimal NVIDIA repo metadata (no heavy CUDA toolkit)"; \
-      DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ocl-icd-dev ocl-icd-opencl-dev ocl-icd-libopencl1 oclgrind opencl-headers libtiff-dev build-essential dkms \
-    curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
-      sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
-      tee /etc/apt/sources.list.d/nvidia-container-toolkit.list \
-      apt-get update && apt-get upgrade -y  \
-      apt-get install -y nvidia-docker2 nvidia-container-toolkit \
+      install -d -m 0755 /etc/apt/keyrings; \
+      curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey \
+        | gpg --dearmor -o /etc/apt/keyrings/nvidia-container-toolkit.gpg; \
+      curl -fsSL https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list \
+        | sed 's#deb https://#deb [signed-by=/etc/apt/keyrings/nvidia-container-toolkit.gpg] https://#' \
+        | tee /etc/apt/sources.list.d/nvidia-container-toolkit.list > /dev/null; \
+      apt-get update; \
+      # OPTIONAL: only if your code needs OpenCL userspace
+      apt-get install -y --no-install-recommends \
+        ocl-icd-libopencl1 ocl-icd-dev opencl-headers libtiff-dev; \
+      rm -rf /var/lib/apt/lists/*; \
     else \
-      echo "CPU build or non-amd64: skipping NVIDIA steps"; \
+      echo "CPU build or non-amd64: skipping NVIDIA repo setup"; \
     fi
 
     # Not necessary, will corrupt nvidia-doker on install, use with care
