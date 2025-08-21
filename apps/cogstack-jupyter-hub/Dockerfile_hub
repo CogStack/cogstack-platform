@@ -112,4 +112,5 @@ RUN chmod g+s /home/jovyan/scratch
 # copy scripts and config files
 COPY config/jupyterhub_config.py /etc/jupyterhub/
 
+ENV NB_UID=1000
 USER $NB_UID

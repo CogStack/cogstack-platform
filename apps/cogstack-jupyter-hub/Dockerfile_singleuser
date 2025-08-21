@@ -7,6 +7,9 @@ ARG http_proxy
 ARG https_proxy
 ARG no_proxy
 
+# set to "true" for the GPU build
+ARG GPU_BUILD=false
+
 ENV HTTP_PROXY=$HTTP_PROXY
 ENV HTTPS_PROXY=$HTTPS_PROXY
 ENV NO_PROXY=$NO_PROXY
@@ -127,8 +130,8 @@ RUN apt-get update && apt-get upgrade -y && dpkg --configure -a && \
 # ===== GPU-only system bits (optional) =====
 # Keep this lightweight; most CUDA libs come from host via NVIDIA Container Runtime.
 # If you need CuDNN or CUDA user-space libs inside the container, add them here.
-# This block only runs for amd64 when USE_GPU=true.
-RUN if [ "$USE_GPU" = "true" ] && [ "$CPU_ARCHITECTURE" = "amd64" ]; then \
+# This block only runs for amd64 when GPU_BUILD=true.
+RUN if [ "$GPU_BUILD" = "true" ] && [ "$CPU_ARCHITECTURE" = "amd64" ]; then \
       echo "GPU build: installing minimal NVIDIA repo metadata (no heavy CUDA toolkit)"; \
       DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ocl-icd-dev ocl-icd-opencl-dev ocl-icd-libopencl1 oclgrind opencl-headers libtiff-dev build-essential dkms \
     curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
