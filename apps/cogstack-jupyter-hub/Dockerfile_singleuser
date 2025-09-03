@@ -202,11 +202,11 @@ COPY ./requirements.txt /srv/jupyterhub/
 COPY notebooks/demo_working_with_cogstack/requirements.txt /srv/jupyterhub/working_with_cogstack_requirements.txt
 
 RUN if [ "$GPU_BUILD" = "true" ] && [ "$CPU_ARCHITECTURE" = "amd64" ]; then \
-      pip3 install --no-cache-dir -r /srv/jupyterhub/working_with_cogstack_requirements.txt \
-      pip3 install --no-cache-dir -r /srv/jupyterhub/requirements.txt \
+      pip3 install --no-cache-dir -r /srv/jupyterhub/working_with_cogstack_requirements.txt && \
+      pip3 install --no-cache-dir -r /srv/jupyterhub/requirements.txt ; \
     else \
-      pip3 install --no-cache-dir -r /srv/jupyterhub/working_with_cogstack_requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu/ \
-      pip3 install --no-cache-dir -r /srv/jupyterhub/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu/ \
+      pip3 install --no-cache-dir -r /srv/jupyterhub/working_with_cogstack_requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu/ && \
+      pip3 install --no-cache-dir -r /srv/jupyterhub/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu/ ; \
     fi
 
 #######################################################################################################
