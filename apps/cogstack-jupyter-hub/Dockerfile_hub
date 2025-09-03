@@ -22,6 +22,8 @@ ENV CPU_ARCHITECTURE=${CPU_ARCHITECTURE}
 
 # prefer prebuilt wheels, never build from sdist for known heavy libs
 ENV PIP_PREFER_BINARY=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+ENV PIP_NO_CACHE_DIR=1
 
 USER root
 
@@ -74,8 +76,6 @@ RUN apt-get update && apt-get upgrade -y && \
     apt-transport-https \
     fonts-dejavu \
     build-essential \
-    unixodbc \
-    unixodbc-dev \
     gfortran \
     gcc \
     git \
@@ -93,15 +93,13 @@ RUN apt-get clean autoclean && apt-get autoremove --purge -y
 RUN pip3 install --no-cache-dir --upgrade pip
 
 # utils for jupyterhub
-RUN pip3 install --no-cache-dir setuptools wheel virtualenv cython isort netifaces
+RUN pip3 install --no-cache-dir setuptools wheel virtualenv cython netifaces
 
 # jupyterhub stuff
-RUN pip3 install --no-cache-dir detect simplejson ipywidgets importlib_metadata jupyterhub-firstuseauthenticator dockerspawner jupyterhub-nativeauthenticator
+RUN pip3 install --no-cache-dir ipywidgets importlib_metadata jupyterhub-firstuseauthenticator dockerspawner jupyterhub-nativeauthenticator
 RUN pip3 install --no-cache-dir jupyterlab_widgets dask-labextension
 RUN pip3 install --no-cache-dir jupyterhub-firstuseauthenticator jupyterhub-systemdspawner jupyterhub-jwtauthenticator jupyterhub-client jupyterhub-kerberosauthenticator --ignore-installed PyYAML 
 RUN pip3 install --no-cache-dir jupyterhub-ldapauthenticator jupyterhub-nanowireauthenticator jupyterhub-kubespawner jupyterhub-idle-culler
-
-# RUN python3 -m jupyter contrib nbextension install --sys-prefix
 
 # clean up pip
 RUN pip3 cache purge

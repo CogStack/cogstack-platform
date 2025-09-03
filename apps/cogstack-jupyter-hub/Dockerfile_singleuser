@@ -31,6 +31,8 @@ ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
 # prefer prebuilt wheels, never build from sdist for known heavy libs
 ENV PIP_PREFER_BINARY=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+ENV PIP_NO_CACHE_DIR=1
 
 USER root
 
@@ -147,19 +149,9 @@ RUN if [ "$GPU_BUILD" = "true" ] && [ "$CPU_ARCHITECTURE" = "amd64" ]; then \
       echo "CPU build or non-amd64: skipping NVIDIA repo setup"; \
     fi
 
-    # Not necessary, will corrupt nvidia-doker on install, use with care
+# Not necessary, will corrupt nvidia-doker on install, use with care
 # RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends apnvidia-driver-$NVIDIA_DRIVER_VERSION pocl-opencl-icd intel-opencl-icd \
 #   mesa-opencl-icd nvidia-opencl-dev libpocl-dev beignet-opencl-icd libnvidia-egl-wayland-dev nvidia-cuda-dev nvidia-cuda-toolkit nvidia-headless-$NVIDIA_DRIVER_VERSION
-
-# NVIDIA Docker
-#################################### PREVIOUS
-#RUN export distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
-
-#RUN curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | apt-key add -
-#RUN curl -s -L https://nvidia.github.io/nvidia-docker/$(. /etc/os-release;echo $ID$VERSION_ID)/nvidia-docker.list | tee /etc/apt/sources.list.d/nvidia-docker.list
-#RUN curl -s -L https://nvidia.github.io/libnvidia-container/experimental/$(. /etc/os-release;echo $ID$VERSION_ID)/libnvidia-container-experimental.list | tee /etc/apt/sources.list.d/libnvidia-container-experimental.list
-################################################################################################################################################################
-
 
 RUN apt --fix-broken install
 
@@ -202,15 +194,20 @@ RUN conda clean --all -f -y
 RUN fix-permissions $CONDA_DIR && fix-permissions /home/$NB_USER
 
 # update pip and install basic utilities
-RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel
+RUN pip3 install --upgrade pip setuptools wheel
 
 # install the rest of the packages including medcat
 COPY ./requirements.txt /srv/jupyterhub/
-RUN pip3 install --no-cache-dir -r /srv/jupyterhub/requirements.txt
-
-COPY notebooks/demo_working_with_cogstack/requirements.txt /srv/jupyterhub/working_with_cogstack_requirements.txt
 # install requirements for working with cogstack scripts
-RUN pip3 install --no-cache-dir -r /srv/jupyterhub/working_with_cogstack_requirements.txt
+COPY notebooks/demo_working_with_cogstack/requirements.txt /srv/jupyterhub/working_with_cogstack_requirements.txt
+
+RUN if [ "$GPU_BUILD" = "true" ] && [ "$CPU_ARCHITECTURE" = "amd64" ]; then \
+      pip3 install --no-cache-dir -r /srv/jupyterhub/working_with_cogstack_requirements.txt \
+      pip3 install --no-cache-dir -r /srv/jupyterhub/requirements.txt \
+    else \
+      pip3 install --no-cache-dir -r /srv/jupyterhub/working_with_cogstack_requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu/ \
+      pip3 install --no-cache-dir -r /srv/jupyterhub/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu/ \
+    fi
 
 # Get the spacy model
 #ARG SPACY_MODELS="en_core_web_sm en_core_web_md en_core_web_lg"
