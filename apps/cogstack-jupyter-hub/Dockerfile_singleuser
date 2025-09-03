@@ -209,13 +209,6 @@ RUN if [ "$GPU_BUILD" = "true" ] && [ "$CPU_ARCHITECTURE" = "amd64" ]; then \
       pip3 install --no-cache-dir -r /srv/jupyterhub/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu/ \
     fi
 
-# Get the spacy model
-#ARG SPACY_MODELS="en_core_web_sm en_core_web_md en_core_web_lg"
-#RUN for spacy_model in ${SPACY_MODELS}; do python3 -m spacy download $spacy_model; done
-
-# clean up pip
-RUN pip3 cache purge
-
 #######################################################################################################
 
 # install R and other dependencies
