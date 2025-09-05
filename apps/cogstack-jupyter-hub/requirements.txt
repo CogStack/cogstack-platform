@@ -23,7 +23,7 @@ seaborn==0.13.2
 matplotlib==3.10.3
 graphviz==0.20.3
 plotly==6.1.1
-tqdm==4.67.1
+tqdm>=4.66.5
 pymssql==2.3.4
 mysql-connector-python==9.3.0
 dataclasses==0.6
@@ -40,8 +40,8 @@ neo4j==5.28.1
 PyYAML==6.0.2
 opencv-python==4.11.0.86
 elasticsearch==8.18.1
-xnat==0.7.1
 plotly==6.1.1
 click==8.2.1
 torchvision>=0.20.1
 traitlets==5.14.3
+xnat>=0.5.2

@@ -193,8 +193,26 @@ RUN conda clean --all -f -y
 
 RUN fix-permissions $CONDA_DIR && fix-permissions /home/$NB_USER
 
+# bust cache
+ENV UV_VERSION=latest
+
+# install rust, medcat requirement, install UV
+ENV HOME=/root
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+RUN curl -sSf https://sh.rustup.rs -o /tmp/rustup-init.sh \
+ && chmod +x /tmp/rustup-init.sh \
+ && /tmp/rustup-init.sh -y \
+ && rm /tmp/rustup-init.sh
+
+RUN curl -Ls https://astral.sh/uv/install.sh -o /tmp/install_uv.sh \
+ && bash /tmp/install_uv.sh
+
+RUN UV_PATH=$(find / -name uv -type f | head -n1) && \
+    ln -s "$UV_PATH" /usr/local/bin/uv
+
 # update pip and install basic utilities
-RUN pip3 install --upgrade pip setuptools wheel
+RUN uv pip install --upgrade --system pip setuptools wheel
 
 # install the rest of the packages including medcat
 COPY ./requirements.txt /srv/jupyterhub/
@@ -202,11 +220,11 @@ COPY ./requirements.txt /srv/jupyterhub/
 COPY notebooks/demo_working_with_cogstack/requirements.txt /srv/jupyterhub/working_with_cogstack_requirements.txt
 
 RUN if [ "$GPU_BUILD" = "true" ] && [ "$CPU_ARCHITECTURE" = "amd64" ]; then \
-      pip3 install --no-cache-dir -r /srv/jupyterhub/working_with_cogstack_requirements.txt && \
-      pip3 install --no-cache-dir -r /srv/jupyterhub/requirements.txt ; \
+      uv pip install --system --no-cache-dir -r /srv/jupyterhub/requirements.txt && \
+      uv pip install --system --no-cache-dir -r /srv/jupyterhub/working_with_cogstack_requirements.txt ; \
     else \
-      pip3 install --no-cache-dir -r /srv/jupyterhub/working_with_cogstack_requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu/ && \
-      pip3 install --no-cache-dir -r /srv/jupyterhub/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu/ ; \
+      uv pip install --system --no-cache-dir -r /srv/jupyterhub/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu/ && \
+      uv pip install --system --no-cache-dir -r /srv/jupyterhub/working_with_cogstack_requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu/ ; \
     fi
 
 #######################################################################################################
