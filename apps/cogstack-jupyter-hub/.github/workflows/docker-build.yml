@@ -33,16 +33,15 @@ jobs:
         with:
           images: cogstacksystems/jupyter-hub
           tags: |
-
-            # vX.Y.Z -> X.Y.Z and X.Y (strip "v")
-            type=semver,pattern={{version}},prefix=v
-            type=semver,pattern={{major}}.{{minor}},prefix=v
-            # latest on main AND on v-tags
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') }}
-            # branches (non-PR)
-            type=ref,event=branch,enable=${{ github.event_name != 'pull_request' }}
-            # short sha
-            type=sha,format=short
+              # vX.Y.Z -> X.Y.Z and X.Y (strip leading "v")
+              type=semver,pattern={{version}},prefix=v
+              type=semver,pattern={{major}}.{{minor}},prefix=v
+              # latest on main and on v-tags
+              type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') }}
+              # branch tag for non-PR branches
+              type=ref,event=branch,enable=${{ github.event_name != 'pull_request' }}
+              # short sha
+              type=sha,format=short
 
       - name: Docker meta (singleuser)
         id: meta_su
@@ -50,7 +49,6 @@ jobs:
         with:
           images: cogstacksystems/jupyter-singleuser
           tags: |
-
             # vX.Y.Z -> X.Y.Z and X.Y (strip "v")
             type=semver,pattern={{version}},prefix=v
             type=semver,pattern={{major}}.{{minor}},prefix=v
@@ -120,7 +118,6 @@ jobs:
         with:
           images: cogstacksystems/jupyter-hub
           tags: |
-
             # vX.Y.Z -> X.Y.Z and X.Y (strip "v")
             type=semver,pattern={{version}},prefix=v
             type=semver,pattern={{major}}.{{minor}},prefix=v
@@ -137,7 +134,6 @@ jobs:
         with:
           images: cogstacksystems/jupyter-singleuser
           tags: |
-
             # vX.Y.Z -> X.Y.Z and X.Y (strip "v")
             type=semver,pattern={{version}},prefix=v
             type=semver,pattern={{major}}.{{minor}},prefix=v
@@ -147,6 +143,7 @@ jobs:
             type=ref,event=branch,enable=${{ github.event_name != 'pull_request' }}
             # short sha
             type=sha,format=short
+ 
 
       - uses: docker/login-action@v3
         with:
@@ -203,7 +200,6 @@ jobs:
         with:
           images: cogstacksystems/jupyter-singleuser-gpu
           tags: |
-
             # vX.Y.Z -> X.Y.Z and X.Y (strip "v")
             type=semver,pattern={{version}},prefix=v
             type=semver,pattern={{major}}.{{minor}},prefix=v
@@ -252,7 +248,6 @@ jobs:
         with:
           images: cogstacksystems/jupyter-hub
           tags: |
-
             # vX.Y.Z -> X.Y.Z and X.Y (strip "v")
             type=semver,pattern={{version}},prefix=v
             type=semver,pattern={{major}}.{{minor}},prefix=v
@@ -269,7 +264,6 @@ jobs:
         with:
           images: cogstacksystems/jupyter-singleuser
           tags: |
-
             # vX.Y.Z -> X.Y.Z and X.Y (strip "v")
             type=semver,pattern={{version}},prefix=v
             type=semver,pattern={{major}}.{{minor}},prefix=v
@@ -287,21 +281,22 @@ jobs:
           ARM64: ${{ needs.build-arm64.outputs.hub_digest }}
         run: |
           set -euo pipefail
+
           # must have both digests
           if [ -z "${AMD64:-}" ] || [ -z "${ARM64:-}" ]; then
             echo "Missing hub digests (amd64='${AMD64:-}', arm64='${ARM64:-}')."
             exit 1
           fi
 
-          # stitch each tag from the hub meta
           while IFS= read -r ref; do
             [[ -z "$ref" ]] && continue
-            img="${ref%%:*}"; tag="${ref#*:}"
+            img="${ref%%:*}"
+            tag="${ref#*:}"
 
-            # optional: refuse v-prefixed tags (defensive)
+            # normalize: if tag starts with 'v', strip it (v2.0.9 -> 2.0.9)
             if [[ "$tag" =~ ^v[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
-              echo "Refusing to publish v-prefixed tag: $img:$tag"
-              exit 1
+              echo "normalize: $img:$tag  ->  $img:${tag#v}"
+              tag="${tag#v}"
             fi
 
             echo "⛵  ${img}:${tag}"
@@ -318,18 +313,25 @@ jobs:
           ARM64: ${{ needs.build-arm64.outputs.su_digest }}
         run: |
           set -euo pipefail
+
           # must have both digests
           if [ -z "${AMD64:-}" ] || [ -z "${ARM64:-}" ]; then
-            echo "Missing singleuser digests (amd64='${AMD64:-}', arm64='${ARM64:-}')."; exit 1
+            echo "Missing singleuser digests (amd64='${AMD64:-}', arm64='${ARM64:-}')."
+            exit 1
           fi
-          # stitch each tag
+
+          # stitch each tag from the singleuser meta
           while IFS= read -r ref; do
             [[ -z "$ref" ]] && continue
-            img="${ref%%:*}"; tag="${ref#*:}"
-            # optional: assert we aren't accidentally using a v-prefixed tag
+            img="${ref%%:*}"
+            tag="${ref#*:}"
+
+            # normalize: if tag starts with 'v', strip it (v2.0.9 -> 2.0.9)
             if [[ "$tag" =~ ^v[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
-              echo "Refuses to publish v-prefixed tag: $img:$tag"; exit 1
+              echo "normalize: $img:$tag  ->  $img:${tag#v}"
+              tag="${tag#v}"
             fi
+
             echo "⛵  ${img}:${tag}"
             docker buildx imagetools create \
               --tag "${img}:${tag}" \
