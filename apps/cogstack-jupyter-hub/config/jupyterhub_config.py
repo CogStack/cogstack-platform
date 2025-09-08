@@ -17,7 +17,7 @@ class LocalNativeAuthenticator(NativeAuthenticator, LocalAuthenticator):
     pass
 
 
-DOCKER_NOTEBOOK_IMAGE = os.getenv("DOCKER_NOTEBOOK_IMAGE", "cogstacksystems:jupyterhub/singleuser:latest-amd64")
+DOCKER_NOTEBOOK_IMAGE = os.getenv("DOCKER_NOTEBOOK_IMAGE", "cogstacksystems:jupyterhub/singleuser:latest")
 
 # JupyterHub requires a single-user instance of the Notebook server, so we
 # default to using the `start-singleuser.sh` script included in the
@@ -89,9 +89,9 @@ c.DockerSpawner.remove = False
 if SELECT_NOTEBOOK_IMAGE_ALLOWED == "true":
     # c.DockerSpawner.image_whitelist has been deprecated for allowed_images
     c.DockerSpawner.allowed_images = {
-        "minimal": "jupyterhub/singleuser:latest-amd64",
-        "cogstack": "cogstacksystems/jupyter-singleuser:latest-amd64",
-        "cogstack-gpu": "cogstacksystems/jupyter-singleuser-gpu:latest-amd64"
+        "minimal": "jupyterhub/singleuser:latest",
+        "cogstack": "cogstacksystems/jupyter-singleuser:latest",
+        "cogstack-gpu": "cogstacksystems/jupyter-singleuser-gpu:latest"
     }
     # https://github.com/jupyterhub/dockerspawner/issues/423
     c.DockerSpawner.remove = True

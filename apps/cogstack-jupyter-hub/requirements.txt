@@ -45,3 +45,6 @@ click==8.2.1
 torchvision>=0.20.1
 traitlets==5.14.3
 xnat>=0.5.2
+
+# code utils
+ruff==0.12.12

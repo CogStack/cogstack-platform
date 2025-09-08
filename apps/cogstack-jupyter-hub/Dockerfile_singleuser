@@ -183,11 +183,7 @@ ENV PATH=/opt/conda/envs/py311/bin:$PATH
 
 RUN conda install --quiet --yes \
     ipykernel \
-    pip \
-    elasticsearch \
-    opensearch-py \
-    psycopg2 \
-    pyodbc
+    pip
 
 RUN conda clean --all -f -y
 

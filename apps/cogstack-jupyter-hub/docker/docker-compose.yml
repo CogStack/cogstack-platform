@@ -1,6 +1,6 @@
 services:
   cogstack-jupyter-hub:
-    image: cogstacksystems/jupyter-hub:${JUPYTER_HUB_IMAGE_RELEASE_VERSION:-latest}-${CPU_ARCHITECTURE:-amd64}
+    image: cogstacksystems/jupyter-hub:${JUPYTER_HUB_IMAGE_RELEASE_VERSION:-latest}
     container_name: cogstack-jupyter-hub
     restart: always
     environment:
