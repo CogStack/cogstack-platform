@@ -38,10 +38,9 @@ jobs:
             repo: cogstacksystems/jupyter-hub
             dockerfile: Dockerfile_hub
             context: .
-            runner: ubuntu-22.04
+            runner: ubuntu-22.04-arm
             platform: linux/arm64
             gpu_build: "false"
-
           # Singleuser CPU (multi-arch)
           - id: singleuser-cpu
             repo: cogstacksystems/jupyter-singleuser
@@ -54,10 +53,9 @@ jobs:
             repo: cogstacksystems/jupyter-singleuser
             dockerfile: Dockerfile_singleuser
             context: .
-            runner: ubuntu-22.04
+            runner: ubuntu-22.04-arm
             platform: linux/arm64
             gpu_build: "false"
-
           # Singleuser GPU (amd64 only)
           - id: singleuser-gpu
             repo: cogstacksystems/jupyter-singleuser-gpu
