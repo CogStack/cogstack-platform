@@ -35,16 +35,17 @@ pyodbc==5.2.0
 openpyxl==3.1.5
 dvc==3.59.2
 GitPython==3.1.44
-opensearch-py==2.8.0
 neo4j==5.28.1
 PyYAML==6.0.2
 opencv-python==4.11.0.86
-elasticsearch==8.18.1
 plotly==6.1.1
 click==8.2.1
 torchvision>=0.20.1
 traitlets==5.14.3
 xnat>=0.5.2
+
+# ES stack
+opensearch-py>=2.0.0
 
 # code utils
 ruff==0.12.12
