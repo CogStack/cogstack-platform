@@ -21,12 +21,11 @@ jobs:
       contents: read
       packages: write
       id-token: write
-
     strategy:
       fail-fast: false
       matrix:
         include:
-          # Hub (multi-arch)
+          # Hub (amd64 + arm64)
           - id: hub
             repo: cogstacksystems/jupyter-hub
             dockerfile: Dockerfile_hub
@@ -41,7 +40,8 @@ jobs:
             runner: ubuntu-22.04-arm
             platform: linux/arm64
             gpu_build: "false"
-          # Singleuser CPU (multi-arch)
+
+          # Singleuser CPU (amd64 + arm64)
           - id: singleuser-cpu
             repo: cogstacksystems/jupyter-singleuser
             dockerfile: Dockerfile_singleuser
@@ -56,6 +56,7 @@ jobs:
             runner: ubuntu-22.04-arm
             platform: linux/arm64
             gpu_build: "false"
+
           # Singleuser GPU (amd64 only)
           - id: singleuser-gpu
             repo: cogstacksystems/jupyter-singleuser-gpu
@@ -73,23 +74,21 @@ jobs:
 
       - uses: docker/setup-buildx-action@v3
 
+      # SAME TAGS FOR BOTH ARCH BUILDS
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ matrix.repo }}
           tags: |
-            # Tags (vX.Y.Z) → strip "v" automatically
+            # strip "v" from vX.Y.Z
             type=semver,pattern={{version}},prefix=v
             type=semver,pattern={{major}}.{{minor}},prefix=v
-
-            # Always push latest on tags and main
+            # latest on main AND on tags
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') }}
-
-            # Other branches → branch name
+            # branches (non-PR)
             type=ref,event=branch,enable=${{ github.event_name != 'pull_request' }}
-
-            # Always add a short sha
+            # short sha
             type=sha,format=short
 
       - uses: docker/login-action@v3
@@ -104,11 +103,11 @@ jobs:
         with:
           context: ${{ matrix.context }}
           file: ${{ matrix.dockerfile }}
-          platforms: ${{ matrix.platform }}
+          platforms: ${{ matrix.platform }}           # linux/amd64 or linux/arm64
           build-args: |
             CPU_ARCHITECTURE=${{ startsWith(matrix.platform, 'linux/arm64') && 'arm64' || 'amd64' }}
             GPU_BUILD=${{ matrix.gpu_build }}
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{ steps.meta.outputs.tags }}        # <-- identical tag list for both arches
           labels: |
             ${{ steps.meta.outputs.labels }}
             org.opencontainers.image.title=${{ matrix.id }}
@@ -116,6 +115,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=${{ matrix.id }}-${{ matrix.platform }}
           push: ${{ github.event_name != 'pull_request' }}
 
+      # Record tag -> digest for this image + arch
       - name: Save digests for this arch
         if: ${{ github.event_name != 'pull_request' }}
         shell: bash
@@ -134,7 +134,7 @@ jobs:
         with:
           name: digests-${{ matrix.id }}-${{ matrix.platform == 'linux/arm64' && 'arm64' || 'amd64' }}
           path: digests-${{ matrix.id }}-${{ matrix.platform == 'linux/arm64' && 'arm64' || 'amd64' }}.txt
-  
+
   manifest:
     runs-on: ubuntu-22.04
     needs: build
@@ -154,6 +154,7 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
+      # same tag list again
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
@@ -166,6 +167,7 @@ jobs:
             type=ref,event=branch,enable=${{ github.event_name != 'pull_request' }}
             type=sha,format=short
 
+      # pull in the two digest lists for this image id
       - name: Download digest artifacts (amd64)
         uses: actions/download-artifact@v4
         with:
@@ -187,7 +189,7 @@ jobs:
             tag="${ref#*:}"
             amd64_d=$(awk -v r="$ref" '$1==r{print $2}' digests-${{ matrix.id }}-amd64.txt)
             arm64_d=$(awk -v r="$ref" '$1==r{print $2}' digests-${{ matrix.id }}-arm64.txt)
-            [[ -z "$amd64_d" || -z "$arm64_d" ]] && continue
+            [[ -z "$amd64_d" || -z "$arm64_d" ]] && { echo "skip $ref (missing digest)"; continue; }
             echo "⛵ $image:$tag"
             docker buildx imagetools create \
               --tag "$image:$tag" \
