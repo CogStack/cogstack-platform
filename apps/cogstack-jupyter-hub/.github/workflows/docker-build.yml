@@ -287,13 +287,28 @@ jobs:
           ARM64: ${{ needs.build-arm64.outputs.hub_digest }}
         run: |
           set -euo pipefail
+          # must have both digests
+          if [ -z "${AMD64:-}" ] || [ -z "${ARM64:-}" ]; then
+            echo "Missing hub digests (amd64='${AMD64:-}', arm64='${ARM64:-}')."
+            exit 1
+          fi
+
+          # stitch each tag from the hub meta
           while IFS= read -r ref; do
             [[ -z "$ref" ]] && continue
             img="${ref%%:*}"; tag="${ref#*:}"
+
+            # optional: refuse v-prefixed tags (defensive)
+            if [[ "$tag" =~ ^v[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
+              echo "Refusing to publish v-prefixed tag: $img:$tag"
+              exit 1
+            fi
+
+            echo "⛵  ${img}:${tag}"
             docker buildx imagetools create \
-              --tag "$img:$tag" \
-              "$img@${AMD64}" \
-              "$img@${ARM64}"
+              --tag "${img}:${tag}" \
+              "${img}@${AMD64}" \
+              "${img}@${ARM64}"
           done < <(printf "%s" "${{ steps.meta_hub.outputs.tags }}")
 
       - name: Create singleuser multi-arch manifests
@@ -303,11 +318,21 @@ jobs:
           ARM64: ${{ needs.build-arm64.outputs.su_digest }}
         run: |
           set -euo pipefail
+          # must have both digests
+          if [ -z "${AMD64:-}" ] || [ -z "${ARM64:-}" ]; then
+            echo "Missing singleuser digests (amd64='${AMD64:-}', arm64='${ARM64:-}')."; exit 1
+          fi
+          # stitch each tag
           while IFS= read -r ref; do
             [[ -z "$ref" ]] && continue
             img="${ref%%:*}"; tag="${ref#*:}"
+            # optional: assert we aren't accidentally using a v-prefixed tag
+            if [[ "$tag" =~ ^v[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
+              echo "Refuses to publish v-prefixed tag: $img:$tag"; exit 1
+            fi
+            echo "⛵  ${img}:${tag}"
             docker buildx imagetools create \
-              --tag "$img:$tag" \
-              "$img@${AMD64}" \
-              "$img@${ARM64}"
+              --tag "${img}:${tag}" \
+              "${img}@${AMD64}" \
+              "${img}@${ARM64}"
           done < <(printf "%s" "${{ steps.meta_su.outputs.tags }}")
