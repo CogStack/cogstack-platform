@@ -98,8 +98,8 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      - name: Build and (conditionally) push
-        id: build           
+      - name: Build & push (native arch)
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.context }}
