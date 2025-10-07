@@ -209,6 +209,11 @@ jobs:
             type=ref,event=branch,enable=${{ github.event_name != 'pull_request' }}
             # short sha
             type=sha,format=short
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android
+          sudo apt-get clean
+          docker system prune -af --volumes || true
 
       - uses: docker/login-action@v3
         with:
