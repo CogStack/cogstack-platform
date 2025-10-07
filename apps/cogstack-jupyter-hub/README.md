@@ -1,7 +1,8 @@
-# Introduction
+# Cogstack-Jupyter-Hub
+
+## Introduction
 
 This repo has been reinstated. The custom jupyter-hub image is specified in the [CogStack-Nifi](https://github.com/CogStack/CogStack-NiFi/tree/main/services/jupyter-hub) project.
-
 
 This repository contains a custom Jupyter Hub Docker image with example notebooks to play with. \
 The notebooks provided are usually kept up to date with the example data that has been generated using Synthea and MTSamples in the [CogStack-NiFi](https://github.com/cogstack/cogstack-nifi) repository. Additionally, the [working with cogstack](https://github.com/CogStack/working_with_cogstack) scripts are included for production use.
@@ -18,15 +19,14 @@ There are 3 images built in this repo:
 
 Images are available for both x86/ARM architectures (post version 1.2.7):
 
-    - jupyter-hub ARM64/AMD64: `cogstacksystems/jupyter-hub:latest-arm64`, `cogstacksystems/jupyter-hub:latest-amd64`
+    - jupyter-hub ARM64/AMD64: `cogstacksystems/jupyter-hub:latest`
     - minimal official image ARM64/AMD64: `jupyterhub/singleuser:latest`
-    - jupyter-singleuser ARM64/AMD64: `cogstacksystems/jupyter-singleuser:latest-arm64`, `cogstacksystems/jupyter-singleuser:latest-amd64`
-    - jupyter-singleuser-gpu AMD64: `cogstacksystems/jupyter-singleuser-gpu:latest-amd64`
+    - jupyter-singleuser ARM64/AMD64: `cogstacksystems/jupyter-singleuser:latest`
+    - jupyter-singleuser-gpu AMD64: `cogstacksystems/jupyter-singleuser-gpu:latest`
 
 Full and more in-depth knowledge on the configuration itself is available in the primary repository [official documentation](https://cogstack-nifi.readthedocs.io/en/latest/deploy/services.html#id12).
 
-
-# Usage & configuration
+## Usage & configuration
 
 ENV variables are located in: [env/jupyter.env](./env/jupyter.env) and [env/general.env](./env/general.env).\
 Please check the ENV file for additional information, every variable is commented and described.
@@ -49,9 +49,10 @@ Check the [env/general.env](./env/general.env), set the `CPU_ARCHITECTURE` varia
 
 Execute the following in the main repo directory:
 
-```
-    bash export_env_vars.sh
-    docker compose up -d
+```bash
+bash export_env_vars.sh
+cd docker
+docker compose up -d -f docker-compose.yml cogstack-jupyter-hub
 ```
 
 Updating certificates and env settings from the main repo:
@@ -60,6 +61,7 @@ Updating certificates and env settings from the main repo:
     - from the main repo directory, execute `bash scripts/update_env_cert_from_nifi_repo.sh`
 
 ## Access and account control
+
 To access Jupyter Hub on the host machine (e.g.localhost), one can type in the browser `https://localhost:8888`.
 
 Creating accounts for other users is possible, just go to the admin page `https://localhost:8888/hub/admin#/`, click on add users and follow the instructions (make sure usernames are lower-cased and DO NOT contain symbols, if usernames contain uppercase they will be converted to lower case in the creation process).
@@ -68,7 +70,7 @@ The default password is blank, you can set the password for the admin user the f
 
 Or you can set the password is defined by a local variable `JUPYTERHUB_PASSWORD` in `.env` file that is the password SHA-1 value if the authenticator is set to either LocalAuthenticator or Native read more in [jupyter doc](https://jupyterhub.readthedocs.io/en/stable/api/auth.html?highlight#) about this.
 
-<strong><u>Users must use the "/work/"directory for their work, otherwise files might not get saved!</u></strong>
+**Users must use the "/work/"directory for their work, otherwise files might not get saved!**
 
 ## Enabling GPU support
 
