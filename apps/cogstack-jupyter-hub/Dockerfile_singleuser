@@ -212,16 +212,18 @@ RUN uv pip install --upgrade --system pip setuptools wheel
 
 # install the rest of the packages including medcat
 COPY ./requirements.txt /srv/jupyterhub/
-# install requirements for working with cogstack scripts
-COPY notebooks/demo_working_with_cogstack/requirements.txt /srv/jupyterhub/working_with_cogstack_requirements.txt
 
 RUN if [ "$GPU_BUILD" = "true" ] && [ "$CPU_ARCHITECTURE" = "amd64" ]; then \
       uv pip install --system --no-cache-dir -r /srv/jupyterhub/requirements.txt && \
-      uv pip install --system --no-cache-dir -r /srv/jupyterhub/working_with_cogstack_requirements.txt ; \
+      # TODO: Figure out exact syntax
+      uv run python -m medcat download-scripts /srv/jupyterhub/medcat-scripts && \
+      uv pip install --system --no-cache-dir -r /srv/jupyterhub/medcat-scripts/requirements.txt ; \
     else \
       uv pip install --system --no-cache-dir -r /srv/jupyterhub/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu/ && \
-      uv pip install --system --no-cache-dir -r /srv/jupyterhub/working_with_cogstack_requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu/ ; \
-    fi
+      uv run python -m medcat download-scripts /srv/jupyterhub/medcat-scripts && \
+      uv pip install --system --no-cache-dir -r /srv/jupyterhub/medcat-scripts/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu/ ; \
+    fi && \ 
+    mv /srv/jupyterhub/medcat-scripts/notebooks/* /home/jovyan/work/. # move notebooks
 
 #######################################################################################################
 
