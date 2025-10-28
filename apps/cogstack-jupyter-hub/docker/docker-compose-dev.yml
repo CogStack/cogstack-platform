@@ -50,8 +50,10 @@ services:
 volumes:
   jupyter-hub-vol:
     driver: local
+    external: true
   jupyter-hub-shared-scratch:
     driver: local
+    external: true
 
 #---------------------------------------------------------------------------#
 # Docker networks.                                                          #

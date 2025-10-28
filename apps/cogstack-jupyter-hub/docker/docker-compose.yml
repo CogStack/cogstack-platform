@@ -49,9 +49,11 @@ volumes:
   jupyter-hub-vol:
     name: "${VOLUME_PREFIX:-deploy_}jupyter-hub-vol"
     driver: local
+    external: true
   jupyter-hub-shared-scratch:
     name: "${VOLUME_PREFIX:-deploy_}jupyter-hub-shared-scratch"
     driver: local
+    external: true
 
 #---------------------------------------------------------------------------#
 # Docker networks.                                                          #
