@@ -13,5 +13,7 @@ elif [[ -d scripts || -f Makefile || -f README.* || -d src || -d app ]]; then
 fi
 
 curl https://raw.githubusercontent.com/CogStack/CogStack-NiFi/refs/heads/main/deploy/general.env > ${OUTPUT_DIR_PATH_PREFIX}env/general.env
+curl https://raw.githubusercontent.com/CogStack/CogStack-NiFi/refs/heads/main/security/certificates/nifi/nifi.key > ${OUTPUT_DIR_PATH_PREFIX}security/nifi.key
+curl https://raw.githubusercontent.com/CogStack/CogStack-NiFi/refs/heads/main/security/certificates/nifi/nifi.pem > ${OUTPUT_DIR_PATH_PREFIX}security/nifi.pem
 curl https://raw.githubusercontent.com/CogStack/CogStack-NiFi/refs/heads/main/security/certificates/root/root-ca.key > ${OUTPUT_DIR_PATH_PREFIX}security/root-ca.key
 curl https://raw.githubusercontent.com/CogStack/CogStack-NiFi/refs/heads/main/security/certificates/root/root-ca.pem > ${OUTPUT_DIR_PATH_PREFIX}security/root-ca.pem

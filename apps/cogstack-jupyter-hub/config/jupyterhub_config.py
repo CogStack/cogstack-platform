@@ -301,8 +301,8 @@ c.ConfigurableHTTPProxy.api_url = jupyter_hub_proxy_url + str(jupyter_hub_proxy_
 
 # TLS config
 c.JupyterHub.port = jupyter_hub_ssl_port
-c.JupyterHub.ssl_key = os.environ.get("SSL_KEY", "/srv/jupyterhub/root-ca.key")
-c.JupyterHub.ssl_cert = os.environ.get("SSL_CERT", "/srv/jupyterhub/root-ca.pem")
+c.JupyterHub.ssl_key = os.environ.get("SSL_KEY", "/srv/jupyterhub/security/nifi.key")
+c.JupyterHub.ssl_cert = os.environ.get("SSL_CERT", "/srv/jupyterhub/security/nifi.pem")
 
 # Persist hub data on volume mounted inside container
 data_dir = os.environ.get("DATA_VOLUME_CONTAINER", "")
