@@ -1,4 +1,4 @@
-FROM jupyterhub/singleuser:5
+FROM jupyterhub/singleuser:5.4
 
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
@@ -249,4 +249,4 @@ RUN echo "cd /home/jovyan/work" >> /home/jovyan/.bashrc
 # Configure container startup
 ENTRYPOINT ["tini", "-g", "--"]
 
-CMD ["jupyterhub-singleuser"]
+CMD ["start-singleuser.py"]

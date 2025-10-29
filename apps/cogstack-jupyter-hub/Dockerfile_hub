@@ -1,4 +1,4 @@
-FROM jupyterhub/jupyterhub:5
+FROM jupyterhub/jupyterhub:5.4
 
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
@@ -97,7 +97,7 @@ RUN pip3 install --no-cache-dir setuptools wheel virtualenv cython netifaces
 
 # jupyterhub stuff
 RUN pip3 install --no-cache-dir ipywidgets importlib_metadata jupyterhub-firstuseauthenticator dockerspawner jupyterhub-nativeauthenticator
-RUN pip3 install --no-cache-dir jupyterlab_widgets dask-labextension
+RUN pip3 install --no-cache-dir jupyterlab_widgets dask-labextension jupyter_contrib_nbextensions
 RUN pip3 install --no-cache-dir jupyterhub-firstuseauthenticator jupyterhub-systemdspawner jupyterhub-jwtauthenticator jupyterhub-client jupyterhub-kerberosauthenticator --ignore-installed PyYAML 
 RUN pip3 install --no-cache-dir jupyterhub-ldapauthenticator jupyterhub-nanowireauthenticator jupyterhub-kubespawner jupyterhub-idle-culler
 
@@ -107,8 +107,7 @@ RUN mkdir -p /home/jovyan/scratch
 RUN chmod -R 777 /home/jovyan/scratch
 RUN chmod g+s /home/jovyan/scratch
 
+RUN chown -R 1000:1000 /srv/jupyterhub
+
 # copy scripts and config files
 COPY config/jupyterhub_config.py /etc/jupyterhub/
-
-ENV NB_UID=1000
-USER $NB_UID

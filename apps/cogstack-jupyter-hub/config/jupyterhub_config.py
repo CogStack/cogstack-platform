@@ -24,7 +24,7 @@ DOCKER_NOTEBOOK_IMAGE = os.getenv("DOCKER_NOTEBOOK_IMAGE", "cogstacksystems:jupy
 # jupyter/docker-stacks *-notebook images as the Docker run command when
 # spawning containers.  Optionally, you can override the Docker run command
 # using the DOCKER_SPAWN_CMD environment variable.
-SPAWN_CMD = os.environ.get("DOCKER_SPAWN_CMD", "start-singleuser.sh")
+SPAWN_CMD = os.environ.get("DOCKER_SPAWN_CMD", "start-singleuser.py")
 
 # Connect containers to this Docker network
 # IMPORTANT, THIS MUST MATCH THE NETWORK DECLARED in "services.yml", by default: "cogstack-net"
@@ -65,7 +65,7 @@ os.environ["HTTPS_PROXY"] = ""
 os.environ["http_proxy"] = ""   
 os.environ["https_proxy"] = ""
 
-c: Config = get_config() #noqa
+c: Config = get_config() 
 
 # Spawn containers from this image
 # Either use the CoGstack one from the repo which is huge and contains all the stuff needed or,
@@ -207,8 +207,12 @@ c.JupyterHub.spawner_class = DockerSpawner
 
 # set DockerSpawner args
 c.DockerSpawner.extra_create_kwargs = {"user": "root"}
-c.DockerSpawner.cmd = [SPAWN_CMD] if isinstance(SPAWN_CMD, str) else SPAWN_CMD
+c.DockerSpawner.args = [
+    "--allow-root",
+    "--NotebookApp.token=''",
+]
 
+c.DockerSpawner.cmd = [SPAWN_CMD] if isinstance(SPAWN_CMD, str) else SPAWN_CMD
 
 c.DockerSpawner.notebook_dir = NOTEBOOK_DIR
 
@@ -277,13 +281,10 @@ c.DockerSpawner.environment.update(ENV_PROXIES)
 c.FirstUseAuthenticator.create_users = True
 c.JupyterHub.authenticator_class = "firstuseauthenticator.FirstUseAuthenticator" 
 
-
-
 # User containers will access hub by container name on the Docker network
 c.JupyterHub.ip = "0.0.0.0"
 c.JupyterHub.hub_ip = "0.0.0.0"
 c.JupyterHub.hub_connect_ip = HUB_CONTAINER_IP_OR_NAME
-
 
 jupyter_hub_port = int(os.environ.get("JUPYTERHUB_INTERNAL_PORT", 8888))
 jupyter_hub_proxy_api_port = int(os.environ.get("JUPYTERHUB_INTERNAL_PROXY_API_PORT", 8887))
@@ -291,6 +292,9 @@ jupyter_hub_ssl_port = int(os.environ.get("JUPYTERHUB_SSL_PORT", 443))
 jupyter_hub_proxy_url = str(os.environ.get("JUPYTERHUB_PROXY_API_URL", "http://127.0.0.1:"))
 
 c.ConfigurableHTTPProxy.api_url = jupyter_hub_proxy_url + str(jupyter_hub_proxy_api_port)
+# c.JupyterHub.hub_connect_url = f"https://{HUB_CONTAINER_IP_OR_NAME}:{jupyter_hub_ssl_port}"
+# c.DockerSpawner.hub_connect_url = c.JupyterHub.hub_connect_url
+
 # ideally a private network address
 # c.JupyterHub.proxy_api_ip = "10.0.1.4"
 # c.JupyterHub.proxy_api_port = jupyter_hub_proxy_api_port
