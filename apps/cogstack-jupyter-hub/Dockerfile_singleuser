@@ -222,7 +222,7 @@ RUN if [ "$GPU_BUILD" = "true" ] && [ "$CPU_ARCHITECTURE" = "amd64" ]; then \
       uv pip install --system --no-cache-dir -r /srv/jupyterhub/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu/ && \
       uv run python -m medcat download-scripts /srv/jupyterhub/medcat-scripts && \
       uv pip install --system --no-cache-dir -r /srv/jupyterhub/medcat-scripts/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu/ ; \
-    fi && \ 
+    fi && \
     mv /srv/jupyterhub/medcat-scripts/notebooks/* /home/jovyan/work/. # move notebooks
 
 #######################################################################################################
