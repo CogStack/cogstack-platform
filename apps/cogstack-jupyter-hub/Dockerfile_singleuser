@@ -7,6 +7,9 @@ ARG http_proxy
 ARG https_proxy
 ARG no_proxy
 
+# NOTE: set to ES8 or Elasticsearch 8 or OS for Opensearch
+ARG COGSTACK_BACKEND=ES9
+
 # set to "true" for the GPU build
 ARG GPU_BUILD=false
 
@@ -223,6 +226,8 @@ RUN if [ "$GPU_BUILD" = "true" ] && [ "$CPU_ARCHITECTURE" = "amd64" ]; then \
       uv run python -m medcat download-scripts /srv/jupyterhub/ && \
       uv pip install --system --no-cache-dir -r /srv/jupyterhub/medcat-scripts/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu/ ; \
     fi && \
+    # install cogstack-es (Cogstack class)
+    uv pip install "cogstack-es[$COGSTACK_BACKEND]" && \
     mv /srv/jupyterhub/medcat-scripts/notebooks/* /home/jovyan/work/. # move notebooks
 
 #######################################################################################################
