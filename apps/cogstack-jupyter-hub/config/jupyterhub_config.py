@@ -65,7 +65,7 @@ os.environ["HTTPS_PROXY"] = ""
 os.environ["http_proxy"] = ""   
 os.environ["https_proxy"] = ""
 
-c: Config = get_config()
+c: Config = get_config() #noqa
 
 # Spawn containers from this image
 # Either use the CoGstack one from the repo which is huge and contains all the stuff needed or,
@@ -80,8 +80,6 @@ c.DockerSpawner.extra_host_config = {"network_mode": NETWORK_NAME}
 # # Mount the real users Docker volume on the host to the notebook user"s
 # # notebook directory in the container
 c.DockerSpawner.volumes = {"jupyterhub-user-{username}": NOTEBOOK_DIR, "jupyter-hub-shared-scratch": SHARED_CONTENT_DIR}
-
-# volume_driver is no longer a keyword argument to create_container()
 
 # Remove containers once they are stopped
 c.DockerSpawner.remove = False
@@ -210,8 +208,6 @@ c.JupyterHub.spawner_class = DockerSpawner
 # set DockerSpawner args
 c.DockerSpawner.extra_create_kwargs = {"user": "root"}
 c.DockerSpawner.cmd = [SPAWN_CMD] if isinstance(SPAWN_CMD, str) else SPAWN_CMD
-
-c.DockerSpawner.extra_create_kwargs.update({ "volume_driver": "local"})
 
 
 c.DockerSpawner.notebook_dir = NOTEBOOK_DIR
