@@ -1,6 +1,4 @@
 wheel==0.45.1
-medcat==2.2.0
-# TODO: cogstack-es
 virtualenv==20.31.2
 ipywidgets==8.1.7
 requests>=2.32.2
