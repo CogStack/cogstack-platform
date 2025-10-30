@@ -56,7 +56,6 @@ docker compose up -d -f docker-compose.yml cogstack-jupyter-hub
 ```
 
 Updating certificates and env settings from the main repo:
-
     - sometimes it is necessary to grab new certificates if the old ones expired (from the main Cogstack-NiFi repo)
     - from the main repo directory, execute `bash scripts/update_env_cert_from_nifi_repo.sh`
 
@@ -101,3 +100,7 @@ Change the coresponding variables in [env/jupyter.env](./env/jupyter.env):
 
 It is possible to configure a `scratch` folder/partition that is just a volume that will be shared by multiple users belonging to the same group.
 This feature is currently experiemntal, it requires admins to add users to the same group and then define a folder to be shared (difficult as it is mainly done via config file at present) .
+
+## DEVELOPING
+
+Please make sure to set DOCKER_JUPYTER_HUB_CONTAINER_NAME="cogstack-jupyter-hub-dev" in the `env/jupyter.env` otherwise singleuser containers won't be able to start.
