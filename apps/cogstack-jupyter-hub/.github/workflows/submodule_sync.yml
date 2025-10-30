@@ -1,0 +1,54 @@
+name: submodules-sync
+
+on:
+  push:
+    branches: ['**']
+    tags: ['v*.*.*']
+  pull_request:
+    branches: ['**']
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  sync:
+    name: 'Submodules Sync'
+    runs-on: ubuntu-22.04
+    if: github.actor != 'github-actions[bot]'
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout repository with submodules
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Sync submodule URLs
+        run: |
+          git submodule sync --recursive
+
+      - name: Update submodules
+        run: |
+          git -c protocol.version=2 submodule update --init --remote --recursive --jobs 8
+
+      - name: Commit and push submodule updates
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}
+          # Stage only submodule pointer updates and .gitmodules
+          git add .gitmodules $(git config -f .gitmodules --get-regexp path | awk '{print $2}') || true
+          if git diff --cached --quiet; then
+            echo "No submodule pointer changes to commit"
+            exit 0
+          fi
+          git commit -m "chore(submodules): auto-update pointers [skip ci]"
+          git push
