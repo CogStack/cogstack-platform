@@ -3,6 +3,7 @@ medcat==2.2.0
 # TODO: cogstack-es
 virtualenv==20.31.2
 ipywidgets==8.1.7
+requests>=2.32.2
 jupyter==1.1.1
 jupyterlab>=4.2.7  
 jupyterlab_widgets==3.0.15
