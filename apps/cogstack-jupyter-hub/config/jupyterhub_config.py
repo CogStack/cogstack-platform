@@ -106,7 +106,7 @@ if RUN_IN_DEBUG_MODE == "true":
 class DockerSpawner(dockerspawner.DockerSpawner):
     def start(self):
         # username is self.user.name
-        #self.volumes = {"jupyterhub-user-{}".format(self.user.name): NOTEBOOK_DIR}
+        self.volumes = {"jupyterhub-user-{}".format(self.user.name): NOTEBOOK_DIR}
 
         # Mount the real users Docker volume on the host to the notebook user"s
         # # notebook directory in the container
