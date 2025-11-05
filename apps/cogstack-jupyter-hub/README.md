@@ -1,5 +1,7 @@
 # Cogstack-Jupyter-Hub
 
+[![docker-jupyter-hub-all](https://github.com/CogStack/cogstack-jupyter-hub/actions/workflows/docker-build.yml/badge.svg?branch=main)](https://github.com/CogStack/cogstack-jupyter-hub/actions/workflows/docker-build.yml)
+
 ## Introduction
 
 This repo has been reinstated. The custom jupyter-hub image is specified in the [CogStack-Nifi](https://github.com/CogStack/CogStack-NiFi/tree/main/services/jupyter-hub) project.
