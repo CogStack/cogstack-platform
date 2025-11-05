@@ -1,0 +1,23 @@
+services:
+  cogstack-jupyter-hub-dev:
+    extends:
+      file: docker-compose.base.yml
+      service: cogstack-jupyter-hub
+    build:
+      context: ../
+      dockerfile: Dockerfile_hub
+    container_name: cogstack-jupyter-hub-dev
+    networks:
+      - cognet
+
+volumes:
+  jupyter-hub-vol:
+    driver: local
+  jupyter-hub-shared-scratch:
+    driver: local
+
+networks:
+  cognet:
+    name: cogstack-net
+
+

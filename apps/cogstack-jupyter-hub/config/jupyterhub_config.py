@@ -17,35 +17,36 @@ class LocalNativeAuthenticator(NativeAuthenticator, LocalAuthenticator):
     pass
 
 
-DOCKER_NOTEBOOK_IMAGE = os.getenv("DOCKER_NOTEBOOK_IMAGE", "cogstacksystems:jupyterhub/singleuser:latest")
+DOCKER_NOTEBOOK_IMAGE = os.getenv("JUPYTER_HUB_SINGLEUSER_DOCKER_NOTEBOOK_IMAGE", 
+                                  "cogstacksystems:jupyterhub/singleuser:latest")
 
 # JupyterHub requires a single-user instance of the Notebook server, so we
 # default to using the `start-singleuser.sh` script included in the
 # jupyter/docker-stacks *-notebook images as the Docker run command when
 # spawning containers.  Optionally, you can override the Docker run command
-# using the DOCKER_SPAWN_CMD environment variable.
-SPAWN_CMD = os.environ.get("DOCKER_SPAWN_CMD", "start-singleuser.py")
+# using the JUPYTER_HUB_DOCKER_SPAWN_CMD environment variable.
+SPAWN_CMD = os.environ.get("JUPYTER_HUB_DOCKER_SPAWN_CMD", "start-singleuser.py")
 
 # Connect containers to this Docker network
 # IMPORTANT, THIS MUST MATCH THE NETWORK DECLARED in "services.yml", by default: "cogstack-net"
-NETWORK_NAME = os.environ.get("DOCKER_NETWORK_NAME", "cogstack-net")
+NETWORK_NAME = os.environ.get("JUPYTER_HUB_DOCKER_NETWORK_NAME", "cogstack-net")
 
 # The IP address or hostname of the JupyterHub container in the Docker network
-HUB_CONTAINER_IP_OR_NAME = os.environ.get("DOCKER_JUPYTER_HUB_CONTAINER_NAME", "cogstack-jupyter-hub")
+HUB_CONTAINER_IP_OR_NAME = os.environ.get("JUPYTER_HUB_DOCKER_CONTAINER_NAME", "cogstack-jupyter-hub")
 
 # The timeout in seconds after which the idle notebook container will be shutdown
 NOTEBOOK_IDLE_TIMEOUT = int(os.environ.get("DOCKER_NOTEBOOK_IDLE_TIMEOUT", "7200"))
 
-SELECT_NOTEBOOK_IMAGE_ALLOWED = str(os.environ.get("DOCKER_SELECT_NOTEBOOK_IMAGE_ALLOWED", "false")).lower()
+SELECT_NOTEBOOK_IMAGE_ALLOWED = str(os.environ.get("JUPYTERHUB_DOCKER_SELECT_NOTEBOOK_IMAGE_ALLOWED", "false")).lower()
 
-RUN_IN_DEBUG_MODE = str(os.environ.get("DOCKER_NOTEBOOK_DEBUG_MODE", "false")).lower()
+RUN_IN_DEBUG_MODE = str(os.environ.get("JUPYTERHUB_DOCKER_NOTEBOOK_DEBUG_MODE", "false")).lower()
 
 # Explicitly set notebook directory because we"ll be mounting a host volume to
 # it.  Most jupyter/docker-stacks *-notebook images run the Notebook server as
 # user `jovyan`, and set the notebook directory to `/home/jovyan/work`.
 # We follow the same convention.
-NOTEBOOK_DIR = os.environ.get("DOCKER_NOTEBOOK_DIR", "/home/jovyan/work")
-SHARED_CONTENT_DIR = os.environ.get("DOCKER_SHARED_DIR", "/home/jovyan/scratch")
+NOTEBOOK_DIR = os.environ.get("JUPYTER_HUB_DOCKER_NOTEBOOK_DIR", "/home/jovyan/work")
+SHARED_CONTENT_DIR = os.environ.get("JUPYTER_HUB_DOCKER_SHARED_DIR", "/home/jovyan/scratch")
 #WORK_DIR = os.environ.get("DOCKER_JUPYTER_WORK_DIR", "/lab/workspaces/auto-b/tree/" + str(NOTEBOOK_DIR.split("/")[-1]))
 WORK_DIR = "/lab/"
 
@@ -127,7 +128,7 @@ class DockerSpawner(dockerspawner.DockerSpawner):
                 }
 
         # this is a temporary fix, need to actually check permissions
-        self.mem_limit = resource_allocation_user_ram_limit
+        self.mem_limit = RESOURCE_ALLOCATION_USER_RAM_LIMIT
         self.post_start_cmd = "chmod -R 777 " + SHARED_CONTENT_DIR
 
         return super().start()
@@ -190,15 +191,15 @@ teamlist_path = os.path.join(curr_dir, "teamlist")
 
 # Resource allocation env vars
 # RAM - GB of ram, CPU - num of cores
-resource_allocation_user_cpu_limit = os.environ.get("RESOURCE_ALLOCATION_USER_CPU_LIMIT", "2")
-resource_allocation_user_ram_limit = os.environ.get("RESOURCE_ALLOCATION_USER_RAM_LIMIT", "2.0G")
-resource_allocation_admin_cpu_limit = os.environ.get("RESOURCE_ALLOCATION_ADMIN_CPU_LIMIT", "2")
-resource_allocation_admin_ram_limit = os.environ.get("RESOURCE_ALLOCATION_ADMIN_RAM_LIMIT", "4.0G")
+RESOURCE_ALLOCATION_USER_CPU_LIMIT = os.environ.get("JUPYTER_HUB_SINGLEUSER_RESOURCE_ALLOCATION_USER_CPU_LIMIT", "2")
+RESOURCE_ALLOCATION_USER_RAM_LIMIT = os.environ.get("JUPYTER_HUB_SINGLEUSER_RESOURCE_ALLOCATION_USER_RAM_LIMIT", "2.0G")
+RESOURCE_ALLOCATION_ADMIN_CPU_LIMIT = os.environ.get("JUPYTER_HUB_SINGLEUSER_RESOURCE_ALLOCATION_ADMIN_CPU_LIMIT", "2")
+RESOURCE_ALLOCATION_ADMIN_RAM_LIMIT = os.environ.get("JUPYTER_HUB_SINGLEUSER_RESOURCE_ALLOCATION_ADMIN_RAM_LIMIT", "4.0G")
 
 
 def per_user_limit(role):
-    ram_limits = {"user": (int(resource_allocation_user_cpu_limit), resource_allocation_user_ram_limit),
-                   "admin": (int(resource_allocation_admin_cpu_limit), resource_allocation_admin_ram_limit)}
+    ram_limits = {"user": (int(RESOURCE_ALLOCATION_USER_CPU_LIMIT), RESOURCE_ALLOCATION_USER_RAM_LIMIT),
+                   "admin": (int(RESOURCE_ALLOCATION_ADMIN_CPU_LIMIT), RESOURCE_ALLOCATION_ADMIN_RAM_LIMIT)}
     return ram_limits.get(role)
 
 
@@ -256,7 +257,7 @@ with open(teamlist_path) as f:
             for member in members:
                 team_map[member].add(team)
 
-gpu_support_enabled = os.environ.get("DOCKER_ENABLE_GPU_SUPPORT", "false")
+gpu_support_enabled = os.environ.get("JUPYTERHUB_DOCKER_ENABLE_GPU_SUPPORT", "false")
 
 if gpu_support_enabled.lower() == "true":
     c.DockerSpawner.extra_host_config = {
@@ -301,11 +302,11 @@ c.ConfigurableHTTPProxy.api_url = jupyter_hub_proxy_url + str(jupyter_hub_proxy_
 
 # TLS config
 c.JupyterHub.port = jupyter_hub_ssl_port
-c.JupyterHub.ssl_key = os.environ.get("SSL_KEY", "/srv/jupyterhub/security/nifi.key")
-c.JupyterHub.ssl_cert = os.environ.get("SSL_CERT", "/srv/jupyterhub/security/nifi.pem")
+c.JupyterHub.ssl_key = os.environ.get("JUPYTERHUB_SSL_KEY", "/srv/jupyterhub/security/nifi.key")
+c.JupyterHub.ssl_cert = os.environ.get("JUPYTERHUB_SSL_CERT", "/srv/jupyterhub/security/nifi.pem")
 
 # Persist hub data on volume mounted inside container
-data_dir = os.environ.get("DATA_VOLUME_CONTAINER", "")
+data_dir = os.environ.get("JUPYTERHUB_DATA_VOLUME_CONTAINER", "")
 
 c.JupyterHub.cookie_secret_file = data_dir + "jupyterhub_cookie_secret"
 

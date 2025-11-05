@@ -1,12 +1,9 @@
 services:
   cogstack-jupyter-hub:
-    extends:
-      file: docker-compose.base.yml
-      service: cogstack-jupyter-hub
     networks:
       - cognet
 
 networks:
   cognet:
     name: cogstack-net
-    driver: bridge
+    external: true

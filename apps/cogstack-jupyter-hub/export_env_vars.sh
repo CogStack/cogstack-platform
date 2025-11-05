@@ -7,12 +7,11 @@ echo "🔧 Running $(basename "$0")..."
 
 set -a
 
-current_dir=$(pwd)
-env_dir="./env/"
+ENV_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/./env/"
 
 env_files=(
-           $env_dir"general.env"
-           $env_dir"jupyter.env"
+           $ENV_DIR"general.env"
+           $ENV_DIR"jupyter.env"
           )
 
 for env_file in "${env_files[@]}"; do

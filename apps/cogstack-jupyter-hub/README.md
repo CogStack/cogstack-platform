@@ -37,23 +37,41 @@ Full list found in [requirements.txt](./requirements.txt).
 
 ## Security
 
-Certificates used are located in the `./security/` folder, taken from the [Cogstack-NiFi](https://github.com/CogStack-NiFi) security folder, [root-ca.key](https://raw.githubusercontent.com/CogStack/CogStack-NiFi/refs/heads/main/security/root-ca.key) and [root-ca.pem](https://raw.githubusercontent.com/CogStack/CogStack-NiFi/refs/heads/main/security/root-capem), read the [security section](https://cogstack-nifi.readthedocs.io/en/latest/security.html) for more info on how to generate them from the main NiFi repository.
+Certificates used are located in the `./security/` folder, taken from the [Cogstack-NiFi](https://github.com/CogStack-NiFi) security folder, [nifi.key](https://raw.githubusercontent.com/CogStack/CogStack-NiFi/refs/heads/main/security/certificates/nifi/nifi.key) and [nifi.pem](https://raw.githubusercontent.com/CogStack/CogStack-NiFi/refs/heads/main/security/certificates/nifi/nifi.pem), read the [security section](https://cogstack-nifi.readthedocs.io/en/latest/security.html) for more info on how to generate them from the main NiFi repository.
 
 ## Setting up your own hub
 
-There are two docker compose files:
-`docker-compose-dev.yml` - this will build the build the hub image from scratch, it will not build the singleuser one however.
-`docker-compose.yml` - default, for production.
+This folder contains a modular Docker Compose setup for running the CogStack Jupyter Hub across multiple environments.
+
+    ```bash
+        docker/
+        ├── docker-compose.base.yml        # Canonical base definition
+        ├── docker-compose.yml             # Extends the base (always loaded)
+        ├── docker-compose.override.yml    # Local overrides (auto-loaded)
+        ├── docker-compose.dev.yml         # Dev overrides
+        ├── docker-compose.prod.yml        # Prod overrides
+        ├── Makefile                       # Helper commands (up, down, ps, show-env)
+        └── export_env_vars.sh             # Loads ../env/*.env files
+    ```
+
+### 🧩 Usage
+
+- **Local:** `make up` → uses base + override (bridge network)
+- **Dev:** `make up-dev` → uses base + dev overrides
+- **Prod:** `make up-prod` → uses base + prod overrides
+- **Stop:** `make down`  
+- **Show envs:** `make show-env`
+
+This structure keeps the base clean while allowing environment-specific overlays.
 
 Check the [env/general.env](./env/general.env), set the `CPU_ARCHITECTURE` variable to whatever you need, the default for most Laptops/PCs is `amd64`, if you have an ARM laptop/device then set to `arm64`, that should suffice.
 
 Execute the following in the main repo directory:
 
-```bash
-bash export_env_vars.sh
-cd docker
-docker compose up -d -f docker-compose.yml cogstack-jupyter-hub
-```
+    ```bash
+        cd docker
+        make start
+    ```
 
 Updating certificates and env settings from the main repo:
     - sometimes it is necessary to grab new certificates if the old ones expired (from the main Cogstack-NiFi repo)
@@ -77,8 +95,8 @@ Pre-requisites (for Linux and Windows): - for Linux, you need to install the nvi
 
 In [env/jupyter.env](./env/jupyter.env):
 
-    - change `DOCKER_ENABLE_GPU_SUPPORT` from `false` to `true`.
-    - change `DOCKER_NOTEBOOK_IMAGE` from `cogstacksystems/jupyter-singleuser:latest` to `cogstacksystems/jupyter-singleuser-gpu:latest`.
+    - change `JUPYTERHUB_DOCKER_ENABLE_GPU_SUPPORT` from `false` to `true`.
+    - change `JUPYTERHUB_JUPYTER_HUB_SINGLEUSER_DOCKER_NOTEBOOK_IMAGE` from `cogstacksystems/jupyter-singleuser:latest` to `cogstacksystems/jupyter-singleuser-gpu:latest`.
     - in the main repo folder, execute the following command in terminal: `source env/jupyter.env`, then `docker compose up -d`.
 
 *Use any release version you want instead of `latest` as necessary .
@@ -89,12 +107,12 @@ Users can have their resources limited (currently only CPU + RAM), there is a de
 Change the coresponding variables in [env/jupyter.env](./env/jupyter.env):
 
     *   General user resource cap per container, default 2 cores, 2GB ram:
-        - `RESOURCE_ALLOCATION_USER_CPU_LIMIT`="2"
-        - `RESOURCE_ALLOCATION_USER_RAM_LIMIT`="2.0G"
+        - `JUPYTER_HUB_SINGLEUSER_RESOURCE_ALLOCATION_USER_CPU_LIMIT`="2"
+        - `JUPYTER_HUB_SINGLEUSER_RESOURCE_ALLOCATION_USER_RAM_LIMIT`="2.0G"
 
     *   Admin resource cap per container, default 2 cores, 4 GB RAM:
-        - `RESOURCE_ALLOCATION_ADMIN_CPU_LIMIT`="2"
-        - `RESOURCE_ALLOCATION_ADMIN_RAM_LIMIT`="4.0G"
+        - `JUPYTER_HUB_SINGLEUSER_RESOURCE_ALLOCATION_ADMIN_CPU_LIMIT`="2"
+        - `JUPYTER_HUB_SINGLEUSER_RESOURCE_ALLOCATION_ADMIN_RAM_LIMIT`="4.0G"
 
 ## Sharing storage between users
 
@@ -103,4 +121,4 @@ This feature is currently experiemntal, it requires admins to add users to the s
 
 ## DEVELOPING
 
-Please make sure to set DOCKER_JUPYTER_HUB_CONTAINER_NAME="cogstack-jupyter-hub-dev" in the `env/jupyter.env` otherwise singleuser containers won't be able to start.
+Please make sure to set JUPYTER_HUB_DOCKER_CONTAINER_NAME="cogstack-jupyter-hub-dev" in the `env/jupyter.env` otherwise singleuser containers won't be able to start.
