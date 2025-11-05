@@ -1,5 +1,8 @@
 name: docker-jupyter-hub-all
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: ['**']

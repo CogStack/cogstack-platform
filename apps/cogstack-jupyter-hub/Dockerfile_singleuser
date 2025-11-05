@@ -216,7 +216,7 @@ COPY ./requirements.txt /srv/jupyterhub/
 RUN if [ "$GPU_BUILD" = "true" ] && [ "$CPU_ARCHITECTURE" = "amd64" ]; then \
       uv pip install --system --no-cache-dir -r /srv/jupyterhub/requirements.txt ; \
     else \
-      uv pip install --system --no-cache-dir -r /srv/jupyterhub/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu/ ; \
+      uv pip install --system --no-cache-dir -r /srv/jupyterhub/requirements.txt ; \
     fi
 
 #######################################################################################################

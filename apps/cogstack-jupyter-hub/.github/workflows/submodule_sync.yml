@@ -1,5 +1,8 @@
 name: submodules-sync
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: ['**']

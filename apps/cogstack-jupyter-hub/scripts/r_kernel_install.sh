@@ -33,7 +33,6 @@ install.packages(
        )
 
 install.packages("lme4")
-install.packages("survminer")
 install.packages("nloptr")
 install.packages('IRkernel')
 
