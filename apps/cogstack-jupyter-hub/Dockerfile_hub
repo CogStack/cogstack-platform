@@ -93,7 +93,7 @@ RUN apt-get clean autoclean && apt-get autoremove --purge -y
 RUN pip3 install --no-cache-dir --upgrade pip
 
 # utils for jupyterhub
-RUN pip3 install --no-cache-dir setuptools wheel virtualenv cython netifaces
+RUN pip3 install --no-cache-dir setuptools wheel
 
 # jupyterhub stuff
 RUN pip3 install --no-cache-dir ipywidgets importlib_metadata jupyterhub-firstuseauthenticator dockerspawner jupyterhub-nativeauthenticator

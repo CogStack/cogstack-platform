@@ -1,5 +1,7 @@
 wheel==0.45.1
 
+medcat==2.3.0
+# TODO: cogstack-es 8/9 handling
 
 virtualenv==20.31.2
 ipywidgets==8.1.7
@@ -34,7 +36,7 @@ dataclasses==0.6
 jsonpickle==4.1.0
 jsonext==0.4.2
 psycopg2==2.9.10
-psycopg2-binary==2.9.10
+psycopg2-binary>=2.9.10
 pyodbc==5.2.0
 openpyxl==3.1.5
 dvc==3.59.2

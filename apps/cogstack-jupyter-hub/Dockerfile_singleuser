@@ -213,11 +213,17 @@ RUN uv pip install --upgrade --system pip setuptools wheel
 # install the rest of the packages including medcat
 COPY ./requirements.txt /srv/jupyterhub/
 
+# https://download.pytorch.org/whl/cpu is out of date on packages, using alternative URL for CPU
 RUN if [ "$GPU_BUILD" = "true" ] && [ "$CPU_ARCHITECTURE" = "amd64" ]; then \
-      uv pip install --system --no-cache-dir -r /srv/jupyterhub/requirements.txt ; \
+      uv pip install --system --no-cache-dir -r /srv/jupyterhub/requirements.txt && \
+      uv run python -m medcat download-scripts /srv/jupyterhub/medcat-scripts ; \
     else \
-      uv pip install --system --no-cache-dir -r /srv/jupyterhub/requirements.txt ; \
+      uv pip install --system --no-cache-dir -r /srv/jupyterhub/requirements.txt --index-url https://pypi.org/simple && \
+      uv run python -m medcat download-scripts /srv/jupyterhub/medcat-scripts ; \
     fi
+
+# move notebooks
+RUN mv /srv/jupyterhub/medcat-scripts/* /home/jovyan/work/. 
 
 #######################################################################################################
 
