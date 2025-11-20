@@ -15,11 +15,25 @@ endef
 
 .PHONY: up down restart build logs cert-check health-check
 
+
+# utility commands
+
 load-env:
 	$(WITH_ENV) echo "Environment variables loaded."
 
 show-env:
 	${WITH_ENV} >/dev/null 2>&1; printenv | grep -E "^(JUPYTER)" | sort
+
+logs-dev:
+	docker logs -f --tail 10000 ${CONTAINER_NAME_DEV}
+
+logs:
+	docker logs -f --tail 10000 $(CONTAINER_NAME)
+
+health-check:
+	${WITH_ENV} curl -k -v https://localhost:${JUPYTERHUB_INTERNAL_PORT}/
+
+# start services
 
 start-dev:
 	$(WITH_ENV) docker compose -f docker-compose.dev.yml $(DC_START_CMD)
@@ -35,12 +49,3 @@ start-prod:
 
 stop-all:
 	$(WITH_ENV) docker compose -f $(COMPOSE_BASE) -f docker-compose.dev.yml -f docker-compose.local.yml -f docker-compose.prod.yml docker-compose.yml  ${DC_DOWN_CMD}
-
-logs-dev:
-	docker logs -f --tail 10000 ${CONTAINER_NAME_DEV}
-
-logs:
-	docker logs -f --tail 10000 $(CONTAINER_NAME)
-
-health-check:
-	curl -k -v https://localhost:8888/
