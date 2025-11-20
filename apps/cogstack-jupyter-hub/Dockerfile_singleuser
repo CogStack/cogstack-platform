@@ -223,7 +223,7 @@ RUN if [ "$GPU_BUILD" = "true" ] && [ "$CPU_ARCHITECTURE" = "amd64" ]; then \
     fi
 
 # move notebooks
-RUN mv /srv/jupyterhub/medcat-scripts/* /home/jovyan/work/. 
+RUN mv /srv/jupyterhub/medcat-scripts /home/jovyan/work/medcat-scripts
 
 #######################################################################################################
 
