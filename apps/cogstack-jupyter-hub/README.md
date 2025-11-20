@@ -58,11 +58,17 @@ This folder contains a modular Docker Compose setup for running the CogStack Jup
 
 ### 🧩 Usage
 
-- **Local:** `make up` → uses base + override (bridge network)
-- **Dev:** `make up-dev` → uses base + dev overrides
-- **Prod:** `make up-prod` → uses base + prod overrides
+- **Local:** `make start` → uses base + override (bridge network)
+- **Dev:** `make start-dev` → uses base + dev overrides
+- **Prod:** `make start-prod` → uses base + prod overrides
 - **Stop:** `make down`  
+- **Load envs:** `make load-env`
 - **Show envs:** `make show-env`
+- **Show logs:** `make logs`, `make logs-dev` - dev container
+- **Health check:** `make health-check`
+- **Stop all containers:** `make stop-all`
+
+For any other commands that are available but may not be listed here, please check the [Makefile](./docker/Makefile).
 
 This structure keeps the base clean while allowing environment-specific overlays.
 
