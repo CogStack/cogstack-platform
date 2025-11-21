@@ -25,5 +25,7 @@ venv
 **.env
 env**
 
+config/jupyterhub_cookie_secret
+
 # cert files
 security**
