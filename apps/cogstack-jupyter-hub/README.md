@@ -41,6 +41,54 @@ Full list found in [requirements.txt](./requirements.txt).
 
 Certificates used are located in the `./security/` folder, taken from the [Cogstack-NiFi](https://github.com/CogStack-NiFi) security folder, [nifi.key](https://raw.githubusercontent.com/CogStack/CogStack-NiFi/refs/heads/main/security/certificates/nifi/nifi.key) and [nifi.pem](https://raw.githubusercontent.com/CogStack/CogStack-NiFi/refs/heads/main/security/certificates/nifi/nifi.pem), read the [security section](https://cogstack-nifi.readthedocs.io/en/latest/security.html) for more info on how to generate them from the main NiFi repository.
 
+### Cookie Secret Management
+
+JupyterHub requires a secure cookie secret file with restrictive permissions.  
+To keep the repository clean and avoid permission-related issues, the cookie secret file is ignored by Git and generated locally as needed.
+
+### File Location
+
+    ```bash
+    config/jupyterhub_cookie_secret
+    ```
+
+This file is intentionally listed in `.gitignore`, so it is never tracked or committed.
+
+### Generating a New Cookie Secret
+
+A helper script is provided to generate a fresh secret.
+
+From the repository root:
+
+    ```bash
+    cd scripts
+    ./generate_cookie_secret.sh
+    ```
+
+The script contents are:
+
+    ```bash
+    #!/usr/bin/env bash
+    set -e
+    openssl rand -hex 32 > ../config/jupyterhub_cookie_secret
+    ```
+
+This command creates (or replaces) a 32-byte hex secret at:
+
+    ```bash
+    config/jupyterhub_cookie_secret
+    ```
+
+### Automatic Permission Fix
+
+At container startup, the entrypoint adjusts permissions to ensure the file is protected:
+
+    ```bash
+    chmod 600 config/jupyterhub_cookie_secret
+    ```
+
+This guarantees the cookie secret always has the correct permissions regardless of host OS, repo checkout, or user environment.
+
 ## Setting up your own hub
 
 This folder contains a modular Docker Compose setup for running the CogStack Jupyter Hub across multiple environments.
