@@ -3,7 +3,7 @@
 This repository demonstrates figures created by data stored in [CogStackDashboards](https://www.cogstackdashboards.sites.er.kcl.ac.uk).
 
 This repo is intended to be a guide on how to access the dashboards and includes example scripts that can be used to gain clinical insights from the MIMIC-IV dataset. Along with additional capacity for querying annotations via `discharge_annotations` and `radiology_annotations`.
-
+```
 ├── data/
 │   ├── co_occurrences/ - Co-occurrence information for SNOMED CT concepts
 │   └── SNOMED/ - Required SNOMED CT Files, See below
@@ -12,7 +12,7 @@ This repo is intended to be a guide on how to access the dashboards and includes
 ├── staging_scripts/ - Staging scripts to save data from CogstackDashboards in local files
 ├── visualisation_scripts/ - Scripts used to generate images used in the paper
 └── README.md
-
+```
 ## Access:
 
 1. Sign up for a [PhysioNet account](https://physionet.org/register/)
