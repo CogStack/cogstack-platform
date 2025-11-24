@@ -1,3 +1,12 @@
+# Personal ignore rules
+# Ignore all files inside data folders
+data/*
+
+# But keep the placeholder files for folders
+!data/.gitkeep
+!data/co_occurrences/.gitkeep
+!data/SNOMED/.gitkeep
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
