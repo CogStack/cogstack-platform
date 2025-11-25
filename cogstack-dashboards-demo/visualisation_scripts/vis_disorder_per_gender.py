@@ -29,7 +29,7 @@ def get_name(code):
     return (preferred_term["term"].iloc[0]).split("(")[0] if not preferred_term.empty else code
 
 # Open json file and read into dict
-with open('../data/cui_to_gender_all.json') as f:
+with open('../data/cui_to_gender.json') as f:
     cui_to_gender = json.load(f)
 
 # Total counts for normalization
@@ -85,11 +85,11 @@ ax.set_yticklabels(merged_dict.keys())
 # Labels and title
 ax.set_xlabel("Prevalence (%)")
 # ax.set_ylabel("Condition")
-ax.set_title("Prevalence of Conditions by Gender for All Notes")
+ax.set_title("Prevalence of Conditions by Gender for Discharge Notes")
 ax.legend(title="Category")  # Legend for colors
 
 # Improve layout
 plt.grid(axis="x", linestyle="--", alpha=0.7)
 plt.tight_layout()
 
-plt.savefig("../images/disorder_per_gender_all.pdf", format="pdf", bbox_inches="tight")
+plt.savefig("../figures/disorder_per_gender.pdf", format="pdf", bbox_inches="tight")

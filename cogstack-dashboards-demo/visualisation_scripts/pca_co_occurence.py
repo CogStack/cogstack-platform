@@ -128,7 +128,7 @@ isa = relations_df[relations_df['typeId'] == 116680003]
 G = nx.DiGraph()
 G.add_edges_from(zip(isa['destinationId'].astype(int), isa['sourceId'].astype(int)))
 
-path_to_resources = "../data/co_occurences/"
+path_to_resources = "../data/co_occurrences/"
 
 # Load cui mapping
 with open(path_to_resources + "data_cuis.json") as f:
@@ -217,7 +217,7 @@ for cluster_id, group in embedding_df.groupby("cluster"):
     }
 
 # Save to JSON
-with open("../data/co_occurence_clusters.json", "w", encoding="utf-8") as f:
+with open("../data/co_occurrence_clusters.json", "w", encoding="utf-8") as f:
     json.dump(clusters_dict, f, ensure_ascii=False, indent=2)
     print(f"Saved {len(clusters_dict)} clusters to ../data/co_occurence_clusters.json")
 

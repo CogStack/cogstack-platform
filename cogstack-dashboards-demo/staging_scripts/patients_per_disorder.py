@@ -106,6 +106,7 @@ client = OpenSearch(
 
 # index of interest. discharge_annotations or radiology_annotations
 index = "discharge_annotations"
+save_path = "../data/cui_to_subjects_discharge.json"
 
 # Define composite aggregation query
 query = {
@@ -181,5 +182,5 @@ pbar.close()
 cui_to_subjects = {cui: list(subjects) for cui, subjects in cui_to_subjects.items()}
 
 print(f"Saved data to: ../data/cui_to_subjects_discharge.json")
-with open('../data/cui_to_subjects_discharge.json', 'w') as fp:
+with open(save_path, "w") as fp:
     json.dump(cui_to_subjects, fp)

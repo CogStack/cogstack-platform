@@ -3,6 +3,7 @@ from tqdm import tqdm
 from opensearchpy import OpenSearch
 from collections import defaultdict
 
+# you can also add add a cui to subjects json file here if you create it via patients_per_disorder.py
 load_paths = ["../data/cui_to_subjects_discharge.json"]
 save_path = "../data/cui_to_gender.json"
 

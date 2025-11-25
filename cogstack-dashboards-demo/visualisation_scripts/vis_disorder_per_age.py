@@ -26,7 +26,7 @@ def get_name(code):
     
     return (preferred_term["term"].iloc[0]).split("(")[0] if not preferred_term.empty else code
 
-with open('../data/cui_to_age_all.json') as f:
+with open('../data/cui_to_age.json') as f:
     cui_to_age = json.load(f)
 
 snomed_codes = [
@@ -65,4 +65,4 @@ for ax, (cui, age_counts) in zip(axes, wanted_codes.items()):
 
 # Adjust layout
 plt.tight_layout()
-plt.savefig("../images/disorder_per_age_all.pdf", format="pdf", bbox_inches="tight")
+plt.savefig("../figures/disorder_per_age.pdf", format="pdf", bbox_inches="tight")

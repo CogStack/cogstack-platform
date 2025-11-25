@@ -9,8 +9,8 @@ import json
 import itertools
 
 # comment and uncomment as required - collate by patient or by note
-# co_occurence = "meta.note_id"
-co_occurence = "meta.subject_id"
+co_occurence = "meta.note_id"
+# co_occurence = "meta.subject_id"
 # index_name = "radiology_annotations"
 index_name = "discharge_annotations"
 
@@ -19,7 +19,7 @@ index_name = "discharge_annotations"
 # disorders=64572001, procedures=71388002, substance=105590001
 # None means no top filtering according to the top level concept
 y_tlc = None
-x_tlc = None
+x_tlc = 64572001
 
 # Choose the top k most occuring concepts to save time on computation
 # There are 50733 unique concepts. So going behind 60k is pointless.
