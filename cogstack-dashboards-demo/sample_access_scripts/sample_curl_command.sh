@@ -7,4 +7,4 @@ curl -X GET \
     "query": {
       "match_all": {}
     }
-  }
+  }'
