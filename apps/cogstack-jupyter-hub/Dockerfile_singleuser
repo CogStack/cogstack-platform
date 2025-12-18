@@ -29,10 +29,13 @@ ENV NVIDIA_DRIVER_VERSION=510
 ENV NVIDIA_VISIBLE_DEVICES=all
 ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
+
 # prefer prebuilt wheels, never build from sdist for known heavy libs
 ENV PIP_PREFER_BINARY=1
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 ENV PIP_NO_CACHE_DIR=1
+# allow python to write byte code
+ENV PYTHONDONTWRITEBYTECODE=0
 
 USER root
 

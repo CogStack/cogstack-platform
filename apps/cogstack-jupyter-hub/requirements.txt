@@ -34,8 +34,7 @@ mysql-connector-python==9.3.0
 dataclasses==0.6
 jsonpickle==4.1.0
 jsonext==0.4.2
-psycopg2==2.9.10
-psycopg2-binary>=2.9.10
+psycopg[c,binary]==3.2.9
 pyodbc==5.2.0
 openpyxl==3.1.5
 dvc==3.59.2
