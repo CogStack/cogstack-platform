@@ -92,4 +92,4 @@ ax.legend(title="Category")  # Legend for colors
 plt.grid(axis="x", linestyle="--", alpha=0.7)
 plt.tight_layout()
 
-plt.savefig("../figures/disorder_per_gender.pdf", format="pdf", bbox_inches="tight")
+plt.savefig("../figures/disorder_per_gender.png", format="png", bbox_inches="tight")

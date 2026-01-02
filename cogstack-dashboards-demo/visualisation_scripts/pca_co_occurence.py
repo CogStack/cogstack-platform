@@ -289,10 +289,7 @@ for cluster_id, cluster_df in embedding_df.groupby("cluster"):
 
 fig.write_html("../figures/clusters.html")
 
-# __________________________________________________________________________________________________
-# Figure PDF
-# __________________________________________________________________________________________________
-
+# Figure PNG
 fig, ax = plt.subplots(figsize=(10, 6), dpi=600)
 
 def to_mpl_color(color_str):
@@ -300,7 +297,7 @@ def to_mpl_color(color_str):
     if isinstance(color_str, str) and color_str.startswith("rgb"):
         nums = list(map(int, re.findall(r"\d+", color_str)))
         return tuple(v / 255 for v in nums)
-    return color_str  # already valid (e.g., hex)
+    return color_str 
 
 
 added_legends = set()
@@ -338,7 +335,6 @@ for cluster_id, cluster_df in embedding_df.groupby("cluster"):
             ax.scatter([], [], color=color, label=f"{ancestor_name} | {ratio:.2f}") # 
             added_legends.add(ancestor_id)
 
-# --- Styling ---
 ax.tick_params(labelsize=7)
 
 ax.legend(
@@ -354,5 +350,5 @@ ax.legend(
 plt.tight_layout(pad=0.5, rect=[0, 0.05, 1, 1])
 
 plt.tight_layout()
-plt.savefig("../figures/clusters.pdf", bbox_inches="tight", dpi=600)
+plt.savefig("../figures/clusters.png", bbox_inches="tight", dpi=600)
 plt.show()

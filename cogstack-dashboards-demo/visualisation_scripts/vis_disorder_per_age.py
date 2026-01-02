@@ -65,4 +65,4 @@ for ax, (cui, age_counts) in zip(axes, wanted_codes.items()):
 
 # Adjust layout
 plt.tight_layout()
-plt.savefig("../figures/disorder_per_age.pdf", format="pdf", bbox_inches="tight")
+plt.savefig("../figures/disorder_per_age.png", format="png", bbox_inches="tight")

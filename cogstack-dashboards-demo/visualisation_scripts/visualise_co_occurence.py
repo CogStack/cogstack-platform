@@ -16,21 +16,18 @@ except Exception:
     sys.exit()
 
 def get_name(code):
-    """Map SNOMED CT code -> preferred term"""
-    try:
-        code = int(code)
-    except Exception:
-        return str(code)
-
-    result = df[(df["conceptId"] == code) & (df["active"] == 1)]
-    preferred_term = result[result["typeId"] == 900000000000003001]  # Fully specified name
-
-    if not preferred_term.empty:
-        return preferred_term["term"].iloc[0].split("(")[0].strip()
-    return str(code)
+    code = int(code) if code != "None" else 0
+    # Filter the description table for the SNOMED code
+    result = df[(df["conceptId"] == code) & 
+                            (df["active"] == 1)]  # Only active descriptions
+                        
+    # Extract the preferred term
+    preferred_term = result[result["typeId"] == 900000000000003001]  # "Fully specified name"
+    
+    return (preferred_term["term"].iloc[0]).split("(")[0] if not preferred_term.empty else code
 
 # Load parquet
-df = pd.read_parquet("../data/hand_selected_co_occurrences.parquet")
+co_occurences_df = pd.read_parquet("../data/hand_selected_co_occurrences.parquet")
 
 # Predefined curated lists
 serious_disorders = [
@@ -87,9 +84,9 @@ row_cuis = [str(c) for c in serious_disorders]
 col_cuis = [str(c) for c in common_procedures + common_symptoms + common_substances]
 
 # Filter for pairs where one is in row_cuis and the other in col_cuis
-df_subset = df[
-    ((df["cui_x"].isin(row_cuis)) & (df["cui_y"].isin(col_cuis))) |
-    ((df["cui_y"].isin(row_cuis)) & (df["cui_x"].isin(col_cuis)))
+df_subset = co_occurences_df[
+    ((co_occurences_df["cui_x"].isin(row_cuis)) & (co_occurences_df["cui_y"].isin(col_cuis))) |
+    ((co_occurences_df["cui_y"].isin(row_cuis)) & (co_occurences_df["cui_x"].isin(col_cuis)))
 ].copy()
 
 # Normalize orientation: row_cui always disorder, col_cui always symptom/procedure/substance
@@ -143,4 +140,4 @@ ax.set_ylabel("Major Disorders", fontsize=14, labelpad=10)
 plt.xticks(rotation=90)
 plt.yticks(rotation=0)
 plt.tight_layout()
-plt.savefig("../figures/per_subject_all.pdf", dpi=600)
+plt.savefig("../figures/handpicked_co_occurrences.png", dpi=600)
