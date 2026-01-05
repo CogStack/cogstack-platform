@@ -4,6 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CogStack Cohort v2</title>
+        <script type="text/javascript">
+      if (localStorage.getItem('theme') === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    </script>
     <link rel="stylesheet" href="assets/css/google.fonts.css" />
     <link rel="stylesheet" href="assets/css/tailwind.output.css" />
     <script defer src="assets/js/alpine.3.10.5.js"></script>
@@ -30,7 +37,7 @@
       </div>
       <div x-text="admin_login_message" class="text-orange-600"></div>
     </div>
-    <div class="flex h-screen bg-gray-700" :class="{ 'overflow-hidden': isSideMenuOpen}">
+    <div class="flex h-screen bg-gray-50 dark:bg-gray-700" :class="{ 'overflow-hidden': isSideMenuOpen}">
       <!-- Desktop sidebar -->
       <aside class="z-20 hidden w-100 overflow-y-auto bg-gray-700 shadow md:block flex-shrink-0">
         <div class="py-4 text-gray-500">
@@ -505,6 +512,25 @@
                   </div>
                 </div>
               </div>
+
+<!-- Theme toggle -->
+Toggle theme
+<button 
+  @click="toggleTheme"
+  class="p-2 m-2 rounded bg-yellow-200 dark:bg-yellow-700"
+  title="Toggle theme"
+>
+  <svg x-show="!isDark" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+          d="M12 3v1m0 16v1m8-9h1M3 12H2m15.364-6.364l.707.707M6.343 17.657l-.707.707M17.657 17.657l.707-.707M6.343 6.343l-.707-.707"/>
+  </svg>
+  <svg x-show="isDark" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+          d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"/>
+  </svg>
+</button>
+
+
               <ul class="flex items-center flex-shrink-0 space-x-6">
                 <!-- Settings menu -->
                 <li class="relative">

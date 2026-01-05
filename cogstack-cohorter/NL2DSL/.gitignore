@@ -1,0 +1,55 @@
+# =========================
+# Node / JS
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build outputs / caches (if any)
+dist/
+build/
+coverage/
+.cache/
+.eslintcache
+*.tsbuildinfo
+
+# =========================
+# Environment / secrets
+# =========================
+.env
+.env.*
+secrets/
+**/secrets/
+**/*secret*
+**/*token*
+**/*apikey*
+**/*api_key*
+*.key
+*.pem
+*.p12
+
+# =========================
+# Logs
+# =========================
+*.log
+logs/
+**/logs/
+
+# =========================
+# OS / editor junk
+# =========================
+.DS_Store
+.DS_Store?
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# =========================
+# Optional local data
+# =========================
+data/
+tmp/

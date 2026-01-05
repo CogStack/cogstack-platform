@@ -1,5 +1,29 @@
 function data() {
+
+  const NL2DSL_URL   = '/nl2dsl';
+  const NL2DSL_MODEL = 'gpt-oss:20b';
+
+  // read version from URL
+  const url = new URL(window.location.href);
+  const vParam = url.searchParams.get('version');   // "1" or null
+
+  // helpers to switch versions while keeping the same path (and other params)
+  const makeV1Href = () => { const u = new URL(window.location.href); u.searchParams.set('version','1'); return u.pathname + u.search + u.hash; };
+  const makeLatestHref = () => { const u = new URL(window.location.href); u.searchParams.delete('version'); return u.pathname + u.search + u.hash; };
+
   return {
+
+    isDark: localStorage.getItem('theme') === 'dark',
+    toggleTheme() {
+      this.isDark = !this.isDark;
+      if (this.isDark) {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+      }
+    },
 
     isTimeMenuOpen: true,
     toggleTimeMenu() {
@@ -34,6 +58,397 @@ function data() {
     },
     closeSettingMenu() {
       this.isSettingMenuOpen = false;
+    },
+
+    // true when on SNOMED-only (legacy) UI
+    isV1: vParam === '1',
+    // links for the settings menu
+    v1Href: makeV1Href(),
+    latestHref: makeLatestHref(),
+
+    // natural-language state
+    nl_query_text: '',
+    nl_loading: false,
+    nl_reasoning: '',
+    nl_last_dsl: null,
+
+    // --- Typewriter helpers ---
+    typing_timer: null,
+    is_typing: false,
+    stop_typing() {
+      if (this.typing_timer) { clearInterval(this.typing_timer); this.typing_timer = null; }
+      this.is_typing = false;
+    },
+    type_text_to_nl(text, speed = 20) {
+      this.stop_typing();
+      this.is_typing = true;
+      this.nl_query_text = '';
+      this.$nextTick(() => this.$refs.nlBox && this.$refs.nlBox.focus());
+
+      let i = 0;
+      this.typing_timer = setInterval(() => {
+        this.nl_query_text += text[i++];
+        if (i >= text.length) this.stop_typing();
+      }, speed);
+    },
+
+
+
+
+    // --- Reasoning streaming state ---
+    reasoning_full: "",
+    reasoning_stream: "",
+    _reasoning_timer: null,
+    _reasoning_deferred: null,
+    stream_duration_ms: 3500, // total animation time; tweak as you like
+
+    // --- State for editable reasoning ---
+    nl_reasoning_editing: false,
+    nl_reasoning_edit_text: "",
+
+    // Start editing: stop animation, load full text into editor
+    start_edit_reasoning() {
+      this.stop_reasoning_stream(true); // fill to end and stop
+      this.nl_reasoning_editing = true;
+      this.nl_reasoning_edit_text = this.reasoning_full || this.nl_reasoning || "";
+    },
+    // Apply: re-run the pipeline using the edited reasoning text
+    async apply_edited_reasoning() {
+      const edited = (this.nl_reasoning_edit_text || "").trim();
+      if (!edited) { this.cancel_edit_reasoning(); return; }
+
+      // feed the edited reasoning back through the *same* NL->DSL route
+      this.nl_reasoning_editing = false;
+      this.nl_query_text = edited;         // reuse existing handler
+      await this.handle_nl_run();          // compiles to DSL and submits
+    },
+
+    // Cancel editing
+    cancel_edit_reasoning() {
+      this.nl_reasoning_editing = false;
+      this.nl_reasoning_edit_text = "";
+    },
+
+    // --- Start streaming; returns a Promise that resolves when finished ---
+    start_reasoning_stream(text) {
+      // stop any previous animation and resolve any pending awaiters
+      this.stop_reasoning_stream();
+
+      this.reasoning_full = (text || "").trim();
+      this.reasoning_stream = "";
+
+      // nothing to stream? resolve immediately
+      if (!this.reasoning_full) return Promise.resolve();
+
+      const words = this.reasoning_full.split(/\s+/);
+      let i = 0;
+      const stepMs = Math.max(20, Math.floor(this.stream_duration_ms / Math.max(1, words.length)));
+
+      return new Promise((resolve) => {
+        this._reasoning_deferred = resolve;
+        this._reasoning_timer = setInterval(() => {
+          if (i >= words.length) {
+            this._finish_reasoning_stream(); // resolves the promise
+            return;
+          }
+          this.reasoning_stream += (this.reasoning_stream ? " " : "") + words[i++];
+        }, stepMs);
+      });
+    },
+
+    // --- Finish helper (fills the rest & resolves) ---
+    _finish_reasoning_stream() {
+      if (this._reasoning_timer) {
+        clearInterval(this._reasoning_timer);
+        this._reasoning_timer = null;
+      }
+      this.reasoning_stream = this.reasoning_full;
+      if (this._reasoning_deferred) {
+        this._reasoning_deferred(); // let awaiters continue
+        this._reasoning_deferred = null;
+      }
+    },
+
+    // --- Stop helper (can optionally skip to end) ---
+    stop_reasoning_stream(skipToEnd = false) {
+      if (this._reasoning_timer) {
+        clearInterval(this._reasoning_timer);
+        this._reasoning_timer = null;
+      }
+      if (skipToEnd) this.reasoning_stream = this.reasoning_full;
+      // Always resolve any pending await so callers don't hang
+      if (this._reasoning_deferred) {
+        this._reasoning_deferred();
+        this._reasoning_deferred = null;
+      }
+    },
+
+
+    // Helper: reuse your existing keyword search to pick a SNOMED term
+    async resolveTermCui(text) {
+      try {
+        const rr = await fetch('/keywords', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        });
+        const suggestions = await rr.json();
+        return suggestions[0] || null; // take top match
+      } catch (e) {
+        console.log('resolveTermCui error:', e);
+        return null;
+      }
+    },
+    // Helper: turn DSL into [{cui,str,with,child},{str:'and'}, ...] structure
+    async buildQueryFromDSL(dsl) {
+      const q = [];
+
+      const resolveOne = async (text, withFlag = 'with') => {
+        const r = await this.resolveTermCui(text);     // null if no match
+        if (!r || !r.cui || !r.str) return null;       // <- filter nulls early
+        return { cui: r.cui, str: r.str, with: withFlag, child: true };
+      };
+
+      // ALL_OF → AND chain
+      const allResolved = (await Promise.all((dsl?.phenotype?.all_of || []).map(t => resolveOne(t, 'with')))).filter(Boolean);
+      for (let i = 0; i < allResolved.length; i++) {
+        if (i > 0) q.push({ str: 'and' });
+        q.push(allResolved[i]);
+      }
+
+      // NONE_OF → AND chain of WITHOUT
+      const noneResolved = (await Promise.all((dsl?.phenotype?.none_of || []).map(t => resolveOne(t, 'without')))).filter(Boolean);
+      if (noneResolved.length) {
+        if (q.length) q.push({ str: 'and' });
+        for (let i = 0; i < noneResolved.length; i++) {
+          if (i > 0) q.push({ str: 'and' });
+          q.push(noneResolved[i]);
+        }
+      }
+
+      // ANY_OF → (A OR B OR ...) optionally prefixed by AND if q already has terms
+      const anyResolved = (await Promise.all((dsl?.phenotype?.any_of || []).map(t => resolveOne(t, 'with')))).filter(Boolean);
+
+      // only add the OR block if we actually got any valid terms
+      if (anyResolved.length) {
+        if (q.length) q.push({ str: 'and' });          // join the OR block to previous with AND
+        for (let i = 0; i < anyResolved.length; i++) {
+          if (i > 0) q.push({ str: 'or' });
+          q.push(anyResolved[i]);
+        }
+      }
+
+      // Final clean: remove any accidental falsy items and stray leading/trailing operators
+      const cleaned = [];
+      for (const item of q) {
+        if (!item) continue;                           // drop null/undefined
+        const isOp = item && !item.cui && (item.str === 'and' || item.str === 'or');
+        if (isOp) {
+          if (!cleaned.length) continue;               // no leading operator
+          const prev = cleaned[cleaned.length - 1];
+          if (prev && !prev.cui) continue;             // no double operators
+        }
+        cleaned.push(item);
+      }
+      // drop trailing operator if any
+      if (cleaned.length && !cleaned[cleaned.length - 1].cui) cleaned.pop();
+
+      return cleaned;
+    },
+    applyDemographicsFromDSL(dem = {}) {
+      // start from a clean slate (does NOT auto-submit)
+      this.clear_all_filters();
+
+      // ---- sex -> filter.gender
+      const sexArr = Array.isArray(dem.sex) ? dem.sex : [];
+      if (sexArr.length) {
+        this.filter.gender['0'] = false;
+        const sexMap = { male: '1', female: '2', other: '3', unknown: '3' };
+        for (const s of sexArr) {
+          const k = sexMap[String(s).toLowerCase().trim()];
+          if (k) this.filter.gender[k] = true;
+        }
+      }
+
+      // ---- vital_status -> filter.alive
+      const vsArr = Array.isArray(dem.vital_status) ? dem.vital_status : [];
+      if (vsArr.length) {
+        this.filter.alive['0'] = false;
+        const vsMap = { alive: '1', dead: '2', deceased: '2' };
+        for (const v of vsArr) {
+          const k = vsMap[String(v).toLowerCase().trim()];
+          if (k) this.filter.alive[k] = true;
+        }
+      }
+
+      // ---- ethnicity -> filter.ethnicity
+      const ethArr = Array.isArray(dem.ethnicity) ? dem.ethnicity : [];
+      if (ethArr.length) {
+        this.filter.ethnicity['0'] = false;
+        const ethMap = {
+          asian: '1',
+          black: '2',
+          white: '3',
+          mixed: '4',
+          other: '5',
+          unknown: '6'
+        };
+        for (const e of ethArr) {
+          const k = ethMap[String(e).toLowerCase().trim()];
+          if (k) this.filter.ethnicity[k] = true;
+        }
+      }
+
+      // ---- age -> filter.age
+      // Supports {min, max}. If it exactly matches a built-in bucket, use that; otherwise use Custom.
+      const age = dem.age || {};
+      const toNum = (v) => v === undefined || v === null || v === '' ? NaN : Number(v);
+      const minN = toNum(age.min);
+      const maxN = toNum(age.max);
+
+      if (!Number.isNaN(minN) || !Number.isNaN(maxN)) {
+        this.filter.age['0'] = false;
+
+        // exact built-in buckets
+        const isBucket =
+          (minN === 0 && maxN === 20) ||
+          (minN === 21 && maxN === 40) ||
+          (minN === 41 && maxN === 60) ||
+          (!Number.isNaN(minN) && minN == 61 && Number.isNaN(maxN));
+
+        if (minN === 0 && maxN === 20) this.filter.age['1'] = true;
+        else if (minN === 21 && maxN === 40) this.filter.age['2'] = true;
+        else if (minN === 41 && maxN === 60) this.filter.age['3'] = true;
+        else if (!Number.isNaN(minN) && minN == 61 && Number.isNaN(maxN)) this.filter.age['4'] = true;
+
+        if (!isBucket) {
+          this.filter.age['5'] = true; // custom
+          this.filter.age.min = Number.isNaN(minN) ? '' : minN;
+          this.filter.age.max = Number.isNaN(maxN) ? '' : maxN;
+        }
+      }
+    },
+    async handle_nl_run() {
+      console.log('handle_nl_run');
+      this.stop_typing();
+      const q = this.nl_query_text.trim();
+      if (!q) return;
+
+      const this_qry_cnt = this.qry_cnt + 1;
+      this.qry_cnt = this_qry_cnt;
+
+      const qid = Math.random().toString().replace('.', '');
+      this.qid = qid;
+
+      this.reset_results();
+      this.is_busy = true;
+      this.running_status = 'Translating natural language query...';
+      this.nl_loading = true;
+
+      try {
+        // 1) NL -> DSL (force gpt-oss-20b)
+        const compileResp = await fetch(NL2DSL_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: q,
+            model: NL2DSL_MODEL         // ← use gpt-oss-20b
+            // If your API also accepts temperature/top_p etc., add them here.
+            // e.g. temperature: 0.2
+          })
+        });
+        if (!compileResp.ok) throw new Error(`NL->DSL HTTP ${compileResp.status}`);
+
+        const { dsl, reasoning } = await compileResp.json();
+        this.nl_last_dsl = dsl || null;
+        this.nl_reasoning = reasoning || '';
+
+        // guard: empty result
+        const ph = dsl?.phenotype ?? {};
+        const hasPhenos =
+          (Array.isArray(ph.all_of)  && ph.all_of.length)  ||
+          (Array.isArray(ph.any_of)  && ph.any_of.length)  ||
+          (Array.isArray(ph.none_of) && ph.none_of.length) ||
+          (Array.isArray(dsl?.temporal?.chains) && dsl.temporal.chains.length);
+        if (!hasPhenos) {
+          console.log('No clinical phenotypes detected.')
+          this.running_status = 'No clinical phenotypes detected.';
+          this.nl_loading = false;
+          return;
+        }
+
+        console.log('dsl:', dsl);
+        console.log('reasoning', reasoning);
+
+        await this.start_reasoning_stream(reasoning);
+
+        // 2) Convert DSL phenotypes -> cohorter query format
+        const built = await this.buildQueryFromDSL(dsl);
+
+        if (!built.length) {
+          this.running_status = 'No phenotypes detected in your query.';
+          this.nl_loading = false;
+          return;
+        }
+
+        console.log('built:', built);
+
+        // get the filters
+        this.applyDemographicsFromDSL(dsl?.demographics || {});
+
+        // replace chain names with search names
+        if (dsl.temporal && dsl.temporal.chains && Array.isArray(dsl.temporal.chains) && dsl.temporal.chains.length>0) {
+          const resolveOne = async (text, withFlag = 'with') => {
+            const r = await this.resolveTermCui(text);     // null if no match
+            if (!r || !r.cui || !r.str) return null;       // <- filter nulls early
+            return r.str;
+          };
+          for (let i=0; i<dsl.temporal.chains.length; i++) {
+            if (dsl.temporal.chains[i].chain && Array.isArray(dsl.temporal.chains[i].chain)) {
+              for (let j=0; j<dsl.temporal.chains[i].chain.length; j++) {
+                t = dsl.temporal.chains[i].chain[j];
+                nt = await resolveOne(t);
+                if (nt) {
+                  dsl.temporal.chains[i].chain[j] = nt;
+                }
+              }
+            }
+          }
+        }
+
+        // 3) Replace current boolean query & run
+        this.query = built;
+        this.index_query();
+        await this.submit_query(dsl?.temporal || null);
+        this.running_status = 'Done';
+
+      } catch (err) {
+        console.log('handle_nl_run error:', err);
+        this.running_status = 'Translation failed. Please try again.';
+        this.reset_results(); this.clear_charts();
+      } finally {
+        this.nl_loading = false;
+        this.is_busy = false;
+      }
+    },
+
+    clear_nl() {
+
+      this.nl_query_text = "";
+      this.stop_reasoning_stream();
+      this.reasoning_full = "";
+      this.reasoning_stream = "";
+
+      this.nl_query_text = '';
+      this.$nextTick(() => this.$refs.nlBox && this.$refs.nlBox.focus());
+      this.query = [];
+      this.search_bar_with = "with";
+      this.search_bar_text = "";
+      this.search_bar_suggestions = [];
+      this.include_child_terms = true;
+      this.clear_all_filters();
+      this.reset_results();
+      this.submit_query();
     },
 
     search_bar_with: "with",
@@ -477,14 +892,18 @@ function data() {
     qry_cnt: 0,
     qid: null,
     running_status: '',
-    async submit_query() {
+    isBusy: false,
+    async submit_query(temporal = null) {
       const this_qry_cnt = this.qry_cnt + 1;
       this.qry_cnt = this_qry_cnt;
       this.reset_results();
       const qid = Math.random().toString().replace('.', '');
       this.qid = qid;
 
-      const data = {qid:qid, query: this.query, filter:this.filter};
+      this.is_busy = true;  
+
+      const data = {qid:qid, query:this.query, filter:this.filter, temporal:temporal||null};
+      console.log(data);
 
       this.running_status = 'getting total count...';
       let query_result_resp = {};
@@ -499,12 +918,14 @@ function data() {
         this.running_status = 'Something went wrong in the server, please try again later.';
         this.reset_results();
         this.clear_charts();
+        this.is_busy = false;
         return;
       }
       if (query_result_resp.query_result['all'] <= 10) { // todo: change to env var
         this.running_status = 'The patient count is too low, please try another query.';
         this.reset_results();
         this.clear_charts();
+        this.is_busy = false;
         return;
       }
 
@@ -512,6 +933,7 @@ function data() {
         this.running_status = 'Something went wrong in the server, please try again later.';
         this.reset_results();
         this.clear_charts();
+        this.is_busy = false;
         return;
       }
 
@@ -532,6 +954,7 @@ function data() {
           this.running_status = 'Something went wrong in the server, please try again later.';
           this.reset_results();
           this.clear_charts();
+          this.is_busy = false;
           return;
         }
         this.filter_result = filter_result_resp.filter_result;
@@ -549,6 +972,7 @@ function data() {
           this.running_status = 'Something went wrong in the server, please try again later.';
           this.reset_results();
           this.clear_charts();
+          this.is_busy = false;
           return;
         }
       }
@@ -562,6 +986,7 @@ function data() {
           this.running_status = 'Something went wrong in the server, please try again later.';
           this.reset_results();
           this.clear_charts();
+          this.is_busy = false;
           return;
         }
       }
@@ -578,10 +1003,14 @@ function data() {
           this.running_status = 'Something went wrong in the server, please try again later.';
           this.reset_results();
           this.clear_charts();
+          this.is_busy = false;
           return;
         }
       }
-      if (this_qry_cnt == this.qry_cnt) this.running_status = 'Done';
+      if (this_qry_cnt == this.qry_cnt) {
+        this.running_status = 'Done';
+        this.is_busy = false;
+      }
     },
 
     query_result: {
