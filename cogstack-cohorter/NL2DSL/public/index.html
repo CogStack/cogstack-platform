@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cohorter DSL Compiler</title>
+  <style>
+    body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; padding: 2rem; background: #0b1020; color: #e8eefc; }
+    .wrap { max-width: 880px; margin: 0 auto; }
+    h1 { font-size: 1.4rem; margin-bottom: 1rem; }
+    textarea { width: 100%; min-height: 120px; padding: 12px; border-radius: 12px; border: 1px solid #233; background: #0f1530; color: #e8eefc; font-size: 14px; }
+    button { padding: 10px 16px; border-radius: 12px; border: 0; background: #4c8dff; color: white; font-weight: 600; cursor: pointer; box-shadow: 0 4px 20px rgba(76,141,255,.25); }
+    button:disabled { opacity: .6; cursor: not-allowed; }
+    .row { display: flex; gap: 12px; align-items: center; margin-top: 12px; }
+    pre { background: #0f1530; border: 1px solid #233; padding: 14px; border-radius: 12px; white-space: pre-wrap; word-break: break-word; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; }
+    .hint { opacity: .75; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>NL -> DSL (Cohorter)</h1>
+    <textarea id="q" placeholder="e.g. Women aged 50–80 with DM-II before MI within 90 days, then heart failure. Use mention threshold 2."></textarea>
+    <div class="row">
+      <button id="run">Compile to DSL</button>
+      <span class="hint">Runs locally via Ollama (temperature=0, seed=42).</span>
+    </div>
+    <div class="row">
+      <label for="model" class="hint">Model:</label>
+      <select id="model"></select>
+      <button id="reloadModels" title="Reload models">↻</button>
+      <span id="modelStatus" class="hint"></span>
+    </div>
+    <h2>Output</h2>
+    <pre id="out" class="mono">{ }</pre>
+    <details id="reasoningWrap" style="margin-top:12px; display:none;">
+      <summary style="cursor:pointer;">Reasoning (model-provided)</summary>
+      <pre id="reasoning" class="mono" style="white-space:pre-wrap;"></pre>
+    </details>
+  </div>
+
+<script>
+  const qEl = document.getElementById('q');
+  const outEl = document.getElementById('out');
+  const runBtn = document.getElementById('run');
+
+  const reasoningWrap = document.getElementById('reasoningWrap');
+  const reasoningEl = document.getElementById('reasoning');
+
+  const modelSel = document.getElementById('model');
+  const reloadBtn = document.getElementById('reloadModels');
+  const modelStatus = document.getElementById('modelStatus');
+
+  const MODEL_KEY = 'cohorter:ollama:model';
+
+  async function loadModels(preserve = true) {
+    modelStatus.textContent = 'Loading models…';
+
+    // remember previously selected (from DOM or localStorage)
+    const prev = preserve
+      ? (modelSel?.value || localStorage.getItem(MODEL_KEY) || '')
+      : '';
+
+    try {
+      const r = await fetch('/api/models');
+      const j = await r.json();
+      if (!r.ok) throw new Error(j?.error || 'Failed to load models');
+
+      const models = Array.isArray(j.models) ? j.models : [];
+      modelSel.innerHTML = '';
+
+      if (models.length === 0) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'No models found';
+        modelSel.appendChild(opt);
+      } else {
+        for (const m of models) {
+          const opt = document.createElement('option');
+          opt.value = m;
+          opt.textContent = m;
+          // Preselect the previous choice if it still exists
+          if (m === prev) opt.selected = true;
+          modelSel.appendChild(opt);
+        }
+        // If nothing was selected (new load), default to first
+        if (!modelSel.value) modelSel.value = models[0];
+      }
+
+      // Persist the choice
+      localStorage.setItem(MODEL_KEY, modelSel.value);
+      modelStatus.textContent = models.length ? `${models.length} model(s)` : 'No models';
+    } catch (e) {
+      modelStatus.textContent = 'Error loading models';
+      console.error(e);
+    }
+  }
+
+  modelSel.addEventListener('change', () => {
+    localStorage.setItem(MODEL_KEY, modelSel.value);
+  });
+
+  reloadBtn.addEventListener('click', () => loadModels(true));
+
+  async function compile() {
+    const query = qEl.value.trim();
+    if (!query) { outEl.textContent = 'Please enter a query.'; return; }
+    runBtn.disabled = true; outEl.textContent = 'Compiling…';
+    reasoningWrap.style.display = 'none';
+    reasoningEl.textContent = '';
+    try {
+      const r = await fetch('/api/compile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, model: modelSel.value })
+      });
+      const j = await r.json();
+      if (!r.ok) {
+        outEl.textContent = JSON.stringify(j, null, 2);
+      } else {
+        outEl.textContent = JSON.stringify(j.dsl, null, 2);
+        if (j.reasoning && String(j.reasoning).trim()) {
+          reasoningEl.textContent = String(j.reasoning).trim();
+          reasoningWrap.style.display = '';
+        }
+      }
+      //outEl.textContent = r.ok ? JSON.stringify(j.dsl, null, 2)
+      //                         : JSON.stringify(j, null, 2);
+    } catch (e) {
+      outEl.textContent = 'Error: ' + e.message;
+    } finally {
+      runBtn.disabled = false;
+    }
+  }
+
+  runBtn.addEventListener('click', compile);
+  qEl.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') compile();
+  });
+
+  // Initial load: preserve previously selected model if present
+  window.addEventListener('DOMContentLoaded', () => loadModels(true));
+</script>
+
+
+
+</body>
+</html>

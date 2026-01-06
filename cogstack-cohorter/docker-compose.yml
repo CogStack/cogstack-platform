@@ -1,0 +1,59 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    restart: unless-stopped
+
+  medcat:
+    build:
+      context: ./MedCAT
+    container_name: cohorter-medcat
+    ports:
+      - "3001:3001"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3001
+      MEDCAT_MODEL_PACK: /app/models/medcat_model_pack.zip
+    volumes:
+      # Keep model locally in MedCAT/models/ (do NOT commit it to GitHub)
+      - ./MedCAT/models/medcat_model_pack.zip:/app/models/medcat_model_pack.zip:ro
+    restart: unless-stopped
+
+  nl2dsl:
+    build:
+      context: ./NL2DSL
+    container_name: cohorter-nl2dsl
+    ports:
+      - "3002:3002"
+    environment:
+      OLLAMA_URL: "http://ollama:11434/api/generate"
+      OLLAMA_MODEL: "gpt-oss:20b"
+      MEDCAT_URL: "http://cohorter-medcat:3001"
+      ALLOW_ORIGINS: "*"
+    depends_on:
+      - ollama
+      - medcat
+    restart: unless-stopped
+
+  webapp:
+    build:
+      context: ./WebAPP
+      args:
+        random: "false"   # set to "true" to run gen_random_data.js during build
+    container_name: cohorter-webapp
+    ports:
+      - "3000:3000"
+    environment:
+      MEDCAT_URL: "http://cohorter-medcat:3001"
+      NL2DSL_URL: "http://cohorter-nl2dsl:3002"
+    depends_on:
+      - medcat
+      - nl2dsl
+    restart: unless-stopped
+
+volumes:
+  ollama:

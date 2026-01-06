@@ -26,6 +26,9 @@ app.use(session({
     secret: Math.random().toString().replace('.', '')
 }))
 
+
+const NL2DSL_SERVER = process.env.NL2DSL_SERVER || "http://localhost:4000/api/compile";
+
 let port = process.env.PORT || 3000;
 console.log('Loading data...');
 
@@ -182,6 +185,89 @@ for (let i=0;i<all_ptt_cnt;i++) ptt2cui_tsp_arr[i] = {};
 })();
 //========================================================
 
+
+//========================================================
+// ------------ Temporal helpers ------------
+/** map display string -> CUI (case-insensitive) */
+const STR2CUI = {};
+for (const t of snomed_terms) STR2CUI[t.str.toLowerCase()] = t.cui;
+
+/** given a SNOMED display name, return a list of CUI codes; include child terms if requested */
+function termsToCuis(name, includeChildren = true) {
+  if (!name) return [];
+  const cui = STR2CUI[String(name).toLowerCase()];
+  if (!cui) return [];
+  return includeChildren ? get_cui_child_terms(cui) : [cui];
+}
+
+/** for a list of CUI *codes*, return { patients:Set<pttId>, times:{pttId: earliestTspSec} } */
+function patientsAndTimesForCuis(cuiCodes) {
+  const patients = new Set();
+  const times = Object.create(null);
+  for (const code of cuiCodes) {
+    const cuiId = cui_code2id[code];
+    if (cuiId === undefined) continue;
+
+    // presence set (same rule you use elsewhere)
+    const arr = cui2ptt_arr[cuiId] || [];
+    for (const ptt of arr) patients.add(ptt);
+
+    // earliest first-mention time among those patients
+    const tspMap = cui2ptt_tsp_arr[cuiId] || {}; // { [pttId]: tspSec }
+    for (const [ptStr, tsp] of Object.entries(tspMap)) {
+      const p = +ptStr;
+      if (times[p] === undefined || tsp < times[p]) times[p] = tsp;
+    }
+  }
+  return { patients, times };
+}
+
+/** evaluate one temporal chain with optional windows_between (days) */
+function evalTemporalChain(chainObj, includeChildren = true) {
+  const { chain = [], windows_between = [] } = chainObj || {};
+  if (chain.length === 0) return new Set(all_ptt_set); // vacuously true
+
+  // step 0
+  const t0 = patientsAndTimesForCuis(termsToCuis(chain[0], includeChildren));
+  let curSet = t0.patients;
+  let prevTimes = t0.times;
+
+  // walk adjacent pairs
+  for (let i = 1; i < chain.length; i++) {
+    const ti = patientsAndTimesForCuis(termsToCuis(chain[i], includeChildren));
+    const wnd = windows_between[i - 1] || {};
+    const minS = wnd.min != null ? wnd.min * 86400 : null;
+    const maxS = wnd.max != null ? wnd.max * 86400 : null;
+
+    const nextSet = new Set();
+    const nextTimes = Object.create(null);
+
+    for (const p of ti.patients) {
+      if (!curSet.has(p)) continue;
+      const tPrev = prevTimes[p];
+      const tCur  = ti.times[p];
+      if (tPrev == null || tCur == null) continue;
+      const delta = tCur - tPrev;
+      if ((minS == null || delta >= minS) && (maxS == null || delta <= maxS) && delta>0) {
+        nextSet.add(p);
+        nextTimes[p] = tCur; // carry forward
+      }
+    }
+    curSet = nextSet;
+    prevTimes = nextTimes;
+  }
+  return curSet;
+}
+
+/** intersect set A with set B */
+function intersectSets(a, b) {
+  const out = new Set();
+  for (const x of a) if (b.has(x)) out.add(x);
+  return out;
+}
+//========================================================
+
+
 //========================================================
 // api to handle keywords search for snomed terms
 app.post("/keywords", (req, res) => {
@@ -270,6 +356,8 @@ app.post("/get_query_result", (req, res) => {
         console.time('/get_query_result');
         const data = req.body;
         console.log(data);
+
+        const { qid, query, filter, include_child_terms = true, temporal } = req.body;
 
         global_results[data.qid] = {tsp: Date.now()/1000};
 
@@ -385,6 +473,17 @@ app.post("/get_query_result", (req, res) => {
             if (data.filter['ethnicity']['6']) fil_add((x) => ptt2eth_arr[x]==6, s_filter, s);
             s_filter = fil((x) => s.has(x), s_filter);
         }
+
+        // >>> NEW: apply temporal chains (if provided) <<<
+        let temporal_s = new Set(all_ptt_set);
+        if (temporal && Array.isArray(temporal.chains) && temporal.chains.length) {
+            for (const ch of temporal.chains) {
+                const chainSet = evalTemporalChain(ch, include_child_terms);
+                temporal_s = intersectSets(temporal_s, chainSet);
+            }
+        }
+
+        s_filter = intersectSets(s_filter, temporal_s);
 
         global_results[data.qid]['all'] = new Set(s_filter);
 
@@ -598,6 +697,27 @@ app.post("/export", (req, res) => {
         const ptt_codes = ptt_ids.map((id) => ptt_id2code[id]);
         res.status(200).json({ptt_codes}).end();
     } 
+});
+//========================================================
+
+//========================================================
+// proxy endpoint (front-end will call this)
+app.post('/nl2dsl', async (req, res) => {
+    console.log('In /nl2dsl');
+    console.log(req.body);
+    try {
+        const r = await fetch(NL2DSL_SERVER, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(req.body),   // e.g. { query: "...", model: "gpt-oss-20b" }
+        });
+        const text = await r.text();
+        console.log(text);
+        res.status(r.status).type('application/json').send(text);
+    } catch (e) {
+        console.error('Proxy /nl2dsl error:', e);
+        res.status(502).json({ error: 'NL2DSL unavailable' });
+    }
 });
 //========================================================
 

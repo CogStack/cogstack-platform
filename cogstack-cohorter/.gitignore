@@ -1,2 +1,96 @@
-node_modules
+# =========================
+# Secrets / environment
+# =========================
+.env
+.env.*
+*.key
+*.pem
+*.p12
+secrets/
+**/secrets/
+**/*secret*
+**/*token*
+**/*apikey*
+**/*api_key*
+
+# =========================
+# MedCAT model packs (keep locally, never commit)
+# =========================
+MedCAT/models/
+MedCAT/models/**
+*.zip
+*.tar
+*.tar.gz
+
+# =========================
+# PHI / data exports / local datasets
+# =========================
+data/
+datasets/
+exports/
+tmp/
+_local_models/
+**/data/
+**/datasets/
+**/exports/
+**/tmp/
+*.csv
+*.tsv
+*.parquet
+*.feather
+*.sqlite
+*.db
+
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+pip-wheel-metadata/
+.pytest_cache/
+.mypy_cache/
+ruff_cache/
+.ipynb_checkpoints/
+
+# =========================
+# Node / JS / Web builds
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+dist/
+build/
+.next/
+out/
+.cache/
+.eslintcache
+*.tsbuildinfo
+
+# =========================
+# Docker / Compose local overrides
+# =========================
+docker-compose.override.yml
+
+# =========================
+# OS / editor junk
+# =========================
 .DS_Store
+.DS_Store?
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# =========================
+# Logs
+# =========================
+*.log
+logs/
+**/logs/
