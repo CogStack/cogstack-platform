@@ -5,6 +5,8 @@ A lightweight cohort discovery application that combines:
 - **NL2DSL** API (natural language → JSON cohort query via Ollama)
 - **WebAPP** (frontend + backend for the full Cohorter experience)
 
+**Live demo:** https://cogstackcohort.sites.er.kcl.ac.uk/
+
 ![Cohorter demo](./cohorter.gif)
 
 ---
