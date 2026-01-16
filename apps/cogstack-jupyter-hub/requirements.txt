@@ -46,7 +46,7 @@ plotly==6.1.1
 click==8.2.1
 traitlets==5.14.3
 xnat==0.7.2
-keras==3.12.0
+keras==3.13.1
 
 # ES stack
 opensearch-py>=2.8.0
