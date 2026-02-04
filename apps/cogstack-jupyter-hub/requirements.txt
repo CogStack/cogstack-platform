@@ -1,4 +1,4 @@
-wheel==0.45.1
+wheel==0.46.2
 
 medcat==2.3.0
 # TODO: cogstack-es 8/9 handling
