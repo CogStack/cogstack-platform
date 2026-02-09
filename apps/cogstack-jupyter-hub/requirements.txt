@@ -21,7 +21,6 @@ isort==6.0.1
 html2text==2025.4.15
 jsoncsv==2.2.5
 simplejson==3.20.1
-detect==2020.12.3
 nltk==3.9.1
 bokeh==3.7.3
 seaborn==0.13.2
@@ -31,7 +30,6 @@ plotly==6.1.1
 tqdm>=4.66.5
 pymssql==2.3.4
 mysql-connector-python==9.3.0
-dataclasses==0.6
 jsonpickle==4.1.0
 jsonext==0.4.2
 psycopg[c,binary,pool]==3.2.9
@@ -42,7 +40,6 @@ GitPython==3.1.44
 neo4j==5.28.1
 PyYAML==6.0.2
 opencv-python==4.11.0.86
-plotly==6.1.1
 click==8.2.1
 traitlets==5.14.3
 xnat==0.7.2

@@ -23,7 +23,6 @@ venv
 
 # env files with passwords or local paths
 **.env
-env**
 
 config/jupyterhub_cookie_secret
 
