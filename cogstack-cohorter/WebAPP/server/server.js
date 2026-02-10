@@ -13,7 +13,8 @@ morgan.token('body', (req, res) => JSON.stringify(req.body));
 app.use(morgan(':remote-addr :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent" ":body"', {
     stream: fs.createWriteStream('./access.log', {flags: 'a'})
 }));
-app.use(express.static(path.join(__dirname, '../client/public')));
+//app.use(express.static(path.join(__dirname, '../client/public')));
+app.use(express.static(path.join(__dirname, '../client-react/dist')));
 app.use(express.json());
 //app.use(express.urlencoded({extended: false}));
 app.use(session({
