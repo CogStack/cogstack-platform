@@ -1,0 +1,15 @@
+<coh-include src="/components/overlays.html"></coh-include>
+
+<div class="flex h-screen bg-gray-50 dark:bg-gray-900" :class="{ 'overflow-hidden': isSideMenuOpen, 'justify-center': !isSideMenuOpen }">
+  <coh-include src="/components/sidebar-desktop.html"></coh-include>
+  <coh-include src="/components/sidebar-mobile.html"></coh-include>
+
+  <div class="flex flex-col flex-1">
+    <coh-include src="/components/topbar.html"></coh-include>
+    <coh-include src="/components/query-v1.html"></coh-include>
+    <coh-include src="/components/query-nl.html"></coh-include>
+    <coh-include src="/components/results-main.html"></coh-include>
+  </div>
+</div>
+
+<coh-include src="/components/busy-pill.html"></coh-include>

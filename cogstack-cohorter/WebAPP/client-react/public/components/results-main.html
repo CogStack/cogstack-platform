@@ -1,0 +1,153 @@
+        <!--<main class="bg-gray-50 dark:bg-gray-900 h-full overflow-y-auto pb-16">-->
+        <main class="bg-gray-50 dark:bg-gray-900 h-full overflow-y-auto pb-16 w-full" x-ref="resultsPanel">
+        
+          <!-- Remove everything INSIDE this div to a really blank page -->
+          <!--<div class="container px-6">-->
+          <div class="container px-6 max-w-screen-2xl mx-auto">
+            <div class="h-12">&nbsp;</div>
+
+            <!-- Cards -->
+            <div class="grid gap-6 mb-8 md:grid-cols-4 xl:grid-cols-4">
+              <!-- Card -->
+              <div class="flex items-center p-4 border bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg shadow-xs">
+                <div>
+                  <p class="mb-2 text-sm font-medium text-gray-900 dark:text-white">No. of patients satisfying your query</p>
+                  <p class="text-4xl font-semibold text-gray-900 dark:text-white" x-text="query_result['all'].toLocaleString()"></p>
+                </div>
+              </div>
+              <template x-if="query_result['individual'] && query_result['individual'].length > 0">
+                <template x-for="(q, q_ind) in query">
+                  <template x-if="q_ind % 2 == 0">
+                    <div class="flex items-center p-4 border bg-white dark:bg-gray-900 rounded-lg shadow-xs">
+                      <div class="w-full relative">
+                        <p x-text="'No. of patients ' + q['with'] + ' ' + q['str'] + ' in database'" class="truncate overflow-hidden w-full mb-2 text-sm font-thin text-gray-900 dark:text-white" data-bs-toggle="tooltip" :title="'No. of patients ' + q['with'] + ' ' + q['str'] + ' in database'"></p>
+                        <p class="text-4xl font-semibold text-gray-900 dark:text-white" x-text="query_result['individual'].slice(parseInt(q_ind/2), parseInt(q_ind/2)+1).toLocaleString()"></p>
+                      </div>
+                    </div>
+                  </template>
+                </template>
+              </template>
+              <script type="text/javascript">
+                var tooltipTriggerList = [].slice.call(
+                  document.querySelectorAll('[data-bs-toggle="tooltip"]')
+                );
+                var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                  return new Tooltip(tooltipTriggerEl);
+                });
+              </script>
+            </div>
+
+            <div class="grid gap-6 mb-8 md:grid-cols-2">
+              <!-- Gender Chart -->
+              <div class="min-w-0 p-4 bg-white dark:bg-gray-900 rounded-lg shadow-xs border">
+                <h4 class="mb-4 font-semibold text-gray-900 dark:text-white">Gender</h4>
+                <div class="w-full h-96" id="gender_chart"></div>
+              </div>
+              <!-- Alive Chart -->
+              <div class="min-w-0 p-4 bg-white dark:bg-gray-900 rounded-lg shadow-xs border">
+                <h4 class="mb-4 font-semibold text-gray-900 dark:text-white">Alive / Died</h4>
+                <div class="w-full h-96" id="alive_chart"></div>
+              </div>
+              <!-- Age Chart -->
+              <div class="min-w-0 p-4 bg-white dark:bg-gray-900 rounded-lg shadow-xs border">
+                <h4 class="mb-4 font-semibold text-gray-900 dark:text-white">Age <span class="text-xs font-thin" :class="age_chart_updating ? '' : 'hidden'">Updating...</span></h4>
+                <div class="w-full h-96" id="age_chart"></div>
+              </div>
+              <!-- Ethnicity Chart -->
+              <div class="min-w-0 p-4 bg-white dark:bg-gray-900 rounded-lg shadow-xs border">
+                <h4 class="mb-4 font-semibold text-gray-900 dark:text-white">Ethnicity</h4>
+                <div class="w-full h-96" id="ethnicity_chart"></div>
+              </div>
+            </div>
+
+            <div class="grid gap-6 mb-8 md:grid-cols-1">
+              <!-- Top Terms Chart -->
+              <div class="min-w-0 p-4 bg-white dark:bg-gray-900 rounded-lg shadow-xs border">
+                <h4 class="mb-4 font-semibold text-gray-900 dark:text-white">Most common SNOMED terms among patients found <span class="text-xs font-thin" :class="top_terms_chart_updating ? '' : 'hidden'">Updating...</span></h4>
+                <div class="w-full h-96" id="top_terms_chart"></div>
+              </div>
+            </div>
+
+
+            <div class="text-md font-bold text-center text-gray-600 border-b border-gray-200">
+              <ul class="flex flex-wrap -mb-px">
+                <li class="mr-2">
+                    <div class="inline-block p-4 rounded-t-lg border-b-2 border-transparent hover:text-gray-500  cursor-pointer" :class="show_disorders_table ? 'border-purple-600' : 'hover:border-gray-300'" @click="change_table('disorders')">Top Disorders</div>
+                </li>
+                <li class="mr-2">
+                    <div class="inline-block p-4 rounded-t-lg border-b-2 border-transparent hover:text-gray-500 cursor-pointer" :class="show_findings_table ? 'border-purple-600' : 'hover:border-gray-300'" @click="change_table('findings')">Top Findings</div>
+                </li>
+                <li class="mr-2">
+                    <div class="inline-block p-4 rounded-t-lg border-b-2 border-transparent hover:text-gray-500 cursor-pointer" :class="show_procedures_table ? 'border-purple-600' : 'hover:border-gray-300'" @click="change_table('procedures')">Top Procedures</div>
+                </li>
+                <li class="mr-2">
+                    <div class="inline-block p-4 rounded-t-lg border-b-2 border-transparent hover:text-gray-500 cursor-pointer" :class="show_substances_table ? 'border-purple-600' : 'hover:border-gray-300'" @click="change_table('substances')">Top Substances</div>
+                </li>
+              </ul>
+            </div>
+
+
+            <!-- Tables -->
+            <coh-top-terms-table data-show="show_disorders_table" data-items="top_disorders" data-cap="true"></coh-top-terms-table>
+            <coh-top-terms-table data-show="show_findings_table" data-items="top_findings"></coh-top-terms-table>
+            <coh-top-terms-table data-show="show_procedures_table" data-items="top_procedures"></coh-top-terms-table>
+            <coh-top-terms-table data-show="show_substances_table" data-items="top_substances"></coh-top-terms-table>
+
+            <!-- Compare SNOMED terms -->
+            <!-- Search input -->
+            <div class="grid gap-6 mb-8 md:grid-cols-1 h-screen">
+              <div class="min-w-0 p-4 bg-white dark:bg-gray-900 rounded-lg shadow-xs border">
+                <h4 class="mb-4 font-semibold text-gray-900 dark:text-white">Compare SNOMED terms among patients found <span class="text-xs font-thin" :class="compare_query_updating ? '' : 'hidden'">Updating...</span></h4>
+                <div class="flex justify-center items-center flex-1 h-16">
+                  <div class="relative mr-2 text-gray-900 dark:text-white">Add terms:
+                    <!--
+                    <select name="compare_query_search_bar_with" id="compare_query_search_bar_with" x-model="compare_query_search_bar_with" class="pl-1 pr-8 bg-gray-100 text-sm shadow-sm rounded-md border focus:border-purple-600 focus:ring focus:ring-purple-600 focus:ring-opacity-50">
+                      <option value="with">with</option>
+                      <option value="without">without</option>
+                    </select>
+                    -->
+                  </div>
+                  <div class="relative w-full max-w-xl mr-2 focus-within:text-gray-900 dark:text-white">
+                    <div class="absolute inset-y-0 flex items-center pl-2">
+                      <svg class="w-4 h-4" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path></svg>
+                    </div>
+                    <input x-model="compare_query_search_bar_text" @input.debounce="handle_compare_query_search_bar_text_input" class="w-full pl-8 pr-2 text-sm text-gray-700 placeholder-gray-600 bg-gray-100 border shadow-sm rounded-md focus:border-purple-600 focus:ring focus:ring-purple-600 focus:ring-opacity-50" type="text" placeholder="Search for SNOMED terms" aria-label="Search"/>
+                    <div class="absolute w-full p-2 border bg-white border-gray-500 h-screen overflow-y-auto rounded z-50" :class="compare_query_search_bar_suggestions.length > 0 ? '' : 'hidden'" @click.outside="compare_query_cancel_suggestions" @keydown.escape.window="compare_query_cancel_suggestions">
+                      <template x-for="suggestion in compare_query_search_bar_suggestions">
+                        <div class="w-full hover:bg-green-200 cursor-pointer" @click="handle_compare_query_select_suggestion(suggestion)" >
+                          <div class="text-left" x-html="suggestion.hl"></div>
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+                <div class="mt-6 font-semibold text-gray-900 dark:text-white">SNOMED terms: </div>
+                <template x-if="compare_query.length == 0">
+                  <div class="inline-block font-normal text-gray-900 dark:text-white mx-2">No terms selected</div>
+                </template>
+                <template x-if="compare_query.length > 0">
+                  <template x-for="(q,q_ind) in compare_query">
+                    <div class="inline-block">
+                      <div class="relative inline-block mt-1">
+                        <span class="inline-block font-normal text-gray-900 dark:text-white mx-1 border border-purple-400 rounded-md" x-text="q.str"></span>
+                        <!-- fix icon colours-->
+                        <div class="absolute h-5 w-5 -right-0 -top-2 cursor-pointer" @click="delete_compare_query(q_ind)"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAABmJLR0QA/wD/AP+gvaeTAAAFUUlEQVR4nO2bXWwUVRTHf1uiXcR0WzR+kCBNqRVUCtWQKg8WY3wWgQdeaTWA+BU1SohGeBNfjBEs4gfWmChGJZEnwQc+pH4hEBoUa6Jook+aQMWuTdquD2cnc+50dpyduXd2G/tPbrLJnvs/59y5955z75yBGczgf41cBjryQDewAugot3lAAbiyLHMJuAj8DvwADANfAF8B/2Rgo3U0A33AZ0ARKCVsReAQ0FvmrHvcAgyQzumowXgbWGzTYFtLoB14EVgVwlkCzgJHgDPAj8B54AIy9UGWQgvQCtwILAN6CHd2EtgPPA38ZMn+xMgD2wl/4seBzcA1KfjnAY8DJ0L4i8DzQGMK/lToAE4FjJoADgDLHejrAt4BxgM6TyKzJlOsBUYChhwGbs1A93Lg64DuEWB1BroBmdYTSvlfwHqyCakeGoCHMZfeBLDJteKtmCN/BljkWmkEOoFzAZu2ulK2ialTvsmVsirQjEQYbdtjtpWsxZz2nyARoF6QR2zSy2GNLfJ2JE31yI9QX857uBw4iLk3pV6eeeC0Iv2O+k5Jm4AhfHtPkfJhbVdkRWBpSgOzQAdmiN6WlKgdM8w4DzEW0Yf54BYmIflYkXyJxN7pghxwFN/+j6oluBk5dHg76u02rcsInfhp8wTiU2wM4I/efuumZYd9+H4MxO1UAEZVxzudmJYNluLP5CIxI9gD+M5/48y07DCI709f8M+wjW2d+v2uBQMKJAufndjJOd5Tv9dVlCojjx/6JoHrUyqfg9z+lJDrrFkx+uSAV8t9fsO/OE2K6zCXQWRitBIz60uLhYrP24iiwmkO2B3okyiGB3BW8fVECW5Rgv0WFIPcFWqH9hI+CGHO77RkQ7/i3BIluFcJbrCkHOAFTMfewhyEHLArIPM69pKvjQHdFXFcCd5tSbmHHZgOvok46Np5gHsU9+dRgr8owVaLBoA4+gqmo68xddrvxv71WpviPx8l+KcSbLFsBIQPgssn7+EqpeOPKMExJXiZA0NABmEn2TkPclni6RnTf/xXSHKFMO4sb5UrQi+BuQ74wzY83d6gxkvA5SbYgOz82uF+6mwT1GFwpUUDGjBzjBKwBz8MBvcE2zPhXsV9LEpQG/mgJeWzkHNA1FN2PQgPKd7IREinwrssKdeXKyXgZSpvgsHlYMuGPYozMhXuUYJDFhQvw3ToJaLXt6vD0LDiuytKMHgcvjal4gLwc5lvR8w+ejl8T/qXMDfgOz9KjHqCQ6rD5pTKAa4gWURpw84bqKfw/fk0Tgd9pz5owYBa4yS+P+vjdGjCvBSdjlfiHu7A96OILMlY0GHrfSemZYMDxAx/QSzGfx0+Diyxbpp7dGO+3LmpWoIP8UfvKHVyWImJBszKsn1JSNowX4722rIuAzyKGfoSn2u2KaJLVPl+rUZYgrmJP5uGrBEzjAxRH3VBlTAXM+s7gYVCymCJzGHqs0RmNnLS8+wcQYolrGA19V0kNRuzSGocuM+2kg1KQQmp57/atpIEaMEshigBj7hSFiyUPEdt64a6MNd8CYeFkh42YhYsF5Gy1SxLaBqQYkgdpsfJsI5pFebGWEIKmF1UiQfRzdTy+YvA/RnoNrAA2Qe0IZNI/r3Cgb7bgA/w01uv1aRc3kMj8Bxm4uG1b4EngPkp+OcDT2LmIjrDS/3BhK38vhV5Db6G8L1gGMkfTpd//4rcz/9d/n8OElEWIE+zC7mVDnuyk0gJ3zPUwSczQSxCjp3T5qMpVyggty8HCV8ecdtomaOXKi4zqkEWR9xGwj+cbMb8cPIC8uHkcLkNIh9OjjGDGczAFf4FaGZXr413GEoAAAAASUVORK5CYII="></div> 
+                      </div>
+                    </div>
+                  </template>
+                </template>
+                <div class="flex space-x-2 justify-end mt-3">
+                  <div class="flex items-center space-x-2 mt-2 mr-4">
+                    <input x-model="compare_query_include_child_terms" @change="handle_compare_query_include_child_terms_change" type="checkbox" :disabled="compare_query.length == 0" class="disabled:opacity-25 rounded text-purple-600 shadow-sm border-purple-400 focus:border-purple-800 focus:ring-0 focus:ring-offset-0 focus:ring-purple-600 focus:ring-opacity-50">
+                    <span :class="query.length == 0 ? 'text-gray-900 dark:text-white' : ''">Include Child Terms</span>
+                  </div>
+                </div>
+
+                <div class="min-w-0 p-4 bg-white dark:bg-gray-900 rounded-lg shadow-xs border">
+                  <h4 class="mb-4 font-semibold text-gray-900 dark:text-white"></h4>
+                  <div class="w-full h-96" id="compare_chart"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>

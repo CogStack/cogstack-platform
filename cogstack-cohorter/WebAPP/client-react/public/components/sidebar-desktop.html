@@ -1,0 +1,229 @@
+      <!-- Desktop sidebar -->
+      <!--<aside class="z-20 hidden w-100 overflow-y-auto bg-white dark:bg-gray-900 shadow md:block flex-shrink-0">-->
+      <aside x-show="isSideMenuOpen" x-transition class="z-20 hidden w-100 overflow-y-auto bg-white dark:bg-gray-900 shadow md:block flex-shrink-0">
+        <div class="py-4 text-gray-500">
+          <!--
+          <a class="text-sm flex justify-center" href="index.html">
+            <img src="assets/Cogstack-Logo-Landcape-Dark.svg" width="200px" class="block dark:hidden">
+            <img src="assets/Cogstack-Logo.svg" width="200px" class="hidden dark:block">
+          </a>
+          <a class="text-sm font-bold text-gray-900 dark:text-white flex justify-center" href="index.html">Cohort v2</a>
+          -->
+          <span class="flex justify-center text-sm">Powered by MedCAT</span>
+          <span class="flex justify-center text-xs font-thin text-gray-800 dark:text-gray-100">modelpack_phase2_snomed_190k_february_2022</span> <!-- remove hard-coding -->
+          <div class="flex justify-end mt-6 mr-6"><u class="cursor-pointer" @click="clear_all_filters_and_submit">clear all filters</u></div>
+          <ul class="mt-0">
+            <li class="relative px-6 py-3">
+              <div class="inline-flex justify-between items-center w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800" @click="toggleTimeMenu">
+                <span class="inline-flex items-center">
+                  <img class="w-5 h-5 invert dark:invert-0" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAABOvAAATrwFj5o7DAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAvFJREFUWIXFl0trFGkUhp9TVRovqaq+JcZRkaCOKETDSPAvDAgikhFdzGLmL4gbIfGCiMx/GBiQYYSooKCrrF04glFxRCMKRhIvfUlVKcZ0VR0XuZpuu6trkviuiu8757zPR93Oge8sSZP0Jgg611arXSHmVgsUzNfTa/Rtl22/WzGAoucdlEj7VeQIsPMbYaOiekNNGSq47t1lASiVgr1q6FnQX5LCzmo4Jj7Vmc2OpAJQVSlP+gMKZwCjRfM5xagO5rPuRRHRxABjY7p+3Ub/LxGONao+6QeAkHHaG1KIcMWvOL91d8vU0r2ak6mqbLD9P5uZA9wavsOt4TvNwlDluJ0JLqtqzYFrAMqT/qAqJ5pWBaarIdPVapJQQPtLFe90Q4By+UOPwmDCiq1L5Py7SqX3mwCREf2xdG2ZZZgYF+oCFD3voCg/r6A5AAqHip7XVwMgccvveXpF2l8DoMjhVQMQOfoVwJsg6AR2rRoA7PR9vzAPYIThD6toDkA462kAWGpsbrVAHMf/C0DVXABQpe53upGevhgDIOvY6QisGU8DIDTiiVZyq2HIyONRAA7s253KXyJzfB4gtqzxVpIf/PecqanPdHXk2bZlUyoAy4oXADbb9nvgWZLEj5+mePLsJQB9vXtSmQOjjuOU5gEARPVmksx7I08Io5gd27dQyLnp7FWuz10ufIhMGWqWV/F8XrwaxzRMfupJd+8BMPVaDUDBde+KcLtRnojQtnYNvT27aN+4Pq39zYLr/jtfc/FOufyhJ5boPmCmrd5EkcTG/nzefjy38NWvN5drfwScXSFzUB1YbA51ekJVlbLn/520K0ouuZrP2MeWNqc1zYeIqF9xfhfhyrJZC/8Ek/av9Trjhm15qeKdRuQc6Z+JCNWBfNa91FJbvljFYrAHU8+lGUwMjU7mcrmHjYJaGc36iLSfmdHsx7pBylPQG2ow1JHJ3EtSN9VwOhEEHW1V6YJo68yK+dqy4gnHcYpp6n1XfQGIlRJDrOjIWAAAAABJRU5ErkJggg==">
+                  <span class="ml-4 text-gray-900 dark:text-white">First Mention Time</span>
+                </span>
+                <svg class="w-4 h-4" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+              </div>
+              <template x-if="isTimeMenuOpen">
+                <ul class="p-2 mt-2 overflow-hidden text-sm font-medium text-gray-600 dark:text-gray-500 rounded-md shadow-inner bg-gray-50 dark:bg-white dark:bg-gray-900" aria-label="submenu">
+                  <li class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 flex items-center">
+                    <input x-model="filter['time']['0']" @change="handle_filter_change_time('0')" type="checkbox" checked :disabled="query.length == 0" class="disabled:opacity-25 mr-1 rounded text-purple-600 shadow-sm border-purple-400 focus:border-purple-800 focus:ring-0 focus:ring-offset-0 focus:ring-purple-600 focus:ring-opacity-50">
+                    <span>Any</span>
+                    <span class="w-full text-right"></span>
+                  </li>
+                  <li class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 flex items-center">
+                    <input x-model="filter['time']['1']" @change="handle_filter_change_time('1')" type="checkbox" :disabled="query.length == 0" class="disabled:opacity-25 mr-1 rounded text-purple-600 shadow-sm border-purple-400 focus:border-purple-800 focus:ring-0 focus:ring-offset-0 focus:ring-purple-600 focus:ring-opacity-50">
+                    <span class="w-full">Last 5 years</span>
+                    <span class="w-full text-right"></span>
+                  </li>
+                  <li class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 flex items-center">
+                    <input x-model="filter['time']['2']" @change="handle_filter_change_time('2')" type="checkbox" :disabled="query.length == 0" class="disabled:opacity-25 mr-1 rounded text-purple-600 shadow-sm border-purple-400 focus:border-purple-800 focus:ring-0 focus:ring-offset-0 focus:ring-purple-600 focus:ring-opacity-50">
+                    <span class="w-full">Last 10 years</span>
+                    <span class="w-24 text-right"></span>
+                  </li>
+                  <li class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 flex items-center">
+                    <input x-model="filter['time']['3']" @change="handle_filter_change_time('3')" type="checkbox" :disabled="(query.length == 0 || (filter['time']['min'] == '' && filter['time']['max'] == ''))" class="disabled:opacity-25 mr-1 rounded text-purple-600 shadow-sm border-purple-400 focus:border-purple-800 focus:ring-0 focus:ring-offset-0 focus:ring-purple-600 focus:ring-opacity-50">
+                    <span>Custom</span>
+                    <span class="w-full text-right"></span>
+                  </li>
+                  <li class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 flex items-top">
+                    <input type="checkbox" :disabled="query.length == 0" class="invisible disabled:opacity-25 mr-1 rounded text-purple-600 shadow-sm border-purple-400 focus:border-purple-800 focus:ring-0 focus:ring-offset-0 focus:ring-purple-600 focus:ring-opacity-50">
+                      <div class="flex-col">
+                        <div class="flex justify-between h-7">
+                          <span class="mr-1">Min</span>
+                          <input x-model="filter['time']['min']" @change.debounce.1000ms="handle_filter_change_time_custom" :disabled="query.length == 0" class="h-5 p-0 ml-1 flex justify-left text-gray-400 text-sm border-gray-300" type="date" name="min_date" />
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="mr-1">Max</span>
+                          <input x-model="filter['time']['max']" @change.debounce.1000ms="handle_filter_change_time_custom" :disabled="query.length == 0" class="h-5 p-0 ml-1 flex justify-left text-gray-400 text-sm border-gray-300" type="date" name="min_date" />
+                        </div>
+                      </div>
+                  </li>
+                </ul>
+              </template>
+            </li>
+            <li class="relative px-6 py-3">
+              <div class="inline-flex justify-between items-center w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800" @click="toggleGenderMenu">
+                <span class="inline-flex items-center">
+                  <img class="w-5 h-5 invert dark:invert-0" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAz0lEQVR4nL3SQUpDMRSF4YCIK9BRpShal+jU1ZQWrOBA0YFuQjchWpHO5ZPIUUJ4iK3ggUDuve/8CSevlF8K27jTqawjnP4VsIenQQAmmOESWzjCFM9YYo7H+L4hJeYTvOI9oHGMQ3rITc5w/wW4yHCaehdX6S0wwnXqWRtsyWaV4agZ7qe3HKr7cFY/AN5Sj9u6BywyvMFBVt1XneebGnDVfAgwSYi9au848xrwS3vLHnLYnPIZVno7uM0zDptbbfSHlcbY6/8APWht46aAD84l0+fm4SZrAAAAAElFTkSuQmCC">
+                  <span class="ml-4 text-gray-900 dark:text-white">Gender</span>
+                </span>
+                <svg class="w-4 h-4" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+              </div>
+              <template x-if="isGenderMenuOpen">
+                <ul class="p-2 mt-2 overflow-hidden text-sm font-medium text-gray-600 dark:text-gray-500 rounded-md shadow-inner bg-gray-50 dark:bg-white dark:bg-gray-900" aria-label="submenu">
+                  <li class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 flex items-center">
+                    <input x-model="filter['gender']['0']" @change="handle_filter_change_gender('0')" type="checkbox" checked class="disabled:opacity-25 mr-1 rounded text-purple-600 shadow-sm border-purple-400 focus:border-purple-800 focus:ring-0 focus:ring-offset-0 focus:ring-purple-600 focus:ring-opacity-50">
+                    <span>Any</span>
+                    <span class="w-full text-right" x-text="'(' + filter_result['gender']['0'] + ')'"></span>
+                  </li>
+                  <li class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 flex items-center">
+                    <input x-model="filter['gender']['1']" @change="handle_filter_change_gender('1')" type="checkbox" class="disabled:opacity-25 mr-1 rounded text-purple-600 shadow-sm border-purple-400 focus:border-purple-800 focus:ring-0 focus:ring-offset-0 focus:ring-purple-600 focus:ring-opacity-50">
+                    <span>Male</span>
+                    <span class="w-full text-right" x-text="'(' + filter_result['gender']['1'] + ')'"></span>
+                  </li>
+                  <li class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 flex items-center">
+                    <input x-model="filter['gender']['2']" @change="handle_filter_change_gender('2')" type="checkbox" class="disabled:opacity-25 mr-1 rounded text-purple-600 shadow-sm border-purple-400 focus:border-purple-800 focus:ring-0 focus:ring-offset-0 focus:ring-purple-600 focus:ring-opacity-50">
+                    <span>Female</span>
+                    <span class="w-full text-right" x-text="'(' + filter_result['gender']['2'] + ')'"></span>
+                  </li>
+                  <li class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 flex items-center">
+                    <input x-model="filter['gender']['3']" @change="handle_filter_change_gender('3')" type="checkbox" class="disabled:opacity-25 mr-1 rounded text-purple-600 shadow-sm border-purple-400 focus:border-purple-800 focus:ring-0 focus:ring-offset-0 focus:ring-purple-600 focus:ring-opacity-50">
+                    <span>Unknown</span>
+                    <span class="w-full text-right" x-text="'(' + filter_result['gender']['3'] + ')'"></span>
+                  </li>
+                </ul>
+              </template>
+            </li>
+            <li class="relative px-6 py-3">
+              <div class="inline-flex justify-between items-center w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800" @click="toggleAliveMenu">
+                <span class="inline-flex items-center">
+                  <img class="w-5 h-5 invert dark:invert-0" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAAsTAAALEwEAmpwYAAAFdElEQVR4nO2aaWwVVRTHRwqFIu4KilpAwgcVq2JMcEMMRkVRWzQCatyCEUVBJQGJIhXX6CcxQnBNVIyKUZQILsF9+SJRcUEQq0KKdUFc4lIt/ZnD+0+9vs68ee2704XML3kh0/fm3HvPnHvu/5whCDIyMjIyMjIyMjISAXYADgMmAdOA6cAE4BigwoP9SuAooBo4HRgJ7Bp0NsD+wHyggXh+B5YBlwC9i7TbAxgH3AdsjLHbBLwDTAX6pL/a1hOcCzTSNjYBM4B+MXZ7A5cCa9th9+ygIwD6AS9r4NUKzSltnPA3wCl5dscA6ykNi8YeaS6+HHjJGXCieR6ob+eEHwaqgIeAZvywME0HzNcgG4B/6Lpcm8biRwJbtT/7Aq/RdfkDGObbAW/J+PG2fz2GbFos9bn4ETL6CtAT+IKuz1ZvUQAskNEaJb7uwl2+HLAO+EWnwPKUJmti6jkdkb742JfaM1ZIqPyJf0xP7CL79lnpya7lqYGlOuBUGbtFJ0EajAdOkry9CDjBo+2TS3XAVTJkau8c/GMytpcjsFbq+mdP9qeU6oAbZeg06XjfWGQNUdY2/tZ2eNqT/VmlOuBWGToOmIdfbNGDgdvz/l6t6rEQtl2+lsMKMbdUB9wgQ2OBmfhlhcI9v5y2MnhgAbFl2+Ygp1ewpsAYM0t1wFQZmtCOqi+JGhVTxhtKfrboDRr7g5j7rlARtVpVpPUO4pjs6xSYnjBQW6mXqgxL62qN95GuD3G2n8uvwE7AYl2/KjsWFVGMKdUBg2XoEWBvjw64GRiqJx46w3oNd+h7227HRtxnqrQ/8JeTRwaZ6osZZx8f/b5vgc90Hdeiak/yCxc7T86YoWILVZtlwOa8ew8Hrsv72/XAwRHj1JW0+BCFm016L+CBhMWtl2AqCwogxdfgPME7Fc6hBgiPwycd22+rHVen6zDs1+lBrcqby/2BD/ivALoSGJ3ggGq1yZareoz7fKLfvyBnfK8e487AEn13FnChY/t8JyetkjM+1PXRylMu43w5oEJP5T0Nah2hOEaqNV4M9vRPzKswaxwNYNE2QHniB+v+As+72R24WteLFKGhLrDoKvfiAEPJp1nH1ucFFvW49u6+wAEJnz2tvw98GqMB6hXa72uLDJIA2gLsqMZMfy16ixy0VHZuC2JQFFl77wlgtm21uN+2oAkX2wdco0bnooTPYxEiaKMWHWoAe+Fyk5KkyWbjbsvuiooKJyomqLCyltiAiDXYg3kqYr7m6COCJMh1cTuCKkcDzFaUlOs0ssg4EJij7yc5Ymq5fndezPznOL8brmN9mnJPXdz7ihbkdWuMpM0sRwO8qbHt6YbHY08nD72oJLpZETpReSXqU68I66sjd7G2W1jjRDrufwDXdIADXtcif9KiDlUCRiW5nTQhTVrEvUXaXqJkGVLraI/aIAlyp4Cd12kSpQHQFuilp07eIiqVAAsdvY2S2pYLngG+Ao4ELpOdyxMdYAD7AT+m7IR8DeDK57B3EGJJb3yQgJJuaKfM6Xg3aGvvnmSjBWCUo8fT4EElqWYn1Ct1HOZjk68KEpCmsAoSPcC1cqZF3LlJ97dCyiytFySuBkAd4z4RkdfYlr6fTpRaHdWbdCKMKvb+Vmj/pOWEEZK3TYq4CyIWv62M7lSAyRH70gdLlfRM7Oyhosfd92cGXQXgDOC3FJzwpRxhqi/kO6s5gq4GOdnq881OFFYFDgm6KsBuMXrbBwuK/X9GnQ5wsSo0H5jsHRt0N8idu4+WcEqYDL7HmiRBd4ac1n63jYs36To82J4g93otv2+Xj70fGB1sz5B7mbHM0Q7277MlKbLuCDBMjdahnT2XjIyMjIyMjIyMjGAb/wKTcaT7xvOysQAAAABJRU5ErkJggg==">
+                  <span class="ml-4 text-gray-900 dark:text-white">Alive / Died</span>
+                </span>
+                <svg class="w-4 h-4" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+              </div>
+              <template x-if="isAliveMenuOpen">
+                <ul class="p-2 mt-2 overflow-hidden text-sm font-medium text-gray-600 dark:text-gray-500 rounded-md shadow-inner bg-gray-50 dark:bg-white dark:bg-gray-900" aria-label="submenu">
+                  <li class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 flex items-center">
+                    <input x-model="filter['alive']['0']" @change="handle_filter_change_alive('0')" type="checkbox" checked class="disabled:opacity-25 mr-1 rounded text-purple-600 shadow-sm border-purple-400 focus:border-purple-800 focus:ring-0 focus:ring-offset-0 focus:ring-purple-600 focus:ring-opacity-50">
+                    <span>Any</span>
+                    <span class="w-full text-right" x-text="'(' + filter_result['alive']['0'] + ')'"></span>
+                  </li>
+                  <li class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 flex items-center">
+                    <input x-model="filter['alive']['1']" @change="handle_filter_change_alive('1')" type="checkbox" class="disabled:opacity-25 mr-1 rounded text-purple-600 shadow-sm border-purple-400 focus:border-purple-800 focus:ring-0 focus:ring-offset-0 focus:ring-purple-600 focus:ring-opacity-50">
+                    <span>Alive</span>
+                    <span class="w-full text-right" x-text="'(' + filter_result['alive']['1'] + ')'"></span>
+                  </li>
+                  <li class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 flex items-center">
+                    <input x-model="filter['alive']['2']" @change="handle_filter_change_alive('2')" type="checkbox" class="disabled:opacity-25 mr-1 rounded text-purple-600 shadow-sm border-purple-400 focus:border-purple-800 focus:ring-0 focus:ring-offset-0 focus:ring-purple-600 focus:ring-opacity-50">
+                    <span>Died</span>
+                    <span class="w-full text-right" x-text="'(' + filter_result['alive']['2'] + ')'"></span>
+                  </li>
+                </ul>
+              </template>
+            </li>
+            <li class="relative px-6 py-3">
+              <div class="inline-flex justify-between items-center w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800" @click="toggleAgeMenu">
+                <span class="inline-flex items-center">
+                  <img class="w-5 h-5 invert dark:invert-0" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA90lEQVR4nO2aSw7CMAxE53iwg9NkGZY5Zyp6jUGVSoGqv6DE2MJv10oZ52n6WxQ4CMkTyY4v8nDu6Ppf50+MwXMyjORPPJPXjrXn2xMheSXZc4f5oNrgeP6w18uSSF950FegLP++Wm3lQcXgy/38r4g24CLKgDeiDDjaoVHgIsqAN6IMeCPlRJKBxhuJb/nBqkhcmBGsicSNF2+wIhK3vyHqyqCRyK5EbRk0bEQUuIgy4I0oA97INqng8Xuj8kaSlITEpZUkJKTukdRaQkrkQ6aFhKQIR4EmEtIiTYGLKAPeiDLgjRhopKM98pLI2ZhMbvIblIM6PACCwnC156YcWAAAAABJRU5ErkJggg==">
+                  <span class="ml-4 text-gray-900 dark:text-white">Age</span>
+                </span>
+                <svg class="w-4 h-4" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+              </div>
+              <template x-if="isAgeMenuOpen">
+                <ul class="p-2 mt-2 overflow-hidden text-sm font-medium text-gray-600 dark:text-gray-500 rounded-md shadow-inner bg-gray-50 dark:bg-white dark:bg-gray-900" aria-label="submenu">
+                  <li class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 flex items-center">
+                    <input x-model="filter['age']['0']" @change="handle_filter_change_age('0')" type="checkbox" checked class="disabled:opacity-25 mr-1 rounded text-purple-600 shadow-sm border-purple-400 focus:border-purple-800 focus:ring-0 focus:ring-offset-0 focus:ring-purple-600 focus:ring-opacity-50">
+                    <span>Any</span>
+                    <span class="w-full text-right" x-text="'(' + filter_result['age']['0'] + ')'"></span>
+                  </li>
+                  <li class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 flex items-center">
+                    <input x-model="filter['age']['1']" @change="handle_filter_change_age('1')" type="checkbox" class="disabled:opacity-25 mr-1 rounded text-purple-600 shadow-sm border-purple-400 focus:border-purple-800 focus:ring-0 focus:ring-offset-0 focus:ring-purple-600 focus:ring-opacity-50">
+                    <span class="w-24">0 - 20</span>
+                    <span class="w-full text-right" x-text="'(' + filter_result['age']['1'] + ')'"></span>
+                  </li>
+                  <li class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 flex items-center">
+                    <input x-model="filter['age']['2']" @change="handle_filter_change_age('2')" type="checkbox" class="disabled:opacity-25 mr-1 rounded text-purple-600 shadow-sm border-purple-400 focus:border-purple-800 focus:ring-0 focus:ring-offset-0 focus:ring-purple-600 focus:ring-opacity-50">
+                    <span class="w-24">21 - 40</span>
+                    <span class="w-full text-right" x-text="'(' + filter_result['age']['2'] + ')'"></span>
+                  </li>
+                  <li class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 flex items-center">
+                    <input x-model="filter['age']['3']" @change="handle_filter_change_age('3')" type="checkbox" class="disabled:opacity-25 mr-1 rounded text-purple-600 shadow-sm border-purple-400 focus:border-purple-800 focus:ring-0 focus:ring-offset-0 focus:ring-purple-600 focus:ring-opacity-50">
+                    <span class="w-24">41 - 60</span>
+                    <span class="w-full text-right" x-text="'(' + filter_result['age']['3'] + ')'"></span>
+                  </li>
+                  <li class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 flex items-center">
+                    <input x-model="filter['age']['4']" @change="handle_filter_change_age('4')" type="checkbox" class="disabled:opacity-25 mr-1 rounded text-purple-600 shadow-sm border-purple-400 focus:border-purple-800 focus:ring-0 focus:ring-offset-0 focus:ring-purple-600 focus:ring-opacity-50">
+                    <span class="w-24">≥ 61</span>
+                    <span class="w-full text-right" x-text="'(' + filter_result['age']['4'] + ')'"></span>
+                  </li>
+                  <li class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 flex items-center">
+                    <input x-model="filter['age']['5']" @change="handle_filter_change_age('5')" :disabled="(filter['age']['min'] == '' && filter['age']['max'] == '')" type="checkbox" class="disabled:opacity-25 mr-1 rounded text-purple-600 shadow-sm border-purple-400 focus:border-purple-800 focus:ring-0 focus:ring-offset-0 focus:ring-purple-600 focus:ring-opacity-50">
+                    <span class="w-24">Custom</span>
+                    <span class="w-full text-right" x-text="'(' + filter_result['age']['5'] + ')'"></span>
+                   </li>
+                  <li class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 flex items-top">
+                    <input type="checkbox" class="invisible disabled:opacity-25 mr-1 rounded text-purple-600 shadow-sm border-purple-400 focus:border-purple-800 focus:ring-0 focus:ring-offset-0 focus:ring-purple-600 focus:ring-opacity-50">
+                    <div class="flex-col">
+                      <div class="flex justify-between h-7">
+                        <span class="mr-1">Min</span>
+                        <input x-model="filter['age']['min']" @input.debounce.1000ms="handle_filter_change_age_custom" class="h-5 p-0 ml-1 w-20 flex justify-left text-gray-400 text-sm border-gray-300" type="number" min="0" oninput="validity.valid||(value='');" name="min_date" />
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="mr-1">Max</span>
+                        <input x-model="filter['age']['max']" @input.debounce.1000ms="handle_filter_change_age_custom" class="h-5 p-0 ml-1 w-20 flex justify-left text-gray-400 text-sm border-gray-300" type="number" min="0" oninput="validity.valid||(value='');" name="max_date" />
+                      </div>
+                    </div>
+                  </li>                  
+                </ul>
+              </template>
+            </li>
+            <li class="relative px-6 py-3">
+              <div class="inline-flex justify-between items-center w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800" @click="toggleEthnicityMenu">
+                <span class="inline-flex items-center">
+                  <img class="w-5 h-5 invert dark:invert-0" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAAC60lEQVR4nO2YPYwNURiGZ4NgrWDRk00oKBRohGRzFSolsoVmJQqFRiJcjVKzjWKxsgqSLRaRkPhrLBIK0SiIv3DLXUKwbnYjHjnr7MnY/WbmnDNz5o7kPs1N7p3zfvPNz/ne+0ZRmzatA1gBnAZeAJPABHAX6Pkf9GcAVgOvkPkFjAJLo4rqG4CzZDMQVVTfADQsCjWiiuobgCmLQlORJ8B0SH0DMG5RaDzyRL/YwfQNwAOLQk8iT4CxkPoG4LZFofuRJ8AdC/17vvrxQp8sCn0NrP+liEYuWhS6FFh/OHcjutiblCLvgY4q6xuAfSmF9ue1HK76uQBOCkVOeViOq5LlSNCv5ztruZEFQqFFRVmOBP2FIRpZIhTqLMpyqLvEfPKbRaFQTShUK8pyALuE4/YU2cBK4DjwTSj0Qz/b3b6WQ60FTgDfU/RX+Z58B9ALXAZ+WpyY2pk2u1oOYKNem0UTGAF2W23FuoE+4CXu9LhaDmCdR53XwMHEhoDFwI2Exc+BfmCLnhGdwCY9K2av6HJXy6F1FI+AQ8AG/Z2kP5db4mYADAoHT2YNJGA9cB7Y5mo5gK3qCbDQHwR+CzpD0gL1YsVRC/faTmqgy9VyxD5t9PsFrabUiLq9ca77TmoXy+GiD9yc8/vDtLtZ1KS2shyVDx+wtBxlhg/TnpPaynKUGT5M+IQDCZaj1srwYcwlHFB2QlsayXKoHakOrPHV98ZxUncL23iS5Vjrqp8L4LPDpJasfhJdZYcP5xwntS3bSw0f+Gsk31pO6isOjYxUMnwADuBOX1XCh7r+bRnw0aORRuxdaWn4MDOptR/y5VqWfqGkTWrgaY5GnmXplxE+mHAA2AFcUDmwxcmr///DwE5b/bLCBxMO6Ct7GHgnHP8BOKLeKV/90OHDvHBAN3Qm9s9uYDYHK0I/ZPgghgPAUeBYKH3X8MGHf8KB0PpZ4UNehsrSN1i6VleaZemnhQ9FYMIB4HFI/TZtojD8ATgACpL1wyIpAAAAAElFTkSuQmCC">
+                  <span class="ml-4 text-gray-900 dark:text-white">Ethnicity</span>
+                </span>
+                <svg class="w-4 h-4" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+              </div>
+              <template x-if="isEthnicityMenuOpen">
+                <ul class="p-2 mt-2 overflow-hidden text-sm font-medium text-gray-600 dark:text-gray-500 rounded-md shadow-inner bg-gray-50 dark:bg-white dark:bg-gray-900" aria-label="submenu">
+                  <li class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 flex items-center">
+                    <input x-model="filter['ethnicity']['0']" @change="handle_filter_change_ethnicity('0')" type="checkbox" checked class="disabled:opacity-25 mr-1 rounded text-purple-600 shadow-sm border-purple-400 focus:border-purple-800 focus:ring-0 focus:ring-offset-0 focus:ring-purple-600 focus:ring-opacity-50">
+                    <span>Any</span>
+                    <span class="w-full text-right" x-text="'(' + filter_result['ethnicity']['0'] + ')'"></span>
+                  </li>
+                  <li class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 flex items-center">
+                    <input x-model="filter['ethnicity']['1']" @change="handle_filter_change_ethnicity('1')" type="checkbox" class="disabled:opacity-25 mr-1 rounded text-purple-600 shadow-sm border-purple-400 focus:border-purple-800 focus:ring-0 focus:ring-offset-0 focus:ring-purple-600 focus:ring-opacity-50">
+                    <span>Asian</span>
+                    <span class="w-full text-right" x-text="'(' + filter_result['ethnicity']['1'] + ')'"></span>
+                  </li>
+                  <li class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 flex items-center">
+                    <input x-model="filter['ethnicity']['2']" @change="handle_filter_change_ethnicity('2')" type="checkbox" class="disabled:opacity-25 mr-1 rounded text-purple-600 shadow-sm border-purple-400 focus:border-purple-800 focus:ring-0 focus:ring-offset-0 focus:ring-purple-600 focus:ring-opacity-50">
+                    <span>Black</span>
+                    <span class="w-full text-right" x-text="'(' + filter_result['ethnicity']['2'] + ')'"></span>
+                  </li>
+                  <li class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 flex items-center">
+                    <input x-model="filter['ethnicity']['3']" @change="handle_filter_change_ethnicity('3')" type="checkbox" class="disabled:opacity-25 mr-1 rounded text-purple-600 shadow-sm border-purple-400 focus:border-purple-800 focus:ring-0 focus:ring-offset-0 focus:ring-purple-600 focus:ring-opacity-50">
+                    <span>White</span>
+                    <span class="w-full text-right" x-text="'(' + filter_result['ethnicity']['3'] + ')'"></span>
+                  </li>
+                  <li class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 flex items-center">
+                    <input x-model="filter['ethnicity']['4']" @change="handle_filter_change_ethnicity('4')" type="checkbox" class="disabled:opacity-25 mr-1 rounded text-purple-600 shadow-sm border-purple-400 focus:border-purple-800 focus:ring-0 focus:ring-offset-0 focus:ring-purple-600 focus:ring-opacity-50">
+                    <span>Mixed</span>
+                    <span class="w-full text-right" x-text="'(' + filter_result['ethnicity']['4'] + ')'"></span>
+                  </li>
+                  <li class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 flex items-center">
+                    <input x-model="filter['ethnicity']['5']" @change="handle_filter_change_ethnicity('5')" type="checkbox" class="disabled:opacity-25 mr-1 rounded text-purple-600 shadow-sm border-purple-400 focus:border-purple-800 focus:ring-0 focus:ring-offset-0 focus:ring-purple-600 focus:ring-opacity-50">
+                    <span>Other</span>
+                    <span class="w-full text-right" x-text="'(' + filter_result['ethnicity']['5'] + ')'"></span>
+                  </li>
+                  <li class="px-2 py-1 transition-colors duration-150 hover:text-gray-800 flex items-center">
+                    <input x-model="filter['ethnicity']['6']" @change="handle_filter_change_ethnicity('6')" type="checkbox" class="disabled:opacity-25 mr-1 rounded text-purple-600 shadow-sm border-purple-400 focus:border-purple-800 focus:ring-0 focus:ring-offset-0 focus:ring-purple-600 focus:ring-opacity-50">
+                    <span>Unknown</span>
+                    <span class="w-full text-right" x-text="'(' + filter_result['ethnicity']['6'] + ')'"></span>
+                  </li>
+                </ul>
+              </template>
+            </li>
+          </ul>
+        </div>
+      </aside>
