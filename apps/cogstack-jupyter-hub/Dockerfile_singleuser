@@ -225,8 +225,9 @@ RUN if [ "$GPU_BUILD" = "true" ] && [ "$CPU_ARCHITECTURE" = "amd64" ]; then \
       uv run python -m medcat download-scripts /srv/jupyterhub/medcat-scripts ; \
     fi
 
-# move notebooks
-RUN mv /srv/jupyterhub/medcat-scripts /home/jovyan/work/medcat-scripts
+# Copy medcat-scripts to default location (for Docker usage)
+# Keep original at /srv/jupyterhub/medcat-scripts for K8s usage
+RUN cp -r /srv/jupyterhub/medcat-scripts /home/jovyan/work/medcat-scripts
 
 #######################################################################################################
 
@@ -245,6 +246,8 @@ COPY config/jupyter_notebook_config.py /home/jovyan/.jupyter/
 
 # copy notebooks
 COPY notebooks /home/jovyan/work/
+# Kubernetes does not automatically copy the contents of /home/joyvan before mounting. Therefore also copying notebooks to /srv/jupyterhub for usage by k8s
+COPY notebooks /srv/jupyterhub/notebooks/
 
 WORKDIR /home/jovyan
 USER jovyan
