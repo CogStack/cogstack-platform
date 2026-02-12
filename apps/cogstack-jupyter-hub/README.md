@@ -11,7 +11,7 @@ The notebooks provided are usually kept up to date with the example data that ha
 
 All notebooks are available in the [notebooks](./notebooks/) folder.
 
-The previous version of the jupyter notebook provided a simple but common environment for people to work on, the new version operaties in a centralised manner, the hub docker container starts individual containers for each user, it also allows for easier sharing of data between users via groups (this feature needs testing).
+The previous version of the jupyter notebook provided a simple but common environment for people to work on, the new version operates in a centralised manner, the hub docker container starts individual containers for each user, it also allows for easier sharing of data between users via groups (this feature needs testing).
 
 There are 3 images built in this repo:
 
@@ -145,6 +145,79 @@ Or you can set the password is defined by a local variable `JUPYTERHUB_PASSWORD`
 
 **Users must use the "/work/"directory for their work, otherwise files might not get saved!**
 
+## Enabling OIDC Authentication
+
+JupyterHub can be configured to authenticate users via OAuth2/OIDC using Keycloak (or other OIDC providers). The implementation uses the `GenericOAuthenticator` from the `oauthenticator` package, which provides flexible OIDC integration.
+
+### Configuration Steps
+
+1. **Enable OIDC Authentication**
+
+   Set the following in [env/jupyter.env](./env/jupyter.env):
+   ```bash
+   JUPYTERHUB_DOCKER_ENABLE_OIDC_AUTH="true"
+   ```
+
+2. **Configure OAuth Client Settings**
+
+   The following environment variables must be configured in [env/jupyter.env](./env/jupyter.env):
+
+   | Variable | Description | Example |
+   |----------|-------------|---------|
+   | `JUPYTERHUB_OAUTH_CLIENT_ID` | OAuth client ID registered in Keycloak | `cogstack-jupyterhub` |
+   | `JUPYTERHUB_OAUTH_CLIENT_SECRET` | OAuth client secret from Keycloak | `your-secure-secret-here` |
+   | `JUPYTERHUB_OAUTH_CALLBACK_URL` | OAuth callback URL (must match Keycloak config) | `https://localhost:8888/hub/oauth_callback` |
+   | `JUPYTERHUB_KEYCLOAK_URL_PUBLIC` | Browser-accessible Keycloak URL | `http://keycloak.cogstack.localhost` |
+   | `JUPYTERHUB_KEYCLOAK_URL_INTERNAL` | Internal container-to-container Keycloak URL | `http://keycloak:8080` |
+   | `JUPYTERHUB_KEYCLOAK_REALM` | Keycloak realm name | `cogstack-realm` |
+
+   **Security Note:** Change `JUPYTERHUB_OAUTH_CLIENT_SECRET` to a secure value obtained from your Keycloak client configuration. Do not use the example value in production.
+
+### Keycloak Configuration Requirements
+
+To use OIDC authentication, configure your Keycloak client with the following:
+
+1. **Client Settings:**
+   - Client Protocol: `openid-connect`
+   - Access Type: `confidential`
+   - Valid Redirect URIs: Must include your `JUPYTERHUB_OAUTH_CALLBACK_URL`
+   - Base URL: Your JupyterHub URL
+
+2. **Client Scopes:**
+   - Enable `openid`, `profile`, `email`, and `groups` scopes
+
+3. **Mappers:**
+   - Add a Group Membership mapper to include user groups in the token
+   - Ensure the mapper uses the token claim name: `groups`
+
+4. **Groups (Optional but Recommended):**
+   - Create groups in Keycloak: `jupyterhub-users` and `jupyterhub-admins`
+   - Assign users to appropriate groups for access control
+
+### Authentication Behavior
+
+When OIDC is enabled:
+- Users are automatically redirected to Keycloak for authentication (no local login page)
+- Only users in the `jupyterhub-users` or `jupyterhub-admins` groups can access JupyterHub (see config/jupyterhub_config.py:318)
+- Users in the `jupyterhub-admins` group receive admin privileges in JupyterHub
+- Group-based authorization is enabled by default
+
+### Network Architecture
+
+The configuration uses separate URLs for different network paths:
+- **`JUPYTERHUB_KEYCLOAK_URL_PUBLIC`**: Used for browser redirects (authorize endpoint)
+- **`JUPYTERHUB_KEYCLOAK_URL_INTERNAL`**: Used for backend API calls (token and userinfo endpoints)
+
+This separation allows JupyterHub to communicate with Keycloak via Docker network while users' browsers access Keycloak via public URL.
+
+### Troubleshooting
+
+- Verify the callback URL matches exactly between JupyterHub config and Keycloak client settings
+- Check that the client secret is correctly copied from Keycloak
+- Ensure the Keycloak groups mapper is configured and users are assigned to groups
+- Review JupyterHub logs: `make logs` or `docker logs cogstack-jupyter-hub-dev`
+- Set `JUPYTERHUB_LOG_LEVEL="DEBUG"` in jupyter.env for detailed authentication logs
+
 ## Enabling GPU support
 
 Pre-requisites (for Linux and Windows): - for Linux, you need to install the nvidia-docker2 package / nvidia toolkit package that adds gpu spport for docker, official documentation here - this also needs to be done for Windows machines, please read the the documentation for WSL2 [here](https://docs.nvidia.com/cuda/wsl-user-guide/index.html).
@@ -155,12 +228,12 @@ In [env/jupyter.env](./env/jupyter.env):
     - change `JUPYTERHUB_JUPYTER_HUB_SINGLEUSER_DOCKER_NOTEBOOK_IMAGE` from `cogstacksystems/jupyter-singleuser:latest` to `cogstacksystems/jupyter-singleuser-gpu:latest`.
     - in the main repo folder, execute the following command in terminal: `source env/jupyter.env`, then `docker compose up -d`.
 
-*Use any release version you want instead of `latest` as necessary .
+*Use any release version you want instead of `latest` as necessary.
 
 ## User resource limits
 
 Users can have their resources limited (currently only CPU + RAM), there is a default `USER` and `ADMIN` role, future work will add more configurable roles.\
-Change the coresponding variables in [env/jupyter.env](./env/jupyter.env):
+Change the corresponding variables in [env/jupyter.env](./env/jupyter.env):
 
     *   General user resource cap per container, default 2 cores, 2GB ram:
         - `JUPYTER_HUB_SINGLEUSER_RESOURCE_ALLOCATION_USER_CPU_LIMIT`="2"
@@ -173,7 +246,7 @@ Change the coresponding variables in [env/jupyter.env](./env/jupyter.env):
 ## Sharing storage between users
 
 It is possible to configure a `scratch` folder/partition that is just a volume that will be shared by multiple users belonging to the same group.
-This feature is currently experiemntal, it requires admins to add users to the same group and then define a folder to be shared (difficult as it is mainly done via config file at present) .
+This feature is currently experimental, it requires admins to add users to the same group and then define a folder to be shared (difficult as it is mainly done via config file at present) .
 
 ## DEVELOPING
 

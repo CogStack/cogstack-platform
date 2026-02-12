@@ -100,6 +100,7 @@ RUN pip3 install --no-cache-dir ipywidgets importlib_metadata jupyterhub-firstus
 RUN pip3 install --no-cache-dir jupyterlab_widgets dask-labextension jupyter_contrib_nbextensions
 RUN pip3 install --no-cache-dir jupyterhub-firstuseauthenticator jupyterhub-systemdspawner jupyterhub-jwtauthenticator jupyterhub-client jupyterhub-kerberosauthenticator --ignore-installed PyYAML 
 RUN pip3 install --no-cache-dir jupyterhub-ldapauthenticator jupyterhub-nanowireauthenticator jupyterhub-kubespawner jupyterhub-idle-culler
+RUN pip3 install --no-cache-dir oauthenticator
 
 #######################################################################################################
 

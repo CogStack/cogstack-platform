@@ -11,6 +11,7 @@ import logging
 from jupyterhub.auth import LocalAuthenticator
 from nativeauthenticator import NativeAuthenticator
 from traitlets.config import Config
+from oauthenticator.generic import GenericOAuthenticator
 
 
 class LocalNativeAuthenticator(NativeAuthenticator, LocalAuthenticator):
@@ -40,6 +41,8 @@ NOTEBOOK_IDLE_TIMEOUT = int(os.environ.get("DOCKER_NOTEBOOK_IDLE_TIMEOUT", "7200
 SELECT_NOTEBOOK_IMAGE_ALLOWED = str(os.environ.get("JUPYTERHUB_DOCKER_SELECT_NOTEBOOK_IMAGE_ALLOWED", "false")).lower()
 
 RUN_IN_DEBUG_MODE = str(os.environ.get("JUPYTERHUB_DOCKER_NOTEBOOK_DEBUG_MODE", "false")).lower()
+
+ENABLE_OIDC_AUTH = str(os.environ.get("JUPYTERHUB_DOCKER_ENABLE_OIDC_AUTH", "false")).lower()
 
 # Explicitly set notebook directory because we"ll be mounting a host volume to
 # it.  Most jupyter/docker-stacks *-notebook images run the Notebook server as
@@ -279,8 +282,51 @@ c.DockerSpawner.environment.update(ENV_PROXIES)
 # Alternative, use: "nativeauthenticator.NativeAuthenticator"
 #c.JupyterHub.authenticator_class = LocalNativeAuthenticator
 
-c.FirstUseAuthenticator.create_users = True
-c.JupyterHub.authenticator_class = "firstuseauthenticator.FirstUseAuthenticator" 
+if ENABLE_OIDC_AUTH == "true":
+    # Use Generic OAuth with Keycloak
+    c.JupyterHub.authenticator_class = GenericOAuthenticator
+
+    # Automatically redirect to OAuth provider (skip login button)
+    c.Authenticator.auto_login = True
+
+    # Keycloak configuration
+    c.GenericOAuthenticator.client_id = os.environ.get("JUPYTERHUB_OAUTH_CLIENT_ID", "cogstack-jupyterhub")
+    c.GenericOAuthenticator.client_secret = os.environ.get("JUPYTERHUB_OAUTH_CLIENT_SECRET", "")
+    c.GenericOAuthenticator.oauth_callback_url = os.environ.get(
+        "JUPYTERHUB_OAUTH_CALLBACK_URL",
+        "https://localhost:8888/hub/oauth_callback"
+    )
+
+    # Keycloak endpoints
+    # Browser-accessible URL
+    keycloak_url_public = os.environ.get("JUPYTERHUB_KEYCLOAK_URL_PUBLIC", "http://keycloak.cogstack.localhost")
+    # Internal container URL (for backend token exchange)
+    keycloak_url_internal = os.environ.get("JUPYTERHUB_KEYCLOAK_URL_INTERNAL", "http://keycloak:8080")
+    realm = os.environ.get("JUPYTERHUB_KEYCLOAK_REALM", "cogstack-realm")
+
+    # authorize_url is accessed by the browser, so use public URL
+    c.GenericOAuthenticator.authorize_url = f"{keycloak_url_public}/realms/{realm}/protocol/openid-connect/auth"
+    # token_url and userdata_url are accessed by JupyterHub backend, so use internal URL
+    c.GenericOAuthenticator.token_url = f"{keycloak_url_internal}/realms/{realm}/protocol/openid-connect/token"
+    c.GenericOAuthenticator.userdata_url = f"{keycloak_url_internal}/realms/{realm}/protocol/openid-connect/userinfo"
+
+    c.GenericOAuthenticator.username_claim = "preferred_username"
+
+    # Require users to be in specific Keycloak groups
+    c.GenericOAuthenticator.manage_groups = True
+    c.GenericOAuthenticator.allowed_groups = ["jupyterhub-users", "juypterhub-admins"]
+    c.GenericOAuthenticator.claim_groups_key = "groups"
+
+    # Map Keycloak roles to JupyterHub admin
+    c.GenericOAuthenticator.admin_groups = ["jupyterhub-admins"]
+
+    c.GenericOAuthenticator.scope = ["openid", "profile", "email", "groups"]
+
+    # Allow all authenticated users (or restrict with allowed_groups above)
+    # c.GenericOAuthenticator.allow_all = True
+else:
+    c.FirstUseAuthenticator.create_users = True
+    c.JupyterHub.authenticator_class = "firstuseauthenticator.FirstUseAuthenticator"
 
 # User containers will access hub by container name on the Docker network
 c.JupyterHub.ip = "0.0.0.0"
@@ -320,6 +366,7 @@ if NOTEBOOK_IDLE_TIMEOUT > 0:
             sys.executable,
             "-m", "jupyterhub_idle_culler",
             f"--timeout={NOTEBOOK_IDLE_TIMEOUT}",
+            "--url=http://127.0.0.1:8081/hub/api",
         ],
     })
 
