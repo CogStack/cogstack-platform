@@ -223,8 +223,9 @@ RUN if [ "$GPU_BUILD" = "true" ] && [ "$CPU_ARCHITECTURE" = "amd64" ]; then \
     else \
       uv pip install --system --no-cache-dir -r /srv/jupyterhub/requirements.txt --index-url https://pypi.org/simple && \
       uv run python -m medcat download-scripts /srv/jupyterhub/medcat-scripts ; \
-    fi \
-    uv pip install -r /srv/jupyterhub/medcat-scripts/requirements.txt
+    fi
+
+RUN uv pip install --no-cache-dir --system -r /srv/jupyterhub/medcat-scripts/requirements.txt
 
 # Copy medcat-scripts to default location (for Docker usage)
 # Keep original at /srv/jupyterhub/medcat-scripts for K8s usage
