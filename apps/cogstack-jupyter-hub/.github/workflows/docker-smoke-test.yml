@@ -1,0 +1,126 @@
+name: docker-smoke-test
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - "Dockerfile_hub"
+      - "Dockerfile_singleuser"
+      - "docker/**"
+      - "env/**"
+      - "config/**"
+      - "scripts/**"
+      - "export_env_vars.sh"
+      - ".github/workflows/docker-smoke-test.yml"
+  push:
+    branches:
+      - "main"
+    paths:
+      - "Dockerfile_hub"
+      - "Dockerfile_singleuser"
+      - "docker/**"
+      - "env/**"
+      - "config/**"
+      - "scripts/**"
+      - "export_env_vars.sh"
+      - ".github/workflows/docker-smoke-test.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: docker-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Ensure cookie secret exists for CI
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -s config/jupyterhub_cookie_secret ]]; then
+            openssl rand -hex 32 > config/jupyterhub_cookie_secret
+          fi
+          chmod 600 config/jupyterhub_cookie_secret
+
+      - name: Build hub image for smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          set -a
+          source env/general.env
+          source env/jupyter.env
+          set +a
+
+          docker build \
+            --file Dockerfile_hub \
+            --build-arg CPU_ARCHITECTURE="${CPU_ARCHITECTURE:-amd64}" \
+            --build-arg GPU_BUILD=false \
+            --tag "cogstacksystems/jupyter-hub:${JUPYTER_HUB_IMAGE_RELEASE_VERSION:-latest}" \
+            .
+
+      - name: Start stack and run smoke health check
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd docker
+          make start
+          set -a
+          source ../export_env_vars.sh >/dev/null 2>&1
+          set +a
+          HUB_URL="https://localhost:${JUPYTERHUB_INTERNAL_PORT:-8888}/"
+
+          for attempt in {1..24}; do
+            code="$(curl -k -sS -o /tmp/jupyterhub-health.html -w '%{http_code}' "${HUB_URL}" || true)"
+            if [[ "${code}" == "200" || "${code}" == "302" || "${code}" == "303" ]]; then
+              echo "Smoke health check succeeded on attempt ${attempt} (HTTP ${code})."
+              exit 0
+            fi
+            echo "Health check attempt ${attempt}/24 failed (HTTP ${code:-n/a}); retrying in 10 seconds."
+            sleep 10
+          done
+
+          echo "Smoke health check did not succeed."
+          make health-check || true
+          exit 1
+
+      - name: Collect docker diagnostics on failure
+        if: failure()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/docker-smoke
+          cd docker
+
+          set -a
+          source ../export_env_vars.sh >/dev/null 2>&1 || true
+          set +a
+
+          docker compose -f docker-compose.base.yml -f docker-compose.yml ps \
+            > /tmp/docker-smoke/compose-ps.txt 2>&1 || true
+          docker compose -f docker-compose.base.yml -f docker-compose.yml logs --no-color \
+            > /tmp/docker-smoke/compose-logs.txt 2>&1 || true
+
+      - name: Upload docker diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-smoke-diagnostics
+          path: /tmp/docker-smoke
+
+      - name: Stop stack
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd docker
+          make stop-all || true
