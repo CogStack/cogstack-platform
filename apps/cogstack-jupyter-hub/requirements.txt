@@ -1,6 +1,6 @@
 wheel==0.46.2
 
-medcat==2.3.0
+medcat==2.5.3
 # TODO: cogstack-es 8/9 handling
 
 virtualenv==20.36.1
