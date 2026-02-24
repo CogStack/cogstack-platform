@@ -1,0 +1,26 @@
+{{- if and (not .Values.envFiles.useBundled) (eq (trim .Values.envFiles.jupyter) "") }}
+{{- fail "envFiles.jupyter is required when envFiles.useBundled=false" }}
+{{- end }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "cogstack-jupyterhub.envConfigMapName" . }}
+  labels:
+    {{- include "cogstack-jupyterhub.labels" . | nindent 4 }}
+data:
+  general.env: |
+{{- if ne (trim .Values.envFiles.general) "" }}
+{{- .Values.envFiles.general | nindent 4 }}
+{{- else if .Values.envFiles.useBundled }}
+{{- .Files.Get "files/env/general.env" | nindent 4 }}
+{{- else }}
+    # optional
+{{- end }}
+  jupyter.env: |
+{{- if ne (trim .Values.envFiles.jupyter) "" }}
+{{- .Values.envFiles.jupyter | nindent 4 }}
+{{- else if .Values.envFiles.useBundled }}
+{{- .Files.Get "files/env/jupyter.env" | nindent 4 }}
+{{- else }}
+    # required when useBundled=false
+{{- end }}

@@ -1,0 +1,17 @@
+{{- if and .Values.persistence.hub.enabled (not .Values.persistence.hub.existingClaim) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "cogstack-jupyterhub.fullname" . }}-hub
+  labels:
+    {{- include "cogstack-jupyterhub.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    {{- toYaml .Values.persistence.hub.accessModes | nindent 4 }}
+  {{- if .Values.persistence.hub.storageClassName }}
+  storageClassName: {{ .Values.persistence.hub.storageClassName | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.hub.size | quote }}
+{{- end }}

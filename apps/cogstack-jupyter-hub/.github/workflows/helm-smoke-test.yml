@@ -1,0 +1,80 @@
+name: helm-smoke-test
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - "charts/**"
+      - "env/**"
+      - "config/**"
+      - "security/**"
+      - "scripts/helm_k8s_smoke_test.sh"
+      - "README.md"
+      - ".github/workflows/helm-smoke-test.yml"
+  push:
+    branches:
+      - "main"
+    paths:
+      - "charts/**"
+      - "env/**"
+      - "config/**"
+      - "security/**"
+      - "scripts/helm_k8s_smoke_test.sh"
+      - "README.md"
+      - ".github/workflows/helm-smoke-test.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: helm-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Run Helm and Kubernetes smoke tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/helm_k8s_smoke_test.sh
+
+      - name: Render manifests for diagnostics
+        if: failure()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/helm-smoke
+          helm template cogstack-jupyterhub ./charts/cogstack-jupyterhub > /tmp/helm-smoke/render-default.yaml || true
+          helm template cogstack-jupyterhub ./charts/cogstack-jupyterhub \
+            --set envFiles.useBundled=false \
+            --set hubFiles.useBundled=false \
+            --set securityFiles.useBundled=false \
+            --set-file envFiles.jupyter=env/jupyter.env \
+            --set-file envFiles.general=env/general.env \
+            --set-file hubFiles.jupyterhubConfig=config/jupyterhub_config.py \
+            --set-file hubFiles.userlist=config/userlist \
+            --set-file hubFiles.teamlist=config/teamlist \
+            --set-file securityFiles.cookieSecret=config/jupyterhub_cookie_secret \
+            --set-file securityFiles.tlsKey=security/nifi.key \
+            --set-file securityFiles.tlsCert=security/nifi.pem \
+            > /tmp/helm-smoke/render-set-file.yaml || true
+
+      - name: Upload smoke diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: helm-smoke-diagnostics
+          path: /tmp/helm-smoke

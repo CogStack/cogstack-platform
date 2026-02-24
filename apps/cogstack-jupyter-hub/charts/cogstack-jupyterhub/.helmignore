@@ -1,0 +1,10 @@
+# Common VCS directories
+.git/
+.gitignore
+
+# IDE files
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
