@@ -32,7 +32,7 @@ jobs:
 
       - name: Docker meta (hub)
         id: meta_hub
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: cogstacksystems/jupyter-hub
           tags: |
@@ -48,7 +48,7 @@ jobs:
 
       - name: Docker meta (singleuser)
         id: meta_su
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: cogstacksystems/jupyter-singleuser
           tags: |
@@ -117,7 +117,7 @@ jobs:
 
       - name: Docker meta (hub)
         id: meta_hub
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: cogstacksystems/jupyter-hub
           tags: |
@@ -133,7 +133,7 @@ jobs:
  
       - name: Docker meta (singleuser)
         id: meta_su
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: cogstacksystems/jupyter-singleuser
           tags: |
@@ -199,7 +199,7 @@ jobs:
 
       - name: Docker meta (singleuser-gpu)
         id: meta_gpu
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: cogstacksystems/jupyter-singleuser-gpu
           tags: |
@@ -252,7 +252,7 @@ jobs:
       # Recompute tags (must match both builds)
       - name: Docker meta (hub)
         id: meta_hub
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: cogstacksystems/jupyter-hub
           tags: |
@@ -268,7 +268,7 @@ jobs:
 
       - name: Docker meta (singleuser)
         id: meta_su
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: cogstacksystems/jupyter-singleuser
           tags: |
