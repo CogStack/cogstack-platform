@@ -69,7 +69,7 @@ jobs:
 
       - name: Build & push hub (amd64)
         id: hub
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: Dockerfile_hub
@@ -87,7 +87,7 @@ jobs:
 
       - name: Build & push singleuser (amd64)
         id: su
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: Dockerfile_singleuser
@@ -155,7 +155,7 @@ jobs:
 
       - name: Build & push hub (arm64)
         id: hub
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: Dockerfile_hub
@@ -172,7 +172,7 @@ jobs:
 
       - name: Build & push singleuser (arm64)
         id: su
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: Dockerfile_singleuser
@@ -224,7 +224,7 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
       - name: Build & push singleuser GPU (amd64)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: Dockerfile_singleuser
