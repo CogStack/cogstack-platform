@@ -3,12 +3,7 @@ repos:
     rev: v1.14.2
     hooks:
       - id: helm-docs-container
-        files: helm-charts/medcat-service-helm/.*
+        files: helm-charts/(.*)/values.yaml
         args:
           # Make the tool search for charts only under the `example-charts` directory
-          - --chart-search-root=helm-charts/medcat-service-helm
-      - id: helm-docs-container
-        files: helm-charts/medcat-trainer-helm/.*
-        args:
-          # Make the tool search for charts only under the `example-charts` directory
-          - --chart-search-root=helm-charts/medcat-trainer-helm
+          - --chart-search-root=helm-charts
