@@ -9,8 +9,13 @@ The Helm charts for CogStack are published to Docker Hub, which is an OCI-compli
 - **MedCAT Trainer:**  
   https://hub.docker.com/r/cogstacksystems/medcat-trainer-helm
 
+- **CogStack CE (Community Edition, umbrella chart):**  
+  https://hub.docker.com/r/cogstacksystems/cogstack-helm-ce
+
 - [MedCAT Service Helm](medcat-service-helm.md)
 - [MedCAT Trainer Helm](medcat-trainer-helm.md)
+
+- [CogStack CE Helm](cogstack-ce-helm.md)
 
 ## Chart Publishing
 
