@@ -122,12 +122,6 @@ kubectl exec -it <POD_NAME> -- nvidia-smi
 
 You should see the NVIDIA GPU device listing if the GPU is properly accessible.
 
-## Maintainers
-
-| Name | Email | Url |
-| ---- | ------ | --- |
-| alhendrickson | <alistair@cogstack.org> |  |
-
 ## Values
 
 | Key | Type | Default | Description |
@@ -138,9 +132,9 @@ You should see the NVIDIA GPU device listing if the GPU is properly accessible.
 | autoscaling.minReplicas | int | `1` |  |
 | autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
 | env.APP_ENABLE_DEMO_UI | bool | `true` |  |
-| env.APP_ENABLE_METRICS | bool | `false` |  |
+| env.APP_ENABLE_METRICS | bool | `false` | Observability Env Vars |
 | env.APP_ENABLE_TRACING | bool | `false` |  |
-| env.APP_MEDCAT_MODEL_PACK | string | `"/cat/models/examples/example-medcat-v2-model-pack.zip"` |  |
+| env.APP_MEDCAT_MODEL_PACK | string | `"/cat/models/examples/example-medcat-v2-model-pack.zip"` | This defines the Model Pack used by the medcat service Example (download on startup): uncomment `ENABLE_MODEL_DOWNLOAD` and the `MODEL_*` URLs below. Example (DeID mode): uncomment `DEID_MODE`/`DEID_REDACT` and use the DeID model pack referenced below. |
 | env.OTEL_EXPERIMENTAL_RESOURCE_DETECTORS | string | `"containerid,os"` |  |
 | env.OTEL_EXPORTER_OTLP_ENDPOINT | string | `"http://<unused>:4317"` |  |
 | env.OTEL_EXPORTER_OTLP_PROTOCOL | string | `"grpc"` |  |
@@ -150,18 +144,16 @@ You should see the NVIDIA GPU device listing if the GPU is properly accessible.
 | env.OTEL_RESOURCE_ATTRIBUTES | string | `"k8s.pod.uid=$(K8S_POD_UID),k8s.pod.name=$(K8S_POD_NAME),k8s.namespace.name=$(K8S_POD_NAMESPACE),k8s.node.name=$(K8S_NODE_NAME)"` |  |
 | env.OTEL_SERVICE_NAME | string | `"medcat-service"` |  |
 | env.OTEL_TRACES_EXPORTER | string | `"otlp"` |  |
-| env.SERVER_GUNICORN_MAX_REQUESTS | string | `"100000"` |  |
-| envValueFrom.K8S_NODE_NAME.fieldRef.fieldPath | string | `"spec.nodeName"` |  |
-| envValueFrom.K8S_POD_NAME.fieldRef.fieldPath | string | `"metadata.name"` |  |
-| envValueFrom.K8S_POD_NAMESPACE.fieldRef.fieldPath | string | `"metadata.namespace"` |  |
-| envValueFrom.K8S_POD_UID.fieldRef.fieldPath | string | `"metadata.uid"` |  |
-| extraInitContainers | list | `[]` |  |
-| extraManifests | list | `[]` |  |
+| env.SERVER_GUNICORN_MAX_REQUESTS | string | `"100000"` | Set SERVER_GUNICORN_MAX_REQUESTS to a high number instead of the default 1000. Trust k8s instead to restart pod when needed. Example (tuning): see the commented `SERVER_GUNICORN_EXTRA_ARGS` setting below. |
+| envValueFrom | object | `{"K8S_NODE_NAME":{"fieldRef":{"fieldPath":"spec.nodeName"}},"K8S_POD_NAME":{"fieldRef":{"fieldPath":"metadata.name"}},"K8S_POD_NAMESPACE":{"fieldRef":{"fieldPath":"metadata.namespace"}},"K8S_POD_UID":{"fieldRef":{"fieldPath":"metadata.uid"}}}` | Allow setting env values from field/configmap/secret references. Defaults to include k8s details for observability. |
+| extraInitContainers | list | `[]` | Additional init containers to run before the main container. Can be templated |
+| extraManifests | list | `[]` | Additional manifests to deploy to kubernetes. Can be templated |
 | fullnameOverride | string | `""` |  |
-| hostAliases | list | `[]` |  |
-| image.pullPolicy | string | `"IfNotPresent"` |  |
-| image.repository | string | `"cogstacksystems/medcat-service"` |  |
-| imagePullSecrets | list | `[]` |  |
+| hostAliases | list | `[]` | Host aliases for the pod |
+| image | object | `{"pullPolicy":"IfNotPresent","repository":"cogstacksystems/medcat-service"}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
+| image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
+| image.repository | string | `"cogstacksystems/medcat-service"` | Image repository for the MedCAT service container |
+| imagePullSecrets | list | `[]` | This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
 | ingress.annotations | object | `{}` |  |
 | ingress.className | string | `""` |  |
 | ingress.enabled | bool | `false` |  |
@@ -171,36 +163,36 @@ You should see the NVIDIA GPU device listing if the GPU is properly accessible.
 | ingress.tls | list | `[]` |  |
 | livenessProbe.httpGet.path | string | `"/api/health/live"` |  |
 | livenessProbe.httpGet.port | string | `"http"` |  |
-| model | object | `{}` |  |
-| nameOverride | string | `""` |  |
-| networkPolicy.egress.egressRules | list | `[]` |  |
-| networkPolicy.egress.enabled | bool | `false` |  |
-| networkPolicy.enabled | bool | `true` |  |
+| model | object | `{}` | Enable downloading of public models using wget on startup. Model will be downloaded to /models/<name> and used for APP_MEDCAT_MODEL_PACK Example: uncomment `model.downloadUrl` and `model.name` below to fetch a model pack at startup. |
+| nameOverride | string | `""` | This is to override the chart name. |
+| networkPolicy.egress.egressRules | list | `[]` | Append any custom egress rules following the standard format |
+| networkPolicy.egress.enabled | bool | `false` | Choose to block egress by enabling it in the network policy |
+| networkPolicy.enabled | bool | `true` | Choose to create a default network policy blocking all ingress other than to the service port. |
 | nodeSelector | object | `{}` |  |
-| podAnnotations | object | `{}` |  |
-| podLabels | object | `{}` |  |
+| podAnnotations | object | `{}` | This is for setting Kubernetes Annotations to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/ |
+| podLabels | object | `{}` | This is for setting Kubernetes Labels to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ |
 | podSecurityContext | object | `{}` |  |
 | readinessProbe.httpGet.path | string | `"/api/health/ready"` |  |
 | readinessProbe.httpGet.port | string | `"http"` |  |
-| replicaCount | int | `1` |  |
+| replicaCount | int | `1` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ |
 | resources | object | `{}` |  |
-| runtimeClassName | string | `""` |  |
+| runtimeClassName | string | `""` | Runtime class name for the pod (e.g., "nvidia" for GPU workloads) More information: https://kubernetes.io/docs/concepts/containers/runtime-class/ |
 | securityContext | object | `{}` |  |
-| service.port | int | `5000` |  |
-| service.type | string | `"ClusterIP"` |  |
-| serviceAccount.annotations | object | `{}` |  |
-| serviceAccount.automount | bool | `true` |  |
-| serviceAccount.create | bool | `true` |  |
-| serviceAccount.name | string | `""` |  |
+| service.port | int | `5000` | This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports |
+| service.type | string | `"ClusterIP"` | This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types |
+| serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
+| serviceAccount.automount | bool | `true` | Automatically mount a ServiceAccount's API credentials? |
+| serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
+| serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
 | startupProbe.failureThreshold | int | `30` |  |
 | startupProbe.httpGet.path | string | `"/api/health/ready"` |  |
 | startupProbe.httpGet.port | string | `"http"` |  |
 | startupProbe.initialDelaySeconds | int | `2` |  |
 | startupProbe.periodSeconds | int | `10` |  |
 | tolerations | list | `[]` |  |
-| updateStrategy.type | string | `"RollingUpdate"` |  |
-| volumeMounts | list | `[]` |  |
-| volumes | list | `[]` |  |
+| updateStrategy.type | string | `"RollingUpdate"` | Used for Kubernetes deployment .spec.strategy.type. Allowed values are "Recreate" or "RollingUpdate". |
+| volumeMounts | list | `[]` | Additional volumeMounts on the output Deployment definition. |
+| volumes | list | `[]` | Additional volumes on the output Deployment definition. |
 
 ----------------------------------------------
 Autogenerated from chart metadata using [helm-docs v1.14.2](https://github.com/norwoodj/helm-docs/releases/v1.14.2)
