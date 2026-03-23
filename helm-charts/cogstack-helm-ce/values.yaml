@@ -2,73 +2,111 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-# This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+# -- This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
-# This is to override the chart name.
+# -- This is to override the chart name.
 nameOverride: ""
+# -- Fully override the chart fullname.
 fullnameOverride: ""
 
 anoncat-service:
+  # -- Enable AnonCAT service deployment.
+  enabled: true
+  # -- Number of AnonCAT (medcat-service in DeID mode) replicas.
   replicasCount: 1
   env:
+    # -- Model pack used by the MedCAT service when running in DeID mode.
     APP_MEDCAT_MODEL_PACK: "/cat/models/examples/example-deid-model-pack.zip"
+    # -- Enable DeID mode.
     DEID_MODE: true
+    # -- Enable redaction behaviour for DeID.
     DEID_REDACT: false
   image:
+    # -- MedCAT service image repository for AnonCAT.
     repository: cogstacksystems/medcat-service
+    # -- MedCAT service image tag used by AnonCAT.
     tag: "1.2.0"
 
 medcat-service:
+  # -- Enable MedCAT service deployment.
+  enabled: true
+  # -- Number of MedCAT service replicas.
   replicasCount: 1
   image:
+    # -- MedCAT service image repository.
     repository: cogstacksystems/medcat-service
+    # -- MedCAT service image tag.
     tag: "1.2.0"
 
 medcat-trainer:
+  # -- Enable MedCAT Trainer deployment.
+  enabled: true
   image:
+    # -- MedCAT Trainer image tag (can be a digest-pinned tag).
     tag: latest@sha256:103215a7540ad614c32866f4cb00ddd91e7aff37cea9abc25dc226c577f9506d
   provisioning:
+    # -- Enable provisioning of projects and models on startup.
     enabled: true
     existingConfigMap:
+      # -- Existing ConfigMap name containing the provisioning configuration.
       name: "cogstack-helm-ce-example-trainer-provisioining"
   env:
+    # -- CSRF trusted origins for the MedCAT Trainer frontend (set for your deployment/port-forward).
     CSRF_TRUSTED_ORIGINS: "http://localhost:8080"
 
 provisioning:
+  # -- Enable provisioning for supporting services (e.g. OpenSearch templates/documents).
   enabled: true
   opensearch:
+    # -- Create the OpenSearch index template on startup.
     createIndexTemplate: true
+    # -- Create example documents in OpenSearch on startup.
     createExampleDocuments: true
   opensearchDashboards:
+    # -- Create dashboards on startup.
     createDashboards: true
 
 opensearch:
+  # -- Deploy an opensearch cluster
   enabled: true
+  # -- Extra environment variables to pass to OpenSearch.
+  # @default -- Sets the initial admin password for OpenSearch
   extraEnvs:
     - name: OPENSEARCH_INITIAL_ADMIN_PASSWORD
       value: "opensearch-312$A"
 
 opensearch-dashboards:
+  # -- Deploy an opensearch-dashboards instance
   enabled: true
 
 cogstack-jupyterhub:
+  # -- Enable JupyterHub (with hub and singleuser components).
   enabled: true
   jupyterhub:
     hub:
       image:
+        # -- JupyterHub hub image name.
         name: cogstacksystems/jupyter-hub
+        # -- JupyterHub hub image tag.
         tag: "2.2.2"
       config:
         JupyterHub:
+          # -- Authenticator class used by JupyterHub (dummy authenticator for demo/non-prod).
           authenticator_class: dummy
         # - Authenticator set to hardcoded user/password
         Authenticator:
+          # -- Allowed admin users for the dummy authenticator.
           admin_users:
+            # -- Admin user entry for the dummy authenticator.
             - admin
         DummyAuthenticator:
+          # -- Password for the dummy authenticator (do not use in production).
           password: "SuperSecret"
     singleuser:
       image:
+        # -- JupyterHub singleuser image name.
         name: cogstacksystems/jupyter-singleuser
+        # -- JupyterHub singleuser image tag.
         tag: "2.2.2"
+        # -- JupyterHub singleuser image pull policy.
         pullPolicy: IfNotPresent

@@ -2,14 +2,15 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-# This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+# -- This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
 replicaCount: 1
 
-# This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
+# -- This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
+  # -- Image repository for the MedCAT service container
   repository: cogstacksystems/medcat-service
   # repository: cogstacksystems/medcat-service-gpu
-  # This sets the pull policy for images.
+  # -- This sets the pull policy for images.
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   # tag: "latest"
@@ -17,7 +18,9 @@ image:
 env:
   APP_ENABLE_DEMO_UI: true
 
-  # This defines the Model Pack used by the medcat service
+  # -- This defines the Model Pack used by the medcat service
+  # Example (download on startup): uncomment `ENABLE_MODEL_DOWNLOAD` and the `MODEL_*` URLs below.
+  # Example (DeID mode): uncomment `DEID_MODE`/`DEID_REDACT` and use the DeID model pack referenced below.
   APP_MEDCAT_MODEL_PACK: "/cat/models/examples/example-medcat-v2-model-pack.zip"
 
   # Alternatively download a model on startup from a URL
@@ -33,7 +36,8 @@ env:
   # DEID_MODE: true
   # DEID_REDACT: true
 
-  # Set SERVER_GUNICORN_MAX_REQUESTS to a high number instead of the default 1000. Trust k8s instead to restart pod when needed.
+  # -- Set SERVER_GUNICORN_MAX_REQUESTS to a high number instead of the default 1000. Trust k8s instead to restart pod when needed.
+  # Example (tuning): see the commented `SERVER_GUNICORN_EXTRA_ARGS` setting below.
   SERVER_GUNICORN_MAX_REQUESTS: "100000"
 
   # Recommended env vars to set to try to limit to 1 CPU for scaling
@@ -50,7 +54,7 @@ env:
   # APP_CUDA_DEVICE_COUNT: "1"
   # APP_TORCH_THREADS: "-1"
 
-  # Observability Env Vars
+  # -- Observability Env Vars
   APP_ENABLE_METRICS: false
   APP_ENABLE_TRACING: false
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://<unused>:4317"
@@ -63,14 +67,15 @@ env:
   OTEL_LOGS_EXPORTER: "none"
   OTEL_PYTHON_FASTAPI_EXCLUDED_URLS: "/api/health,/metrics"
 
-# Enable downloading of public models using wget on startup. Model will be downloaded to /models/<name> and used for APP_MEDCAT_MODEL_PACK
+# -- Enable downloading of public models using wget on startup. Model will be downloaded to /models/<name> and used for APP_MEDCAT_MODEL_PACK
+# Example: uncomment `model.downloadUrl` and `model.name` below to fetch a model pack at startup.
 model: {}
   # Public URL to download a model pack from
   # downloadUrl: "http://localhost:9000/models/my-model.zip"
   # Name of the model pack to save to. Will be stored at /models/<name>
   # name: my-model.zip
 
-# Allow setting env values from field/configmap/secret references. Defaults to include k8s details f
+# -- Allow setting env values from field/configmap/secret references. Defaults to include k8s details for observability.
 envValueFrom:
   K8S_NODE_NAME:
     fieldRef:
@@ -85,14 +90,14 @@ envValueFrom:
     fieldRef:
       fieldPath: metadata.namespace
 
-# This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+# -- This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
-# This is to override the chart name.
+# -- This is to override the chart name.
 nameOverride: ""
 fullnameOverride: ""
 
 updateStrategy:
-  # Used for Kubernetes deployment .spec.strategy.type. Allowed values are "Recreate" or "RollingUpdate".
+  # -- Used for Kubernetes deployment .spec.strategy.type. Allowed values are "Recreate" or "RollingUpdate".
   type: RollingUpdate
   # RollingUpdate default options example
   # rollingUpdate:
@@ -101,20 +106,20 @@ updateStrategy:
 
 # This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
 serviceAccount:
-  # Specifies whether a service account should be created
+  # -- Specifies whether a service account should be created
   create: true
-  # Automatically mount a ServiceAccount's API credentials?
+  # -- Automatically mount a ServiceAccount's API credentials?
   automount: true
-  # Annotations to add to the service account
+  # -- Annotations to add to the service account
   annotations: {}
-  # The name of the service account to use.
+  # -- The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
-# This is for setting Kubernetes Annotations to a Pod.
+# -- This is for setting Kubernetes Annotations to a Pod.
 # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
 podAnnotations: {}
-# This is for setting Kubernetes Labels to a Pod.
+# -- This is for setting Kubernetes Labels to a Pod.
 # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
 podLabels: {}
 
@@ -131,9 +136,9 @@ securityContext: {}
 
 # This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
 service:
-  # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+  # -- This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
   type: ClusterIP
-  # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
+  # -- This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
   port: 5000
 
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
@@ -158,6 +163,8 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
+# -- Configure resources for the pod. More information can be found here: https://kubernetes.io/docs/concepts/containers/
+# Recommendation for a default production model is { requests: { cpu: 1, memory: 4Gi }, limits: { cpu: null <unset>, memory: 4Gi } }
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
@@ -195,20 +202,20 @@ autoscaling:
   targetCPUUtilizationPercentage: 80
   # targetMemoryUtilizationPercentage: 80
 
-# Additional volumes on the output Deployment definition.
+# -- Additional volumes on the output Deployment definition.
 volumes: []
 # - name: foo
 #   secret:
 #     secretName: mysecret
 #     optional: false
 
-# Additional volumeMounts on the output Deployment definition.
+# -- Additional volumeMounts on the output Deployment definition.
 volumeMounts: []
 # - name: foo
 #   mountPath: "/etc/foo"
 #   readOnly: true
 
-# Runtime class name for the pod (e.g., "nvidia" for GPU workloads)
+# -- Runtime class name for the pod (e.g., "nvidia" for GPU workloads)
 # More information: https://kubernetes.io/docs/concepts/containers/runtime-class/
 runtimeClassName: ""
 
@@ -218,18 +225,19 @@ tolerations: []
 
 affinity: {}
 
-# Host aliases for the pod
+# -- Host aliases for the pod
 hostAliases: []
   # - ip: "127.0.0.1"
   #   hostnames:
   #   - "foo.local"
+
 networkPolicy:
-  # Choose to create a default network policy blocking all ingress other than to the service port.
+  # -- Choose to create a default network policy blocking all ingress other than to the service port.
   enabled: true
   egress:
-    # Choose to block egress by enabling it in the network policy
+    # -- Choose to block egress by enabling it in the network policy
     enabled: false
-    # Append any custom egress rules following the standard format
+    # -- Append any custom egress rules following the standard format
     egressRules: []
       # # Example format
       # - to:
@@ -239,8 +247,8 @@ networkPolicy:
       #   ports:
       #     - port: 5000
 
-# Additional init containers to run before the main container. Can be templated
+# -- Additional init containers to run before the main container. Can be templated
 extraInitContainers: []
 
-# Additional manifests to deploy to kubernetes. Can be templated
+# -- Additional manifests to deploy to kubernetes. Can be templated
 extraManifests: []

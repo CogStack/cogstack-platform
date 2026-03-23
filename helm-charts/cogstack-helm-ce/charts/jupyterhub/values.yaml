@@ -2,8 +2,11 @@
 jupyterhub:
   hub:
     image:
+        # -- Image repository for the JupyterHub hub.
       name: cogstacksystems/jupyter-hub
+      # -- Image tag for the JupyterHub hub.
       tag: "2.2.2"
+      # -- Pull policy for the JupyterHub hub.
       pullPolicy: IfNotPresent
     extraConfig:
       00-log-level: |
@@ -28,7 +31,7 @@ jupyterhub:
         default_url: /lab/
         notebook_dir: /home/jovyan/work
 
-    # Extra hub configuration for custom spawner settings
+    # -- Extra hub configuration for custom spawner settings
     extraConfig:
       00-custom-spawner: |
         # Custom environment variables for user pods
@@ -48,8 +51,8 @@ jupyterhub:
       name: cogstacksystems/jupyter-singleuser
       tag: "2.2.2"
       pullPolicy: IfNotPresent
-    # Lifecycle hook to copy notebooks from image to PVC on first run
     lifecycleHooks:
+      # -- Lifecycle hook to copy notebooks from image to PVC on first run
       postStart:
         exec:
           command:
@@ -73,15 +76,16 @@ jupyterhub:
     fsGid: 0
     cmd: ["jupyterhub-singleuser"]
 
-    # Extra arguments passed to jupyterhub-singleuser
+    # -- Extra arguments passed to jupyterhub-singleuser
     extraPodConfig:
       securityContext:
         runAsUser: 0
         runAsGroup: 0
 
     storage:
+      # -- Capacity of the storage for the user pods.
       capacity: 5Gi
-      # NOTE: Prefer dictionary-form here to avoid Helm merge issues
+      # -- NOTE: Prefer dictionary-form here to avoid Helm merge issues
       # when this subchart is configured by a parent chart.
       extraVolumes:
         jupyter-examples:
@@ -94,11 +98,14 @@ jupyterhub:
           mountPath: /home/jovyan/work/examples
           readOnly: true
   cull:
+    # -- Enable culling of user pods
+    # @default -- false, so pods stay running indefinitely
     enabled: false
   scheduling:
     userScheduler:
       replicas: 1
   prePuller:
+    # -- Enable pulling the singleuser image before they are used to improve startup time
     hook:
       enabled: false
     continuous:
