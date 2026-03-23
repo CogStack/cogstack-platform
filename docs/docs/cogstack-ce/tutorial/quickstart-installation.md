@@ -51,10 +51,12 @@ Visit http://127.0.0.1:8000/user/admin/notebooks/medcat-service-tutorial.ipynb t
 
 This command runs `kubectl port-forward` in the background.
 
-2. Open JupyterHub:
-   - Visit http://127.0.0.1:8000 in a web browser
-
 If you use a custom namespace or Helm release name, add the namespace or replace `cogstack` in the commands above accordingly.
+
+2. Open JupyterHub by opening http://127.0.0.1:8000 in a web browser
+
+Jupyter should start up, and present a login screen. 
+
 
 ## Next step: run the bundled notebook
 
