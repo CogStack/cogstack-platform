@@ -32,6 +32,13 @@ For the full installation reference, deployment instructions, and customizations
 - [Deployment](../platform/deployment/_index.md)
 - [CogStack CE Helm chart (install + customization)](../platform/deployment/helm/charts/cogstack-ce-helm.md)
 
+## Models
+The default installation comes with basic models that are just for demo purposes. 
+
+There are public models available, that will require a NIH profile or UMLS license. See [MedCAT](https://github.com/CogStack/cogstack-nlp/tree/main/medcat-v2) documentation for how to get these models.
+
+!!! tip
+    For access to high performing models trained on real world clinical datasets, contact us
 
 ## Next Steps
 After setting up and trying CogStack Community edition, you can look into the details and wider tools in the platform

@@ -2,6 +2,8 @@
 
 This tutorial installs CogStack CE using Helm, sets up port-forwarding, and opens the bundled JupyterHub in your browser.
 
+The install should take around 15 minutes, and by the end of this tutorial you will have a fully working and integrated CogStack environment that you can start using.
+
 ## Prerequisites
 
 - A Kubernetes cluster
@@ -18,11 +20,11 @@ helm install cogstack oci://registry-1.docker.io/cogstacksystems/cogstack-helm-c
 This command will install Cogstack community edition with all the default values.
 
 !!! warning
-   For brand new installations, this might take a while, so expect up to 15 minutes. It needs to download many GB of docker images first and then startup processes.
-
-   Once the initial installation is done, then any updates should be significantly faster.
-
-   The defaults are set for a production-ready environment. See [Deployment](../../platform/deployment/_index.md) for detailed deployment information and customization options.
+    For brand new installations, this might take a while, so expect up to 15 minutes. It needs to download    many GB of docker images first and then startup processes.
+    
+    Once the initial installation is done, then any updates should be significantly faster.
+    
+    The defaults are set for a production-ready environment. See [Deployment](../../platform/deployment/_index.md) for detailed deployment information and customization options.
 
 
 ## Port-forward and open JupyterHub
