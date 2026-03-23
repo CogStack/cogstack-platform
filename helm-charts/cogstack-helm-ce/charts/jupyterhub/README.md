@@ -14,7 +14,7 @@ A Helm chart for CogStack Jupyter Hub using official JupyterHub chart
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| jupyterhub.cull.enabled | bool | false, so pods stay running indefinitely | Enable culling of user pods |
+| jupyterhub.cull.enabled | bool | false, so pods stay running indefinitely d | Enable culling of user pods |
 | jupyterhub.hub.config.Authenticator.admin_users[0] | string | `"admin"` |  |
 | jupyterhub.hub.config.DummyAuthenticator.password | string | `"SuperSecret"` |  |
 | jupyterhub.hub.config.JupyterHub.authenticator_class | string | `"dummy"` |  |
