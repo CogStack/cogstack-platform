@@ -163,6 +163,8 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
+# -- Configure resources for the pod. More information can be found here: https://kubernetes.io/docs/concepts/containers/
+# Recommendation for a default production model is { requests: { cpu: 1, memory: 4Gi }, limits: { cpu: null <unset>, memory: 4Gi } }
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
@@ -228,6 +230,7 @@ hostAliases: []
   # - ip: "127.0.0.1"
   #   hostnames:
   #   - "foo.local"
+
 networkPolicy:
   # -- Choose to create a default network policy blocking all ingress other than to the service port.
   enabled: true

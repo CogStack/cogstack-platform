@@ -175,7 +175,7 @@ You should see the NVIDIA GPU device listing if the GPU is properly accessible.
 | readinessProbe.httpGet.path | string | `"/api/health/ready"` |  |
 | readinessProbe.httpGet.port | string | `"http"` |  |
 | replicaCount | int | `1` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ |
-| resources | object | `{}` |  |
+| resources | object | `{}` | Configure resources for the pod. More information can be found here: https://kubernetes.io/docs/concepts/containers/ Recommendation for a default production model is { requests: { cpu: 1, memory: 4Gi }, limits: { cpu: null <unset>, memory: 4Gi } } |
 | runtimeClassName | string | `""` | Runtime class name for the pod (e.g., "nvidia" for GPU workloads) More information: https://kubernetes.io/docs/concepts/containers/runtime-class/ |
 | securityContext | object | `{}` |  |
 | service.port | int | `5000` | This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports |
