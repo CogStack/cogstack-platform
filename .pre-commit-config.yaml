@@ -7,3 +7,8 @@ repos:
         args:
           # Make the tool search for charts only under the `example-charts` directory
           - --chart-search-root=helm-charts/medcat-service-helm
+      - id: helm-docs-container
+        files: helm-charts/medcat-trainer-helm/.*
+        args:
+          # Make the tool search for charts only under the `example-charts` directory
+          - --chart-search-root=helm-charts/medcat-trainer-helm
