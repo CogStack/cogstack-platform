@@ -86,4 +86,4 @@ If those outputs appear, you have validated the full end-to-end flow from Jupyte
 
 - See the [full deployment documentation](../../platform/deployment/_index.md) for more details on scaling, production security, and advanced configuration options.
 - See full install instructions of the cogstack CE chart[CogStack CE Helm chart (install + customization)](../../platform/deployment/helm/charts/cogstack-ce-helm.md)
-
+- See further tutorials on medcat on [GitHub](https://github.com/CogStack/cogstack-nlp/tree/79f00cfc204f4ae559b56c8e397bbcaf82d44274/medcat-v2-tutorials)
