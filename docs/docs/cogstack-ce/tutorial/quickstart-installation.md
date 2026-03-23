@@ -20,7 +20,7 @@ helm install cogstack oci://registry-1.docker.io/cogstacksystems/cogstack-helm-c
 This command will install Cogstack community edition with all the default values.
 
 !!! warning
-For brand new installations, this might take a while, so expect up to 15 minutes. It needs to download many GB of docker images first and then startup processes.
+    For brand new installations, this might take a while, so expect up to 15 minutes. It needs to download many GB of docker images first and then startup processes.
 
     Once the initial installation is done, then any updates should be significantly faster.
 
