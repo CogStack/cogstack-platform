@@ -10,6 +10,11 @@ By the end, you will have completed an end-to-end user flow:
 4. Run cells that call MedCAT and AnonCAT service APIs
 5. Inspect the outputs
 
+!!! tip
+    The following tutorial will use your CogStack CE installation and let you run real code against your environment.
+
+    To see a non-interactive version of the tutorial notebook, refer to [the MedCAT Service Tutorial notebook](../../platform/cogstack-ai/medcat-service-tutorial.ipynb).
+
 ## Before you start
 
 Make sure your CogStack CE release is installed and local port-forwarding is running.
