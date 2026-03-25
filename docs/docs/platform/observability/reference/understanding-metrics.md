@@ -22,6 +22,7 @@ Our probe interval is every 10 seconds. This means that in 8 hours we make 2440 
 For 98.77% availability, we must have had 30 calls fail over the time period (2440 * 0.9877)
 
 30 failing calls over the time period could happen in a few ways:
+
 - We could have just dropped 30 calls spaced evenly over the period of 8 hours, which probably can't be noticed
 -  we could have had a outage of 0% availability for 5 minutes in sequence, where the thing is properly broken for that period. This would mean 30 calls failed, so uptime over 8 hours is 98.7% 
 

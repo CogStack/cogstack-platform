@@ -11,6 +11,7 @@ Use the percentage uptime charts at the top to see the availability over a given
 Use the time filter in the top right corner of the page to change the window, for example change it to 30 days to see availability for the total month. 
 
 Look for trends like:
+
 - Has there been a full outage of a service for 5 minutes, where where 5m availability goes to 0
 - Is there some disruption over the time period, where my 5m availability stays high, but my 6h availability is going down?
 - Have we met the service level objective, if we set the time threshold to 30 days? 
@@ -27,6 +28,7 @@ Use the Docker Metrics dashboard to check which containers are running, where, a
 The dashboard above includes the hostnames, IP addresses and any other details configured. 
 
 Check for things like:
+
 - Containers not running where you thought they should be by looking at the hostname for each container
 - Containers restarting unexpectedly, by looking at the "Running" column in the table
 
@@ -56,6 +58,7 @@ Open the Elasticsearch Metrics dashboard on [localhost/grafana](http://localhost
 This dashboard helps you understand how your ElasticSearch or Opensearch cluster is behaving. 
 
 Look at:
+
 - Cluster health status — shows yellow/red states immediately
 - Index size per shard — to detect unbalanced index growth
 - Query latency and throughput — useful during heavy search loads

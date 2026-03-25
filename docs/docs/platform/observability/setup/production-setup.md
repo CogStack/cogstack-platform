@@ -7,6 +7,7 @@ If you're new, we recommend completing the [Quickstart Tutorial](../get-started/
 By the end of the tutorial, you will have a complete stack offering all the observability features, customized to your usage. 
 
 We will run the stack and then:
+
 - Setup further *Probing* of our running services to get availability metrics
 - Configure *Telemetry* like VM memory usage, and Elasticsearch index size, by running Grafana Alloy
 - Enable *Alerting* based on our availability and a defined Service Level Objective (SLO)
@@ -26,11 +27,13 @@ This script will setup all the folder structure, and download all the relevant f
 The script automates making folders, and downloading these files:
 
 Downloads the example docker compose files:
+
 - [docker-compose.yml](https://raw.githubusercontent.com/CogStack/cogstack-platform-toolkit/85029d135b5bacfb473b638d82e45021ee67781a/observability/examples/full/docker-compose.yml)
 - [exporters.docker-compose.yml](https://raw.githubusercontent.com/CogStack/cogstack-platform-toolkit/85029d135b5bacfb473b638d82e45021ee67781a/observability/examples/full/exporters.docker-compose.yml)
 - [exporters.elastic.docker-compose.yml](https://raw.githubusercontent.com/CogStack/cogstack-platform-toolkit/85029d135b5bacfb473b638d82e45021ee67781a/observability/examples/full/exporters.elastic.docker-compose.yml)
 
 Downloads the configurations:
+
 - [alloy/probers/probe-external.yml](https://raw.githubusercontent.com/CogStack/cogstack-platform-toolkit/85029d135b5bacfb473b638d82e45021ee67781a/observability/examples/full/alloy/probers/probe-external.yml)
 - [alloy/probers/probe-observability.yml](https://raw.githubusercontent.com/CogStack/cogstack-platform-toolkit/85029d135b5bacfb473b638d82e45021ee67781a/observability/examples/full/alloy/probers/probe-observability.yml)
 - [prometheus/scrape-configs/exporters/exporters.yml](https://raw.githubusercontent.com/CogStack/cogstack-platform-toolkit/85029d135b5bacfb473b638d82e45021ee67781a/observability/examples/full/prometheus/scrape-configs/exporters/exporters.yml)

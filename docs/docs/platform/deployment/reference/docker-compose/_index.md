@@ -15,6 +15,7 @@ We use Docker Compose internally during development to run services individually
 ## How to run
 
 You can find example Docker Compose `.yml` files throughout our repositories, for example
+
 - [MedCAT Service](https://github.com/CogStack/cogstack-nlp/blob/main/medcat-service/docker/docker-compose.example.yml)  
 - [MedCAT Trainer](https://github.com/CogStack/cogstack-nlp/blob/main/medcat-trainer/docker-compose.yml)
 

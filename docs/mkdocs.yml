@@ -35,14 +35,16 @@ nav:
   - Home:
       - Home: index.md
       - Getting started: overview/getting-started.md
-
+      - CogStack Community Edition:
+          - Overview: cogstack-ce/_index.md
+          - Quickstart: cogstack-ce/tutorial/quickstart-installation.md
+          - Tutorials:
+              - End To End Tutorial: cogstack-ce/tutorial/end-to-end-jupyterhub.md
   - CogStack AI:
       - CogStack AI: cogstack-ai/index.md
       - Natural Language Processing: overview/Natural Language Processing.md
       - MedCAT: https://docs.cogstack.org/projects/nlp
       - MedCAT Trainer: https://docs.cogstack.org/projects/medcat-trainer/
-      - Tutorials:
-        - Medcat Service Tutorial: platform/cogstack-ai/medcat-service-tutorial.ipynb
   - Data Engineering:
       - Data Engineering: data-engineering/index.md
       - Data pipelines: overview/Data pipelines.md
@@ -64,6 +66,7 @@ nav:
                   - Charts Overview: platform/deployment/helm/charts/_index.md
                   - MedCAT Service Helm: platform/deployment/helm/charts/medcat-service-helm.md
                   - MedCAT Trainer Helm: platform/deployment/helm/charts/medcat-trainer-helm.md
+              - CogStack CE:
                   - Cogstack CE Helm: platform/deployment/helm/charts/cogstack-helm-ce.md
           - Examples:
               - Examples: platform/deployment/examples/_index.md
@@ -103,6 +106,7 @@ plugins:
   - termynal
   - mkdocs-jupyter:
       ignore_h1_titles: True
+
 extra:
   analytics:
     provider: custom
