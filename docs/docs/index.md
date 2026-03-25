@@ -1,3 +1,6 @@
+<p align="center">
+  <img src="assets/brand-logo-dark.svg" alt="CogStack Logo">
+</p>
 Welcome to the CogStack Documentation site.
 
 ## What is CogStack?
