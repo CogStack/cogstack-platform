@@ -1,14 +1,12 @@
 # CogStack Community Edition (CogStack CE)
 
-CogStack Community Edition (CogStack CE) is a one line installation of the open source apps, AI products and Data Engineering tools in CogStack. 
+CogStack Community Edition (CogStack CE) is a collection of the open source apps, AI products and data engineering tools in cogstack.
 
-The installation is preconfigured with default data sets, configurations, and example dashboards already setup for you.
+CogStack CE aims to show what is possible with the open source CogStack products, and give you ideas of how you could build upon this and integrate with your real data.
 
-The CE aims to show what is possible with the open source CogStack products, and give you ideas of how you could build upon this and integrate with your real data.
+It is installed with a one line command, and comes preconfigured with default data sets, configurations, and example dashboards already setup for you. It is built to run in Kubernetes, from local instances using Minikube, and scale up to production clusters and managed cloud environments.
 
-## What is CogStack CE?
-
-**CogStack CE** is an all-in-one Kubernetes deployment for clinical NLP workflows.
+## What is included in CogStack CE?
 
 It combines model serving, de-identification, model training, notebook-based analysis, and search tooling into one Helm release.
 
