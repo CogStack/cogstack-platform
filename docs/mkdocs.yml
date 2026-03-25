@@ -35,11 +35,14 @@ nav:
   - Home:
       - Home: index.md
       - Getting started: overview/getting-started.md
+
   - CogStack AI:
       - CogStack AI: cogstack-ai/index.md
       - Natural Language Processing: overview/Natural Language Processing.md
       - MedCAT: https://docs.cogstack.org/projects/nlp
       - MedCAT Trainer: https://docs.cogstack.org/projects/medcat-trainer/
+      - Tutorials:
+        - Medcat Service Tutorial: platform/cogstack-ai/medcat-service-tutorial.ipynb
   - Data Engineering:
       - Data Engineering: data-engineering/index.md
       - Data pipelines: overview/Data pipelines.md
@@ -96,8 +99,10 @@ plugins:
   - gen-files:
       scripts:
         - scripts/gen_helm_readme.py
+        - scripts/copy_files_from_repo.py
   - termynal
-
+  - mkdocs-jupyter:
+      ignore_h1_titles: True
 extra:
   analytics:
     provider: custom
