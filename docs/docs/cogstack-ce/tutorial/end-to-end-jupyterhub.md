@@ -78,6 +78,7 @@ If those outputs appear, you have validated the full end-to-end flow from Jupyte
 
 - If JupyterHub does not load, ensure port-forwarding is running.
 - If notebook requests fail, verify the cluster services are up and re-run:
+
   - `helm get notes <release> | bash`
 - For production deployments, replace dummy authentication with secure auth configuration.
 

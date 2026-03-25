@@ -60,6 +60,7 @@ See [CogStack Community Edition (CE)](cogstack-ce/_index.md) to continue this pr
 CogStack is comprised of a suite of applications, all using a common AI and data engineering platform. It is designed to be a self hosted platform where you run your own instances and keep all of your data on premise, with full support for air gapped environments.
 
 The applications provide features for:
+
 - Clinical Coding
 - Search and Audit of EHRs
 - Cohorting
@@ -68,15 +69,18 @@ The applications provide features for:
 - Clinical Decision Support (CDS)
 
 The AI and Data Engineering layer comprises of:
+
 - Healthcare Language Models trained on large data real world data sets
 - The open source MedCAT and AnonCAT natural language processing libraries
 - Data Engineering pipelines using Apache NiFi and OpenSearch to read unstructured and structured data
 - MLOps tooling for model training and validation
 
 !!! tip
-    Many of these apps and tools are open source and available on GitHub (subject to the licensing in each project), in the [CogStack GitHub](https://github.com/CogStack)
+    Many of these apps and tools are open source and available on GitHub (subject to the licensing in each project), in the [CogStack GitHub](https://github.com/CogStack).
+
     The public documentation on this page covers these open source community offerings.
-    For advanced features and enterprise level features see [products](https://cogstack.org/products/).
+
+    For advanced features and enterprise level features see our range of [products](https://cogstack.org/products/).
 
 ## Next Steps
 
