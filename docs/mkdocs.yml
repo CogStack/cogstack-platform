@@ -45,6 +45,8 @@ nav:
       - Natural Language Processing: overview/Natural Language Processing.md
       - MedCAT: https://docs.cogstack.org/projects/nlp
       - MedCAT Trainer: https://docs.cogstack.org/projects/medcat-trainer/
+      - Tutorials:
+        - Medcat Service Tutorial: platform/cogstack-ai/medcat-service-tutorial.ipynb
   - Data Engineering:
       - Data Engineering: data-engineering/index.md
       - Data pipelines: overview/Data pipelines.md
@@ -66,7 +68,6 @@ nav:
                   - Charts Overview: platform/deployment/helm/charts/_index.md
                   - MedCAT Service Helm: platform/deployment/helm/charts/medcat-service-helm.md
                   - MedCAT Trainer Helm: platform/deployment/helm/charts/medcat-trainer-helm.md
-              - CogStack CE:
                   - Cogstack CE Helm: platform/deployment/helm/charts/cogstack-helm-ce.md
           - Examples:
               - Examples: platform/deployment/examples/_index.md
