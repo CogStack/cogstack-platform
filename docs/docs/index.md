@@ -10,13 +10,6 @@ There are a wide range of features including Generative AI, Natural Language Pro
 
 CogStack is a commercial open-source product, with the code for the community edition available on GitHub: [https://github.com/CogStack/](https://github.com/CogStack/). For enterprise deployments, full platform setup, and advanced features, please [contact us](https://docs.cogstack.org/en/latest/).
 
-## Demo
-Try a demo of the MedCAT natural language processing tool on [https://medcat.app.cogstack.org/](https://medcat.app.cogstack.org/)
-
-This tool demonstrates named entity resolution on patient records to extract SNOMED clinical terms. This can be integrated for clinical coding and search applications. 
-
-!!! warning
-    Do not put real patient data into this demo page
 ## Quickstart
 
 Deploy the CogStack Community Edition on an existing Kubernetes cluster using helm.
@@ -47,13 +40,7 @@ NOTES:
 
 See [CogStack Community Edition (CE)](cogstack-ce/_index.md) to continue this process.
 
-## Community and support
-
-- **Questions?** Reach out in the [CogStack community forum](https://discourse.cogstack.org/).
-- **Code and projects:** [CogStack on GitHub](https://github.com/orgs/CogStack/repositories).
-
-
-### Architecture
+## Architecture
 
 ![CogStack Architecture](overview/attachments/architecture.png)
 
@@ -85,3 +72,8 @@ The AI and Data Engineering layer comprises of:
 ## Next Steps
 
 [Get Started ](overview/getting-started.md){ .md-button .md-button--primary }
+
+## Community and support
+
+- **Questions?** Reach out in the [CogStack community forum](https://discourse.cogstack.org/).
+- **Code and projects:** [CogStack on GitHub](https://github.com/orgs/CogStack/repositories).
