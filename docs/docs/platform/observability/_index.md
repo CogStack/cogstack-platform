@@ -3,6 +3,7 @@
 This project provides observability of a cogstack deployment.
 
 It provides the following features:
+
 - Dashboards for availability
 - Telemetry of infrastructure such as host memory usage, and elasticsearch index size
 - Alerting based on a defined Service Level Objective (SLO) and burn rates

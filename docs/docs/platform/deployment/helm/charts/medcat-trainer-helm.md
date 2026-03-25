@@ -42,6 +42,7 @@ postgresql:
 
 ## Missing features
 These features are not yet existing but to be added in future:
+
 - Use a pre existing postgres db
 - Use a pre existing SOLR instance
 - Migrate from supervisord to standalone deployment for background tasks for better scaling

@@ -18,6 +18,7 @@ EOT
 This module simplifies deploying the CogStack with an opinionated Helm release setup. 
 
 It does the following:
+
 - Deploys MedCAT Service using Helm
 - Configures Ingress based on path prefix and hostname
 - Runs a terraform Check as an integration test on the deployed service

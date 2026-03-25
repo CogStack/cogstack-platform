@@ -1,30 +1,82 @@
+<p align="center">
+  <img src="assets/brand-logo-dark.svg" alt="CogStack Logo">
+</p>
 Welcome to the CogStack Documentation site.
 
 ## What is CogStack?
+
+CogStack lets you unlock the power of healthcare data.
+
+CogStack is a healthcare suite with interchangeable modules for analysing clinical data using AI to draw insights from text in or documents in an Electronic Health Records.
+
+There are a wide range of features including Generative AI, Natural Language Processing, Full Search, Alerting, Cohort Selection, Population Health Dashboards, Deep Phenotyping and Clinical Research.
+
+CogStack is a commercial open-source product, with the code for the community edition available on GitHub: [https://github.com/CogStack/](https://github.com/CogStack/). For enterprise deployments, full platform setup, and advanced features, please [contact us](https://docs.cogstack.org/en/latest/).
+
+## Quickstart
+
+Deploy the CogStack Community Edition on an existing Kubernetes cluster using helm.
+
+<!-- termynal -->
+
+```sh
+$ helm install \
+    cogstack oci://registry-1.docker.io/cogstacksystems/cogstack-helm-ce \
+    --timeout=15m0s
+---> 100%
+Pulled: registry-1.docker.io/cogstacksystems/cogstack-helm-ce:0.0.1
+Digest: sha256:02e8ad3df7173270f7fdeb3e1ed5133427cec06ffc15b4ce763fa9bb062c8df1
+
+NAME: cogstack
+LAST DEPLOYED: Mon Mar 23 16:19:05 2026
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+DESCRIPTION: Install complete
+NOTES:
+...
+# CogStack Community Edition is installed
+# Setup Complete
+# Run this command line to setup port-forwarding and access services
+# `helm get notes cogstack | bash`
+```
+
+See [CogStack Community Edition (CE)](cogstack-ce/_index.md) to continue this process.
+
+## Architecture
+
 ![CogStack Architecture](overview/attachments/architecture.png)
 
-CogStack is a lightweight distributed, fault tolerant database processing architecture and ecosystem, intended to make NLP processing and preprocessing easier in resource constrained environments. It comprises of multiple components, and has been designed to provide configurable data processing pipelines for working with EHR data.
+CogStack is comprised of a suite of applications, all using a common AI and data engineering platform. It is designed to be a self hosted platform where you run your own instances and keep all of your data on premise, with full support for air gapped environments.
 
-CogStack uses databases and files as primary sources of EHR data, with support for custom data connectors. The platform leverages [Apache NiFi](https://nifi.apache.org/) to provide fully configurable data processing pipelines with the goal of generating annotated JSON standardised schema files that can be readily indexed into [ElasticSearch](https://www.elastic.co/), stored as files or pushed back to a database.
+The applications provide features for:
 
+- Clinical Coding
+- Search and Audit of EHRs
+- Cohorting
+- EHR Analytics
+- DeIdentification of patient records
+- Clinical Decision Support (CDS)
 
-CogStack is a commercial open-source product, with the code available on GitHub: [https://github.com/CogStack/](https://github.com/CogStack/) . For enterprise deployments, full platform setup, and advanced features, please [contact us](https://docs.cogstack.org/en/latest/).
+The AI and Data Engineering layer comprises of:
+
+- Healthcare Language Models trained on large data real world data sets
+- The open source MedCAT and AnonCAT natural language processing libraries
+- Data Engineering pipelines using Apache NiFi and OpenSearch to read unstructured and structured data
+- MLOps tooling for model training and validation
 
 !!! tip
+    Many of these apps and tools are open source and available on GitHub (subject to the licensing in each project), in the [CogStack GitHub](https://github.com/CogStack).
 
-    CogStack is designed as a microservices-based ecosystem. The recommended deployment method is on **Kubernetes using Helm charts**, which provides cloud-native support, scalability, and reliability. Ready-to-use CogStack images are available from the official Docker Hub under the [cogstacksystems](https://hub.docker.com/u/cogstacksystems/) organisation. Docker Compose is still supported for development and smaller deployments, but Kubernetes is recommended for production environments.
+    The public documentation on this page covers these open source community offerings.
 
-## What is CogStack For?
+    For advanced features and enterprise level features see our range of [products](https://cogstack.org/products/).
 
-CogStack consists of a range of technologies designed to support modern, open source healthcare analytics, and is chiefly comprised of the Elastic stack ([ElasticSearch](https://www.elastic.co/products/elasticsearch), [Kibana](https://www.elastic.co/products/kibana), etc.), [MedCAT](https://github.com/CogStack/MedCAT) (clinical natural language processing for named entity extraction and linking, contextualization, and realtion extraction), clinical text [OCR](https://github.com/CogStack/ocr-service), and clinical text de-identification. Since the processed EHR data can be represented and stored in databases or ElasticSearch, CogStack can be perfectly utilised as one of the solutions for integrating EHR data with other types of biomedical, -omics, wearables data, etc.
+## Next Steps
 
----
+[Get Started ](overview/getting-started.md){ .md-button .md-button--primary }
 
 ## Community and support
 
 - **Questions?** Reach out in the [CogStack community forum](https://discourse.cogstack.org/).
 - **Code and projects:** [CogStack on GitHub](https://github.com/orgs/CogStack/repositories).
-
-## Next Steps
-
-[Get Started ](overview/getting-started.md){ .md-button .md-button--primary  }

@@ -51,6 +51,7 @@ Now refresh the grafana dashboard, and you can see the availability of google.co
 This is the end of this quickstart tutorial, that enables probing availability of endpoints.
 
 For the next steps we can:
+
 - Look deeper into the observability dashboards, on [Dashboards Userguide](./userguide-tutorial.md)
 - Productionise our deployment to enable further features  by following [Production Setup](../setup/production-setup.md)
 
