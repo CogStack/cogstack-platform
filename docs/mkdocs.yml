@@ -39,7 +39,8 @@ nav:
           - Overview: cogstack-ce/_index.md
           - Quickstart: cogstack-ce/tutorial/quickstart-installation.md
           - Tutorials:
-              - End To End Tutorial: cogstack-ce/tutorial/end-to-end-jupyterhub.md
+              - Using JupyterHub: cogstack-ce/tutorial/end-to-end-jupyterhub.md
+              - End To End Tutorial: cogstack-ce/tutorial/medcat-opensearch-e2e.ipynb
   - CogStack AI:
       - CogStack AI: cogstack-ai/index.md
       - Natural Language Processing: overview/Natural Language Processing.md

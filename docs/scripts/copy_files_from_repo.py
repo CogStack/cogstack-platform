@@ -24,7 +24,11 @@ COPY_SPECS = [
     {
         "sourceFilePath": "helm-charts/cogstack-helm-ce/charts/jupyterhub/examples/medcat-service-tutorial.ipynb",
         "outputFilePath": "platform/cogstack-ai/medcat-service-tutorial.ipynb",
-    }
+    },
+    {
+        "sourceFilePath": "helm-charts/cogstack-helm-ce/charts/jupyterhub/examples/medcat-opensearch-e2e.ipynb",
+        "outputFilePath": "cogstack-ce/tutorial/medcat-opensearch-e2e.ipynb",
+    },
 ]
 
 
@@ -46,4 +50,3 @@ def main() -> None:
 
 
 main()
-
