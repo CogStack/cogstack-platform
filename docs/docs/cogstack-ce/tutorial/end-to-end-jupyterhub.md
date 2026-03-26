@@ -13,7 +13,10 @@ By the end, you will have completed an end-to-end user flow:
 !!! tip
     The following tutorial will use your CogStack CE installation and let you run real code against your environment.
 
-    To see a non-interactive version of the tutorial notebook, refer to [the MedCAT Service Tutorial notebook](../../platform/cogstack-ai/medcat-service-tutorial.ipynb).
+    To see a non-interactive version of the tutorial notebook, refer to:
+
+    - [the MedCAT Service Tutorial notebook](../../platform/cogstack-ai/medcat-service-tutorial.ipynb).
+    - [the OpenSearch E2E notebook](./medcat-opensearch-e2e.ipynb).
 
 ## Before you start
 
@@ -46,11 +49,12 @@ Log in with:
 
 After login, JupyterLab opens for your user.
 
-## Step 3: Open the bundled notebook
+## Step 3: Open the bundled notebooks
 
-The chart includes an example notebook:
+The chart includes example notebooks to interact with CogStack CE:
 
 - `medcat-service-tutorial.ipynb`
+- `medcat-opensearch-e2e.ipynb`
 
 You can open it directly:
 
@@ -62,10 +66,11 @@ Or navigate to it in JupyterLab and click to open it.
 
 Run each cell in order from top to bottom.
 
-The notebook demonstrates service calls to:
+The notebooks demonstrates service calls to:
 
 - `medcat-service` at `/api/process` for named entity extraction
 - `anoncat-service` at `/api/process` for de-identification
+- `OpenSearch` for indexing and searching data.
 
 It uses environment variables for service URLs where available, so the default CogStack CE setup should work without edits.
 
@@ -83,10 +88,9 @@ If those outputs appear, you have validated the full end-to-end flow from Jupyte
 
 - If JupyterHub does not load, ensure port-forwarding is running.
 - If notebook requests fail, verify the cluster services are up and re-run:
-
   - `helm get notes <release> | bash`
-- For production deployments, replace dummy authentication with secure auth configuration.
 
+- For production deployments, replace dummy authentication with secure auth configuration.
 
 ## Next Steps
 
