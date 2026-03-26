@@ -39,6 +39,8 @@ INDEX_ORDER: Tuple[str, ...] = (
     "icustays",
     "patients",
     "poe",
+    "discharge",
+    "discharge_annotations",
 )
 
 
@@ -299,6 +301,205 @@ class EmarEvent:
     @property
     def emar_id(self) -> str:
         return f"{self.subject_id}-{self.emar_seq}"
+
+
+@dataclass(frozen=True)
+class DischargeNote:
+    note_id: str
+    subject_id: int
+    hadm_id: int
+    note_type: str
+    note_seq: int
+    charttime: datetime
+    storetime: datetime
+    text: str
+
+
+def make_discharge_notes(rng: random.Random, admissions: Sequence[Admission]) -> List[DischargeNote]:
+    notes: List[DischargeNote] = []
+    for adm in admissions:
+        note_type = "DS"
+        note_seq = bounded_int(rng, 1, 20)
+        note_id = f"{adm.subject_id}-{note_type}-{note_seq}"
+
+        charttime = rand_datetime(rng, adm.admittime, adm.dischtime, resolution_seconds=60)
+        storetime = min(adm.dischtime, charttime + timedelta(hours=bounded_int(rng, 0, 24), minutes=bounded_int(rng, 0, 59)))
+
+        # Synthetic discharge-note-like template (non-derivative, intentionally generic).
+        problems = (
+            "Chest pain",
+            "Shortness of breath",
+            "Abdominal pain",
+            "Dizziness",
+            "Headache",
+            "Fever",
+            "Fatigue",
+        )
+        services = ("MEDICINE", "SURGERY", "CARDIOLOGY", "NEUROLOGY", "RESPIRATORY", "RENAL")
+        meds = ("acetaminophen", "heparin", "pantoprazole", "insulin", "furosemide", "saline flush")
+        diag = choose(rng, problems)
+        service = choose(rng, services)
+        discharge_to = adm.discharge_location
+        med_list = ", ".join(rng.sample(meds, k=bounded_int(rng, 2, 4)))
+
+        text = (
+            "\n"
+            "Discharge Summary\n"
+            "=================\n"
+            f"Subject: {adm.subject_id}\n"
+            f"Admission ID: {adm.hadm_id}\n"
+            f"Service: {service}\n"
+            "\n"
+            "Chief Complaint:\n"
+            f"{diag}\n"
+            "\n"
+            "Hospital Course:\n"
+            "The patient was evaluated and treated during this admission. Symptoms improved with supportive care.\n"
+            "Vital signs remained stable. No acute complications were documented.\n"
+            "\n"
+            "Discharge Diagnoses:\n"
+            f"- {diag}\n"
+            "\n"
+            "Discharge Medications:\n"
+            f"- {med_list}\n"
+            "\n"
+            "Follow-up:\n"
+            "- Primary care follow-up in 1-2 weeks.\n"
+            "- Return to care if symptoms worsen.\n"
+            "\n"
+            "Disposition:\n"
+            f"{discharge_to}\n"
+            "\n"
+        )
+
+        notes.append(
+            DischargeNote(
+                note_id=note_id,
+                subject_id=adm.subject_id,
+                hadm_id=adm.hadm_id,
+                note_type=note_type,
+                note_seq=note_seq,
+                charttime=charttime,
+                storetime=storetime,
+                text=text,
+            )
+        )
+    return notes
+
+
+def discharge_doc(n: DischargeNote) -> Dict[str, object]:
+    return {
+        "note_id": n.note_id,
+        "subject_id": n.subject_id,
+        "hadm_id": n.hadm_id,
+        "note_type": n.note_type,
+        "note_seq": n.note_seq,
+        "charttime": fmt_dt(n.charttime),
+        "storetime": fmt_dt(n.storetime),
+        "text": n.text,
+    }
+
+
+def _rand_timestamp_utc_iso(rng: random.Random, base: datetime) -> str:
+    # Example: 2024-04-13T16:17:02.103+00:00
+    dt = base + timedelta(seconds=bounded_int(rng, -3600 * 24 * 30, 3600 * 24 * 30))
+    ms = bounded_int(rng, 0, 999)
+    return dt.strftime("%Y-%m-%dT%H:%M:%S") + f".{ms:03d}+00:00"
+
+
+def make_discharge_annotations(rng: random.Random, notes: Sequence[DischargeNote]) -> List[Dict[str, object]]:
+    ann: List[Dict[str, object]] = []
+    pretty_names = (
+        "Usage",
+        "Dose",
+        "Route",
+        "Frequency",
+        "Condition",
+        "Procedure",
+        "Symptom",
+    )
+    detected_terms = (
+        "use",
+        "dose",
+        "oral",
+        "daily",
+        "pain",
+        "fever",
+        "follow-up",
+        "medication",
+    )
+    # Keep ontology/model identifiers generic (avoid licensed/sensitive names).
+    ontologies = (
+        "ONTOLOGY_A",
+        "ONTOLOGY_B",
+        "ONTOLOGY_C",
+        "ONTOLOGY_D",
+    )
+    service_models = ("demo_model_a", "demo_model_b", "demo_model_c")
+    service_versions = ("1.10.2", "1.11.0", "2.0.0")
+
+    for n in notes:
+        # Seeded random 1–20 annotations per note.
+        per_note = bounded_int(rng, 1, 20)
+        text_len = len(n.text)
+        for _ in range(per_note):
+            # Pick a safe span inside the text.
+            if text_len < 10:
+                start = 0
+                end = text_len
+            else:
+                start = bounded_int(rng, 0, max(0, text_len - 2))
+                span = bounded_int(rng, 1, min(25, max(1, text_len - start)))
+                end = min(text_len, start + span)
+                if end <= start:
+                    end = min(text_len, start + 1)
+
+            detected = choose(rng, detected_terms)
+            pretty = choose(rng, pretty_names)
+            cui = str(bounded_int(rng, 100_000_000, 999_999_999))
+
+            doc: Dict[str, object] = {
+                "nlp.cui": cui,
+                "enrich_top_level_concept": bounded_int(rng, 100_000, 999_999_999),
+                "nlp.pretty_name": pretty,
+                "nlp.end": end,
+                "nlp.types": [""],
+                "nlp.detected_name": detected,
+                "nlp.meta_anns": {
+                    "Presence": {
+                        "confidence": rng.random(),
+                        "name": "Presence",
+                        "value": choose(rng, ("Present", "Absent", "Hypothetical")),
+                    },
+                    "Time": {
+                        "confidence": rng.random(),
+                        "name": "Time",
+                        "value": choose(rng, ("Recent", "Historical", "Planned")),
+                    },
+                    "Subject": {
+                        "confidence": rng.random(),
+                        "name": "Subject",
+                        "value": choose(rng, ("Patient", "Family", "Clinician")),
+                    },
+                },
+                "service_version": choose(rng, service_versions),
+                "nlp.start": start,
+                "nlp.source_value": detected,
+                "nlp.id": bounded_int(rng, 1, 10_000),
+                "meta.note_id": n.note_id,
+                "service_model": choose(rng, service_models),
+                "meta.subject_id": str(n.subject_id),
+                "nlp.icd10": [],
+                "nlp.snomed": [],
+                "nlp.acc": rng.random(),
+                "nlp.type_ids": [str(bounded_int(rng, 1_000_000, 99_999_999))],
+                "nlp.context_similarity": rng.random(),
+                "nlp.ontologies": [choose(rng, ontologies)],
+                "timestamp": _rand_timestamp_utc_iso(rng, n.storetime),
+            }
+            ann.append(doc)
+
+    return ann
 
 
 def make_patients(rng: random.Random, n: int) -> List[Patient]:
@@ -637,6 +838,8 @@ def iter_bulk_rows(
     icustays: Sequence[IcuStay],
     patients: Sequence[Patient],
     poe: Sequence[PoeOrder],
+    discharge: Sequence[DischargeNote],
+    discharge_annotations: Sequence[Dict[str, object]],
 ) -> Iterator[Row]:
     # Deterministic order by index, with _id 1..N per index.
     for i, a in enumerate(admissions, start=1):
@@ -651,6 +854,10 @@ def iter_bulk_rows(
         yield ("patients", str(i), patient_doc(p))
     for i, o in enumerate(poe, start=1):
         yield ("poe", str(i), poe_doc(o))
+    for i, n in enumerate(discharge, start=1):
+        yield ("discharge", str(i), discharge_doc(n))
+    for i, d in enumerate(discharge_annotations, start=1):
+        yield ("discharge_annotations", str(i), d)
 
 
 def write_bulk_ndjson(path: Path, rows: Iterable[Row]) -> None:
@@ -662,10 +869,10 @@ def write_bulk_ndjson(path: Path, rows: Iterable[Row]) -> None:
             f.write(json.dumps(doc, ensure_ascii=False) + "\n")
 
 
-def validate_bulk_ndjson(path: Path, expected_n: int) -> None:
+def validate_bulk_ndjson(path: Path, expected_counts: Dict[str, int]) -> None:
     # Lightweight structural validation: alternating meta/doc, correct index names, correct counts.
-    expected_lines = 2 * (len(INDEX_ORDER) * expected_n)
-    index_counts: Dict[str, int] = {idx: 0 for idx in INDEX_ORDER}
+    expected_lines = 2 * sum(expected_counts.values())
+    index_counts: Dict[str, int] = {idx: 0 for idx in expected_counts.keys()}
 
     with path.open("r", encoding="utf-8") as f:
         lines = f.readlines()
@@ -685,19 +892,33 @@ def validate_bulk_ndjson(path: Path, expected_n: int) -> None:
             raise SystemExit(f"Validation failed: doc is not an object at line {i+2}")
         index_counts[idx] += 1
 
-    for idx, count in index_counts.items():
-        if count != expected_n:
-            raise SystemExit(f"Validation failed: index '{idx}' expected {expected_n} docs, got {count}")
+    for idx, expected in expected_counts.items():
+        got = index_counts.get(idx, 0)
+        if got != expected:
+            raise SystemExit(f"Validation failed: index '{idx}' expected {expected} docs, got {got}")
 
 
-def build_dataset(rng: random.Random, n: int) -> Tuple[List[Patient], List[Admission], List[IcuStay], List[PoeOrder], List[EmarEvent], List[dict]]:
+def build_dataset(
+    rng: random.Random, n: int
+) -> Tuple[
+    List[Patient],
+    List[Admission],
+    List[IcuStay],
+    List[PoeOrder],
+    List[EmarEvent],
+    List[dict],
+    List[DischargeNote],
+    List[Dict[str, object]],
+]:
     patients = make_patients(rng, n)
     admissions = make_admissions(rng, patients)
     icustays = make_icustays(rng, admissions)
     poe_orders = make_poe_orders(rng, admissions)
     emar_events = make_emar_events(rng, admissions, poe_orders)
     drg_docs = make_drgcodes(rng, admissions)
-    return patients, admissions, icustays, poe_orders, emar_events, drg_docs
+    discharge_notes = make_discharge_notes(rng, admissions)
+    discharge_anns = make_discharge_annotations(rng, discharge_notes)
+    return patients, admissions, icustays, poe_orders, emar_events, drg_docs, discharge_notes, discharge_anns
 
 
 def parse_args(argv: Sequence[str]) -> argparse.Namespace:
@@ -721,7 +942,7 @@ def main(argv: Sequence[str]) -> int:
         raise SystemExit("--n must be > 0")
 
     rng = random.Random(args.seed)
-    patients, admissions, icustays, poe_orders, emar_events, drg_docs = build_dataset(rng, args.n)
+    patients, admissions, icustays, poe_orders, emar_events, drg_docs, discharge_notes, discharge_anns = build_dataset(rng, args.n)
 
     rows = iter_bulk_rows(
         admissions=admissions,
@@ -730,11 +951,23 @@ def main(argv: Sequence[str]) -> int:
         icustays=icustays,
         patients=patients,
         poe=poe_orders,
+        discharge=discharge_notes,
+        discharge_annotations=discharge_anns,
     )
     write_bulk_ndjson(args.out, rows)
 
     if args.validate:
-        validate_bulk_ndjson(args.out, args.n)
+        expected_counts: Dict[str, int] = {
+            "admissions": args.n,
+            "drgcodes": args.n,
+            "emar": args.n,
+            "icustays": args.n,
+            "patients": args.n,
+            "poe": args.n,
+            "discharge": len(discharge_notes),
+            "discharge_annotations": len(discharge_anns),
+        }
+        validate_bulk_ndjson(args.out, expected_counts)
 
     print(f"Completed synthetic data genration. File written to {args.out}")
     return 0

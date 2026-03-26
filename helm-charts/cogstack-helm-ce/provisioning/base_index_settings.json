@@ -5,7 +5,9 @@
         "emar",
         "icustays",
         "patients",
-        "poe"
+        "poe",
+        "discharge",
+        "discharge_annotations"
     ],
     "template": {
         "mappings": {
