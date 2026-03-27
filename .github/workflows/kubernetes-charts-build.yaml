@@ -20,7 +20,7 @@ defaults:
 jobs:
   helm-lint-test:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.user.login != 'dependabot[bot]' && github.repository == 'CogStack/cogstack-platform-toolkit'
+    if: github.event.pull_request.user.login != 'dependabot[bot]' && github.repository == 'CogStack/cogstack-platform'
     steps:
       - name: Checkout
         uses: actions/checkout@v5.0.0

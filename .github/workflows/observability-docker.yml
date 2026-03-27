@@ -16,7 +16,7 @@ on:
 jobs:
   docker:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.user.login != 'dependabot[bot]' && github.repository == 'CogStack/cogstack-platform-toolkit'
+    if: github.event.pull_request.user.login != 'dependabot[bot]' && github.repository == 'CogStack/cogstack-platform'
     strategy:
       matrix: # This should be replaced with Docker Bake instead
         include:
