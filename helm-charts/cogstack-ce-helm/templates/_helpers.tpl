@@ -1,7 +1,7 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "cogstack-helm-ce.name" -}}
+{{- define "cogstack-ce-helm.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -10,7 +10,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "cogstack-helm-ce.fullname" -}}
+{{- define "cogstack-ce-helm.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -26,16 +26,16 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "cogstack-helm-ce.chart" -}}
+{{- define "cogstack-ce-helm.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "cogstack-helm-ce.labels" -}}
-helm.sh/chart: {{ include "cogstack-helm-ce.chart" . }}
-{{ include "cogstack-helm-ce.selectorLabels" . }}
+{{- define "cogstack-ce-helm.labels" -}}
+helm.sh/chart: {{ include "cogstack-ce-helm.chart" . }}
+{{ include "cogstack-ce-helm.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -45,17 +45,17 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "cogstack-helm-ce.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "cogstack-helm-ce.name" . }}
+{{- define "cogstack-ce-helm.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "cogstack-ce-helm.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "cogstack-helm-ce.serviceAccountName" -}}
+{{- define "cogstack-ce-helm.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "cogstack-helm-ce.fullname" .) .Values.serviceAccount.name }}
+{{- default (include "cogstack-ce-helm.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}

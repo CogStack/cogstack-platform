@@ -1,4 +1,4 @@
-# Default values for cogstack-helm-ce.
+# Default values for cogstack-ce-helm.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -49,7 +49,7 @@ medcat-trainer:
     enabled: true
     existingConfigMap:
       # -- Existing ConfigMap name containing the provisioning configuration.
-      name: "cogstack-helm-ce-example-trainer-provisioining"
+      name: "cogstack-ce-helm-example-trainer-provisioining"
   env:
     # -- CSRF trusted origins for the MedCAT Trainer frontend (set for your deployment/port-forward).
     CSRF_TRUSTED_ORIGINS: "http://localhost:8080"
