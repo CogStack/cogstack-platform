@@ -130,7 +130,7 @@ jobs:
         run: |
           helm package ./medcat-service-helm --version  ${{ steps.version.outputs.chart_version }}
           helm package ./medcat-trainer-helm --version  ${{ steps.version.outputs.chart_version }} --dependency-update 
-          helm package ./cogstack-helm-ce --version  ${{ steps.version.outputs.chart_version }} --dependency-update
+          helm package ./cogstack-ce-helm --version  ${{ steps.version.outputs.chart_version }} --dependency-update
 
       - name: Helm OCI login to Docker Hub
         run: helm registry login registry-1.docker.io -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
@@ -139,7 +139,7 @@ jobs:
         run: |
           helm push ./medcat-service-helm-${{ steps.version.outputs.chart_version }}.tgz oci://registry-1.docker.io/cogstacksystems
           helm push ./medcat-trainer-helm-${{ steps.version.outputs.chart_version }}.tgz oci://registry-1.docker.io/cogstacksystems
-          helm push ./cogstack-helm-ce-${{ steps.version.outputs.chart_version }}.tgz oci://registry-1.docker.io/cogstacksystems
+          helm push ./cogstack-ce-helm-${{ steps.version.outputs.chart_version }}.tgz oci://registry-1.docker.io/cogstacksystems
 
       - name: Release
         uses: softprops/action-gh-release@v2

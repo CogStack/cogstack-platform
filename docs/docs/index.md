@@ -21,10 +21,10 @@ Deploy the CogStack Community Edition on an existing Kubernetes cluster using he
 
 ```sh
 $ helm install \
-    cogstack oci://registry-1.docker.io/cogstacksystems/cogstack-helm-ce \
+    cogstack oci://registry-1.docker.io/cogstacksystems/cogstack-ce-helm \
     --timeout=15m0s
 ---> 100%
-Pulled: registry-1.docker.io/cogstacksystems/cogstack-helm-ce:0.0.1
+Pulled: registry-1.docker.io/cogstacksystems/cogstack-ce-helm:0.0.1
 Digest: sha256:02e8ad3df7173270f7fdeb3e1ed5133427cec06ffc15b4ce763fa9bb062c8df1
 
 NAME: cogstack
@@ -66,7 +66,7 @@ The AI and Data Engineering layer comprises of:
 - MLOps tooling for model training and validation
 
 !!! tip
-    Many of these apps and tools are open source and available on GitHub (subject to the licensing in each project), in the [CogStack GitHub](https://github.com/CogStack).
+Many of these apps and tools are open source and available on GitHub (subject to the licensing in each project), in the [CogStack GitHub](https://github.com/CogStack).
 
     The public documentation on this page covers these open source community offerings.
 

@@ -25,9 +25,9 @@ helm test medcat-service --logs
 
 ## helm install trainer-registry oci://registry-1.docker.io/cogstacksystems/medcat-trainer-helm --wait --timeout 5m0s
 
-helm upgrade cogstack-helm-ce ./cogstack-helm-ce --install
+helm upgrade cogstack-ce-helm ./cogstack-ce-helm --install
 
 # Stop any running port forwards
 # ps -ef | grep '[p]ort-forward' | awk '{print $2}' | xargs -r kill
-# Port forward all services in  cogstack-helm-ce
-# helm get notes cogstack-helm-ce | bash
+# Port forward all services in  cogstack-ce-helm
+# helm get notes cogstack-ce-helm | bash

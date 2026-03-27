@@ -1,4 +1,4 @@
-{{- if and (index .Values "medcat-trainer" "provisioning" "enabled") (eq (index .Values "medcat-trainer" "provisioning" "existingConfigMap" "name") "cogstack-helm-ce-example-trainer-provisioining") }}
+{{- if and (index .Values "medcat-trainer" "provisioning" "enabled") (eq (index .Values "medcat-trainer" "provisioning" "existingConfigMap" "name") "cogstack-ce-helm-example-trainer-provisioining") }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -15,7 +15,7 @@ data:
           description: "Example project for medcat trainer using MedCAT Service"
           annotationGuidelineLink: "https://docs.google.com/document/d/1xxelBOYbyVzJ7vLlztP2q1Kw9F5Vr1pRwblgrXPS7QM/edit?usp=sharing"
           useModelService: true
-          modelServiceUrl: "http://{{ include "cogstack-helm-ce.fullname" . }}-medcat-service:5000"
+          modelServiceUrl: "http://{{ include "cogstack-ce-helm.fullname" . }}-medcat-service:5000"
       - dataset:
           name: "Example Dataset - psych.csv - deid"
           url: "https://raw.githubusercontent.com/CogStack/cogstack-nlp/be9825f151da2d3b6faac80d49e5be91a1629c68/medcat-trainer/notebook_docs/example_data/psych.csv"
@@ -25,5 +25,5 @@ data:
           description: "Example project for medcat trainer using AnonCAT Service"
           annotationGuidelineLink: "https://docs.google.com/document/d/1xxelBOYbyVzJ7vLlztP2q1Kw9F5Vr1pRwblgrXPS7QM/edit?usp=sharing"
           useModelService: true
-          modelServiceUrl: "http://{{ include "cogstack-helm-ce.fullname" . }}-anoncat-service:5000"
+          modelServiceUrl: "http://{{ include "cogstack-ce-helm.fullname" . }}-anoncat-service:5000"
 {{- end }}

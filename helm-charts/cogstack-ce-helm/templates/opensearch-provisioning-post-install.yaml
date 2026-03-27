@@ -3,13 +3,13 @@ apiVersion: v1
 kind: Pod
 metadata:
   labels:
-    {{- include "cogstack-helm-ce.labels" . | nindent 4 }}
+    {{- include "cogstack-ce-helm.labels" . | nindent 4 }}
   annotations:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-weight": "1"
     "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
     #"helm.sh/hook-delete-policy": before-hook-creation
-  name: {{ include "cogstack-helm-ce.fullname" . }}-opensearch-provisioning
+  name: {{ include "cogstack-ce-helm.fullname" . }}-opensearch-provisioning
 spec:
   restartPolicy: OnFailure
   containers:

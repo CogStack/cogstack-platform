@@ -1,4 +1,4 @@
-# CogStack Helm Community Edition
+# CogStack Community Edition Helm Chart
 
 This is a all in one helm chart that runs CogStack on Kubernetes
 
@@ -11,6 +11,10 @@ This chart is an umbrella chart that deploys:
 | **MedCAT**       | Medical Concept Annotation Tool — NER and linking for clinical text. |
 | **AnonCAT**      | De-identification service (MedCAT in DEID mode) for anonymising text. |
 | **MedCAT Trainer** | Training and model management for MedCAT, with Solr and PostgreSQL. |
+| **OpenSearch**        | Search and analytics engine powering logs and document indexing for CogStack. |
+| **OpenSearch Dashboards** | Visualization and analytics UI for OpenSearch data. |
+| **JupyterHub**        | Multi-user notebook server for interactive data science workflows. |
+
 
 ## Prerequisites
 
@@ -20,7 +24,7 @@ This chart is an umbrella chart that deploys:
 ## Installation
 
 ```sh
-helm install cogstack oci://registry-1.docker.io/cogstacksystems/cogstack-helm-ce
+helm install cogstack oci://registry-1.docker.io/cogstacksystems/cogstack-ce-helm
 ```
 
 ## Configuration

@@ -14,7 +14,7 @@ The install should take around 15 minutes, and by the end of this tutorial you w
 Run:
 
 ```sh
-helm install cogstack oci://registry-1.docker.io/cogstacksystems/cogstack-helm-ce --timeout 15m
+helm install cogstack oci://registry-1.docker.io/cogstacksystems/cogstack-ce-helm --timeout 15m
 ```
 
 This command will install Cogstack community edition with all the default values.
@@ -55,8 +55,7 @@ If you use a custom namespace or Helm release name, add the namespace or replace
 
 2. Open JupyterHub by opening http://127.0.0.1:8000 in a web browser
 
-Jupyter should start up, and present a login screen. 
-
+Jupyter should start up, and present a login screen.
 
 ## Next step: run the bundled notebook
 

@@ -1,4 +1,4 @@
-# CogStack Helm Community Edition
+# CogStack Community Edition Helm Chart
 
 This is a all in one helm chart that runs CogStack on Kubernetes
 
@@ -11,6 +11,9 @@ This chart is an umbrella chart that deploys:
 | **MedCAT**       | Medical Concept Annotation Tool — NER and linking for clinical text. |
 | **AnonCAT**      | De-identification service (MedCAT in DEID mode) for anonymising text. |
 | **MedCAT Trainer** | Training and model management for MedCAT, with Solr and PostgreSQL. |
+| **OpenSearch**        | Search and analytics engine powering logs and document indexing for CogStack. |
+| **OpenSearch Dashboards** | Visualization and analytics UI for OpenSearch data. |
+| **JupyterHub**        | Multi-user notebook server for interactive data science workflows. |
 
 ## Prerequisites
 
@@ -20,7 +23,7 @@ This chart is an umbrella chart that deploys:
 ## Installation
 
 ```sh
-helm install cogstack oci://registry-1.docker.io/cogstacksystems/cogstack-helm-ce
+helm install cogstack oci://registry-1.docker.io/cogstacksystems/cogstack-ce-helm
 ```
 
 ## Configuration
@@ -115,7 +118,7 @@ kubectl delete namespace cogstack
 | medcat-trainer.env.CSRF_TRUSTED_ORIGINS | string | `"http://localhost:8080"` | CSRF trusted origins for the MedCAT Trainer frontend (set for your deployment/port-forward). |
 | medcat-trainer.image.tag | string | `"latest@sha256:103215a7540ad614c32866f4cb00ddd91e7aff37cea9abc25dc226c577f9506d"` | MedCAT Trainer image tag (can be a digest-pinned tag). |
 | medcat-trainer.provisioning.enabled | bool | `true` | Enable provisioning of projects and models on startup. |
-| medcat-trainer.provisioning.existingConfigMap.name | string | `"cogstack-helm-ce-example-trainer-provisioining"` | Existing ConfigMap name containing the provisioning configuration. |
+| medcat-trainer.provisioning.existingConfigMap.name | string | `"cogstack-ce-helm-example-trainer-provisioining"` | Existing ConfigMap name containing the provisioning configuration. |
 | nameOverride | string | `""` | This is to override the chart name. |
 | opensearch-dashboards.enabled | bool | `true` | Deploy an opensearch-dashboards instance |
 | opensearch.enabled | bool | `true` | Deploy an opensearch cluster |
