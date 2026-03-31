@@ -132,7 +132,7 @@ You should see the NVIDIA GPU device listing if the GPU is properly accessible.
 | autoscaling.minReplicas | int | `1` |  |
 | autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
 | env.APP_ENABLE_DEMO_UI | bool | `true` |  |
-| env.APP_ENABLE_METRICS | bool | `false` | Observability Env Vars |
+| env.APP_ENABLE_METRICS | bool | `true` | Observability Env Vars |
 | env.APP_ENABLE_TRACING | bool | `false` |  |
 | env.APP_MEDCAT_MODEL_PACK | string | `"/cat/models/examples/example-medcat-v2-model-pack.zip"` | This defines the Model Pack used by the medcat service Example (download on startup): uncomment `ENABLE_MODEL_DOWNLOAD` and the `MODEL_*` URLs below. Example (DeID mode): uncomment `DEID_MODE`/`DEID_REDACT` and use the DeID model pack referenced below. |
 | env.OTEL_EXPERIMENTAL_RESOURCE_DETECTORS | string | `"containerid,os"` |  |
@@ -184,6 +184,12 @@ You should see the NVIDIA GPU device listing if the GPU is properly accessible.
 | serviceAccount.automount | bool | `true` | Automatically mount a ServiceAccount's API credentials? |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
 | serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
+| serviceMonitor | object | `{"enabled":false,"interval":"10s","labels":{},"path":"/metrics","scheme":"http","tlsConfig":{}}` | Create a Prometheus ServiceMonitor for the medcat service. Requires the Prometheus Operator to be installed Ensure APP_ENABLE_METRICS is set to true to expose the /metrics endpoint. |
+| serviceMonitor.enabled | bool | `false` | Set to true to enable creation of a ServiceMonitor resource |
+| serviceMonitor.interval | string | `"10s"` | Frequency at which Prometheus will scrape metrics. |
+| serviceMonitor.labels | object | `{}` | Additional labels to be added to the ServiceMonitor |
+| serviceMonitor.path | string | `"/metrics"` | HTTP path where metrics are exposed. |
+| serviceMonitor.scheme | string | `"http"` | Scheme to use for scraping. |
 | startupProbe.failureThreshold | int | `30` |  |
 | startupProbe.httpGet.path | string | `"/api/health/ready"` |  |
 | startupProbe.httpGet.port | string | `"http"` |  |

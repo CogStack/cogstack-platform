@@ -55,7 +55,7 @@ env:
   # APP_TORCH_THREADS: "-1"
 
   # -- Observability Env Vars
-  APP_ENABLE_METRICS: false
+  APP_ENABLE_METRICS: true
   APP_ENABLE_TRACING: false
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://<unused>:4317"
   OTEL_SERVICE_NAME: "medcat-service"
@@ -252,3 +252,18 @@ extraInitContainers: []
 
 # -- Additional manifests to deploy to kubernetes. Can be templated
 extraManifests: []
+
+# -- Create a Prometheus ServiceMonitor for the medcat service. Requires the Prometheus Operator to be installed
+# Ensure APP_ENABLE_METRICS is set to true to expose the /metrics endpoint.
+serviceMonitor:
+  # -- Set to true to enable creation of a ServiceMonitor resource
+  enabled: false
+  # -- HTTP path where metrics are exposed.
+  path: /metrics
+  # -- Scheme to use for scraping.
+  scheme: http
+  # -- Frequency at which Prometheus will scrape metrics.
+  interval: 10s
+  # -- Additional labels to be added to the ServiceMonitor
+  labels: {}
+  tlsConfig: {}
