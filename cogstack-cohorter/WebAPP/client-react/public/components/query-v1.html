@@ -1,0 +1,89 @@
+<!-- ===== Version 1 (SNOMED builder) ===== -->
+<div x-show="isV1" x-cloak class="container px-6 max-w-screen-2xl mx-auto">
+        <header class="z-10 py-4 bg-white dark:bg-gray-900 shadow-md max-w-screen-2xl">
+
+          <div>
+            <div class="container flex items-center justify-between h-full px-3 mx-auto text-gray-900 dark:text-white">
+
+              <!-- Mobile hamburger -->
+              <button class="p-1 -ml-1 mr-5 rounded-md md:hidden focus:outline-none focus:shadow-outline-purple" @click="toggleSideMenu" aria-label="Menu">
+                <svg class="w-6 h-6" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path></svg>
+              </button>
+              <!-- Search input -->
+              <div class="flex justify-center items-center flex-1 h-16">
+                <div class="text-gray-900 dark:text-white mx-2">Find patients</div>
+                <div class="relative mr-2">
+                  <select name="search_bar_with" id="search_bar_with" x-model="search_bar_with" class="pl-1 pr-8 bg-white dark:bg-gray-900 text-sm shadow-sm rounded-md border focus:border-purple-600 focus:ring focus:ring-purple-600 focus:ring-opacity-50">
+                    <option value="with">with</option>
+                    <option value="without">without</option>
+                  </select>
+                </div>
+                <div class="relative w-full max-w-xl mr-2 focus-within:text-gray-900 dark:text-gray-600">
+                  <div class="absolute inset-y-0 flex items-center pl-2">
+                    <svg class="w-4 h-4" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path></svg>
+                  </div>
+                  <input x-model="search_bar_text" @input.debounce="handle_search_bar_text_input" class="w-full pl-8 pr-2 text-sm text-gray-700 placeholder-gray-600 bg-gray-100 border shadow-sm rounded-md focus:border-purple-600 focus:ring focus:ring-purple-600 focus:ring-opacity-50" type="text" placeholder="Search for SNOMED terms or enter a term ID" aria-label="Search"/>
+                  <div class="absolute w-full p-2 border bg-white dark:bg-gray-900 border-gray-500 h-screen overflow-y-auto rounded z-50" :class="search_bar_suggestions.length > 0 ? '' : 'hidden'" @click.outside="cancel_suggestions" @keydown.escape.window="cancel_suggestions">
+                    <template x-for="suggestion in search_bar_suggestions">
+                      <div class="w-full hover:bg-green-200 cursor-pointer" @click="handle_select_suggestion(suggestion)" >
+                        <div class="text-left" x-html="suggestion.hl"></div>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="container px-6">
+            <div class="mt-1 font-semibold text-gray-900 dark:text-white">SNOMED terms: </div>
+            <template x-if="query.length == 0">
+              <div class="inline-block font-normal text-gray-900 dark:text-white mx-2">No terms selected</div>
+            </template>
+            <template x-if="query.length > 0">
+              <div class="inline-block">(</div>
+            </template>
+            <template x-if="query.length > 0">
+              <template x-for="(q,q_ind) in query">
+                <div class="inline-block">
+                  <template x-if="q_ind % 2 == 0">
+                    <div class="relative inline-block mt-1">
+                      <span class="inline-block font-normal text-gray-900 dark:text-white mx-1 border border-purple-400 rounded-md" x-text="q.with + ' ' + q.str"></span>
+                      <div class="absolute h-5 w-5 -right-0 -top-2 cursor-pointer" @click="delete_query(q_ind)"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAABmJLR0QA/wD/AP+gvaeTAAAFUUlEQVR4nO2bXWwUVRTHf1uiXcR0WzR+kCBNqRVUCtWQKg8WY3wWgQdeaTWA+BU1SohGeBNfjBEs4gfWmChGJZEnwQc+pH4hEBoUa6Jook+aQMWuTdquD2cnc+50dpyduXd2G/tPbrLJnvs/59y5955z75yBGczgf41cBjryQDewAugot3lAAbiyLHMJuAj8DvwADANfAF8B/2Rgo3U0A33AZ0ARKCVsReAQ0FvmrHvcAgyQzumowXgbWGzTYFtLoB14EVgVwlkCzgJHgDPAj8B54AIy9UGWQgvQCtwILAN6CHd2EtgPPA38ZMn+xMgD2wl/4seBzcA1KfjnAY8DJ0L4i8DzQGMK/lToAE4FjJoADgDLHejrAt4BxgM6TyKzJlOsBUYChhwGbs1A93Lg64DuEWB1BroBmdYTSvlfwHqyCakeGoCHMZfeBLDJteKtmCN/BljkWmkEOoFzAZu2ulK2ialTvsmVsirQjEQYbdtjtpWsxZz2nyARoF6QR2zSy2GNLfJ2JE31yI9QX857uBw4iLk3pV6eeeC0Iv2O+k5Jm4AhfHtPkfJhbVdkRWBpSgOzQAdmiN6WlKgdM8w4DzEW0Yf54BYmIflYkXyJxN7pghxwFN/+j6oluBk5dHg76u02rcsInfhp8wTiU2wM4I/efuumZYd9+H4MxO1UAEZVxzudmJYNluLP5CIxI9gD+M5/48y07DCI709f8M+wjW2d+v2uBQMKJAufndjJOd5Tv9dVlCojjx/6JoHrUyqfg9z+lJDrrFkx+uSAV8t9fsO/OE2K6zCXQWRitBIz60uLhYrP24iiwmkO2B3okyiGB3BW8fVECW5Rgv0WFIPcFWqH9hI+CGHO77RkQ7/i3BIluFcJbrCkHOAFTMfewhyEHLArIPM69pKvjQHdFXFcCd5tSbmHHZgOvok46Np5gHsU9+dRgr8owVaLBoA4+gqmo68xddrvxv71WpviPx8l+KcSbLFsBIQPgssn7+EqpeOPKMExJXiZA0NABmEn2TkPclni6RnTf/xXSHKFMO4sb5UrQi+BuQ74wzY83d6gxkvA5SbYgOz82uF+6mwT1GFwpUUDGjBzjBKwBz8MBvcE2zPhXsV9LEpQG/mgJeWzkHNA1FN2PQgPKd7IREinwrssKdeXKyXgZSpvgsHlYMuGPYozMhXuUYJDFhQvw3ToJaLXt6vD0LDiuytKMHgcvjal4gLwc5lvR8w+ejl8T/qXMDfgOz9KjHqCQ6rD5pTKAa4gWURpw84bqKfw/fk0Tgd9pz5owYBa4yS+P+vjdGjCvBSdjlfiHu7A96OILMlY0GHrfSemZYMDxAx/QSzGfx0+Diyxbpp7dGO+3LmpWoIP8UfvKHVyWImJBszKsn1JSNowX4722rIuAzyKGfoSn2u2KaJLVPl+rUZYgrmJP5uGrBEzjAxRH3VBlTAXM+s7gYVCymCJzGHqs0RmNnLS8+wcQYolrGA19V0kNRuzSGocuM+2kg1KQQmp57/atpIEaMEshigBj7hSFiyUPEdt64a6MNd8CYeFkh42YhYsF5Gy1SxLaBqQYkgdpsfJsI5pFebGWEIKmF1UiQfRzdTy+YvA/RnoNrAA2Qe0IZNI/r3Cgb7bgA/w01uv1aRc3kMj8Bxm4uG1b4EngPkp+OcDT2LmIjrDS/3BhK38vhV5Db6G8L1gGMkfTpd//4rcz/9d/n8OElEWIE+zC7mVDnuyk0gJ3zPUwSczQSxCjp3T5qMpVyggty8HCV8ecdtomaOXKi4zqkEWR9xGwj+cbMb8cPIC8uHkcLkNIh9OjjGDGczAFf4FaGZXr413GEoAAAAASUVORK5CYII="></div>
+                    </div>
+                  </template>
+                  <template x-if="(q_ind % 2 != 0) && (q.str=='or')">
+                    <div class="inline-block">)</div>
+                  </template>
+                  <template x-if="q_ind % 2 != 0">
+                    <div class="inline-block font-normal text-gray-900 dark:text-white mx-1 border rounded-md cursor-pointer" x-text="q.str" @click="convert_and_or(q_ind)"></div>
+                  </template>
+                  <template x-if="(q_ind % 2 != 0) && (q.str=='or')">
+                    <div class="inline-block">(</div>
+                  </template>
+                </div>
+              </template>
+            </template>
+            <template x-if="query.length > 0">
+              <div class="inline-block">)</div>
+            </template>
+            <div class="flex space-x-2 justify-end mt-3">
+              <div class="flex items-center space-x-2 mt-2 mr-4">
+                <input x-model="include_child_terms" @change="handle_include_child_terms_change" type="checkbox" :disabled="query.length == 0" class="disabled:opacity-25 rounded text-purple-600 shadow-sm border-purple-400 focus:border-purple-800 focus:ring-0 focus:ring-offset-0 focus:ring-purple-600 focus:ring-opacity-50">
+                <span :class="query.length == 0 ? 'text-gray-900 dark:text-white' : 'dark:text-white'">Include Child Terms</span>
+              </div>
+              <button @click="handle_and" class="px-2 py-1 text-sm w-18 font-medium leading-5 text-gray-900 dark:text-white transition-colors duration-150 bg-purple-500 border border-transparent rounded-md active:bg-purple-600 hover:bg-purple-600 focus:outline-none focus:shadow-outline-purple">AND</button>
+              <button @click="handle_or" class="px-2 py-1 text-sm w-18 font-medium leading-5 text-gray-900 dark:text-white transition-colors duration-150 bg-purple-500 border border-transparent rounded-md active:bg-purple-600 hover:bg-purple-600 focus:outline-none focus:shadow-outline-purple">OR</button>
+              <button @click="handle_clear" class="px-2 py-1 text-sm w-18 font-medium leading-5 text-gray-900 dark:text-white transition-colors duration-150 bg-purple-500 border border-transparent rounded-md active:bg-purple-600 hover:bg-purple-600 focus:outline-none focus:shadow-outline-purple">CLEAR</button>
+            </div>
+            <!--<div class="text-gray-500" x-text="running_status"></div>-->
+            <!--<div class="flex items-center text-gray-600 ml-6">
+              <span x-text="running_status"></span>
+              <span x-show="is_busy" x-cloak
+                class="ml-2 inline-block h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin"
+                aria-label="Loading"></span>
+            </div>-->
+            <coh-status-inline></coh-status-inline>
+          </div>
+        </header>
+</div>

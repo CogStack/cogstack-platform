@@ -1,0 +1,110 @@
+        <!-- ====== TOP BAR ====== -->
+<header class="container max-w-screen-2xl mx-auto sticky top-0 z-40  backdrop-blur border-gray-200 dark:border-gray-700">
+  <div class="mx-auto max-w-screen-2xl px-4 h-16 flex items-center justify-between text-gray-900 dark:text-white">
+    <!-- (Optional) left slot: small title or logo -->
+    <div class="text-sm font-semibold text-gray-700 dark:text-gray-200">
+      <a class="text-sm flex items-center" href="index.html">
+        <img src="assets/Cogstack-Logo-Landcape-Dark.svg" width="200px" class="block dark:hidden">
+        <img src="assets/Cogstack-Logo.svg" width="200px" class="hidden dark:block">
+        <div class="ml-4 text-xl">Cohorter v2</div>
+      </a>
+    </div>
+
+    <!-- Right-side actions -->
+    <div class="flex items-center space-x-2">
+         <!-- Desktop Filters toggle -->
+    <button class="hidden md:inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800" @click="toggleSideMenu" aria-label="Toggle filters">
+      <!-- icon -->
+      <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 4h14v2H3V4zm3 5h8v2H6V9zm2 5h4v2H8v-2z" clip-rule="evenodd"></path></svg>
+      <span>Filters</span>
+    </button>
+ 
+      <!-- Theme toggle -->
+      <button @click="toggleTheme" class="p-2 m-2 rounded bg-gray-200 dark:bg-gray-900" title="Toggle theme">
+        <svg x-show="!isDark" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M12 3v1m0 16v1m8-9h1M3 12H2m15.364-6.364l.707.707M6.343 17.657l-.707.707M17.657 17.657l.707-.707M6.343 6.343l-.707-.707"/>
+        </svg>
+        <svg x-show="isDark" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"/>
+        </svg>
+      </button>
+
+      <!-- Settings dropdown -->
+      <div class="relative" @keydown.escape="closeSettingMenu" @click.outside="closeSettingMenu">
+        <button
+          class="p-2 rounded bg-gray-200 hover:bg-gray-300 dark:bg-gray-900 dark:hover:bg-gray-600"
+          @click="toggleSettingMenu"
+          aria-haspopup="true"
+          :aria-expanded="isSettingMenuOpen"
+          title="Settings"
+          aria-label="Settings"
+        >
+          <!-- gear icon -->
+          <svg class="w-6 h-6" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M10 13a3 3 0 100-6 3 3 0 000 6zm6.94-3a6.94 6.94 0 00-.15-1.39l2.12-1.65-2-3.46-2.49.99a6.97 6.97 0 00-2.42-1.41l-.38-2.64H8.38l-.38 2.64a6.97 6.97 0 00-2.42 1.41l-2.49-.99-2 3.46L3.21 8.6A6.94 6.94 0 003.06 10c0 .47.05.93.15 1.39l-2.12 1.65 2 3.46 2.49-.99a6.97 6.97 0 002.42 1.41l.38 2.64h3.24l.38-2.64a6.97 6.97 0 002.42-1.41l2.49.99 2-3.46-2.12-1.65c.1-.46.15-.92.15-1.39z" />
+          </svg>
+        </button>
+
+        <!-- dropdown -->
+        <ul
+          x-cloak
+          x-show="isSettingMenuOpen"
+          x-transition.origin.top.right
+          class="absolute right-0 mt-2 w-56 p-2 space-y-2 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg"
+          role="menu"
+          aria-label="Settings menu"
+        >
+          <li class="flex">
+            <!-- Show this when you're in the default (NL) view -->
+            <a x-show="!isV1"
+              :href="v1Href"
+              class="cursor-pointer inline-flex items-center w-full px-2 py-1 text-sm font-semibold transition-colors duration-150 rounded-md hover:bg-gray-100 hover:text-gray-800">
+              <span>Go to old version</span>
+            </a>
+
+            <!-- Show this when you're on ?v=1 (legacy SNOMED UI) -->
+            <a x-show="isV1"
+              :href="latestHref"
+              class="cursor-pointer inline-flex items-center w-full px-2 py-1 text-sm font-semibold transition-colors duration-150 rounded-md hover:bg-gray-100 hover:text-gray-800">
+              <span>Go to latest (NL)</span>
+            </a>
+          </li>
+          <li role="none">
+            <button @click="save_query" role="menuitem"
+              class="w-full text-left px-2 py-1 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+              Save Query
+            </button>
+          </li>
+          <li role="none">
+            <button @click="load_query" role="menuitem"
+              class="w-full text-left px-2 py-1 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+              Load Query
+            </button>
+          </li>
+          <li role="none" x-show="!admin_logged_in">
+            <button @click="admin_login" role="menuitem"
+              class="w-full text-left px-2 py-1 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+              Admin Login
+            </button>
+          </li>
+          <li role="none" x-show="admin_logged_in">
+            <button @click="admin_logout" role="menuitem"
+              class="w-full text-left px-2 py-1 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+              Admin Logout
+            </button>
+          </li>
+          <li role="none" x-show="admin_logged_in">
+            <button @click="export_patients" role="menuitem"
+              class="w-full text-left px-2 py-1 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+              Export patients
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</header>
+<!-- ====== /TOP BAR ====== -->

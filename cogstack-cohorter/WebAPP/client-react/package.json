@@ -1,0 +1,28 @@
+{
+  "name": "cohorter-client-react",
+  "version": "1.0.0",
+  "private": true,
+  "description": "React migration of Cohorter client",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build && rm -rf dist && mv build dist",
+    "test": "react-scripts test"
+  },
+  "dependencies": {
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "react-scripts": "5.0.1"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

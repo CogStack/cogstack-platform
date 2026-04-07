@@ -1,0 +1,21 @@
+{
+  "name": "cohort-identification-app",
+  "version": "1.0.0",
+  "description": "A cohort identification app using MedCAT for users to identify patients with SNOMED concepts.",
+  "scripts": {
+    "tailwind": "tailwindcss build -i public/assets/css/tailwind.css -o public/assets/css/tailwind.output.css",
+    "build": "env NODE_ENV=production postcss public/assets/css/tailwind.css -o public/assets/css/tailwind.output.css"
+  },
+  "author": "Jack Wu",
+  "license": "",
+  "devDependencies": {
+    "@tailwindcss/forms": "^0.5.3",
+    "autoprefixer": "^10.4.12",
+    "color": "^4.2.3",
+    "cssnano": "^5.1.13",
+    "postcss": "^8.4.18",
+    "postcss-cli": "^10.0.0",
+    "postcss-nested": "^6.0.0",
+    "tailwindcss": "^3.2.1"
+  }
+}

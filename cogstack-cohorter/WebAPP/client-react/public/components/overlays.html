@@ -1,0 +1,12 @@
+    <div id="load_query_panel" class="flex flex-col items-center justify-center h-screen w-screen" x-show="load_query_panel_show">
+      <input type="file" id="file_selector" name="file_selector" accept=".txt" @change="handle_load_query($event)">
+      <button @click="load_query_panel_show = false;"> Cancel </button>
+    </div>
+    <div id="admin_login_panel" class="flex flex-col items-center justify-center h-screen w-screen" x-show="admin_login_panel_show">
+      <div class="flex flex-row">
+        <input x-model="admin_password_input" type="password" id="password" name="password" placeholder="admin password">
+        <button @click="handle_admin_login" class="mx-2"> Login </button>
+        <button @click="admin_login_panel_show = false;" class="mx-2"> Cancel </button>
+      </div>
+      <div x-text="admin_login_message" class="text-orange-600"></div>
+    </div>

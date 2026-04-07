@@ -1,0 +1,42 @@
+# =========================
+# Node dependencies
+# =========================
+server/node_modules/
+client/node_modules/
+
+# =========================
+# WebAPP server data (generated / local)
+# =========================
+server/data/*.json
+server/data/*.jsonl
+
+# (Optional) keep tarball tracked if you want, otherwise ignore it too:
+# server/data/*.tar.gz
+
+# =========================
+# Logs / caches
+# =========================
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.cache/
+.eslintcache
+
+# =========================
+# OS / editor junk
+# =========================
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# =========================
+# Env / secrets
+# =========================
+.env
+.env.*
+secrets/

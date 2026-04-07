@@ -1,0 +1,58 @@
+# =========================
+# MedCAT local-only assets
+# =========================
+
+# Keep model packs locally; never commit
+models/
+models/**
+*.zip
+*.tar
+*.tar.gz
+
+# Local data / exports (if any)
+data/
+exports/
+tmp/
+
+# Environment / secrets
+.env
+.env.*
+secrets/
+**/*secret*
+**/*token*
+**/*apikey*
+**/*api_key*
+*.key
+*.pem
+*.p12
+
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+ruff_cache/
+.ipynb_checkpoints/
+
+# =========================
+# Logs
+# =========================
+*.log
+logs/
+
+# =========================
+# OS / editor junk
+# =========================
+.DS_Store
+.DS_Store?
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
