@@ -67,7 +67,7 @@ NL2DSL reads the following environment variables (as used in `docker_run.sh` / y
   Model name to use in Ollama, e.g. `gpt-oss:20b`
 
 - `MEDCAT_URL`  
-  MedCAT API base URL, e.g. `http://cohorter-medcat:3001`
+  MedCAT API base URL, e.g. `http://cohorter-medcat:5000`
 
 - `ALLOW_ORIGINS`  
   CORS allowlist. Use `*` during local development.
