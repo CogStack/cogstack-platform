@@ -12,13 +12,8 @@ A lightweight cohort discovery application that combines:
 ---
 
 ## Repository structure
-
-- `MedCAT/`  
-  FastAPI service that provides MedCAT-based annotation endpoints.  
-  **Note:** the MedCAT model pack is **not committed** to GitHub. It is mounted at runtime.
-
 - `NL2DSL/`  
-  API service that accepts natural language queries and calls **Ollama** to translate them into a JSON DSL query, optionally using MedCAT context.
+  API service that accepts natural language queries, calls **Ollama** to translate them into a JSON DSL query, and uses MedCAT to normalize medical terms.
 
 - `WebAPP/`  
   Full application (frontend + backend) providing the UI and orchestration of the workflow.
@@ -31,16 +26,7 @@ A lightweight cohort discovery application that combines:
 - Docker Desktop (or Docker Engine) with Docker Compose
 - (Optional) GPU setup if you want Ollama GPU acceleration (depends on your host OS)
 
-### 1) Put your MedCAT model pack locally (do not commit)
-Place your model pack zip at:
-
-```
-MedCAT/models/medcat_model_pack.zip
-```
-
-Make sure `MedCAT/models/` (or at least the `.zip`) is excluded by `.gitignore`.
-
-### 2) Build and start all services
+### 1) Build and start all services
 From the repo root:
 
 ```bash
@@ -53,9 +39,9 @@ Or run in background:
 docker compose up --build -d
 ```
 
-### 3) Access the app
+### 2) Access the app
 - Web UI: http://localhost:3000  
-- MedCAT API: http://localhost:3001  
+- MedCAT API: http://localhost:5000
 - NL2DSL API: http://localhost:3002  
 - Ollama: http://localhost:11434  
 
@@ -68,12 +54,11 @@ docker compose up --build -d
 NL2DSL uses:
 - `OLLAMA_URL` (default in compose: `http://ollama:11434/api/generate`)
 - `OLLAMA_MODEL` (default: `gpt-oss:20b`)
-- `MEDCAT_URL` (default: `http://cohorter-medcat:3001`)
+- `MEDCAT_URL` (default: `http://cohorter-medcat:5000`)
 - `ALLOW_ORIGINS` (default: `*`)
 
 ### WebAPP environment variables
 WebAPP uses:
-- `MEDCAT_URL` (default: `http://cohorter-medcat:3001`)
 - `NL2DSL_URL` (default: `http://cohorter-nl2dsl:3002`)
 
 ### WebAPP random data generation (optional)
@@ -91,7 +76,6 @@ WEBAPP_RANDOM=true docker compose up --build
 
 You can work on each component independently:
 
-- `MedCAT/` — FastAPI + Uvicorn (Python)
 - `NL2DSL/` — API service (see its folder README)
 - `WebAPP/` — Node app (server + client)
 
