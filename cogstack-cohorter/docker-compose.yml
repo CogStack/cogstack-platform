@@ -9,18 +9,15 @@ services:
     restart: unless-stopped
 
   medcat:
-    build:
-      context: ./MedCAT
+    image: cogstacksystems/medcat-service:latest
     container_name: cohorter-medcat
-    ports:
-      - "3001:3001"
     environment:
-      HOST: 0.0.0.0
-      PORT: 3001
-      MEDCAT_MODEL_PACK: /app/models/medcat_model_pack.zip
-    volumes:
-      # Keep model locally in MedCAT/models/ (do NOT commit it to GitHub)
-      - ./MedCAT/models/medcat_model_pack.zip:/app/models/medcat_model_pack.zip:ro
+      # Uses a preloaded model pack example inside the image
+      # Can be substituted for a custom model
+      - APP_MEDCAT_MODEL_PACK=/cat/models/examples/example-medcat-v2-model-pack.zip
+      - APP_ENABLE_METRICS=True
+    ports:
+      - "5000:5000"
     restart: unless-stopped
 
   nl2dsl:
@@ -32,7 +29,7 @@ services:
     environment:
       OLLAMA_URL: "http://ollama:11434/api/generate"
       OLLAMA_MODEL: "gpt-oss:20b"
-      MEDCAT_URL: "http://cohorter-medcat:3001"
+      MEDCAT_URL: "http://cohorter-medcat:5000"
       ALLOW_ORIGINS: "*"
     depends_on:
       - ollama
@@ -48,7 +45,6 @@ services:
     ports:
       - "3000:3000"
     environment:
-      MEDCAT_URL: "http://cohorter-medcat:3001"
       NL2DSL_URL: "http://cohorter-nl2dsl:3002"
     depends_on:
       - medcat

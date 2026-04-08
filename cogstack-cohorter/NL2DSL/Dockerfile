@@ -4,7 +4,7 @@ ENV NODE_ENV=production \
     PORT=3002 \
     OLLAMA_URL=http://ollama:11434/api/generate \
     OLLAMA_MODEL=gpt-oss:20b \
-    MEDCAT_URL=http://cohorter-medcat:3001 \
+    MEDCAT_URL=http://cohorter-medcat:5000 \
     ALLOW_ORIGINS=*
 
 WORKDIR /app
