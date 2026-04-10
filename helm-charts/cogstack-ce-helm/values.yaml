@@ -74,6 +74,10 @@ opensearch:
   extraEnvs:
     - name: OPENSEARCH_INITIAL_ADMIN_PASSWORD
       value: "opensearch-312$A"
+  # plugins:
+  #   enabled: true
+  #   installList:
+  #     - https://github.com/opensearch-project/opensearch-prometheus-exporter/releases/download/3.5.0.0/prometheus-exporter-3.5.0.0.zip
 
 opensearch-dashboards:
   # -- Deploy an opensearch-dashboards instance
