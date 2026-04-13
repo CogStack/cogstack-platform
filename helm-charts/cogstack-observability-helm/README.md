@@ -2,6 +2,8 @@
 
 This chart installs the observability stack for a CogStack deployment on Kubernetes.
 
+It is a wrapper around the kube-prometheus-stack, aiming to provide a simple way to get with observability for cogstack services.
+
 ## Overview
 
 This chart deploys:
@@ -24,7 +26,7 @@ This chart is intended to be installed alongside a CogStack deployment that expo
 ## Installation
 
 ```sh
-helm install cogstack-observability oci://registry-1.docker.io/cogstacksystems/cogstack-observability-helm --namespace observability --create-namespace
+helm install observability oci://registry-1.docker.io/cogstacksystems/cogstack-observability-helm
 ```
 
 If you are deploying this alongside `cogstack-ce-helm`, you can enable the required monitors in the CE chart with the example override file at `../cogstack-ce-helm/values-observability.yaml`.
