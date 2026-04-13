@@ -1,0 +1,34 @@
+# Default values for cogstack-observability-helm.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# This is to override the chart name.
+nameOverride: ""
+fullnameOverride: ""
+
+kube-prometheus-stack:
+  enabled: true
+  crds:
+    enabled: true
+  prometheus:
+    prometheusSpec:
+      # scrapeInterval: "30s"
+      # evaluationInterval: "30s"
+      podMonitorSelectorNilUsesHelmValues: false
+      probeSelectorNilUsesHelmValues: false
+      ruleSelectorNilUsesHelmValues: false
+      serviceMonitorSelectorNilUsesHelmValues: false
+      scrapeConfigSelectorNilUsesHelmValues: false
+    # service:
+    #   type: NodePort
+    #   nodePort: 30004
+  grafana:
+    enabled: true
+    # service:
+    #   type: NodePort
+    #   nodePort: 30003
+    adminUser: admin
+    adminPassword: grafana-admin-password
+    sidecar:
+      dashboards:
+        enabled: true

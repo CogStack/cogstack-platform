@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cogstack-availability-configmap
+  labels:
+    grafana_dashboard: "1"
+data:
+  cogstack-availability.json: |-
+    {{ .Files.Get "dashboards/cogstack-availability.json" | nindent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fastapi-metrics-configmap
+  labels:
+    grafana_dashboard: "1"
+data:
+  fastapi-metrics.json: |-
+    {{ .Files.Get "dashboards/fastapi-metrics.json" | nindent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opensearch-metrics-configmap
+  labels:
+    grafana_dashboard: "1"
+data:
+  opensearch-metrics.json: |-
+    {{ .Files.Get "dashboards/opensearch-metrics.json" | nindent 4 }}
+---

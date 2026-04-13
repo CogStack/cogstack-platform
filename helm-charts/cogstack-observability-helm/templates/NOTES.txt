@@ -1,0 +1,31 @@
+CogStack Observability Stack has been installed successfully!
+
+To access Grafana:
+
+1. Get your Grafana admin password:
+   ```
+   kubectl get secret --namespace {{ .Release.Namespace }} {{ include "cogstack-observability-helm.fullname" . }}-kube-prometheus-stack-grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+   ```
+
+2. Forward the Grafana service port to your local machine:
+   ```
+   kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ include "cogstack-observability-helm.fullname" . }}-kube-prometheus-stack-grafana 3000:80
+   ```
+
+3. Visit Grafana in your browser:
+   ```
+   http://localhost:3000
+   ```
+   - Username: `admin`
+   - Password: (use the password from step 1, or the value you set in values.yaml)
+
+-------
+
+To access Prometheus, Alertmanager, etc., port-forward in a similar fashion, e.g.:
+   ```
+   kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ include "cogstack-observability-helm.fullname" . }}-kube-prometheus-stack-prometheus 9090:9090
+   ```
+
+Default namespace: `{{ .Release.Namespace }}`
+
+For more information or configuration options, see the chart README.

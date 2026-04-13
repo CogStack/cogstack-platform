@@ -31,3 +31,7 @@ helm upgrade cogstack-ce-helm ./cogstack-ce-helm --install
 # ps -ef | grep '[p]ort-forward' | awk '{print $2}' | xargs -r kill
 # Port forward all services in  cogstack-ce-helm
 # helm get notes cogstack-ce-helm | bash
+
+## To fix minikube when it's stuck on minikube start
+#minikube delete --all --purge
+#docker system prune -af

@@ -70,6 +70,7 @@ nav:
                   - MedCAT Service Helm: platform/deployment/helm/charts/medcat-service-helm.md
                   - MedCAT Trainer Helm: platform/deployment/helm/charts/medcat-trainer-helm.md
                   - Cogstack CE Helm: platform/deployment/helm/charts/cogstack-ce-helm.md
+                  - Cogstack Observability Helm: platform/deployment/helm/charts/cogstack-observability-helm.md
           - Examples:
               - Examples: platform/deployment/examples/_index.md
               - AWS Kubernetes EKS: platform/deployment/examples/aws-kubernetes-eks.md
