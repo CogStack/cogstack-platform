@@ -27,4 +27,3 @@ dependencies:
     version: "81.2.2"
     repository: "oci://ghcr.io/prometheus-community/charts"
     condition: kube-prometheus-stack.enabled
-
