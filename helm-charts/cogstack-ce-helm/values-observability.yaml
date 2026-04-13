@@ -1,0 +1,22 @@
+anoncat-service:
+  serviceMonitor:
+    enabled: true
+medcat-service:
+  serviceMonitor:
+    enabled: true
+
+opensearch:
+  plugins:
+    enabled: true
+    installList:
+      - https://github.com/opensearch-project/opensearch-prometheus-exporter/releases/download/3.5.0.0/prometheus-exporter-3.5.0.0.zip
+  serviceMonitor:
+    enabled: true
+    scheme: https
+    tlsConfig:
+      insecureSkipVerify: true
+    basicAuth:
+      enabled: true
+      username: admin
+      password: opensearch-312$A
+
