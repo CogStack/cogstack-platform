@@ -21,22 +21,22 @@ anoncat-service:
     DEID_MODE: true
     # -- Enable redaction behaviour for DeID.
     DEID_REDACT: false
-  image:
-    # -- MedCAT service image repository for AnonCAT.
-    repository: cogstacksystems/medcat-service
-    # -- MedCAT service image tag used by AnonCAT.
-    tag: "1.2.0"
+  # image:
+  # -- MedCAT service image repository for AnonCAT.
+  # repository: cogstacksystems/medcat-service
+  # -- MedCAT service image tag used by AnonCAT.
+  # tag: "1.3.0"
 
 medcat-service:
   # -- Enable MedCAT service deployment.
   enabled: true
   # -- Number of MedCAT service replicas.
   replicasCount: 1
-  image:
-    # -- MedCAT service image repository.
-    repository: cogstacksystems/medcat-service
-    # -- MedCAT service image tag.
-    tag: "1.2.0"
+  # image:
+  # -- MedCAT service image repository.
+  # repository: cogstacksystems/medcat-service
+  # -- MedCAT service image tag.
+  # tag: "1.3.0"
 
 medcat-trainer:
   # -- Enable MedCAT Trainer deployment.

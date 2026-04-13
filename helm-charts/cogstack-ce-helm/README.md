@@ -95,8 +95,6 @@ kubectl delete namespace cogstack
 | anoncat-service.env.APP_MEDCAT_MODEL_PACK | string | `"/cat/models/examples/example-deid-model-pack.zip"` | Model pack used by the MedCAT service when running in DeID mode. |
 | anoncat-service.env.DEID_MODE | bool | `true` | Enable DeID mode. |
 | anoncat-service.env.DEID_REDACT | bool | `false` | Enable redaction behaviour for DeID. |
-| anoncat-service.image.repository | string | `"cogstacksystems/medcat-service"` | MedCAT service image repository for AnonCAT. |
-| anoncat-service.image.tag | string | `"1.2.0"` | MedCAT service image tag used by AnonCAT. |
 | anoncat-service.replicasCount | int | `1` | Number of AnonCAT (medcat-service in DeID mode) replicas. |
 | cogstack-jupyterhub.enabled | bool | `true` | Enable JupyterHub (with hub and singleuser components). |
 | cogstack-jupyterhub.jupyterhub.hub.config.Authenticator.admin_users | list | `["admin"]` | Allowed admin users for the dummy authenticator. |
@@ -111,8 +109,6 @@ kubectl delete namespace cogstack
 | fullnameOverride | string | `""` | Fully override the chart fullname. |
 | imagePullSecrets | list | `[]` | This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
 | medcat-service.enabled | bool | `true` | Enable MedCAT service deployment. |
-| medcat-service.image.repository | string | `"cogstacksystems/medcat-service"` | MedCAT service image repository. |
-| medcat-service.image.tag | string | `"1.2.0"` | MedCAT service image tag. |
 | medcat-service.replicasCount | int | `1` | Number of MedCAT service replicas. |
 | medcat-trainer.enabled | bool | `true` | Enable MedCAT Trainer deployment. |
 | medcat-trainer.env.CSRF_TRUSTED_ORIGINS | string | `"http://localhost:8080"` | CSRF trusted origins for the MedCAT Trainer frontend (set for your deployment/port-forward). |
