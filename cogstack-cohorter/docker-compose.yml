@@ -8,6 +8,22 @@ services:
       - ollama:/root/.ollama
     restart: unless-stopped
 
+  ollama-init:
+    image: ollama/ollama:latest
+    container_name: ollama-pull
+    entrypoint: >
+      sh -c "
+        until ollama list > /dev/null 2>&1; do
+          echo '[ollama-pull] Waiting for Ollama...'; sleep 2;
+        done &&
+        ollama pull ${OLLAMA_MODEL:-gpt-oss:20b}
+      "
+    environment:
+      OLLAMA_HOST: "http://ollama:11434"
+    depends_on:
+      - ollama
+    restart: "no"
+
   medcat:
     image: cogstacksystems/medcat-service:latest
     container_name: cohorter-medcat
@@ -32,20 +48,25 @@ services:
       MEDCAT_URL: "http://cohorter-medcat:5000"
       ALLOW_ORIGINS: "*"
     depends_on:
-      - ollama
+      - ollama-init
       - medcat
     restart: unless-stopped
 
   webapp:
     build:
       context: ./WebAPP
-      args:
-        random: "false"   # set to "true" to run gen_random_data.js during build
     container_name: cohorter-webapp
     ports:
       - "3000:3000"
     environment:
-      NL2DSL_URL: "http://cohorter-nl2dsl:3002"
+      NL2DSL_SERVER: "http://cohorter-nl2dsl:3002/api/compile"
+      # Set to "true" to generate synthetic patient data on startup.
+      RANDOM_DATA: "true"
+    volumes:
+      # Mount your data directory here. It should contain either:
+      #   - snomed_terms_data.tar.gz (will be auto-extracted on startup), or
+      #   - pre-extracted files: snomed_terms.json (SNOMED term lookup by Concept Unique Identifier) and cui_pt2ch.json (SNOMED CT ontology hierachy map).
+      - ./WebAPP/server/data:/usr/src/app/server/data
     depends_on:
       - medcat
       - nl2dsl
