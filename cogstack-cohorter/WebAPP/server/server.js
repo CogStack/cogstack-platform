@@ -28,7 +28,7 @@ app.use(session({
 }))
 
 
-const NL2DSL_SERVER = process.env.NL2DSL_SERVER || "http://localhost:4000/api/compile";
+const NL2DSL_SERVER = process.env.NL2DSL_SERVER || "http://localhost:3002/api/compile";
 
 let port = process.env.PORT || 3000;
 console.log('Loading data...');
@@ -181,7 +181,7 @@ for (let i=0;i<all_ptt_cnt;i++) ptt2cui_tsp_arr[i] = {};
     }
     console.log('Finished reading cui2ptt_tsp');
     console.timeEnd('cui2ptt_tsp');
-    console.log('Loading data...Finsihed');
+    console.log('Finished loading data');
     console.log(`Access the app on port ${port}`);
 })();
 //========================================================

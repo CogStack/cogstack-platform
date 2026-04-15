@@ -1,0 +1,7 @@
+node_modules/
+client/node_modules/
+client-react/node_modules/
+server/node_modules/
+
+# Data files are never baked into the image — supply them via volume mount at runtime
+server/data/
