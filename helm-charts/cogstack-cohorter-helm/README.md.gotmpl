@@ -1,0 +1,136 @@
+# CogStack Cohorter Helm Chart
+
+{{ template "chart.description" . }}
+
+{{ template "chart.homepageLine" . }}
+
+## Architecture
+
+| Component | Image | Description |
+|-----------|-------|-------------|
+| **WebApp** | `cogstacksystems/cogstack-cohorter-webapp` | React + Node.js frontend and API |
+| **NL2DSL** | `cogstacksystems/cogstack-cohorter-nl2dsl` | Natural language → cohort DSL compiler |
+| **MedCAT** | `cogstacksystems/medcat-service` | Clinical NER and concept normalisation (subchart) |
+| **Ollama** | `ollama/ollama` | LLM serving backend (subchart) |
+
+MedCAT and Ollama are deployed as **subcharts**:
+- MedCAT: [`cogstacksystems/medcat-service-helm`](https://hub.docker.com/r/cogstacksystems/medcat-service-helm) (OCI)
+- Ollama: [`otwld/ollama`](https://github.com/otwld/ollama-helm)
+
+## Prerequisites
+
+- Kubernetes 1.21+
+- Helm 3.10+
+- A storage class that supports `ReadWriteOnce` PVCs
+- Sufficient node resources for the Ollama model (the default `gpt-oss:20b` requires ~14 GB of memory/VRAM)
+
+## Installation
+
+From Docker Hub OCI (published chart):
+
+```bash
+helm install cogstack-cohorter oci://registry-1.docker.io/cogstacksystems/cogstack-cohorter-helm
+```
+
+## Configuration
+
+All configurable values are in [`values.yaml`](./values.yaml). Key sections:
+
+### Ollama
+
+```yaml
+ollama:
+  enabled: true
+  ollama:
+    models:
+      - gpt-oss:20b   # pulled automatically on first startup
+  persistentVolume:
+    enabled: true
+    size: 10Gi
+```
+
+Models are pulled automatically by the otwld subchart's built-in init container. Change `ollama.ollama.models` to use a different model — make sure `nl2dsl.env.OLLAMA_MODEL` matches.
+
+### MedCAT
+
+```yaml
+medcat:
+  enabled: true
+  env:
+    APP_MEDCAT_MODEL_PACK: "/cat/models/examples/example-medcat-v2-model-pack.zip"
+```
+
+To use a custom model pack, provide a download URL:
+
+```yaml
+medcat:
+  model:
+    downloadUrl: "https://your-host/medcat_model_pack.zip"
+    name: "medcat_model_pack.zip"
+```
+
+### WebApp data volume
+
+The WebApp requires a SNOMED data directory mounted at `/usr/src/app/server/data`. A PVC is provisioned automatically:
+
+```yaml
+webapp:
+  persistence:
+    enabled: true
+    size: 5Gi
+```
+
+Populate the PVC with either:
+- `snomed_terms_data.tar.gz` — auto-extracted by the entrypoint on first startup, or
+- Pre-extracted files: `snomed_terms.json`, `cui_pt2ch.json`, and patient data files
+
+To generate synthetic patient data on first startup (demo mode):
+
+```yaml
+webapp:
+  env:
+    RANDOM_DATA: "true"
+```
+
+### Ingress
+
+```yaml
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: cohorter.example.com
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls:
+    - secretName: cohorter-tls
+      hosts:
+        - cohorter.example.com
+```
+
+### Autoscaling (webapp only)
+
+```yaml
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+```
+
+## Uninstallation
+
+```bash
+helm uninstall cogstack-cohorter
+```
+
+## Support
+
+For issues and questions, please visit the [CogStack GitHub repository](https://github.com/CogStack/cogstack-platform).
+
+{{ template "chart.requirementsSection" . }}
+
+{{ template "chart.valuesSection" . }}
+
+{{ template "helm-docs.versionFooter" . }}

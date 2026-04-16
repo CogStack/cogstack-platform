@@ -1,0 +1,183 @@
+# Default values for cogstack-cohort.
+
+global:
+  imagePullSecrets: []
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+podSecurityContext: {}
+securityContext: {}
+
+# ---------------------------------------------------------------------------
+# Ollama — subchart: otwld/ollama
+# All keys are passed through to the subchart. The model is pulled
+# automatically by the subchart's built-in init container.
+# Ref: https://github.com/otwld/ollama-helm
+# ---------------------------------------------------------------------------
+ollama:
+  enabled: true
+
+  ollama:
+    # Model to pull on startup. Change to any model available on ollama.com.
+    models:
+      - gpt-oss:20b
+
+  service:
+    type: ClusterIP
+    port: 11434
+
+  persistentVolume:
+    enabled: true
+    size: 10Gi
+    storageClass: ""
+
+  resources: {}
+
+# ---------------------------------------------------------------------------
+# MedCAT — subchart: cogstacksystems/medcat-service-helm
+# All keys are passed through to the subchart.
+# ---------------------------------------------------------------------------
+medcat:
+  enabled: true
+
+  image:
+    tag: "latest"
+
+  env:
+    APP_MEDCAT_MODEL_PACK: "/cat/models/examples/example-medcat-v2-model-pack.zip"
+    APP_ENABLE_METRICS: "true"
+
+  # To download a custom model pack at startup, set:
+  # model:
+  #   downloadUrl: "https://your-host/medcat_model_pack.zip"
+  #   name: "medcat_model_pack.zip"
+
+  service:
+    port: 5000
+
+  resources: {}
+
+# ---------------------------------------------------------------------------
+# NL2DSL (CohortCompiler) — custom templates
+# ---------------------------------------------------------------------------
+nl2dsl:
+  enabled: true
+
+  image:
+    repository: cogstacksystems/cogstack-cohorter-nl2dsl
+    pullPolicy: IfNotPresent
+    tag: "latest"
+
+  replicaCount: 1
+
+  service:
+    type: ClusterIP
+    port: 3002
+
+  env:
+    OLLAMA_MODEL: "gpt-oss:20b"
+    ALLOW_ORIGINS: "*"
+    # OLLAMA_URL and MEDCAT_URL are derived from subchart service names in the template
+
+  resources: {}
+
+  livenessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 30
+    periodSeconds: 10
+
+  readinessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 10
+    periodSeconds: 5
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# ---------------------------------------------------------------------------
+# WebApp — custom templates
+# ---------------------------------------------------------------------------
+webapp:
+  enabled: true
+
+  image:
+    repository: cogstacksystems/cogstack-cohorter-webapp
+    pullPolicy: IfNotPresent
+    tag: "latest"
+
+  replicaCount: 1
+
+  service:
+    type: ClusterIP
+    port: 3000
+
+  env:
+    RANDOM_DATA: "false"
+    # NL2DSL_SERVER is derived from subchart service names in the template
+
+  # PVC for the data directory (snomed_terms.json, cui_pt2ch.json, etc.)
+  # Supply snomed_terms_data.tar.gz or pre-extracted files — the entrypoint
+  # auto-extracts the archive if the JSON files are not yet present.
+  persistence:
+    enabled: true
+    storageClass: ""
+    accessMode: ReadWriteOnce
+    size: 5Gi
+    existingClaim: ""
+
+  resources: {}
+
+  livenessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 60
+    periodSeconds: 15
+
+  readinessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 30
+    periodSeconds: 10
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# ---------------------------------------------------------------------------
+# Ingress (routes to webapp)
+# ---------------------------------------------------------------------------
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: cogstack-cohort.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+# ---------------------------------------------------------------------------
+# Autoscaling (webapp only)
+# ---------------------------------------------------------------------------
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80

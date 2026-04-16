@@ -1,0 +1,17 @@
+{{- if .Values.webapp.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "cogstack-cohort.fullname" . }}-webapp
+  labels:
+    {{- include "cogstack-cohort.webapp.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.webapp.service.type }}
+  ports:
+    - port: {{ .Values.webapp.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "cogstack-cohort.webapp.selectorLabels" . | nindent 4 }}
+{{- end }}
