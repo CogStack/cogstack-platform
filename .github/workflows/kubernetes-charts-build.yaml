@@ -39,6 +39,11 @@ jobs:
       - name: Set up chart-testing
         uses: helm/chart-testing-action@v2.8.0
 
+      - name: Add Helm repositories
+        run: |
+          helm repo add ollama https://otwld.github.io/ollama-helm/
+          helm repo update
+
       - name: Run chart-testing (list-changed)
         id: list-changed
         working-directory: .
@@ -110,6 +115,11 @@ jobs:
             CHART_VERSION="$DEFAULT_CHART_VERSION"
           fi
           echo "chart_version=$CHART_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Add Helm repositories
+        run: |
+          helm repo add ollama https://otwld.github.io/ollama-helm/
+          helm repo update
 
       - name: Recursive dependency update (all charts, including nested)
         # Waiting on helm recursive feature https://github.com/helm/helm/pull/30855
