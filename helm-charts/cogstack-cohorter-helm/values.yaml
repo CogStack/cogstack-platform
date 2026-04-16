@@ -1,4 +1,4 @@
-# Default values for cogstack-cohort.
+# Default values for cogstack-cohorter.
 
 global:
   imagePullSecrets: []
@@ -17,19 +17,14 @@ podLabels: {}
 podSecurityContext: {}
 securityContext: {}
 
-# ---------------------------------------------------------------------------
-# Ollama — subchart: otwld/ollama
-# All keys are passed through to the subchart. The model is pulled
-# automatically by the subchart's built-in init container.
-# Ref: https://github.com/otwld/ollama-helm
-# ---------------------------------------------------------------------------
 ollama:
   enabled: true
 
   ollama:
-    # Model to pull on startup. Change to any model available on ollama.com.
     models:
-      - gpt-oss:20b
+      # Models to pull on startup. Change to any model available on ollama.com.
+      pull:
+        - gpt-oss:20b
 
   service:
     type: ClusterIP
@@ -42,10 +37,6 @@ ollama:
 
   resources: {}
 
-# ---------------------------------------------------------------------------
-# MedCAT — subchart: cogstacksystems/medcat-service-helm
-# All keys are passed through to the subchart.
-# ---------------------------------------------------------------------------
 medcat:
   enabled: true
 
@@ -66,9 +57,6 @@ medcat:
 
   resources: {}
 
-# ---------------------------------------------------------------------------
-# NL2DSL (CohortCompiler) — custom templates
-# ---------------------------------------------------------------------------
 nl2dsl:
   enabled: true
 
@@ -108,9 +96,6 @@ nl2dsl:
   tolerations: []
   affinity: {}
 
-# ---------------------------------------------------------------------------
-# WebApp — custom templates
-# ---------------------------------------------------------------------------
 webapp:
   enabled: true
 
@@ -159,9 +144,6 @@ webapp:
   tolerations: []
   affinity: {}
 
-# ---------------------------------------------------------------------------
-# Ingress (routes to webapp)
-# ---------------------------------------------------------------------------
 ingress:
   enabled: false
   className: ""
@@ -173,9 +155,6 @@ ingress:
           pathType: ImplementationSpecific
   tls: []
 
-# ---------------------------------------------------------------------------
-# Autoscaling (webapp only)
-# ---------------------------------------------------------------------------
 autoscaling:
   enabled: false
   minReplicas: 1

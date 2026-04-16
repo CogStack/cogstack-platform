@@ -43,13 +43,14 @@ ollama:
   enabled: true
   ollama:
     models:
-      - gpt-oss:20b   # pulled automatically on first startup
+      pull:
+        - gpt-oss:20b   # pulled automatically on first startup
   persistentVolume:
     enabled: true
     size: 10Gi
 ```
 
-Models are pulled automatically by the otwld subchart's built-in init container. Change `ollama.ollama.models` to use a different model — make sure `nl2dsl.env.OLLAMA_MODEL` matches.
+Models are pulled automatically by the otwld subchart's built-in init container. Change `ollama.ollama.models.pull` to use a different model — make sure `nl2dsl.env.OLLAMA_MODEL` matches.
 
 ### MedCAT
 

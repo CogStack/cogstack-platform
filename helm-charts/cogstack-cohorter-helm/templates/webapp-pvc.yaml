@@ -1,0 +1,17 @@
+{{- if and .Values.webapp.enabled .Values.webapp.persistence.enabled (not .Values.webapp.persistence.existingClaim) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "cogstack-cohort.fullname" . }}-webapp-data
+  labels:
+    {{- include "cogstack-cohort.webapp.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - {{ .Values.webapp.persistence.accessMode }}
+  {{- if .Values.webapp.persistence.storageClass }}
+  storageClassName: {{ .Values.webapp.persistence.storageClass }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.webapp.persistence.size }}
+{{- end }}
