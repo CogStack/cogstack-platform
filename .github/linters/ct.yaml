@@ -7,3 +7,4 @@ helm-extra-args: --timeout 1000s
 chart-repos:
   - opensearch=https://opensearch-project.github.io/helm-charts
   - ollama=https://otwld.github.io/ollama-helm
+  - jupyterhub=https://hub.jupyter.org/helm-chart
