@@ -8,9 +8,7 @@ jupyterhub:
       tag: "2.2.2"
       # -- Pull policy for the JupyterHub hub.
       pullPolicy: IfNotPresent
-    extraConfig:
-      00-log-level: |
-        c.Application.log_level = 'DEBUG'
+
     config:
       JupyterHub:
         authenticator_class: dummy
@@ -33,6 +31,8 @@ jupyterhub:
 
     # -- Extra hub configuration for custom spawner settings
     extraConfig:
+      00-log-level: |
+        c.Application.log_level = 'DEBUG'
       00-custom-spawner: |
         # Custom environment variables for user pods
         c.KubeSpawner.environment = {
@@ -69,8 +69,8 @@ jupyterhub:
                 echo "Notebooks already initialized - skipping";
               fi
     networkPolicy:
-      enabled: false 
-    startTimeout: 600 # Give 10 minutes to start the container, which includes pulling the image.
+      enabled: false
+    startTimeout: 600  # Give 10 minutes to start the container, which includes pulling the image.
     # User pod configuration
     uid: 0
     fsGid: 0
