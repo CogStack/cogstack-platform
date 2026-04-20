@@ -27,7 +27,7 @@ serviceAccount:
 # ---------------------------------------------------------------------------
 # Chart name overrides
 # ---------------------------------------------------------------------------
-nameOverride: ""
+nameOverride: "cogstack-cohorter"
 fullnameOverride: ""
 
 # ---------------------------------------------------------------------------
@@ -153,6 +153,10 @@ webapp:
     # requests:
     #   cpu: 250m
     #   memory: 256Mi
+
+  # Optional init containers run before the webapp container starts.
+  # Useful for seeding the data volume (see ci/ci-values.yaml for an example).
+  initContainers: []
 
   nodeSelector: {}
   tolerations: []

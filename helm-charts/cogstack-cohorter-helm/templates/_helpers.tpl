@@ -61,31 +61,6 @@ Create the name of the service account to use
 {{- end }}
 {{- end }}
 
-{{/*
-NL2DSL component labels / selector labels.
-*/}}
-{{- define "cogstack-cohorter-helm.nl2dsl.labels" -}}
-{{ include "cogstack-cohorter-helm.labels" . }}
-app.kubernetes.io/component: nl2dsl
-{{- end }}
-
-{{- define "cogstack-cohorter-helm.nl2dsl.selectorLabels" -}}
-{{ include "cogstack-cohorter-helm.selectorLabels" . }}
-app.kubernetes.io/component: nl2dsl
-{{- end }}
-
-{{/*
-WebApp component labels / selector labels.
-*/}}
-{{- define "cogstack-cohorter-helm.webapp.labels" -}}
-{{ include "cogstack-cohorter-helm.labels" . }}
-app.kubernetes.io/component: webapp
-{{- end }}
-
-{{- define "cogstack-cohorter-helm.webapp.selectorLabels" -}}
-{{ include "cogstack-cohorter-helm.selectorLabels" . }}
-app.kubernetes.io/component: webapp
-{{- end }}
 
 {{/*
 Fully-qualified service name for the ollama subchart.
