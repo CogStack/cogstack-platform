@@ -111,11 +111,6 @@ jobs:
           fi
           echo "chart_version=$CHART_VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Add Helm repositories
-        run: |
-          helm repo add ollama https://otwld.github.io/ollama-helm/
-          helm repo update
-
       - name: Recursive dependency update (all charts, including nested)
         # Waiting on helm recursive feature https://github.com/helm/helm/pull/30855
         # Could alternatively switch to helm "cascade" plugin
