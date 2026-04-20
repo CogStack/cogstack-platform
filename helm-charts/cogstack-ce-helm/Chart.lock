@@ -16,6 +16,6 @@ dependencies:
   version: 3.5.0
 - name: cogstack-jupyterhub-helm
   repository: file://../cogstack-jupyterhub-helm
-  version: 0.1.0
-digest: sha256:e0129202a475f3a6888591564ef1956019bee4ad57c89e4df00222488f9f16c2
-generated: "2026-04-20T15:53:22.403089397+01:00"
+  version: 0.0.1
+digest: sha256:91586641cf31493b780341598900d7bd33d64be72cc34ac808811c4f7ff508cd
+generated: "2026-04-20T16:37:45.151724713+01:00"

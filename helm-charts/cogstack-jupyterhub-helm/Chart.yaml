@@ -2,7 +2,7 @@ apiVersion: v2
 name: cogstack-jupyterhub-helm
 description: A Helm chart for CogStack Jupyter Hub using official JupyterHub chart
 type: application
-version: 0.1.0
+version: 0.0.1
 appVersion: "latest"
 
 maintainers:
