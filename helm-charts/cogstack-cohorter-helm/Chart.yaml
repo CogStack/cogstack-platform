@@ -1,0 +1,27 @@
+apiVersion: v2
+name: cogstack-cohorter-helm
+description: CogStack Cohorter — cohort identification powered by Ollama and MedCAT
+type: application
+version: 0.0.1
+appVersion: "latest"
+
+maintainers:
+  - name: jocelyneholdbrook
+    email: jocelyne@cogstack.org
+
+icon: "https://avatars.githubusercontent.com/u/28688163"
+
+dependencies:
+  # MedCAT annotation service
+  - name: medcat-service-helm
+    version: "0.0.1"
+    repository: "oci://registry-1.docker.io/cogstacksystems"
+    alias: medcat
+    condition: medcat.enabled
+
+  # Ollama LLM serving — https://github.com/otwld/ollama-helm
+  - name: ollama
+    version: ">=0.1.0"
+    repository: "https://otwld.github.io/ollama-helm/"
+    alias: ollama
+    condition: ollama.enabled

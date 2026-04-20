@@ -1,0 +1,274 @@
+# Default values for cogstack-cohorter-helm.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# ---------------------------------------------------------------------------
+# Global
+# ---------------------------------------------------------------------------
+global:
+  # Image pull secrets shared across all components (including subcharts).
+  imagePullSecrets: []
+
+# ---------------------------------------------------------------------------
+# Service account
+# More information: https://kubernetes.io/docs/concepts/security/service-accounts/
+# ---------------------------------------------------------------------------
+serviceAccount:
+  # Specifies whether a service account should be created.
+  create: true
+  # Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # Annotations to add to the service account.
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template.
+  name: ""
+
+# ---------------------------------------------------------------------------
+# Chart name overrides
+# ---------------------------------------------------------------------------
+nameOverride: "cogstack-cohorter"
+fullnameOverride: ""
+
+# ---------------------------------------------------------------------------
+# Pod-level settings (shared by webapp and nl2dsl pods)
+# ---------------------------------------------------------------------------
+podAnnotations: {}
+podLabels: {}
+podSecurityContext: {}
+  # fsGroup: 2000
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# ---------------------------------------------------------------------------
+# Autoscaling (webapp only)
+# More information: https://kubernetes.io/docs/concepts/workloads/autoscaling/
+# ---------------------------------------------------------------------------
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# ---------------------------------------------------------------------------
+# Ingress
+# More information: https://kubernetes.io/docs/concepts/services-networking/ingress/
+# ---------------------------------------------------------------------------
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: cogstack-cohort.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+    # - secretName: cogstack-cohort-tls
+    #   hosts:
+    #     - cogstack-cohort.local
+
+# ---------------------------------------------------------------------------
+# Gateway API HTTPRoute (alternative to Ingress)
+# Requires Gateway API resources and a suitable controller installed in the cluster.
+# See: https://gateway-api.sigs.k8s.io/guides/
+# ---------------------------------------------------------------------------
+httpRoute:
+  enabled: false
+  annotations: {}
+  # Which Gateways this Route is attached to.
+  parentRefs:
+    - name: gateway
+      sectionName: http
+      # namespace: default
+  hostnames:
+    - chart-example.local
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+
+# ---------------------------------------------------------------------------
+# WebApp — React + Node.js frontend and REST API
+# ---------------------------------------------------------------------------
+webapp:
+  # -- Enable the WebApp deployment and service.
+  enabled: true
+
+  replicaCount: 1
+
+  image:
+    repository: cogstacksystems/cogstack-cohorter-webapp
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  # Environment variables injected into the webapp container.
+  # NL2DSL_SERVER is set automatically from nl2dsl.service.port.
+  env:
+    # Set to "true" to generate synthetic patient data on first startup (demo mode).
+    RANDOM_DATA: "false"
+
+  service:
+    type: ClusterIP
+    port: 3000
+
+  # Persistent volume for SNOMED data directory (/usr/src/app/server/data).
+  # Populate the PVC with snomed_terms_data.tar.gz (auto-extracted on startup)
+  # or the pre-extracted files (snomed_terms.json, cui_pt2ch.json, patient data).
+  persistence:
+    enabled: true
+    # Use an existing PVC instead of creating a new one.
+    existingClaim: ""
+    storageClass: ""
+    accessMode: ReadWriteOnce
+    size: 5Gi
+
+  livenessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 60
+    periodSeconds: 15
+
+  readinessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 30
+    periodSeconds: 10
+
+  resources: {}
+    # limits:
+    #   cpu: 500m
+    #   memory: 512Mi
+    # requests:
+    #   cpu: 250m
+    #   memory: 256Mi
+
+  # Optional init containers run before the webapp container starts.
+  # Useful for seeding the data volume (see ci/ci-values.yaml for an example).
+  initContainers: []
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# ---------------------------------------------------------------------------
+# NL2DSL — natural language → cohort DSL compiler (backed by Ollama + MedCAT)
+# ---------------------------------------------------------------------------
+nl2dsl:
+  # -- Enable the NL2DSL deployment and service.
+  enabled: true
+
+  replicaCount: 1
+
+  image:
+    repository: cogstacksystems/cogstack-cohorter-nl2dsl
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  # Environment variables injected into the nl2dsl container.
+  # OLLAMA_URL and MEDCAT_URL are set automatically from subchart service names.
+  env:
+    # Ollama model to use for NL → DSL compilation.
+    OLLAMA_MODEL: "gpt-oss:20b"
+    # CORS origins allowed to call the NL2DSL API.
+    ALLOW_ORIGINS: "*"
+
+  service:
+    type: ClusterIP
+    port: 3002
+
+  livenessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 30
+    periodSeconds: 10
+
+  readinessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 10
+    periodSeconds: 5
+
+  resources: {}
+    # limits:
+    #   cpu: 500m
+    #   memory: 512Mi
+    # requests:
+    #   cpu: 250m
+    #   memory: 256Mi
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# ---------------------------------------------------------------------------
+# MedCAT subchart — clinical NER and concept normalisation
+# Source: oci://registry-1.docker.io/cogstacksystems/medcat-service-helm
+# Full list of medcat-service-helm values:
+#   https://hub.docker.com/r/cogstacksystems/medcat-service-helm
+# ---------------------------------------------------------------------------
+medcat:
+  # -- Enable the MedCAT subchart.
+  enabled: true
+
+  image:
+    tag: latest
+
+  env:
+    # Path to the MedCAT model pack inside the container.
+    APP_MEDCAT_MODEL_PACK: "/cat/models/examples/example-medcat-v2-model-pack.zip"
+    APP_ENABLE_METRICS: "true"
+
+  # To download a custom model pack at startup:
+  # model:
+  #   downloadUrl: "https://your-host/medcat_model_pack.zip"
+  #   name: "medcat_model_pack.zip"
+
+  service:
+    port: 5000
+
+  resources: {}
+
+# ---------------------------------------------------------------------------
+# Ollama subchart — LLM serving backend
+# Source: https://github.com/otwld/ollama-helm
+# Full list of otwld/ollama values:
+#   https://github.com/otwld/ollama-helm/blob/main/charts/ollama/values.yaml
+# ---------------------------------------------------------------------------
+ollama:
+  # -- Enable the Ollama subchart.
+  enabled: true
+
+  ollama:
+    # Models pulled automatically by the built-in init container on first startup.
+    # Ensure nl2dsl.env.OLLAMA_MODEL matches the model listed here.
+    models:
+      pull:
+        - gpt-oss:20b
+
+  persistentVolume:
+    enabled: true
+    storageClass: ""
+    size: 10Gi
+
+  service:
+    type: ClusterIP
+    port: 11434
+
+  resources: {}
+    # GPU example:
+    # limits:
+    #   nvidia.com/gpu: 1

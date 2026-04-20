@@ -30,7 +30,8 @@ jobs:
       - name: Set up Helm
         uses: azure/setup-helm@v4.3.1
 
-      - uses: actions/setup-python@v6.0.0
+      - name: Set up Python
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: "3.x"
           check-latest: true
@@ -131,6 +132,8 @@ jobs:
           helm package ./medcat-service-helm --version  ${{ steps.version.outputs.chart_version }}
           helm package ./medcat-trainer-helm --version  ${{ steps.version.outputs.chart_version }} --dependency-update 
           helm package ./cogstack-ce-helm --version  ${{ steps.version.outputs.chart_version }} --dependency-update
+          helm package ./cogstack-cohorter-helm --version  ${{ steps.version.outputs.chart_version }} --dependency-update
+          helm package ./cogstack-observability-helm --version  ${{ steps.version.outputs.chart_version }} --dependency-update
 
       - name: Helm OCI login to Docker Hub
         run: helm registry login registry-1.docker.io -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
@@ -140,6 +143,8 @@ jobs:
           helm push ./medcat-service-helm-${{ steps.version.outputs.chart_version }}.tgz oci://registry-1.docker.io/cogstacksystems
           helm push ./medcat-trainer-helm-${{ steps.version.outputs.chart_version }}.tgz oci://registry-1.docker.io/cogstacksystems
           helm push ./cogstack-ce-helm-${{ steps.version.outputs.chart_version }}.tgz oci://registry-1.docker.io/cogstacksystems
+          helm push ./cogstack-cohorter-helm-${{ steps.version.outputs.chart_version }}.tgz oci://registry-1.docker.io/cogstacksystems
+          helm push ./cogstack-observability-helm-${{ steps.version.outputs.chart_version }}.tgz oci://registry-1.docker.io/cogstacksystems
 
       - name: Release
         uses: softprops/action-gh-release@v2

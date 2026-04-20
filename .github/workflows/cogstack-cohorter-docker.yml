@@ -1,0 +1,71 @@
+name: ci-build-cohorter
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - "cohorter-v*.*.*" # e.g., cohorter-v1.2.3
+    paths:
+      - "cogstack-cohorter/**"
+      - ".github/workflows/cogstack-cohorter-docker**"
+  pull_request:
+    paths:
+      - "cogstack-cohorter/**"
+      - ".github/workflows/cogstack-cohorter-docker**"
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.user.login != 'dependabot[bot]' && github.repository == 'CogStack/cogstack-platform'
+    strategy:
+      matrix:
+        include:
+          - name: nl2dsl
+            context: cogstack-cohorter/NL2DSL
+            dockerfile: cogstack-cohorter/NL2DSL/Dockerfile
+            image: cogstacksystems/cogstack-cohorter-nl2dsl
+
+          - name: webapp
+            context: cogstack-cohorter/WebAPP
+            dockerfile: cogstack-cohorter/WebAPP/Dockerfile
+            image: cogstacksystems/cogstack-cohorter-webapp
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ matrix.image }}
+          tags: |
+            # latest tag on the default branch
+            type=raw,value=latest,enable={{is_default_branch}}
+            # Include all default tags
+            type=schedule
+            type=ref,event=branch
+            type=ref,event=tag
+            type=ref,event=pr
+            type=sha
+
+      - name: Build and push Docker image
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ matrix.image }}:buildcache
+          cache-to: type=registry,ref=${{ matrix.image }}:buildcache,mode=max
