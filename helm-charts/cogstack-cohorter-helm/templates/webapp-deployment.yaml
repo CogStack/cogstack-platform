@@ -5,14 +5,14 @@ kind: Deployment
 metadata:
   name: {{ $fullName }}-webapp
   labels:
-    {{- include "cogstack-cohorter-helm.webapp.labels" . | nindent 4 }}
+    {{- include "cogstack-cohorter-helm.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.webapp.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "cogstack-cohorter-helm.webapp.selectorLabels" . | nindent 6 }}
+      {{- include "cogstack-cohorter-helm.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -20,7 +20,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "cogstack-cohorter-helm.webapp.labels" . | nindent 8 }}
+        {{- include "cogstack-cohorter-helm.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}

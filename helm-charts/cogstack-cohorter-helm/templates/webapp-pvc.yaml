@@ -4,7 +4,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: {{ include "cogstack-cohorter-helm.fullname" . }}-webapp-data
   labels:
-    {{- include "cogstack-cohorter-helm.webapp.labels" . | nindent 4 }}
+    {{- include "cogstack-cohorter-helm.labels" . | nindent 4 }}
 spec:
   accessModes:
     - {{ .Values.webapp.persistence.accessMode }}

@@ -4,7 +4,7 @@ kind: Service
 metadata:
   name: {{ include "cogstack-cohorter-helm.fullname" . }}-nl2dsl
   labels:
-    {{- include "cogstack-cohorter-helm.nl2dsl.labels" . | nindent 4 }}
+    {{- include "cogstack-cohorter-helm.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.nl2dsl.service.type }}
   ports:
@@ -13,5 +13,5 @@ spec:
       protocol: TCP
       name: http
   selector:
-    {{- include "cogstack-cohorter-helm.nl2dsl.selectorLabels" . | nindent 4 }}
+    {{- include "cogstack-cohorter-helm.selectorLabels" . | nindent 4 }}
 {{- end }}

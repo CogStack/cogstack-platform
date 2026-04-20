@@ -4,12 +4,12 @@ kind: Deployment
 metadata:
   name: {{ include "cogstack-cohorter-helm.fullname" . }}-nl2dsl
   labels:
-    {{- include "cogstack-cohorter-helm.nl2dsl.labels" . | nindent 4 }}
+    {{- include "cogstack-cohorter-helm.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.nl2dsl.replicaCount }}
   selector:
     matchLabels:
-      {{- include "cogstack-cohorter-helm.nl2dsl.selectorLabels" . | nindent 6 }}
+      {{- include "cogstack-cohorter-helm.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -17,7 +17,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "cogstack-cohorter-helm.nl2dsl.labels" . | nindent 8 }}
+        {{- include "cogstack-cohorter-helm.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
