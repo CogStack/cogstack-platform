@@ -50,7 +50,8 @@ dependencies:
     condition: opensearch-dashboards.enabled
     version: "3.5.0"
     repository: "https://opensearch-project.github.io/helm-charts/"
-  - name: cogstack-jupyterhub
+  - name: cogstack-jupyterhub-helm
+    alias: cogstack-jupyterhub
     condition: cogstack-jupyterhub.enabled
-    version: "0.1.0"
-    repository: "file://charts/jupyterhub"
+    version: "0.0.1"
+    repository: "file://../cogstack-jupyterhub-helm"

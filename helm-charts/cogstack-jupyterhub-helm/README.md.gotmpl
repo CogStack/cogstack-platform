@@ -1,0 +1,86 @@
+# CogStack JupyterHub Helm Chart
+
+## Overview
+
+This chart deploys the upstream [`jupyterhub`](https://hub.jupyter.org/helm-chart/) Helm chart with CogStack defaults (hub/singleuser images) and optional example notebooks bundled as a ConfigMap.
+
+## Prerequisites
+
+- Kubernetes cluster
+- Helm 3+
+
+## Installation
+
+Install from a local checkout:
+
+```bash
+helm install cogstack-cohorter oci://registry-1.docker.io/cogstacksystems/cogstack-jupyterhub-helm
+```
+
+## Configuration
+
+### Change the Docker image version
+
+The most common change is bumping the hub and single-user image tags:
+
+```yaml
+jupyterhub:
+  hub:
+    image:
+      tag: "2.2.2"
+  singleuser:
+    image:
+      tag: "2.2.2"
+```
+
+### JupyterHub Configuration
+
+All configuration is passed through under the `jupyterhub.*` key (see `values.yaml` for the full default set). Commonly customized values include:
+
+- `jupyterhub.hub.config.*` (authenticator and hub config)
+- `jupyterhub.singleuser.image.*` (user image)
+- `jupyterhub.proxy.service.type`
+
+See the upstream JupyterHub documentation which lists every option [z2jh.jupyter.org](https://z2jh.jupyter.org/en/stable/resources/reference.html)
+
+### User culling
+
+Enable culling of idle user pods. This will delete pods that are unused and free up resources
+
+```yaml
+jupyterhub:
+  cull:
+    enabled: true
+    every: 600
+```
+
+### Authentication
+
+The default configuration uses the JupyterHub `DummyAuthenticator` (not for production).
+
+One option for you may be to setup the FirstUseAuthenticator. This will let any new user login and set their own passwords. 
+
+```yaml
+jupyterhub:
+    hub:
+        config:
+        JupyterHub:
+            authenticator_class: firstuseauthenticator.FirstUseAuthenticator
+        Authenticator:
+            admin_users:
+            - admin
+```
+
+Refer to the JupyterHub docs for other authentication settings on [z2jh](https://z2jh.jupyter.org/en/stable/administrator/authentication.html#general-configuration)
+
+### OAuth / OIDC
+
+JupyterHub can be setup with OAuth2 based authentication.
+
+See [Enabling OIDC Authentication](https://github.com/CogStack/cogstack-jupyter-hub/blob/main/README.md#enabling-oidc-authentication).
+
+{{ template "chart.requirementsSection" . }}
+
+{{ template "chart.valuesSection" . }}
+
+{{ template "helm-docs.versionFooter" . }}

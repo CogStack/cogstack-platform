@@ -1,9 +1,17 @@
 apiVersion: v2
-name: cogstack-jupyterhub
+name: cogstack-jupyterhub-helm
 description: A Helm chart for CogStack Jupyter Hub using official JupyterHub chart
 type: application
 version: 0.1.0
 appVersion: "latest"
+
+maintainers:
+  - name: alhendrickson
+    email: alistair@cogstack.org
+  - name: jocelyneholdbrook
+    email: jocelyne@cogstack.org
+
+icon: "https://avatars.githubusercontent.com/u/28688163"
 
 dependencies:
   - name: jupyterhub
