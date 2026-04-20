@@ -1,5 +1,5 @@
 apiVersion: v2
-name: cogstack-cohorter
+name: cogstack-cohorter-helm
 description: CogStack Cohorter — cohort identification powered by Ollama and MedCAT
 type: application
 version: 0.0.1

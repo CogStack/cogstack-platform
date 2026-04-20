@@ -19,7 +19,6 @@ MedCAT and Ollama are deployed as **subcharts**:
 
 - Kubernetes 1.21+
 - Helm 3.10+
-- A storage class that supports `ReadWriteOnce` PVCs
 - Sufficient node resources for the Ollama model (the default `gpt-oss:20b` requires ~14 GB of memory/VRAM)
 
 ## Installation

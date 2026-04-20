@@ -2,9 +2,9 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ include "cogstack-cohort.fullname" . }}-webapp-data
+  name: {{ include "cogstack-cohorter-helm.fullname" . }}-webapp-data
   labels:
-    {{- include "cogstack-cohort.webapp.labels" . | nindent 4 }}
+    {{- include "cogstack-cohorter-helm.webapp.labels" . | nindent 4 }}
 spec:
   accessModes:
     - {{ .Values.webapp.persistence.accessMode }}

@@ -1,18 +1,18 @@
 {{- if .Values.webapp.enabled }}
-{{- $fullName := include "cogstack-cohort.fullname" . }}
+{{- $fullName := include "cogstack-cohorter-helm.fullname" . }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ $fullName }}-webapp
   labels:
-    {{- include "cogstack-cohort.webapp.labels" . | nindent 4 }}
+    {{- include "cogstack-cohorter-helm.webapp.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.webapp.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "cogstack-cohort.webapp.selectorLabels" . | nindent 6 }}
+      {{- include "cogstack-cohorter-helm.webapp.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -20,7 +20,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "cogstack-cohort.webapp.labels" . | nindent 8 }}
+        {{- include "cogstack-cohorter-helm.webapp.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -29,7 +29,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "cogstack-cohort.serviceAccountName" . }}
+      serviceAccountName: {{ include "cogstack-cohorter-helm.serviceAccountName" . }}
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}

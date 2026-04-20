@@ -1,14 +1,16 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "cogstack-cohort.name" -}}
+{{- define "cogstack-cohorter-helm.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Create a default fully qualified app name.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+If release name contains chart name it will be used as a full name.
 */}}
-{{- define "cogstack-cohort.fullname" -}}
+{{- define "cogstack-cohorter-helm.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -22,39 +24,38 @@ Create a default fully qualified app name.
 {{- end }}
 
 {{/*
-Chart name and version label.
+Create chart name and version as used by the chart label.
 */}}
-{{- define "cogstack-cohort.chart" -}}
+{{- define "cogstack-cohorter-helm.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
-Common labels.
+Common labels
 */}}
-{{- define "cogstack-cohort.labels" -}}
-helm.sh/chart: {{ include "cogstack-cohort.chart" . }}
-{{ include "cogstack-cohort.selectorLabels" . }}
+{{- define "cogstack-cohorter-helm.labels" -}}
+helm.sh/chart: {{ include "cogstack-cohorter-helm.chart" . }}
+{{ include "cogstack-cohorter-helm.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
-app.kubernetes.io/part-of: cogstack
 {{- end }}
 
 {{/*
-Selector labels.
+Selector labels
 */}}
-{{- define "cogstack-cohort.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "cogstack-cohort.name" . }}
+{{- define "cogstack-cohorter-helm.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "cogstack-cohorter-helm.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-Service account name.
+Create the name of the service account to use
 */}}
-{{- define "cogstack-cohort.serviceAccountName" -}}
+{{- define "cogstack-cohorter-helm.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "cogstack-cohort.fullname" .) .Values.serviceAccount.name }}
+{{- default (include "cogstack-cohorter-helm.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
@@ -63,26 +64,26 @@ Service account name.
 {{/*
 NL2DSL component labels / selector labels.
 */}}
-{{- define "cogstack-cohort.nl2dsl.labels" -}}
-{{ include "cogstack-cohort.labels" . }}
+{{- define "cogstack-cohorter-helm.nl2dsl.labels" -}}
+{{ include "cogstack-cohorter-helm.labels" . }}
 app.kubernetes.io/component: nl2dsl
 {{- end }}
 
-{{- define "cogstack-cohort.nl2dsl.selectorLabels" -}}
-{{ include "cogstack-cohort.selectorLabels" . }}
+{{- define "cogstack-cohorter-helm.nl2dsl.selectorLabels" -}}
+{{ include "cogstack-cohorter-helm.selectorLabels" . }}
 app.kubernetes.io/component: nl2dsl
 {{- end }}
 
 {{/*
 WebApp component labels / selector labels.
 */}}
-{{- define "cogstack-cohort.webapp.labels" -}}
-{{ include "cogstack-cohort.labels" . }}
+{{- define "cogstack-cohorter-helm.webapp.labels" -}}
+{{ include "cogstack-cohorter-helm.labels" . }}
 app.kubernetes.io/component: webapp
 {{- end }}
 
-{{- define "cogstack-cohort.webapp.selectorLabels" -}}
-{{ include "cogstack-cohort.selectorLabels" . }}
+{{- define "cogstack-cohorter-helm.webapp.selectorLabels" -}}
+{{ include "cogstack-cohorter-helm.selectorLabels" . }}
 app.kubernetes.io/component: webapp
 {{- end }}
 
@@ -90,7 +91,7 @@ app.kubernetes.io/component: webapp
 Fully-qualified service name for the ollama subchart.
 The otwld/ollama chart names its service <release>-ollama.
 */}}
-{{- define "cogstack-cohort.ollamaServiceName" -}}
+{{- define "cogstack-cohorter-helm.ollamaServiceName" -}}
 {{- printf "%s-ollama" .Release.Name }}
 {{- end }}
 
@@ -98,6 +99,6 @@ The otwld/ollama chart names its service <release>-ollama.
 Fully-qualified service name for the medcat subchart.
 The medcat-service-helm chart names its service <release>-medcat.
 */}}
-{{- define "cogstack-cohort.medcatServiceName" -}}
+{{- define "cogstack-cohorter-helm.medcatServiceName" -}}
 {{- printf "%s-medcat" .Release.Name }}
 {{- end }}

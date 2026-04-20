@@ -2,9 +2,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "cogstack-cohort.fullname" . }}-webapp
+  name: {{ include "cogstack-cohorter-helm.fullname" . }}-webapp
   labels:
-    {{- include "cogstack-cohort.webapp.labels" . | nindent 4 }}
+    {{- include "cogstack-cohorter-helm.webapp.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.webapp.service.type }}
   ports:
@@ -13,5 +13,5 @@ spec:
       protocol: TCP
       name: http
   selector:
-    {{- include "cogstack-cohort.webapp.selectorLabels" . | nindent 4 }}
+    {{- include "cogstack-cohorter-helm.webapp.selectorLabels" . | nindent 4 }}
 {{- end }}

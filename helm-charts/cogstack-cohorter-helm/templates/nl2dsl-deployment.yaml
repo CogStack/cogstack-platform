@@ -2,14 +2,14 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "cogstack-cohort.fullname" . }}-nl2dsl
+  name: {{ include "cogstack-cohorter-helm.fullname" . }}-nl2dsl
   labels:
-    {{- include "cogstack-cohort.nl2dsl.labels" . | nindent 4 }}
+    {{- include "cogstack-cohorter-helm.nl2dsl.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.nl2dsl.replicaCount }}
   selector:
     matchLabels:
-      {{- include "cogstack-cohort.nl2dsl.selectorLabels" . | nindent 6 }}
+      {{- include "cogstack-cohorter-helm.nl2dsl.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -17,7 +17,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "cogstack-cohort.nl2dsl.labels" . | nindent 8 }}
+        {{- include "cogstack-cohorter-helm.nl2dsl.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -26,7 +26,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "cogstack-cohort.serviceAccountName" . }}
+      serviceAccountName: {{ include "cogstack-cohorter-helm.serviceAccountName" . }}
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
@@ -45,9 +45,9 @@ spec:
               protocol: TCP
           env:
             - name: OLLAMA_URL
-              value: "http://{{ include "cogstack-cohort.ollamaServiceName" . }}:{{ .Values.ollama.service.port }}/api/generate"
+              value: "http://{{ include "cogstack-cohorter-helm.ollamaServiceName" . }}:{{ .Values.ollama.service.port }}/api/generate"
             - name: MEDCAT_URL
-              value: "http://{{ include "cogstack-cohort.medcatServiceName" . }}:{{ .Values.medcat.service.port }}"
+              value: "http://{{ include "cogstack-cohorter-helm.medcatServiceName" . }}:{{ .Values.medcat.service.port }}"
             {{- range $key, $value := .Values.nl2dsl.env }}
             - name: {{ $key | quote }}
               value: {{ $value | quote }}

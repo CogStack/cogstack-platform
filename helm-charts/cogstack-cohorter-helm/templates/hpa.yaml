@@ -2,14 +2,14 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "cogstack-cohort.fullname" . }}-webapp
+  name: {{ include "cogstack-cohorter-helm.fullname" . }}
   labels:
-    {{- include "cogstack-cohort.webapp.labels" . | nindent 4 }}
+    {{- include "cogstack-cohorter-helm.labels" . | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "cogstack-cohort.fullname" . }}-webapp
+    name: {{ include "cogstack-cohorter-helm.fullname" . }}
   minReplicas: {{ .Values.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.autoscaling.maxReplicas }}
   metrics:
@@ -29,4 +29,4 @@ spec:
           type: Utilization
           averageUtilization: {{ .Values.autoscaling.targetMemoryUtilizationPercentage }}
     {{- end }}
-{{- end }}
+  {{- end }}

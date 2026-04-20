@@ -2,18 +2,18 @@ CogStack Cohort has been deployed.
 
 Components:
 {{- if .Values.webapp.enabled }}
-  - WebApp:  {{ include "cogstack-cohort.fullname" . }}-webapp  (port {{ .Values.webapp.service.port }})
+  - WebApp:  {{ include "cogstack-cohorter-helm.fullname" . }}-webapp  (port {{ .Values.webapp.service.port }})
 {{- end }}
 {{- if .Values.nl2dsl.enabled }}
-  - NL2DSL:  {{ include "cogstack-cohort.fullname" . }}-nl2dsl  (port {{ .Values.nl2dsl.service.port }})
+  - NL2DSL:  {{ include "cogstack-cohorter-helm.fullname" . }}-nl2dsl  (port {{ .Values.nl2dsl.service.port }})
 {{- end }}
 {{- if .Values.medcat.enabled }}
-  - MedCAT:  {{ include "cogstack-cohort.medcatServiceName" . }}  (port {{ .Values.medcat.service.port }})  [subchart: medcat-service-helm]
+  - MedCAT:  {{ include "cogstack-cohorter-helm.medcatServiceName" . }}  (port {{ .Values.medcat.service.port }})  [subchart: medcat-service-helm]
 {{- end }}
 {{- if .Values.ollama.enabled }}
-  - Ollama:  {{ include "cogstack-cohort.ollamaServiceName" . }}  (port {{ .Values.ollama.service.port }})  [subchart: otwld/ollama]
+  - Ollama:  {{ include "cogstack-cohorter-helm.ollamaServiceName" . }}  (port {{ .Values.ollama.service.port }})  [subchart: otwld/ollama]
     Models pulled on startup:
-  {{- range .Values.ollama.ollama.models }}
+  {{- range .Values.ollama.ollama.models.pull }}
       - {{ . }}
   {{- end }}
 {{- end }}
@@ -34,13 +34,13 @@ Access the WebApp:
   http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}
 {{- end }}
 {{- else if contains "NodePort" .Values.webapp.service.type }}
-  export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "cogstack-cohort.fullname" . }}-webapp)
+  export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "cogstack-cohorter-helm.fullname" . }}-webapp)
   export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
   echo http://$NODE_IP:$NODE_PORT
 {{- else if contains "LoadBalancer" .Values.webapp.service.type }}
-  export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "cogstack-cohort.fullname" . }}-webapp --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+  export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "cogstack-cohorter-helm.fullname" . }}-webapp --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
   echo http://$SERVICE_IP:{{ .Values.webapp.service.port }}
 {{- else }}
-  kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ include "cogstack-cohort.fullname" . }}-webapp {{ .Values.webapp.service.port }}:{{ .Values.webapp.service.port }}
+  kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ include "cogstack-cohorter-helm.fullname" . }}-webapp {{ .Values.webapp.service.port }}:{{ .Values.webapp.service.port }}
   Then open: http://localhost:{{ .Values.webapp.service.port }}
 {{- end }}
