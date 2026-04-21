@@ -134,6 +134,7 @@ jobs:
           helm package ./cogstack-ce-helm --version  ${{ steps.version.outputs.chart_version }} --dependency-update
           helm package ./cogstack-cohorter-helm --version  ${{ steps.version.outputs.chart_version }} --dependency-update
           helm package ./cogstack-observability-helm --version  ${{ steps.version.outputs.chart_version }} --dependency-update
+          helm package ./cogstack-jupyterhub-helm --version  ${{ steps.version.outputs.chart_version }} --dependency-update
 
       - name: Helm OCI login to Docker Hub
         run: helm registry login registry-1.docker.io -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
@@ -145,6 +146,7 @@ jobs:
           helm push ./cogstack-ce-helm-${{ steps.version.outputs.chart_version }}.tgz oci://registry-1.docker.io/cogstacksystems
           helm push ./cogstack-cohorter-helm-${{ steps.version.outputs.chart_version }}.tgz oci://registry-1.docker.io/cogstacksystems
           helm push ./cogstack-observability-helm-${{ steps.version.outputs.chart_version }}.tgz oci://registry-1.docker.io/cogstacksystems
+          helm push ./cogstack-jupyterhub-helm-${{ steps.version.outputs.chart_version }}.tgz oci://registry-1.docker.io/cogstacksystems
 
       - name: Release
         uses: softprops/action-gh-release@v2
