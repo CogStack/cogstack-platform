@@ -22,11 +22,11 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 # Add more entries here to copy additional static files into documentation.
 COPY_SPECS = [
     {
-        "sourceFilePath": "helm-charts/cogstack-jupyterhub-helm/charts/examples/medcat-service-tutorial.ipynb",
+        "sourceFilePath": "helm-charts/cogstack-jupyterhub-helm/examples/medcat-service-tutorial.ipynb",
         "outputFilePath": "platform/cogstack-ai/medcat-service-tutorial.ipynb",
     },
     {
-        "sourceFilePath": "helm-charts/cogstack-jupyterhub-helm/charts/examples/medcat-opensearch-e2e.ipynb",
+        "sourceFilePath": "helm-charts/cogstack-jupyterhub-helm/examples/medcat-opensearch-e2e.ipynb",
         "outputFilePath": "cogstack-ce/tutorial/medcat-opensearch-e2e.ipynb",
     },
 ]
