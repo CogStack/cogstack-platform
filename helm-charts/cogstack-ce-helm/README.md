@@ -63,6 +63,7 @@ The chart uses local subcharts via relative paths:
 
 - `medcat-service-helm` (as `medcat-service` and `anoncat-service`)
 - `medcat-trainer-helm`
+- `cogstack-jupyterhub-helm` (as `cogstack-jupyterhub`)
 
 ## Uninstall
 
@@ -83,7 +84,7 @@ kubectl delete namespace cogstack
 | file://../medcat-service-helm | medcat-service(medcat-service-helm) | 0.0.1 |
 | file://../medcat-service-helm | anoncat-service(medcat-service-helm) | 0.0.1 |
 | file://../medcat-trainer-helm | medcat-trainer(medcat-trainer-helm) | 0.0.1 |
-| file://charts/jupyterhub | cogstack-jupyterhub | 0.1.0 |
+| file://../cogstack-jupyterhub-helm | cogstack-jupyterhub(cogstack-jupyterhub-helm) | 0.1.0 |
 | https://opensearch-project.github.io/helm-charts/ | opensearch | 3.5.0 |
 | https://opensearch-project.github.io/helm-charts/ | opensearch-dashboards | 3.5.0 |
 

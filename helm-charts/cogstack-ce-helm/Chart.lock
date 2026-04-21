@@ -14,8 +14,8 @@ dependencies:
 - name: opensearch-dashboards
   repository: https://opensearch-project.github.io/helm-charts/
   version: 3.5.0
-- name: cogstack-jupyterhub
-  repository: file://charts/jupyterhub
-  version: 0.1.0
-digest: sha256:d9fb8600b71642cbbdcfc0e9c4b512f3efedadf99544b3e81f97f0deb5a8469a
-generated: "2026-03-03T17:30:34.27108704Z"
+- name: cogstack-jupyterhub-helm
+  repository: file://../cogstack-jupyterhub-helm
+  version: 0.0.1
+digest: sha256:91586641cf31493b780341598900d7bd33d64be72cc34ac808811c4f7ff508cd
+generated: "2026-04-20T16:37:45.151724713+01:00"
