@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cogstack-ce-helm-jupyterhub-config
+data:
+  MEDCAT_SERVICE_URL: {{ include "medcat-service.url" . }}
+  ANONCAT_SERVICE_URL: {{ include "anoncat-service.url" . }}

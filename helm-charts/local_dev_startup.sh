@@ -25,7 +25,14 @@ helm test medcat-service --logs
 
 ## helm install trainer-registry oci://registry-1.docker.io/cogstacksystems/medcat-trainer-helm --wait --timeout 5m0s
 
-helm upgrade cogstack-ce-helm ./cogstack-ce-helm --install
+# Run cogstack-ce-helm
+
+helm repo add opensearch https://opensearch-project.github.io/helm-charts/
+helm dependency update ./medcat-trainer-helm
+helm dependency update ./cogstack-jupyterhub-helm
+helm dependency update ./cogstack-ce-helm
+
+helm upgrade cogstack-ce-helm ./cogstack-ce-helm --install --dependency-update --wait --timeout 30m0s
 
 # Stop any running port forwards
 # ps -ef | grep '[p]ort-forward' | awk '{print $2}' | xargs -r kill

@@ -114,3 +114,15 @@ cogstack-jupyterhub:
         tag: "2.2.2"
         # -- JupyterHub singleuser image pull policy.
         pullPolicy: IfNotPresent
+      extraEnv:
+        MEDCAT_SERVICE_URL:
+          valueFrom:
+            configMapKeyRef:
+              name: cogstack-ce-helm-jupyterhub-config
+              key: MEDCAT_SERVICE_URL
+        ANONCAT_SERVICE_URL:
+          name: ANONCAT_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: cogstack-ce-helm-jupyterhub-config
+              key: ANONCAT_SERVICE_URL

@@ -35,11 +35,12 @@ jupyterhub:
         c.Application.log_level = 'DEBUG'
       00-custom-spawner: |
         # Custom environment variables for user pods
-        c.KubeSpawner.environment = {
-            'GRANT_SUDO': '1',
-            'CHOWN_HOME': 'yes',
-            'CHOWN_HOME_OPTS': '-R',
-        }
+        c.KubeSpawner.environment = c.KubeSpawner.environment or {}
+        c.KubeSpawner.environment.update({
+          'GRANT_SUDO': '1',
+          'CHOWN_HOME': 'yes',
+          'CHOWN_HOME_OPTS': '-R',
+        })
         # Allow root in notebooks
         c.KubeSpawner.args = ['--allow-root']
   proxy:

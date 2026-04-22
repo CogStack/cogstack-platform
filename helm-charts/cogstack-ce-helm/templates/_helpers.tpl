@@ -65,6 +65,47 @@ Create the name of the service account to use
 Dependency URLs
 */}}
 
+
+{{- define "medcat-service.service-name" -}}
+{{ include "medcat-service.fullname" (dict "Values" .Values "Chart" (dict "Name" "medcat-service") "Release" .Release ) }}
+{{- end -}}
+
+{{- define "medcat-service.port" -}}
+{{ index .Values "medcat-service" "service" "port" }}
+{{- end -}}
+
+{{- define "medcat-service.url" -}}
+{{- $url := (index .Values "medcat-service" "url") | default "" -}}
+{{- if $url -}}
+{{ $url }}
+{{- else if not (index .Values "medcat-service" "enabled") -}}
+"unset"
+{{- else -}}
+http://{{ include "medcat-service.service-name" . }}:{{ include "medcat-service.port" . }}
+{{- end -}}
+{{- end -}}
+
+{{- define "anoncat-service.service-name" -}}
+{{ include "medcat-service.fullname" (dict "Values" (index .Values "anoncat-service") "Chart" (dict "Name" "anoncat-service") "Release" .Release ) }}
+{{- end -}}
+
+{{- define "anoncat-service.port" -}}
+{{ index .Values "anoncat-service" "service" "port" }}
+{{- end -}}
+
+{{- define "anoncat-service.url" -}}
+{{- $url := (index .Values "anoncat-service" "url") | default "" -}}
+{{- if $url -}}
+{{ $url }}
+{{- else if not (index .Values "anoncat-service" "enabled") -}}
+"unset"
+{{- else -}}
+http://{{ include "anoncat-service.service-name" . }}:{{ include "anoncat-service.port" . }}
+{{- end -}}
+{{- end -}}
+
+
+
 {{- define "opensearch.url" -}}
 {{- if .Values.opensearch.enabled }}
 {{- $serviceName := include "opensearch.serviceName" (index .Subcharts "opensearch") -}}

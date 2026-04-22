@@ -39,5 +39,5 @@ spec:
   volumes:
     - name: opensearch-provisioning-config
       configMap:
-        name: opensearch-provisioning-config
+        name: {{ include "cogstack-ce-helm.fullname" . }}-opensearch-provisioning-config
 {{- end }}
