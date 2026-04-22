@@ -2,24 +2,18 @@
 set -e
 
 DATA_DIR=/usr/src/app/server/data
+BUNDLED_ARCHIVE=/usr/src/app/server/data-bundled/snomed_terms_data.tar.gz
 
-# ── Step 1: extract archive if JSON data isn't already present ────────────────
+# ── Step 1: extract bundled SNOMED data if not already present ────────────────
 if [ ! -f "$DATA_DIR/snomed_terms.json" ]; then
-    if [ -f "$DATA_DIR/snomed_terms_data.tar.gz" ]; then
-        echo "[webapp] Extracting SNOMED data archive..."
-        tar xzvf "$DATA_DIR/snomed_terms_data.tar.gz" -C "$DATA_DIR"
-    else
-        echo "[webapp] ERROR: No data found at $DATA_DIR." >&2
-        echo "[webapp] Mount a directory containing snomed_terms.json (and related files)" >&2
-        echo "[webapp] or snomed_terms_data.tar.gz via a Docker volume:" >&2
-        echo "[webapp]   -v /your/data:/usr/src/app/server/data" >&2
-        exit 1
-    fi
+    echo "[webapp] Extracting bundled SNOMED data..."
+    tar xzvf "$BUNDLED_ARCHIVE" -C "$DATA_DIR"
 fi
 
 # ── Step 2 (optional): generate random patient data ───────────────────────────
-# Set RANDOM_DATA=true in the container environment to generate synthetic data.
-if [ "${RANDOM_DATA}" = "true" ]; then
+# Runs only on first startup — skipped if patient data files already exist.
+# Set RANDOM_DATA=false and supply real MIMIC-IV shaped data via volume mount.
+if [ "${RANDOM_DATA}" = "true" ] && [ ! -f "$DATA_DIR/ptt2age.json" ]; then
     echo "[webapp] Generating random demo patient data..."
     node --max-old-space-size=32768 /usr/src/app/server/gen_random_data.js
 fi
