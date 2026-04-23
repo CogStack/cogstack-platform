@@ -37,10 +37,10 @@ console.log('Loading data...');
 // In production mode use the full SNOMED files supplied via volume mount.
 const isRandomMode = (process.env.RANDOM_DATA || 'true') === 'true';
 const snomed_terms = isRandomMode
-    ? require('./data/snomed_example.json')
+    ? require('./data-example/snomed_example.json')
     : require('./data/snomed_terms.json');
 const cui_pt2ch = isRandomMode
-    ? require('./data/cui_pt2ch_example.json')
+    ? require('./data-example/cui_pt2ch_example.json')
     : require('./data/cui_pt2ch.json');
 
 // for admin login
