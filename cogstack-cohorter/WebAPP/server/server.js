@@ -33,9 +33,15 @@ const NL2DSL_SERVER = process.env.NL2DSL_SERVER || "http://localhost:3002/api/co
 let port = process.env.PORT || 3000;
 console.log('Loading data...');
 
-// index all the snomed concepts
-const snomed_terms = require('./data/snomed_terms.json');
-const cui_pt2ch = require('./data/cui_pt2ch.json');
+// In random/demo mode use the example subset baked into the image.
+// In production mode use the full SNOMED files supplied via volume mount.
+const isRandomMode = (process.env.RANDOM_DATA || 'true') === 'true';
+const snomed_terms = isRandomMode
+    ? require('./data-example/snomed_example.json')
+    : require('./data/snomed_terms.json');
+const cui_pt2ch = isRandomMode
+    ? require('./data-example/cui_pt2ch_example.json')
+    : require('./data/cui_pt2ch.json');
 
 // for admin login
 const admin_pwd = process.env.PASSWORD || 'admin_pass';

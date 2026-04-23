@@ -114,19 +114,27 @@ webapp:
   # Environment variables injected into the webapp container.
   # NL2DSL_SERVER is set automatically from nl2dsl.service.port.
   env:
-    # Set to "true" to generate synthetic patient data on first startup (demo mode).
-    RANDOM_DATA: "false"
+    # true  → demo mode: bundled SNOMED data is used and synthetic patient records are generated on start-up.
+    # false → production mode: supply real MIMIC-IV shaped EHR data via data.downloadUrl or a pre-populated persistence.existingClaim.
+    RANDOM_DATA: "true"
+
+  # EHR data configuration (production / non-random mode).
+  # Ignored when RANDOM_DATA=true — the image's bundled demo data is used instead.
+  data:
+    # URL to download a data archive (tar.gz) at startup.
+    # The archive must contain snomed_terms.json, cui_pt2ch.json, and MIMIC-IV shaped patient data files.
+    # Example: "https://your-storage/ehr_data.tar.gz"
+    downloadUrl: ""
 
   service:
     type: ClusterIP
     port: 3000
 
-  # Persistent volume for SNOMED data directory (/usr/src/app/server/data).
-  # Populate the PVC with snomed_terms_data.tar.gz (auto-extracted on startup)
-  # or the pre-extracted files (snomed_terms.json, cui_pt2ch.json, patient data).
+  # Persistent volume for the data directory (/usr/src/app/server/data).
+  # In random/demo mode this stores the generated patient records across restarts.
+  # In production mode this is where real EHR data lives.
   persistence:
     enabled: true
-    # Use an existing PVC instead of creating a new one.
     existingClaim: ""
     storageClass: ""
     accessMode: ReadWriteOnce

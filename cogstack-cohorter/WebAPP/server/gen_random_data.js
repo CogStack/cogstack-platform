@@ -3,7 +3,7 @@
 // node --max-old-space-size=32768 gen_random_data.js
 console.log('Generating random data')
 const fs = require('fs');
-const snomed_terms = require('./data/snomed_terms.json');
+const snomed_terms = require('./data-example/snomed_example.json');
 
 // Returns a random integer between min (inclusive) and max (inclusive).
 function random_int(min, max) {

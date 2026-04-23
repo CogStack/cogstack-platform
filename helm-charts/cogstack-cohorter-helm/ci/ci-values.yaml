@@ -1,36 +1,60 @@
 # CI smoke-test overrides.
-# An init container seeds the empty data volume with minimal stub SNOMED data
-# so the webapp entrypoint can proceed and RANDOM_DATA=true can generate
-# synthetic patient records without requiring a real data mount.
+# Only the webapp is deployed; NL2DSL, MedCAT, and Ollama are disabled to keep
+# the smoke test fast and resource-light.
 webapp:
   env:
     RANDOM_DATA: "true"
+
   persistence:
     enabled: false
+
+  # Seed the data volume before the webapp container starts so that:
+  #   1. gen_random_data.js is skipped (all six generated files are present).
   initContainers:
-    - name: init-snomed-stub
+    - name: init-ci-stub
       image: busybox
       command:
         - sh
         - -c
         - |
           mkdir -p /data
-          # Minimal snomed_terms.json — a few entries covering each clinical
-          # category that gen_random_data.js filters on.
-          cat > /data/snomed_terms.json << 'EOF'
-          [
-            {"cui":"73211009","str":"Diabetes mellitus (disorder)"},
-            {"cui":"44054006","str":"Diabetes mellitus type 2 (disorder)"},
-            {"cui":"38341003","str":"Hypertensive disorder (disorder)"},
-            {"cui":"195967001","str":"Asthma (disorder)"},
-            {"cui":"271807003","str":"Eruption of skin (finding)"},
-            {"cui":"386661006","str":"Fever (finding)"},
-            {"cui":"80146002","str":"Appendectomy (procedure)"},
-            {"cui":"387517004","str":"Paracetamol (substance)"}
-          ]
-          EOF
-          # cui_pt2ch.json — empty hierarchy is valid; server handles missing keys
+          # Minimal patient stubs so gen_random_data.js is skipped on startup.
+          # All six generated files must be present (entrypoint checks every one).
+          echo '{"0":25,"1":42,"2":67}' > /data/ptt2age.json
+          echo '{"0":"Male","1":"Female","2":"Male"}' > /data/ptt2sex.json
+          echo '{"0":"White","1":"Asian","2":"Black"}' > /data/ptt2eth.json
+          echo '{"0":0,"1":0,"2":0}' > /data/ptt2dod.json
+          echo '{"73211009":{"0":3},"386661006":{"1":1}}' > /data/cui2ptt_pos.jsonl
+          echo '{"73211009":{"0":1609459200},"386661006":{"1":1609459200}}' > /data/cui2ptt_tsp.jsonl
+          # Legacy stubs for old Docker Hub images that expect these files.
+          echo '[{"cui":"73211009","str":"Diabetes mellitus (disorder)"},{"cui":"386661006","str":"Fever (finding)"},{"cui":"80146002","str":"Appendectomy (procedure)"},{"cui":"387517004","str":"Paracetamol (substance)"}]' > /data/snomed_terms.json
           echo '{}' > /data/cui_pt2ch.json
       volumeMounts:
         - name: data
           mountPath: /data
+
+  # Relax probes for CI — image pull + npm start can be slow on shared runners.
+  livenessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 120
+    periodSeconds: 15
+    failureThreshold: 5
+
+  readinessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    failureThreshold: 6
+
+nl2dsl:
+  enabled: false
+
+medcat:
+  enabled: false
+
+ollama:
+  enabled: false

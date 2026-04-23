@@ -3,5 +3,8 @@ client/node_modules/
 client-react/node_modules/
 server/node_modules/
 
-# Data files are never baked into the image — supply them via volume mount at runtime
+# Runtime-generated patient data and full production SNOMED files — these are
+# either generated at startup (random mode) or supplied via a volume mount
+# (production mode). They must NOT be baked into the image.
 server/data/
+
