@@ -1,7 +1,4 @@
 # CI smoke-test overrides.
-# RANDOM_DATA=true is already the default — the image's bundled demo SNOMED data
-# is used automatically, so no data mount or init container is needed here.
-# Persistence is disabled so no PVC is provisioned during the test.
 webapp:
   persistence:
     enabled: false
