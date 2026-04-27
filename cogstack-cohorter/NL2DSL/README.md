@@ -45,7 +45,7 @@ Run:
 docker run -d --name cohorter-nl2dsl \
   -p 3002:3002 \
   -e OLLAMA_URL="http://ollama:11434/api/generate" \
-  -e OLLAMA_MODEL="gpt-oss:20b" \
+  -e OLLAMA_MODEL="llama3.2:3b" \
   -e MEDCAT_URL="http://cohorter-medcat:3001" \
   -e ALLOW_ORIGINS="*" \
   --restart unless-stopped \
@@ -64,7 +64,7 @@ NL2DSL reads the following environment variables (as used in `docker_run.sh` / y
   Ollama generate endpoint URL, e.g. `http://ollama:11434/api/generate`
 
 - `OLLAMA_MODEL`  
-  Model name to use in Ollama, e.g. `gpt-oss:20b`
+  Model name to use in Ollama, e.g. `llama3.2:3b`
 
 - `MEDCAT_URL`  
   MedCAT API base URL, e.g. `http://cohorter-medcat:5000`
@@ -121,7 +121,7 @@ node server.js
 Pull the model inside the ollama container (example):
 
 ```bash
-docker exec -it ollama ollama pull gpt-oss:20b
+docker exec -it ollama ollama pull llama3.2:3b
 ```
 
 (Replace with your actual model name.)

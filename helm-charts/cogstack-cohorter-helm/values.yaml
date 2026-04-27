@@ -188,7 +188,11 @@ nl2dsl:
   # OLLAMA_URL and MEDCAT_URL are set automatically from subchart service names.
   env:
     # Ollama model to use for NL → DSL compilation.
-    OLLAMA_MODEL: "gpt-oss:20b"
+    # llama3.2:3b is a lightweight default that runs on CPU but produces lower-quality results.
+    # For better NL → DSL accuracy, upgrade to a larger model — e.g. llama3.1:8b, llama3.3:70b,
+    # or gpt-oss:20b. Must match ollama.ollama.models.pull below.
+    # Browse available models at: https://ollama.com/library
+    OLLAMA_MODEL: "llama3.2:3b"
     # CORS origins allowed to call the NL2DSL API.
     ALLOW_ORIGINS: "*"
 
@@ -263,9 +267,11 @@ ollama:
   ollama:
     # Models pulled automatically by the built-in init container on first startup.
     # Ensure nl2dsl.env.OLLAMA_MODEL matches the model listed here.
+    # For better results, replace llama3.2:3b with a larger model — e.g. llama3.1:8b,
+    # llama3.3:70b, or gpt-oss:20b. Browse options at: https://ollama.com/library
     models:
       pull:
-        - gpt-oss:20b
+        - llama3.2:3b
 
   persistentVolume:
     enabled: true

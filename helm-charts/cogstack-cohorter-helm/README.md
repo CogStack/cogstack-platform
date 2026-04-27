@@ -19,7 +19,7 @@ MedCAT and Ollama are deployed as **subcharts**:
 
 - Kubernetes 1.21+
 - Helm 3.10+
-- Sufficient node resources for the Ollama model (the default `gpt-oss:20b` requires ~14 GB of memory/VRAM)
+- Sufficient node resources for the Ollama model. The default `llama3.2:3b` (~2 GB) runs on CPU. For better NL → DSL accuracy, consider a larger model — see [Ollama model library](https://ollama.com/library)
 
 ## Installation
 
@@ -41,13 +41,15 @@ ollama:
   ollama:
     models:
       pull:
-        - gpt-oss:20b   # pulled automatically on first startup
+        - llama3.2:3b   # pulled automatically on first startup
   persistentVolume:
     enabled: true
     size: 10Gi
 ```
 
 Models are pulled automatically by the otwld subchart's built-in init container. Change `ollama.ollama.models.pull` to use a different model — make sure `nl2dsl.env.OLLAMA_MODEL` matches.
+
+`llama3.2:3b` is a lightweight default that runs on CPU but produces lower-quality NL → DSL results. For better accuracy, upgrade to a larger model such as `llama3.1:8b`, `llama3.3:70b`, or `gpt-oss:20b`. Browse all available models at [https://ollama.com/library](https://ollama.com/library).
 
 ### MedCAT
 
@@ -161,7 +163,7 @@ For issues and questions, please visit the [CogStack GitHub repository](https://
 | nl2dsl.affinity | object | `{}` |  |
 | nl2dsl.enabled | bool | `true` |  |
 | nl2dsl.env.ALLOW_ORIGINS | string | `"*"` |  |
-| nl2dsl.env.OLLAMA_MODEL | string | `"gpt-oss:20b"` |  |
+| nl2dsl.env.OLLAMA_MODEL | string | `"llama3.2:3b"` |  |
 | nl2dsl.image.pullPolicy | string | `"IfNotPresent"` |  |
 | nl2dsl.image.repository | string | `"cogstacksystems/cogstack-cohorter-nl2dsl"` |  |
 | nl2dsl.image.tag | string | `"latest"` |  |
@@ -180,7 +182,7 @@ For issues and questions, please visit the [CogStack GitHub repository](https://
 | nl2dsl.service.type | string | `"ClusterIP"` |  |
 | nl2dsl.tolerations | list | `[]` |  |
 | ollama.enabled | bool | `true` |  |
-| ollama.ollama.models.pull[0] | string | `"gpt-oss:20b"` |  |
+| ollama.ollama.models.pull[0] | string | `"llama3.2:3b"` |  |
 | ollama.persistentVolume.enabled | bool | `true` |  |
 | ollama.persistentVolume.size | string | `"10Gi"` |  |
 | ollama.persistentVolume.storageClass | string | `""` |  |

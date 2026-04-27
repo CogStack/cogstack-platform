@@ -7,7 +7,7 @@ import cors from 'cors';
 // ---- config ----
 const PORT = process.env.PORT || 3002;
 const OLLAMA_URL = process.env.OLLAMA_URL || 'http://127.0.0.1:8002/api/generate';
-const MODEL = process.env.OLLAMA_MODEL || 'gpt-oss:20b'; // 'phi4:latest';
+const MODEL = process.env.OLLAMA_MODEL || 'llama3.2:3b';
 
 // CORS: allow list via env (comma-separated) or "*"
 const allowList = (process.env.ALLOW_ORIGINS || '*')

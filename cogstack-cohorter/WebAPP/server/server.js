@@ -716,7 +716,7 @@ app.post('/nl2dsl', async (req, res) => {
         const r = await fetch(NL2DSL_SERVER, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(req.body),   // e.g. { query: "...", model: "gpt-oss-20b" }
+            body: JSON.stringify(req.body),   // e.g. { query: "...", model: "llama3.2:3b" }
         });
         const text = await r.text();
         console.log(text);
