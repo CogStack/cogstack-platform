@@ -12,7 +12,7 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      {{- include "cogstack-cohorter-helm.selectorLabels" . | nindent 6 }}
+      {{- include "cogstack-cohorter-helm.webappSelectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -21,6 +21,7 @@ spec:
       {{- end }}
       labels:
         {{- include "cogstack-cohorter-helm.labels" . | nindent 8 }}
+        app.kubernetes.io/component: webapp
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}

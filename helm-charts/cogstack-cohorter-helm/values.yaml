@@ -109,7 +109,7 @@ webapp:
   image:
     repository: cogstacksystems/cogstack-cohorter-webapp
     tag: latest
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
 
   # Environment variables injected into the webapp container.
   # NL2DSL_SERVER is set automatically from nl2dsl.service.port.
@@ -182,7 +182,7 @@ nl2dsl:
   image:
     repository: cogstacksystems/cogstack-cohorter-nl2dsl
     tag: latest
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
 
   # Environment variables injected into the nl2dsl container.
   # OLLAMA_URL and MEDCAT_URL are set automatically from subchart service names.
