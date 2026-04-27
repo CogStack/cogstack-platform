@@ -43,11 +43,25 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
 {{/*
-Selector labels
+Selector labels (release-scoped — shared base, do not use directly as pod selectors)
 */}}
 {{- define "cogstack-cohorter-helm.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "cogstack-cohorter-helm.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+Component-scoped selector labels — use these in Deployment matchLabels and Service selectors
+so that each service only targets its own pods.
+*/}}
+{{- define "cogstack-cohorter-helm.webappSelectorLabels" -}}
+{{ include "cogstack-cohorter-helm.selectorLabels" . }}
+app.kubernetes.io/component: webapp
+{{- end }}
+
+{{- define "cogstack-cohorter-helm.nl2dslSelectorLabels" -}}
+{{ include "cogstack-cohorter-helm.selectorLabels" . }}
+app.kubernetes.io/component: nl2dsl
 {{- end }}
 
 {{/*
