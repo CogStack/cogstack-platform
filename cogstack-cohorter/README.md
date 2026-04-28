@@ -53,7 +53,7 @@ docker compose up --build -d
 
 NL2DSL uses:
 - `OLLAMA_URL` (default in compose: `http://ollama:11434/api/generate`)
-- `OLLAMA_MODEL` (default: `gpt-oss:20b`)
+- `OLLAMA_MODEL` (default: `llama3.2:3b`)
 - `MEDCAT_URL` (default: `http://cohorter-medcat:5000`)
 - `ALLOW_ORIGINS` (default: `*`)
 
