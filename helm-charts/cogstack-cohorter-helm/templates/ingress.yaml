@@ -37,7 +37,7 @@ spec:
               service:
                 name: {{ include "cogstack-cohorter-helm.fullname" $ }}
                 port:
-                  number: {{ $.Values.service.port }}
+                  number: {{ $.Values.webapp.service.port }}
           {{- end }}
     {{- end }}
   {{- end }}
