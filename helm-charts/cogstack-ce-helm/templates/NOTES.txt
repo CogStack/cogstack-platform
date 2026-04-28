@@ -6,7 +6,7 @@ export CONTAINER_PORT=$(kubectl get pod --namespace {{ .Release.Namespace }} $AN
 kubectl --namespace {{ .Release.Namespace }} port-forward $ANONCAT_POD_NAME 5001:$CONTAINER_PORT --pod-running-timeout=5m0s & 
 
 # 2.Medcat service port forward
-export MEDCAT_POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name=anoncat-service,app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
+export MEDCAT_POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name=medcat-service,app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
 export CONTAINER_PORT=$(kubectl get pod --namespace {{ .Release.Namespace }} $MEDCAT_POD_NAME -o jsonpath="{.spec.containers[0].ports[0].containerPort}")
 kubectl --namespace {{ .Release.Namespace }} port-forward $MEDCAT_POD_NAME 5000:$CONTAINER_PORT --pod-running-timeout=5m0s &
 
