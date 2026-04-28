@@ -24,7 +24,7 @@ In this tour, we will:
 
 ## Product Tour
 
-### medcat-service
+### Medcat Service
 
 Open the MedCAT UI at `http://127.0.0.1:5000`, load the sample text, and click Annotate. The concepts and annotations will appear in the results panel on the right.
 
@@ -35,6 +35,9 @@ To learn more about MedCAT and related services, see [CogStack NLP on GitHub](ht
 <video autoplay loop muted playsinline controls style="max-width: 100%; height: auto;">
   <source src="../../assets/tour/medcat-service-demo.webm" type="video/webm">
 </video>
+
+
+By default the cogstack community edition uses a tiny model that only learned one concept, so it wont give very good results if you try with other inputs. Check the medcat documentation for access to public models, or contact us if you want access to the best performing private models.
 
 ### AnonCAT Service
 
