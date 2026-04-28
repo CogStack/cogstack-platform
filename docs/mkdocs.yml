@@ -44,10 +44,18 @@ nav:
   - CogStack AI:
       - CogStack AI: cogstack-ai/index.md
       - Natural Language Processing: overview/Natural Language Processing.md
-      - MedCAT: https://docs.cogstack.org/projects/nlp
-      - MedCAT Trainer: https://docs.cogstack.org/projects/medcat-trainer/
+      - Medcat Trainer: '!import https://github.com/CogStack/cogstack-nlp?branch=main&docs_dir=medcat-trainer/docs/*&config=medcat-trainer/mkdocs.yml'
+      - Something: '!import https://github.com/CogStack/cogstack-nlp?branch=main&docs_dir=*/docs/*&config=medcat-v2/mkdocs.yml&multi_docs=True'
+      - MedCAT:
+          - Overview: microservice/medcat-v2/docs/index.md
+          - Architecture: microservice/medcat-v2/docs/architecture.md
+          - Migration guide (v2): microservice/medcat-v2/docs/migration_guide_v2.md
+          - Breaking changes: microservice/medcat-v2/docs/breaking_changes.md
+          - Reference: https://docs.cogstack.org/projects/nlp
       - Tutorials:
           - Medcat Service Tutorial: platform/cogstack-ai/medcat-service-tutorial.ipynb
+      - External Links:
+        - MedCAT Trainer: https://docs.cogstack.org/projects/medcat-trainer/
   - Data Engineering:
       - Data Engineering: data-engineering/index.md
       - Data pipelines: overview/Data pipelines.md
@@ -111,7 +119,14 @@ plugins:
   - termynal
   - mkdocs-jupyter:
       ignore_h1_titles: True
-
+  - multirepo:
+      cleanup: true
+      keep_docs_dir: false
+      nav_repos:
+        - name: microservice
+          import_url: https://github.com/CogStack/cogstack-nlp?branch=main
+          imports:
+            - medcat-v2/docs
 extra:
   analytics:
     provider: custom
