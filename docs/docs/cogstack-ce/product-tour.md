@@ -33,7 +33,7 @@ For a walkthrough of this service in the CogStack platform docs, see [MedCAT ser
 To learn more about MedCAT and related services, see [CogStack NLP on GitHub](https://github.com/CogStack/cogstack-nlp).
 
 <video autoplay loop muted playsinline controls style="max-width: 100%; height: auto;">
-  <source src="/docs/assets/tour/medcat-service-demo.webm" type="video/webm">
+  <source src="../../assets/tour/medcat-service-demo.webm" type="video/webm">
 </video>
 
 ### AnonCAT Service
@@ -45,7 +45,7 @@ For a walkthrough of this service in the CogStack platform docs, see [MedCAT ser
 To learn more about AnonCAT and related services, see [CogStack NLP on GitHub](https://github.com/CogStack/cogstack-nlp).
 
 <video autoplay loop muted playsinline controls style="max-width: 100%; height: auto;">
-  <source src="/docs/assets/tour/anoncat-service-demo.webm" type="video/webm">
+  <source src="../../assets/tour/anoncat-service-demo.webm" type="video/webm">
 </video>
 
 ### MedCAT Trainer
@@ -55,7 +55,7 @@ Open MedCAT Trainer at `http://127.0.0.1:8080` and log in with your credentials.
 For a deeper guide to projects and annotation workflows, see the [MedCATtrainer documentation](https://docs.cogstack.org/projects/medcat-trainer/en/latest/).
 
 <video autoplay loop muted playsinline controls style="max-width: 100%; height: auto;">
-  <source src="/docs/assets/tour/medcat-trainer-demo.webm" type="video/webm">
+  <source src="../../assets/tour/medcat-trainer-demo.webm" type="video/webm">
 </video>
 
 ### JupyterHub
@@ -71,7 +71,7 @@ For more details on the JupyterHub setup used here, see [CogStack Jupyter Hub on
     If this is the first time opening jupyterhub, it might take a while starting up your user container. This is mostly spent downloading the cogstack-singleuser
 
 <video autoplay loop muted playsinline controls style="max-width: 100%; height: auto;">
-  <source src="/docs/assets/tour/jupyterhub-demo.webm" type="video/webm">
+  <source src="../../assets/tour/jupyterhub-demo.webm" type="video/webm">
 </video>
 
 ### OpenSearch Dashboards
@@ -81,7 +81,7 @@ Open OpenSearch Dashboards at `http://127.0.0.1:5601` and log in with your crede
 By default in the cogstack community edition, it will generate and load test data and a sample dashboard.
 
 <video autoplay loop muted playsinline controls style="max-width: 100%; height: auto;">
-  <source src="/docs/assets/tour/opensearch-dashboard-demo.webm" type="video/webm">
+  <source src="../../assets/tour/opensearch-dashboard-demo.webm" type="video/webm">
 </video>
 
 ## Summary and Next Steps
