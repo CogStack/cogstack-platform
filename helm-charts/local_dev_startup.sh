@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-minikube start --cni=calico --cpus=no-limit --memory=no-limit
+export MINIKUBE_HOME="$HOME/.minikube-${HOSTNAME}"
+export KUBECONFIG="$HOME/.kube/config-${HOSTNAME}"
+minikube start -p cogstack-platform --cni=calico --cpus=no-limit --memory=no-limit
 minikube addons enable metrics-server
 
 minikube dashboard --url=true &

@@ -56,13 +56,17 @@ spec:
               {{- tpl (toYaml $value) $ | nindent 14 }}
           {{- end }}
           {{- range $key, $value := .Values.env }}
+          {{- if ne $key "APP_MEDCAT_MODEL_PACK" }}
           - name: "{{ tpl $key $ }}"
             value: "{{ tpl (print $value) $ }}"
           {{- end }}
+          {{- end }}
           {{- if .Values.model.downloadUrl }}
-          # Note this overrides any previous env setting if downloading is enabled
           - name: "APP_MEDCAT_MODEL_PACK"
-            value: "/models/{{ .Values.model.name}}"
+            value: '/models/{{ default "medcat-model.zip" .Values.model.name }}'
+          {{ else }}
+          - name: "APP_MEDCAT_MODEL_PACK"
+            value: {{ .Values.env.APP_MEDCAT_MODEL_PACK | quote }}
           {{- end}}
           {{- with .Values.livenessProbe }}
           livenessProbe:
@@ -95,24 +99,32 @@ spec:
       {{- end }}
       {{- if .Values.model.downloadUrl }}
         - name: model-downloader
-          image: busybox:1.28
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           command: 
             - sh
             - -c
             - |
-              echo "Downloading model $MODEL_NAME from $MODEL_PACK_URL"
+              set -e
+              echo "Downloading model to $APP_MEDCAT_MODEL_PACK from $MODEL_PACK_URL"
               mkdir -p /models
-              wget -O "/models/$MODEL_NAME" "$MODEL_PACK_URL"
-              if [ $? -ne 0 ]; then
-                echo "Failed to download model from $MODEL_PACK_URL" >&2
-                exit 1
-              fi
+              python - <<'PY'
+              import os
+              import requests
+
+              url = os.environ["MODEL_PACK_URL"]
+              path = os.environ.get("APP_MEDCAT_MODEL_PACK")
+
+              r = requests.get(url, allow_redirects=True)
+              r.raise_for_status()
+              with open(path, "wb") as f:
+                  f.write(r.content)
+              PY
               echo "Download finished successfully"
           env:
           - name: MODEL_PACK_URL
             value: {{ .Values.model.downloadUrl}}
-          - name: MODEL_NAME
-            value: {{ .Values.model.name}}
+          - name: APP_MEDCAT_MODEL_PACK
+            value: '/models/{{ default "medcat-model.zip" .Values.model.name }}'
           volumeMounts:
             - name: models
               mountPath: /models
