@@ -1,0 +1,25 @@
+{{- if .Values.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "cogstack-jupyterhub-helm.fullname" . }}-hub
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "cogstack-jupyterhub-helm.labels" . | nindent 4 }}
+    {{- with .Values.serviceMonitor.labels }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "jupyterhub.hubMatchLabels" . | nindent 6 }}
+  endpoints:
+  - port: {{ .Values.serviceMonitor.port }}
+    interval: {{ .Values.serviceMonitor.interval }}
+    path: {{ .Values.serviceMonitor.path }}
+    scheme: {{ .Values.serviceMonitor.scheme }}
+    {{- with .Values.serviceMonitor.tlsConfig }}
+    tlsConfig:
+      {{- toYaml . | nindent 8 }}
+    {{- end }}
+{{- end }}
