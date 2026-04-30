@@ -32,3 +32,20 @@ kube-prometheus-stack:
     sidecar:
       dashboards:
         enabled: true
+
+# -- Dashboards to be installed
+provisioning:
+  dashboards:
+    enabled: true
+    # -- Availability dashboard shows uptime of services
+    availability:
+      enabled: false
+    # -- FastAPI dashboard shows metrics from FastAPI services
+    fastapi:
+      enabled: true
+    # -- OpenSearch dashboard shows metrics from OpenSearch
+    opensearch:
+      enabled: true
+    # -- JupyterHub dashboard shows metrics from JupyterHub
+    jupyterhub:
+      enabled: false
