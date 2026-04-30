@@ -124,7 +124,7 @@ jupyterhub:
     continuous:
       enabled: false
 
-# -- Create a Prometheus ServiceMonitor for jupyterhub. Requires the Prometheus Operator to be installed
+# -- Create a Prometheus ServiceMonitor for the JupyterHub. Requires the Prometheus Operator to be installed
 serviceMonitor:
   # -- Set to true to enable creation of a ServiceMonitor resource
   enabled: false
