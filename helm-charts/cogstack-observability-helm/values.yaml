@@ -32,3 +32,5 @@ kube-prometheus-stack:
     sidecar:
       dashboards:
         enabled: true
+
+##

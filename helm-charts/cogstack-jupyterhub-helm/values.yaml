@@ -139,3 +139,5 @@ serviceMonitor:
   # -- Additional labels to be added to the ServiceMonitor
   labels: {}
   tlsConfig: {}
+
+##
