@@ -37,7 +37,7 @@ psycopg[c,binary,pool]==3.2.9
 pyodbc==5.2.0
 openpyxl==3.1.5
 dvc==3.59.2
-GitPython==3.1.44
+GitPython==3.1.47
 neo4j==5.28.1
 PyYAML==6.0.2
 opencv-python==4.11.0.86
