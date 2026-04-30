@@ -1,6 +1,7 @@
 wheel==0.46.2
 
-medcat==2.5.3
+medcat[spacy,meta-cat,deid,rel-cat,dict-ner]==2.7.0
+medcat-den==0.5.4
 # TODO: cogstack-es 8/9 handling
 
 virtualenv==20.36.1
