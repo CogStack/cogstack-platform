@@ -129,6 +129,7 @@ postgresql:
     repository: bitnamilegacy/postgresql
     # Pin legacy version of postgresql following bitnami change to remove free images. Match prefect version
     tag: 17.6.0-debian-12-r4
+  fullnameOverride: "medcat-trainer-postgresql"
 
 persistence:
   media:
