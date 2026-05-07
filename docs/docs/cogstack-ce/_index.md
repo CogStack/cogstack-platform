@@ -27,7 +27,7 @@ It combines model serving, de-identification, model training, notebook-based ana
 
 For the full installation reference, deployment instructions, and customizations, see:
 
-- [Deployment](../platform/deployment/_index.md)
+- [Deployment](../platform/deployment/index.md)
 - [CogStack CE Helm chart (install + customization)](../platform/deployment/helm/charts/cogstack-ce-helm.md)
 
 ## Models

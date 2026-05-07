@@ -33,13 +33,6 @@ EOT
 ```
 
 
-### CogStack Helm Module 
-The above resource is enough to deploy a helm chart using terraform.
-
-An example module has been created to provide further examples of using Terraform to deploy helm. Please see [Cogstack Helm Module](./cogstack-helm-module.md) for more details.
-
-
-
 ## Helm CLI Install
 We can also use the Helm CLI to deploy CogStack.
 

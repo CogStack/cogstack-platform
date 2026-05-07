@@ -1,5 +1,13 @@
 # AWS EKS Deployment
 
+<div class="tech-stack-banner" markdown="block">
+
+{{ cogstack_banner_logo() }}
+
+:material-aws:{ .tech-icon-aws } :simple-kubernetes:{ .tech-icon-kubernetes } :simple-terraform:{ .tech-icon-terraform }
+
+</div>
+
 This is an example deployment of CogStack in AWS. It will create publically accessible services, so is not suitable for production deployment.
 
 The recommended deployment in AWS is based on using Kubernetes through AWS EKS.
@@ -11,12 +19,29 @@ Deployment through terraform is carried out through two terraform commands, to h
 
 ### Requirements
 - Terraform - [Install Terraform](https://developer.hashicorp.com/terraform/install)
-- AWS Credentials for an account that can create and destroy resources. 
+- AWS Credentials for an account that can create and destroy resources.
 
+### 1. Get the configuration files
 
-### Steps
+All you need to do is get the Terraform files that have been preconfigured for this example (the ZIP contains every `deployment-examples` tree; use the `aws-kubernetes` folder for this guide).
 
-### 1. Add Required Secrets for your env
+[Download all deployment examples (ZIP)](../../../assets/downloads/deployment-examples.zip){ .md-button }
+
+Alternatively you can view the file contents here:
+
+#### eks-cluster terraform files
+
+This terraform configuration will create a new AWS EKS cluster.
+
+{{ embed_all_files_in_directory_as_snippets('aws-kubernetes/eks-cluster') }}
+
+#### kubernetes-deployment terraform files
+
+This terraform configuration will use the helm plugin to run services in kubernetes.
+
+{{ embed_all_files_in_directory_as_snippets('aws-kubernetes/kubernetes-deployment') }}
+
+### 2. Add required secrets for your environment
 This readme uses environment variables for access:
 
 1. See the `.env.example` file for the required details.
@@ -25,7 +50,7 @@ This readme uses environment variables for access:
 
 If desired, see the official documentation for other ways to provide AWS credentials https://registry.terraform.io/providers/hashicorp/aws/latest/docs#authentication-and-configuration
 
-### 2. Run Terraform
+### 3. Run Terraform
 Terraform is run on two modules for AWS, so we will run one terraform apply in one folder, then another terraform apply in a second folder. 
 
 Initial provisioning takes around 15 minutes.
@@ -48,7 +73,7 @@ terraform init
 terraform apply --auto-approve
 ```
 
-### 3. Accessing the CogStack Platform
+### 4. Accessing the CogStack Platform
 
 Once the deployment is complete and all services are running, you can access the CogStack platform and its components using the following URLs:
 

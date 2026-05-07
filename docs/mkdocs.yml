@@ -57,17 +57,15 @@ nav:
   - Platform:
       - Platform: platform/index.md
       - Deployment:
-          - Deployment: platform/deployment/_index.md
+          - Deployment: platform/deployment/index.md
           - Getting Started:
-              - Getting Started: platform/deployment/get-started/_index.md
+              - Overview: platform/deployment/get-started/_index.md
               - Quickstart: platform/deployment/get-started/quickstart.md
           - Helm:
-              - Helm: platform/deployment/helm/_index.md
+              - Helm: platform/deployment/helm/index.md
               - Tutorial: platform/deployment/helm/tutorial.md
-              - CogStack Helm Module: platform/deployment/helm/cogstack-helm-module.md
-              - Troubleshooting: platform/deployment/helm/troubleshooting.md
               - Charts:
-                  - Charts Overview: platform/deployment/helm/charts/_index.md
+                  - Charts Overview: platform/deployment/helm/charts/index.md
                   - Cogstack CE Helm: platform/deployment/helm/charts/cogstack-ce-helm.md
                   - MedCAT Service Helm: platform/deployment/helm/charts/medcat-service-helm.md
                   - MedCAT Trainer Helm: platform/deployment/helm/charts/medcat-trainer-helm.md
@@ -75,14 +73,14 @@ nav:
                   - Cogstack Observability Helm: platform/deployment/helm/charts/cogstack-observability-helm.md
                   - Cogstack JupyterHub Helm: platform/deployment/helm/charts/cogstack-jupyterhub-helm.md
           - Examples:
-              - Examples: platform/deployment/examples/_index.md
+              - Examples: platform/deployment/examples/index.md
               - AWS Kubernetes EKS: platform/deployment/examples/aws-kubernetes-eks.md
               - Azure Kubernetes AKS: platform/deployment/examples/azure-kubernetes-aks.md
               - OpenStack Kubernetes K3s: platform/deployment/examples/openstack-kubernetes-k3s.md
               - OpenStack Docker: platform/deployment/examples/openstack-docker.md
           - Docker Compose: platform/deployment/reference/docker-compose/_index.md
       - Observability:
-          - Observability: platform/observability/_index.md
+          - Observability: platform/observability/index.md
           - Getting Started:
               - Quickstart: platform/observability/get-started/quickstart.md
               - User Guide Tutorial: platform/observability/get-started/userguide-tutorial.md
@@ -105,10 +103,12 @@ nav:
 
 plugins:
   - search
+  - macros
   - gen-files:
       scripts:
         - scripts/gen_helm_readme.py
         - scripts/copy_files_from_repo.py
+        - scripts/zip_deployment_examples.py
   - termynal
   - mkdocs-jupyter:
       ignore_h1_titles: True
@@ -117,11 +117,24 @@ extra:
   analytics:
     provider: custom
 
+extra_css:
+  - stylesheets/extra.css
+
 markdown_extensions:
+  - md_in_html
   - admonition
   - attr_list
   - pymdownx.details
   - pymdownx.superfences
+  - pymdownx.snippets:
+      check_paths: true
+      base_path:
+        - docs
+        # Repo root (e.g. Read the Docs) vs. docs/ project dir (local `cd docs && mkdocs`)
+        - ../deployment-examples
+        - deployment-examples
+  - pymdownx.tabbed:
+      alternate_style: true
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
