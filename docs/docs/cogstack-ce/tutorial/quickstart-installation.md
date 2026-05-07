@@ -24,7 +24,7 @@ This command will install Cogstack community edition with all the default values
 
     Once the initial installation is done, then any updates should be significantly faster.
 
-    The defaults are set for a production-ready environment. See [Deployment](../../platform/deployment/_index.md) for detailed deployment information and customization options.
+    The defaults are set for a production-ready environment. See [Deployment](../../platform/deployment/index.md) for detailed deployment information and customization options.
 
 ## Port-forward and open JupyterHub
 

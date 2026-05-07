@@ -57,17 +57,15 @@ nav:
   - Platform:
       - Platform: platform/index.md
       - Deployment:
-          - Deployment: platform/deployment/_index.md
+          - Deployment: platform/deployment/index.md
           - Getting Started:
-              - Getting Started: platform/deployment/get-started/_index.md
+              - Overview: platform/deployment/get-started/_index.md
               - Quickstart: platform/deployment/get-started/quickstart.md
           - Helm:
-              - Helm: platform/deployment/helm/_index.md
+              - Helm: platform/deployment/helm/index.md
               - Tutorial: platform/deployment/helm/tutorial.md
-              - CogStack Helm Module: platform/deployment/helm/cogstack-helm-module.md
-              - Troubleshooting: platform/deployment/helm/troubleshooting.md
               - Charts:
-                  - Charts Overview: platform/deployment/helm/charts/_index.md
+                  - Charts Overview: platform/deployment/helm/charts/index.md
                   - Cogstack CE Helm: platform/deployment/helm/charts/cogstack-ce-helm.md
                   - MedCAT Service Helm: platform/deployment/helm/charts/medcat-service-helm.md
                   - MedCAT Trainer Helm: platform/deployment/helm/charts/medcat-trainer-helm.md
@@ -82,7 +80,7 @@ nav:
               - OpenStack Docker: platform/deployment/examples/openstack-docker.md
           - Docker Compose: platform/deployment/reference/docker-compose/_index.md
       - Observability:
-          - Observability: platform/observability/_index.md
+          - Observability: platform/observability/index.md
           - Getting Started:
               - Quickstart: platform/observability/get-started/quickstart.md
               - User Guide Tutorial: platform/observability/get-started/userguide-tutorial.md
