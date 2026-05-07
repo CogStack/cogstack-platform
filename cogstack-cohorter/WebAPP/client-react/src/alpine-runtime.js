@@ -550,13 +550,23 @@ export async function mountCohorterApp(rootEl) {
   let disposed = false;
   let queued = false;
 
+  // Listeners called after every DOM update so React components can sync.
+  const listeners = new Set();
+  const subscribe = (cb) => {
+    listeners.add(cb);
+    return () => listeners.delete(cb);
+  };
+
   let updateAll = () => {};
   const scheduleUpdate = () => {
     if (queued || disposed) return;
     queued = true;
     Promise.resolve().then(() => {
       queued = false;
-      if (!disposed) updateAll();
+      if (!disposed) {
+        updateAll();
+        listeners.forEach((cb) => cb());
+      }
     });
   };
 
@@ -576,9 +586,14 @@ export async function mountCohorterApp(rootEl) {
     state.submit_query();
   }
 
-  return () => {
+  const cleanup = () => {
     disposed = true;
+    listeners.clear();
     bindings.forEach((binding) => binding.destroy());
     rootEl.innerHTML = '';
   };
+
+  // Expose state + subscribe so React components can read reactive Alpine.js
+  // state and re-render whenever it changes.
+  return { cleanup, state, subscribe };
 }
