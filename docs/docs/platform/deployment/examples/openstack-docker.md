@@ -1,5 +1,13 @@
 # Openstack Docker Deployment
 
+<div class="tech-stack-banner" markdown="block">
+
+{{ cogstack_banner_logo() }}
+
+:simple-openstack:{ .tech-icon-openstack } :simple-docker:{ .tech-icon-docker } :simple-portainer: :simple-ansible:{ .tech-icon-ansible } :simple-terraform:{ .tech-icon-terraform }
+
+</div>
+
 This Terraform example provides one stop approach to deploy the **CogStack** platform with its core components and observability stack in an OpenStack environment. It is specifically designed to simplify and automate the provisioning and configuration needed to run CogStack reliably and securely.
 
 This example:

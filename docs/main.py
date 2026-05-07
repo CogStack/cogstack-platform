@@ -12,6 +12,18 @@ def define_env(env):
     repo_root = Path(__file__).resolve().parent.parent
 
     @env.macro
+    def cogstack_banner_logo() -> str:
+        """Inline SVG for the tech-stack banner (avoids late <img> fetch vs emoji icons)."""
+        docs_dir = Path(env.conf.docs_dir)
+        path = docs_dir / "assets" / "brand-logo-dark.svg"
+        svg = path.read_text(encoding="utf-8").strip()
+        if svg.startswith("<?xml"):
+            svg = svg.split("?>", 1)[-1].strip()
+        return (
+            f'<span class="tech-stack-banner__logo-svg" role="img" aria-label="CogStack">{svg}</span>'
+        )
+
+    @env.macro
     def embed_all_files_in_directory_as_snippets(
         folder: str,
         patterns: str = "*.tf,*.hcl,*.yml,*.yaml",

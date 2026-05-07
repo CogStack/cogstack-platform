@@ -11,3 +11,88 @@
   max-height: var(--md-code-block-max-height);
   overflow-y: auto;
 }
+
+/* Large technology icons row (use with md_in_html wrapper, see deployment examples) */
+.md-typeset .tech-stack-banner {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1rem 1.25rem;
+  margin: 0 0 1.25rem;
+  max-width: 100%;
+  box-sizing: border-box;
+  border-radius: 0.2rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  background-color: var(--md-code-bg-color);
+}
+
+/* Markdown wraps banner content in <p>; flatten so flex aligns logo + icons */
+.md-typeset .tech-stack-banner > p {
+  display: contents;
+  margin: 0;
+}
+
+.md-typeset .tech-stack-banner .twemoji {
+  width: var(--tech-banner-icon-size, 2.75rem);
+  height: var(--tech-banner-icon-size, 2.75rem);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.md-typeset .tech-stack-banner .twemoji img,
+.md-typeset .tech-stack-banner .twemoji svg {
+  width: 100%;
+  height: 100%;
+}
+
+.md-typeset .tech-stack-banner .tech-stack-banner__logo-svg {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: var(--tech-banner-icon-size, 2.75rem);
+}
+
+.md-typeset .tech-stack-banner .tech-stack-banner__logo-svg svg {
+  height: 100%;
+  width: auto;
+  max-width: 9rem;
+  display: block;
+}
+
+/* Brand colours — use { .tech-icon-* } on each shortcode in the banner */
+.md-typeset .tech-stack-banner .twemoji.tech-icon-aws svg *,
+.md-typeset .tech-stack-banner .twemoji.tech-icon-aws svg {
+  fill: #ff9900 !important;
+}
+
+.md-typeset .tech-stack-banner .twemoji.tech-icon-kubernetes svg *,
+.md-typeset .tech-stack-banner .twemoji.tech-icon-kubernetes svg {
+  fill: #326ce5 !important;
+}
+
+.md-typeset .tech-stack-banner .twemoji.tech-icon-terraform svg *,
+.md-typeset .tech-stack-banner .twemoji.tech-icon-terraform svg {
+  fill: #844fba !important;
+}
+
+.md-typeset .tech-stack-banner .twemoji.tech-icon-azure svg *,
+.md-typeset .tech-stack-banner .twemoji.tech-icon-azure svg {
+  fill: #0078d4 !important;
+}
+
+.md-typeset .tech-stack-banner .twemoji.tech-icon-openstack svg *,
+.md-typeset .tech-stack-banner .twemoji.tech-icon-openstack svg {
+  fill: #da1a32 !important;
+}
+
+.md-typeset .tech-stack-banner .twemoji.tech-icon-docker svg *,
+.md-typeset .tech-stack-banner .twemoji.tech-icon-docker svg {
+  fill: #2496ed !important;
+}
+
+.md-typeset .tech-stack-banner .twemoji.tech-icon-ansible svg *,
+.md-typeset .tech-stack-banner .twemoji.tech-icon-ansible svg {
+  fill: #000000 !important;
+}

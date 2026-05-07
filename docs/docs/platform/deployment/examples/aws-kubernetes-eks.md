@@ -1,5 +1,13 @@
 # AWS EKS Deployment
 
+<div class="tech-stack-banner" markdown="block">
+
+{{ cogstack_banner_logo() }}
+
+:material-aws:{ .tech-icon-aws } :simple-kubernetes:{ .tech-icon-kubernetes } :simple-terraform:{ .tech-icon-terraform }
+
+</div>
+
 This is an example deployment of CogStack in AWS. It will create publically accessible services, so is not suitable for production deployment.
 
 The recommended deployment in AWS is based on using Kubernetes through AWS EKS.

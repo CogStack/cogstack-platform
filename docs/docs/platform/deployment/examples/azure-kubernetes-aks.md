@@ -1,5 +1,13 @@
 # Azure AKS Deployment
 
+<div class="tech-stack-banner" markdown="block">
+
+{{ cogstack_banner_logo() }}
+
+:material-microsoft-azure:{ .tech-icon-azure } :simple-kubernetes:{ .tech-icon-kubernetes } :simple-terraform:{ .tech-icon-terraform }
+
+</div>
+
 This is an example deployment of CogStack in Azure.
 
 The recommended deployment of CogStack in Azure is based on using Kubernetes through Azure Kubernetes Service.
