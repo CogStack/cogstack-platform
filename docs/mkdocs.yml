@@ -105,10 +105,12 @@ nav:
 
 plugins:
   - search
+  - macros
   - gen-files:
       scripts:
         - scripts/gen_helm_readme.py
         - scripts/copy_files_from_repo.py
+        - scripts/zip_deployment_examples.py
   - termynal
   - mkdocs-jupyter:
       ignore_h1_titles: True
@@ -117,11 +119,22 @@ extra:
   analytics:
     provider: custom
 
+extra_css:
+  - stylesheets/extra.css
+
 markdown_extensions:
   - admonition
   - attr_list
   - pymdownx.details
   - pymdownx.superfences
+  - pymdownx.snippets:
+      check_paths: true
+      base_path:
+        - docs
+        # Include the deployment-examples dir to embed the terraform files
+        - ../deployment-examples
+  - pymdownx.tabbed:
+      alternate_style: true
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg

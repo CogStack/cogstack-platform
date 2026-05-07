@@ -1,0 +1,13 @@
+/*
+ * Long fenced code blocks (including content pulled in via pymdownx.snippets)
+ * stay within a capped height; scroll vertically inside the block.
+ * Tweak --md-code-block-max-height as needed (Material uses CSS variables elsewhere).
+ */
+:root {
+  --md-code-block-max-height: min(70vh, 28rem);
+}
+
+.md-typeset .highlight pre {
+  max-height: var(--md-code-block-max-height);
+  overflow-y: auto;
+}
