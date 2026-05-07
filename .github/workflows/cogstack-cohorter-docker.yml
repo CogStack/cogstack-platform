@@ -14,7 +14,7 @@ on:
       - ".github/workflows/cogstack-cohorter-docker**"
 
 jobs:
-  docker:
+  docker-build-and-push:
     runs-on: ubuntu-latest
     if: github.event.pull_request.user.login != 'dependabot[bot]' && github.repository == 'CogStack/cogstack-platform'
     permissions:
@@ -73,4 +73,4 @@ jobs:
           cache-from: type=registry,ref=${{ matrix.image }}:buildcache
           cache-to: type=registry,ref=${{ matrix.image }}:buildcache,mode=max
           secrets: |
-            npm_token=${{ github.token }}
+            "npm_token=${{ github.token }}"
