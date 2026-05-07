@@ -131,8 +131,9 @@ markdown_extensions:
       check_paths: true
       base_path:
         - docs
-        # Include the deployment-examples dir to embed the terraform files
+        # Repo root (e.g. Read the Docs) vs. docs/ project dir (local `cd docs && mkdocs`)
         - ../deployment-examples
+        - deployment-examples
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.emoji:
