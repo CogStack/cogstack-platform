@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 """
-mkdocs-gen-files generator: zip archives of deployment example folders.
+mkdocs-gen-files generator: zip archives from repository folders.
 
 Each zip is written under `docs_dir` so MkDocs publishes it as a static download.
 
@@ -22,8 +22,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 ZIP_SPECS = [
     {
-        "sourceFolderPath": "deployment-examples/aws-kubernetes",
-        "outputZipPath": "assets/downloads/deployment-examples-aws-kubernetes.zip",
+        "sourceFolderPath": "deployment-examples",
+        "outputZipPath": "assets/downloads/deployment-examples.zip",
     },
 ]
 

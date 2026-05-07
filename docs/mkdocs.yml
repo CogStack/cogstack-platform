@@ -75,7 +75,7 @@ nav:
                   - Cogstack Observability Helm: platform/deployment/helm/charts/cogstack-observability-helm.md
                   - Cogstack JupyterHub Helm: platform/deployment/helm/charts/cogstack-jupyterhub-helm.md
           - Examples:
-              - Examples: platform/deployment/examples/_index.md
+              - Examples: platform/deployment/examples/index.md
               - AWS Kubernetes EKS: platform/deployment/examples/aws-kubernetes-eks.md
               - Azure Kubernetes AKS: platform/deployment/examples/azure-kubernetes-aks.md
               - OpenStack Kubernetes K3s: platform/deployment/examples/openstack-kubernetes-k3s.md

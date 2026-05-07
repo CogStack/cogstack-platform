@@ -1,6 +1,6 @@
 # Openstack Kubernetes Deployment
 
-This Terraform example provides one stop approach to deploy the **CogStack** platform with its core components and observability stack in an OpenStack environment. It is specifically designed to simplify and automate the provisioning and configuration needed to run CogStack reliably and securely. 
+This Terraform example provides one stop approach to deploy the **CogStack** platform with its core components and observability stack in an OpenStack environment. It is specifically designed to simplify and automate the provisioning and configuration needed to run CogStack reliably and securely.
 
 This example:
 
@@ -14,14 +14,33 @@ This example:
 - Terraform - [Install Terraform](https://developer.hashicorp.com/terraform/install)
 - Openstack Cloud environment
 
-### 1. Add Required Secrets for your env
+### 1. Get the configuration files
 
-Create a `terraform.tfvars` file, based on `terraform.tfvars.example`, containing the secrets for your environment. 
+Get the Terraform files for this example (the ZIP contains all `deployment-examples`; use the `openstack-kubernetes` folder for this guide).
 
-### 2. Run Terraform
+[Download all deployment examples (ZIP)](../../../assets/downloads/deployment-examples.zip){ .md-button }
+
+Alternatively you can view the file contents here:
+
+#### k3s-cluster terraform files
+
+This terraform configuration provisions VMs and installs k3s.
+
+{{ embed_all_files_in_directory_as_snippets('openstack-kubernetes/k3s-cluster') }}
+
+#### kubernetes-deployment terraform files
+
+This terraform configuration deploys CogStack services to the cluster.
+
+{{ embed_all_files_in_directory_as_snippets('openstack-kubernetes/kubernetes-deployment') }}
+
+### 2. Add required secrets for your environment
+
+Create a `terraform.tfvars` file, based on `terraform.tfvars.example`, containing the secrets for your environment.
+
+### 3. Run Terraform
 
 ```bash
-# Create AKS cluster
 cd k3s-cluster
 terraform init
 terraform apply --auto-approve
@@ -37,7 +56,7 @@ terraform apply --auto-approve
 
 Initial provisioning takes up to 10 minutes, where time is mostly downloading large docker images
 
-### 3. Accessing the CogStack Platform
+### 4. Accessing the CogStack Platform
 
 Once the deployment is complete and all services are running, you can access the CogStack platform and its components using the following URLs:
 

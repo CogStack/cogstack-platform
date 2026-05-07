@@ -1,12 +1,12 @@
 # Azure AKS Deployment
 
-This is an example deployment of CogStack in Azure. 
+This is an example deployment of CogStack in Azure.
 
 The recommended deployment of CogStack in Azure is based on using Kubernetes through Azure Kubernetes Service.
 
-This example will create a AKS cluster, setup any necessary config, deploy CogStack to the cluster, and test that it is available. It will create publically accessible services, so is not suitable for production deployment. 
+This example will create a AKS cluster, setup any necessary config, deploy CogStack to the cluster, and test that it is available. It will create publically accessible services, so is not suitable for production deployment.
 
-We create a cluster following the Official Azure Verified Modules patterns in https://azure.github.io/Azure-Verified-Modules/indexes/terraform/tf-pattern-modules/ to create AKS clusters with their recommended defaults. 
+We create a cluster following the Official Azure Verified Modules patterns in https://azure.github.io/Azure-Verified-Modules/indexes/terraform/tf-pattern-modules/ to create AKS clusters with their recommended defaults.
 
 
 ## Usage
@@ -14,7 +14,7 @@ Deployment through terraform is carried out through two terraform commands, to h
 
 ### Requirements
 - Terraform - [Install Terraform](https://developer.hashicorp.com/terraform/install)
-- Azure Credentials for an account and subscription that can create and destroy resources. 
+- Azure Credentials for an account and subscription that can create and destroy resources.
 
 #### Required Permissions
 - Contributor
@@ -23,18 +23,36 @@ Deployment through terraform is carried out through two terraform commands, to h
 #### Required Features
 - EncryptionAtHost: `az feature register --namespace Microsoft.Compute --name EncryptionAtHost`
 
-### Steps
+### 1. Get the configuration files
 
-### 1. Use the Azure CLI to login for your subscription
-Run the az login command, which will open a web browser for you to login to your azure account. We then set the subscription ID for use by the Azure RM Terraform provider. 
+All you need to do is get the Terraform files that have been preconfigured for this example (this download includes every `deployment-examples` tree; use the `azure-kubernetes` folder for this guide).
+
+[Download all deployment examples (ZIP)](../../../assets/downloads/deployment-examples.zip){ .md-button }
+
+Alternatively you can view the file contents here:
+
+#### aks-cluster terraform files
+
+This terraform configuration will create a new Azure AKS cluster.
+
+{{ embed_all_files_in_directory_as_snippets('azure-kubernetes/aks-cluster') }}
+
+#### kubernetes-deployment terraform files
+
+This terraform configuration will use the helm provider to run services in kubernetes.
+
+{{ embed_all_files_in_directory_as_snippets('azure-kubernetes/kubernetes-deployment') }}
+
+### 2. Use the Azure CLI to login for your subscription
+Run the az login command, which will open a web browser for you to login to your azure account. We then set the subscription ID for use by the Azure RM Terraform provider.
 
 ```bash
 az login
 export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 ```
 
-### 2. Run Terraform
-Terraform is run on two modules, so we will run one terraform apply in one folder, then another terraform apply in a second folder. 
+### 3. Run Terraform
+Terraform is run on two modules, so we will run one terraform apply in one folder, then another terraform apply in a second folder.
 
 Initial provisioning takes around 15 minutes.
 
@@ -53,7 +71,7 @@ terraform init
 terraform apply --auto-approve
 ```
 
-### 3. Accessing the CogStack Platform
+### 4. Accessing the CogStack Platform
 
 Once the deployment is complete and all services are running, you can access the CogStack platform and its components using the following URLs:
 
@@ -68,8 +86,6 @@ http://localhost:5000/demo
 ### Optional - Destroy
 
 You can destroy the infra to save costs when it wont be used for a long time.
-
-Do note that there is an initial cost every time the EKS infrastructure is created, looks to be around $0.50 at time of writing.
 
 ```bash
 cd ../kubernetes-deployment
@@ -94,7 +110,7 @@ AZURE_KUBECONFIG=$(terraform output -raw kubeconfig_file)
 export KUBECONFIG=${AZURE_KUBECONFIG}
 ```
 
-Note - alternatively you could use the Azure CLI to set your kubeconfig using 
+Note - alternatively you could use the Azure CLI to set your kubeconfig using
 
 ```bash
 MY_RESOURCE_GROUP_NAME=$(terraform output -raw resource_group_name)
