@@ -9,6 +9,8 @@ dependencies = [
     "mkdocs-gen-files>=0.6.1",
     "mkdocs-jupyter>=0.26.1",
     "mkdocs-material>=9.7.0",
+    "mkdocs-monorepo-plugin>=1.1.0",
+    "mkdocs-multirepo-plugin>=0.8.3",
     "termynal>=0.13.1",
 ]
 
