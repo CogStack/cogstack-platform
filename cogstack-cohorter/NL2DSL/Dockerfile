@@ -3,7 +3,7 @@ FROM node:20-alpine
 ENV NODE_ENV=production \
     PORT=3002 \
     OLLAMA_URL=http://ollama:11434/api/generate \
-    OLLAMA_MODEL=gpt-oss:20b \
+    OLLAMA_MODEL=llama3.2:3b \
     MEDCAT_URL=http://cohorter-medcat:5000 \
     ALLOW_ORIGINS=*
 

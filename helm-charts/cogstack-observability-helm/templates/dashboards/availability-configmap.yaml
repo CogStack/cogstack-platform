@@ -1,30 +1,51 @@
+{{- if .Values.provisioning.dashboards.enabled }}
+{{- if .Values.provisioning.dashboards.availability.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: cogstack-availability-configmap
+  name: {{ include "cogstack-observability-helm.fullname" . }}-dashboards-availability
   labels:
     grafana_dashboard: "1"
 data:
   cogstack-availability.json: |-
     {{ .Files.Get "dashboards/cogstack-availability.json" | nindent 4 }}
 ---
+{{- end }}
+{{- if .Values.provisioning.dashboards.fastapi.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: fastapi-metrics-configmap
+  name: {{ include "cogstack-observability-helm.fullname" . }}-dashboards-fastapi
   labels:
     grafana_dashboard: "1"
 data:
   fastapi-metrics.json: |-
     {{ .Files.Get "dashboards/fastapi-metrics.json" | nindent 4 }}
 ---
+{{- end }}
+{{- if .Values.provisioning.dashboards.opensearch.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: opensearch-metrics-configmap
+  name: {{ include "cogstack-observability-helm.fullname" . }}-dashboards-opensearch
   labels:
     grafana_dashboard: "1"
 data:
   opensearch-metrics.json: |-
     {{ .Files.Get "dashboards/opensearch-metrics.json" | nindent 4 }}
 ---
+{{- end }}
+{{- if .Values.provisioning.dashboards.jupyterhub.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "cogstack-observability-helm.fullname" . }}-dashboards-jupyterhub
+  labels:
+    grafana_dashboard: "1"
+data:
+  jupyterhub-metrics.json: |-
+    {{ .Files.Get "dashboards/jupyterhub-metrics.json" | nindent 4 }}
+---
+{{- end }}
+
+{{- end }}

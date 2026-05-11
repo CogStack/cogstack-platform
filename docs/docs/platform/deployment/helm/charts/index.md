@@ -6,7 +6,7 @@
 - [MedCAT Service Helm](medcat-service-helm.md)
 - [MedCAT Trainer Helm](medcat-trainer-helm.md)
 - [CogStack Community Edition Helm](cogstack-ce-helm.md)
-- [CogStack Observability Helm](cogstack-observability-helm.md.md)
+- [CogStack Observability Helm](cogstack-observability-helm.md)
 
 ## Chart Publishing
 

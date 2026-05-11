@@ -19,6 +19,7 @@ MedCAT and Ollama are deployed as **subcharts**:
 
 - Kubernetes 1.21+
 - Helm 3.10+
+- A storage class that supports `ReadWriteOnce` PVCs
 - Sufficient node resources for the Ollama model (the default `gpt-oss:20b` requires ~14 GB of memory/VRAM)
 
 ## Installation
@@ -138,88 +139,25 @@ For issues and questions, please visit the [CogStack GitHub repository](https://
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| autoscaling.enabled | bool | `false` |  |
-| autoscaling.maxReplicas | int | `3` |  |
-| autoscaling.minReplicas | int | `1` |  |
-| autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
+| autoscaling | object | `{"enabled":false,"maxReplicas":3,"minReplicas":1,"targetCPUUtilizationPercentage":80}` | ------------------------------------------------------------------------- |
 | fullnameOverride | string | `""` |  |
-| global.imagePullSecrets | list | `[]` |  |
-| ingress.annotations | object | `{}` |  |
-| ingress.className | string | `""` |  |
-| ingress.enabled | bool | `false` |  |
-| ingress.hosts[0].host | string | `"cogstack-cohort.local"` |  |
-| ingress.hosts[0].paths[0].path | string | `"/"` |  |
-| ingress.hosts[0].paths[0].pathType | string | `"ImplementationSpecific"` |  |
-| ingress.tls | list | `[]` |  |
-| medcat.enabled | bool | `true` |  |
-| medcat.env.APP_ENABLE_METRICS | string | `"true"` |  |
-| medcat.env.APP_MEDCAT_MODEL_PACK | string | `"/cat/models/examples/example-medcat-v2-model-pack.zip"` |  |
-| medcat.image.tag | string | `"latest"` |  |
-| medcat.resources | object | `{}` |  |
-| medcat.service.port | int | `5000` |  |
-| nameOverride | string | `""` |  |
-| nl2dsl.affinity | object | `{}` |  |
-| nl2dsl.enabled | bool | `true` |  |
-| nl2dsl.env.ALLOW_ORIGINS | string | `"*"` |  |
-| nl2dsl.env.OLLAMA_MODEL | string | `"gpt-oss:20b"` |  |
-| nl2dsl.image.pullPolicy | string | `"IfNotPresent"` |  |
-| nl2dsl.image.repository | string | `"cogstacksystems/cogstack-cohorter-nl2dsl"` |  |
-| nl2dsl.image.tag | string | `"latest"` |  |
-| nl2dsl.livenessProbe.httpGet.path | string | `"/"` |  |
-| nl2dsl.livenessProbe.httpGet.port | string | `"http"` |  |
-| nl2dsl.livenessProbe.initialDelaySeconds | int | `30` |  |
-| nl2dsl.livenessProbe.periodSeconds | int | `10` |  |
-| nl2dsl.nodeSelector | object | `{}` |  |
-| nl2dsl.readinessProbe.httpGet.path | string | `"/"` |  |
-| nl2dsl.readinessProbe.httpGet.port | string | `"http"` |  |
-| nl2dsl.readinessProbe.initialDelaySeconds | int | `10` |  |
-| nl2dsl.readinessProbe.periodSeconds | int | `5` |  |
-| nl2dsl.replicaCount | int | `1` |  |
-| nl2dsl.resources | object | `{}` |  |
-| nl2dsl.service.port | int | `3002` |  |
-| nl2dsl.service.type | string | `"ClusterIP"` |  |
-| nl2dsl.tolerations | list | `[]` |  |
-| ollama.enabled | bool | `true` |  |
-| ollama.ollama.models.pull[0] | string | `"gpt-oss:20b"` |  |
-| ollama.persistentVolume.enabled | bool | `true` |  |
-| ollama.persistentVolume.size | string | `"10Gi"` |  |
-| ollama.persistentVolume.storageClass | string | `""` |  |
-| ollama.resources | object | `{}` |  |
-| ollama.service.port | int | `11434` |  |
-| ollama.service.type | string | `"ClusterIP"` |  |
-| podAnnotations | object | `{}` |  |
+| global | object | `{"imagePullSecrets":[]}` | ------------------------------------------------------------------------- |
+| httpRoute | object | `{"annotations":{},"enabled":false,"hostnames":["chart-example.local"],"parentRefs":[{"name":"gateway","sectionName":"http"}],"rules":[{"matches":[{"path":{"type":"PathPrefix","value":"/"}}]}]}` | ------------------------------------------------------------------------- |
+| ingress | object | `{"annotations":{},"className":"","enabled":false,"hosts":[{"host":"cogstack-cohort.local","paths":[{"path":"/","pathType":"ImplementationSpecific"}]}],"tls":[]}` | ------------------------------------------------------------------------- |
+| medcat | object | `{"enabled":true,"env":{"APP_ENABLE_METRICS":"true","APP_MEDCAT_MODEL_PACK":"/cat/models/examples/example-medcat-v2-model-pack.zip"},"image":{"tag":"latest"},"resources":{},"service":{"port":5000}}` | ------------------------------------------------------------------------- |
+| medcat.enabled | bool | `true` | Enable the MedCAT subchart. |
+| nameOverride | string | `"cogstack-cohorter"` | ------------------------------------------------------------------------- |
+| nl2dsl | object | `{"affinity":{},"enabled":true,"env":{"ALLOW_ORIGINS":"*","OLLAMA_MODEL":"llama3.2:3b"},"image":{"pullPolicy":"Always","repository":"cogstacksystems/cogstack-cohorter-nl2dsl","tag":"latest"},"livenessProbe":{"httpGet":{"path":"/","port":"http"},"initialDelaySeconds":30,"periodSeconds":10},"nodeSelector":{},"readinessProbe":{"httpGet":{"path":"/","port":"http"},"initialDelaySeconds":10,"periodSeconds":5},"replicaCount":1,"resources":{},"service":{"port":3002,"type":"ClusterIP"},"tolerations":[]}` | ------------------------------------------------------------------------- |
+| nl2dsl.enabled | bool | `true` | Enable the NL2DSL deployment and service. |
+| ollama | object | `{"enabled":true,"ollama":{"models":{"pull":["llama3.2:3b"]}},"persistentVolume":{"enabled":true,"size":"10Gi","storageClass":""},"resources":{},"service":{"port":11434,"type":"ClusterIP"}}` | ------------------------------------------------------------------------- |
+| ollama.enabled | bool | `true` | Enable the Ollama subchart. |
+| podAnnotations | object | `{}` | ------------------------------------------------------------------------- |
 | podLabels | object | `{}` |  |
 | podSecurityContext | object | `{}` |  |
 | securityContext | object | `{}` |  |
-| serviceAccount.annotations | object | `{}` |  |
-| serviceAccount.automount | bool | `true` |  |
-| serviceAccount.create | bool | `true` |  |
-| serviceAccount.name | string | `""` |  |
-| webapp.affinity | object | `{}` |  |
-| webapp.enabled | bool | `true` |  |
-| webapp.env.RANDOM_DATA | string | `"false"` |  |
-| webapp.image.pullPolicy | string | `"IfNotPresent"` |  |
-| webapp.image.repository | string | `"cogstacksystems/cogstack-cohorter-webapp"` |  |
-| webapp.image.tag | string | `"latest"` |  |
-| webapp.livenessProbe.httpGet.path | string | `"/"` |  |
-| webapp.livenessProbe.httpGet.port | string | `"http"` |  |
-| webapp.livenessProbe.initialDelaySeconds | int | `60` |  |
-| webapp.livenessProbe.periodSeconds | int | `15` |  |
-| webapp.nodeSelector | object | `{}` |  |
-| webapp.persistence.accessMode | string | `"ReadWriteOnce"` |  |
-| webapp.persistence.enabled | bool | `true` |  |
-| webapp.persistence.existingClaim | string | `""` |  |
-| webapp.persistence.size | string | `"5Gi"` |  |
-| webapp.persistence.storageClass | string | `""` |  |
-| webapp.readinessProbe.httpGet.path | string | `"/"` |  |
-| webapp.readinessProbe.httpGet.port | string | `"http"` |  |
-| webapp.readinessProbe.initialDelaySeconds | int | `30` |  |
-| webapp.readinessProbe.periodSeconds | int | `10` |  |
-| webapp.replicaCount | int | `1` |  |
-| webapp.resources | object | `{}` |  |
-| webapp.service.port | int | `3000` |  |
-| webapp.service.type | string | `"ClusterIP"` |  |
-| webapp.tolerations | list | `[]` |  |
+| serviceAccount | object | `{"annotations":{},"automount":true,"create":true,"name":""}` | ------------------------------------------------------------------------- |
+| webapp | object | `{"affinity":{},"data":{"downloadUrl":""},"enabled":true,"env":{"RANDOM_DATA":"true"},"image":{"pullPolicy":"Always","repository":"cogstacksystems/cogstack-cohorter-webapp","tag":"latest"},"initContainers":[],"livenessProbe":{"httpGet":{"path":"/","port":"http"},"initialDelaySeconds":60,"periodSeconds":15},"nodeSelector":{},"persistence":{"accessMode":"ReadWriteOnce","enabled":true,"existingClaim":"","size":"5Gi","storageClass":""},"readinessProbe":{"httpGet":{"path":"/","port":"http"},"initialDelaySeconds":30,"periodSeconds":10},"replicaCount":1,"resources":{},"service":{"port":3000,"type":"ClusterIP"},"tolerations":[]}` | ------------------------------------------------------------------------- |
+| webapp.enabled | bool | `true` | Enable the WebApp deployment and service. |
 
 ----------------------------------------------
 Autogenerated from chart metadata using [helm-docs v1.14.2](https://github.com/norwoodj/helm-docs/releases/v1.14.2)

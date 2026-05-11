@@ -1,7 +1,6 @@
 function data() {
 
-  const NL2DSL_URL   = '/nl2dsl';
-  const NL2DSL_MODEL = 'gpt-oss:20b';
+  const NL2DSL_URL = '/nl2dsl';
 
   // read version from URL
   const url = new URL(window.location.href);
@@ -346,13 +345,12 @@ function data() {
       this.nl_loading = true;
 
       try {
-        // 1) NL -> DSL (force gpt-oss-20b)
+        // 1) NL -> DSL — model is configured server-side via OLLAMA_MODEL env var
         const compileResp = await fetch(NL2DSL_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            query: q,
-            model: NL2DSL_MODEL         // ← use gpt-oss-20b
+            query: q
             // If your API also accepts temperature/top_p etc., add them here.
             // e.g. temperature: 0.2
           })

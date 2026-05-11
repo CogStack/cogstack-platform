@@ -1,7 +1,7 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "medcat-service.name" -}}
+{{- define "cogstack-jupyterhub-helm.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -10,7 +10,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "medcat-service.fullname" -}}
+{{- define "cogstack-jupyterhub-helm.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -27,16 +27,16 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "medcat-service.chart" -}}
+{{- define "cogstack-jupyterhub-helm.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "medcat-service.labels" -}}
-helm.sh/chart: {{ include "medcat-service.chart" . }}
-{{ include "medcat-service.selectorLabels" . }}
+{{- define "cogstack-jupyterhub-helm.labels" -}}
+helm.sh/chart: {{ include "cogstack-jupyterhub-helm.chart" . }}
+{{ include "cogstack-jupyterhub-helm.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -47,18 +47,17 @@ app.kubernetes.io/part-of: cogstack
 {{/*
 Selector labels
 */}}
-{{- define "medcat-service.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "medcat-service.name" . }}
+{{- define "cogstack-jupyterhub-helm.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "cogstack-jupyterhub-helm.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-Create the name of the service account to use
+ServiceMonitor selector labels for the jupyterhub hub Service.
+This intentionally mirrors the JupyterHub chart's hub service labels.
 */}}
-{{- define "medcat-service.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create }}
-{{- default (include "medcat-service.fullname" .) .Values.serviceAccount.name }}
-{{- else }}
-{{- default "default" .Values.serviceAccount.name }}
-{{- end }}
-{{- end }}
+{{- define "jupyterhub.hubMatchLabels" -}}
+component: {{ "hub" | quote }}
+app: {{ "jupyterhub" | quote }}
+release: {{ .Release.Name | quote }}
+{{- end -}}

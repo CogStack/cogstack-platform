@@ -20,14 +20,14 @@ It combines model serving, de-identification, model training, notebook-based ana
 
 ## Where to start
 
-1. [Tutorial: Quickstart](./tutorial/quickstart-installation.md)
-2. [Tutorial: End To End Tutorial](./tutorial/end-to-end-jupyterhub.md)
+1. [Quickstart](./tutorial/quickstart-installation.md) for the installation
+2. [Product Tour](./tutorial/end-to-end-jupyterhub.md)
 
 ## Installation and customization (reference)
 
 For the full installation reference, deployment instructions, and customizations, see:
 
-- [Deployment](../platform/deployment/_index.md)
+- [Deployment](../platform/deployment/index.md)
 - [CogStack CE Helm chart (install + customization)](../platform/deployment/helm/charts/cogstack-ce-helm.md)
 
 ## Models

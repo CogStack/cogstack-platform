@@ -16,7 +16,7 @@ services:
         until ollama list > /dev/null 2>&1; do
           echo '[ollama-pull] Waiting for Ollama...'; sleep 2;
         done &&
-        ollama pull ${OLLAMA_MODEL:-gpt-oss:20b}
+        ollama pull ${OLLAMA_MODEL:-llama3.2:3b}
       "
     environment:
       OLLAMA_HOST: "http://ollama:11434"
@@ -44,7 +44,7 @@ services:
       - "3002:3002"
     environment:
       OLLAMA_URL: "http://ollama:11434/api/generate"
-      OLLAMA_MODEL: "gpt-oss:20b"
+      OLLAMA_MODEL: "llama3.2:3b"
       MEDCAT_URL: "http://cohorter-medcat:5000"
       ALLOW_ORIGINS: "*"
     depends_on:

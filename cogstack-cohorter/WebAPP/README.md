@@ -5,19 +5,9 @@ This webapp is a cohort app for users to obtain the number of patients satifying
 ### Frontend
 This repository currently contains two frontend implementations:
 
-- `client` (legacy frontend): adapted from [Windmill Dashboard](https://windmillui.com/dashboard-html) with [tailwindcss](https://tailwindcss.com/) for styling and [alpine.js](https://alpinejs.dev/) for interactivity.
 - `client-react` (React shell frontend): React 18 + `react-scripts`, using reusable HTML template components and a lightweight Alpine-style runtime.
 
 Other runtime dependencies include [ECharts](https://echarts.apache.org/en/index.html) for charts and [popper.js](https://popper.js.org/) for tooltips.
-
-To work on the legacy frontend:
-
-```bash
-cd client
-npm install
-```
-
-Run `npm run tailwind` in `client` after adding any tailwind classes.
 
 To work on the React frontend:
 
@@ -47,7 +37,7 @@ The backend of the app is in the `server` folder which is a [node.js](https://no
 
 There is a script `gen_random_data.js` in `server/data/` folder to generate the above 6 files completely randomly so you can still try the app without any real data. In the app folder run `cd server/data && node --max-old-space-size=32768  gen_random_data.js`.
 
-Please make sure to have the 6 data files ready in the `server/data/` folder before starting the server. To start the server, in the app folder run `cd server && npm install && npm run start`. 
+Please make sure to have the six data files ready in the `server/data/` folder before starting the server. To start the server, in the app folder run `cd server && npm install && npm run start`. 
 
 There is also a Dockerfile in the app folder if using docker, to build and run the container, run `docker build --tag cohortingtool/webapp . && docker run  -p 3000:3000 cohortingtool/webapp`.
 

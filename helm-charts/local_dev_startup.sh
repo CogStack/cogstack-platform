@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-minikube start --cni=calico --cpus=no-limit --memory=no-limit
+export MINIKUBE_HOME="$HOME/.minikube-${HOSTNAME}"
+export KUBECONFIG="$HOME/.kube/config-${HOSTNAME}"
+minikube start -p cogstack-platform --cni=calico --cpus=no-limit --memory=no-limit
 minikube addons enable metrics-server
 
 minikube dashboard --url=true &
@@ -32,12 +34,12 @@ helm dependency update ./medcat-trainer-helm
 helm dependency update ./cogstack-jupyterhub-helm
 helm dependency update ./cogstack-ce-helm
 
-helm upgrade cogstack-ce-helm ./cogstack-ce-helm --install --dependency-update --wait --timeout 30m0s
+helm upgrade cogstack ./cogstack-ce-helm --install --dependency-update --wait --timeout 30m0s
 
 # Stop any running port forwards
 # ps -ef | grep '[p]ort-forward' | awk '{print $2}' | xargs -r kill
 # Port forward all services in  cogstack-ce-helm
-# helm get notes cogstack-ce-helm | bash
+# helm get notes cogstack | bash
 
 ## To fix minikube when it's stuck on minikube start
 #minikube delete --all --purge

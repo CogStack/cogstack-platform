@@ -1,4 +1,4 @@
-# Default values for the community jupyterhub helm chart
+# Values for the community jupyterhub helm chart
 jupyterhub:
   hub:
     image:
@@ -43,6 +43,18 @@ jupyterhub:
         })
         # Allow root in notebooks
         c.KubeSpawner.args = ['--allow-root']
+      # -- Allow /hub/metrics to be scraped without authentication
+      01-prometheus-authentication: |
+        c.JupyterHub.authenticate_prometheus = False
+    networkPolicy:
+      ingress:
+        - from:
+            - podSelector:
+                matchLabels:
+                  app.kubernetes.io/name: prometheus
+          ports:
+            - protocol: TCP
+              port: http
   proxy:
     service:
       type: ClusterIP
@@ -111,3 +123,19 @@ jupyterhub:
       enabled: false
     continuous:
       enabled: false
+
+# -- Create a Prometheus ServiceMonitor for the JupyterHub. Requires the Prometheus Operator to be installed
+serviceMonitor:
+  # -- Set to true to enable creation of a ServiceMonitor resource
+  enabled: false
+  # -- HTTP path where metrics are exposed.
+  path: /hub/metrics
+  # -- Scheme to use for scraping.
+  scheme: http
+  # -- Frequency at which Prometheus will scrape metrics.
+  interval: 30s
+  # -- Named port the serviceMonitor will scrape.
+  port: hub
+  # -- Additional labels to be added to the ServiceMonitor
+  labels: {}
+  tlsConfig: {}

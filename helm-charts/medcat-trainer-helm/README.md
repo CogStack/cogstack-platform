@@ -106,6 +106,7 @@ These features are not yet existing but to be added in future:
 | postgresql.auth.password | string | `"postgres"` |  |
 | postgresql.auth.username | string | `"postgres"` |  |
 | postgresql.enabled | bool | `true` |  |
+| postgresql.fullnameOverride | string | `"medcat-trainer-postgresql"` |  |
 | postgresql.image.repository | string | `"bitnamilegacy/postgresql"` |  |
 | postgresql.image.tag | string | `"17.6.0-debian-12-r4"` |  |
 | postgresql.primary.persistence.size | string | `"500Mi"` |  |

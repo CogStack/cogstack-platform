@@ -39,7 +39,6 @@ Create a values file like `values-model-download.yaml` and set these values:
 ```yaml
 model:
   downloadUrl: "http://localhost:9000/models/my-model.zip"
-  name: my-model.zip
 ```
 
 Use this if you prefer dynamic loading of models at runtime.

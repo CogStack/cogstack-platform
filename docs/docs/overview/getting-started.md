@@ -20,13 +20,15 @@ Suggested order for reading the docs and getting the most out of CogStack.
 
 **If you care about running CogStack:**
 
-- [Deployment overview](../platform/deployment/_index.md) — Ways to deploy (Helm, Docker Compose, cloud examples).
+- [Deployment overview](../platform/deployment/index.md) — Ways to deploy (Helm, Docker Compose, cloud examples).
 - [Quickstart](../platform/deployment/get-started/quickstart.md) — Get a local instance running quickly.
+- [Deployment examples](../platform/deployment/examples/index.md) — Real-world deployment scenarios for AWS, Azure, OpenStack,
+
 
 ## 3. Deploy and operate
 
 - **[Helm tutorial](../platform/deployment/helm/tutorial.md)** — Deploy with Helm step by step.
-- **[Observability](../platform/observability/_index.md)** — Dashboards, telemetry, and alerting for your deployment.
+- **[Observability](../platform/observability/index.md)** — Dashboards, telemetry, and alerting for your deployment.
 
 ## 4. Go deeper
 
