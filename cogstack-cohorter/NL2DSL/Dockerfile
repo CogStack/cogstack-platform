@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:20
 
 ENV NODE_ENV=production \
     PORT=3002 \
@@ -11,7 +11,7 @@ WORKDIR /app
 
 # Install deps first (better layer caching)
 COPY package.json package-lock.json* ./
-RUN npm ci --only=production || npm i --only=production
+RUN npm ci --omit=dev
 
 # Copy app code
 COPY server.js ./server.js

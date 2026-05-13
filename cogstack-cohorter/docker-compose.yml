@@ -55,13 +55,31 @@ services:
   webapp:
     build:
       context: ./WebAPP
+      secrets:
+        - npm_token
+      args:
+        VITE_OAUTH2_USERINFO_PATH: "${VITE_OAUTH2_USERINFO_PATH}"
+        VITE_OAUTH2_LOGIN_PATH: "${VITE_OAUTH2_LOGIN_PATH}"
+        VITE_OAUTH2_LOGOUT_PATH: "${VITE_OAUTH2_LOGOUT_PATH}"
     container_name: cohorter-webapp
     ports:
       - "3000:3000"
     environment:
       NL2DSL_SERVER: "http://cohorter-nl2dsl:3002/api/compile"
       # Set to "true" to generate synthetic patient data on startup.
-      RANDOM_DATA: "true"
+      RANDOM_DATA: "${RANDOM_DATA:-true}"
+
+      # ── Default user (pre-oauth2-proxy deployment) ───────────────────────
+      # When oauth2-proxy is NOT deployed in front of the app, the Express
+      # server returns these values from GET /oauth2/userinfo so that the
+      # Header / UserSection renders correctly without real authentication.
+      # Once oauth2-proxy is deployed it intercepts /oauth2/* before Express,
+      # so these vars have no effect.
+      DEFAULT_USER_NAME: "${DEFAULT_USER_NAME:-Local User}"
+      DEFAULT_USER_EMAIL: "${DEFAULT_USER_EMAIL:-}"
+      DEFAULT_USER_ID: "${DEFAULT_USER_ID:-local}"
+      # Comma-separated list, e.g. "cohorter-users,role:admin"
+      DEFAULT_USER_GROUPS: "${DEFAULT_USER_GROUPS:-}"
     volumes:
       # Mount your data directory here. It should contain either:
       #   - snomed_terms_data.tar.gz (will be auto-extracted on startup), or
@@ -74,3 +92,7 @@ services:
 
 volumes:
   ollama:
+
+secrets:
+  npm_token:
+    environment: NPM_TOKEN

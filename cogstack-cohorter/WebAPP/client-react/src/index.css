@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.header-gradient button {
+  background-color: transparent;
+  color: white;
+  border-color: white;
+}
+.header-gradient button:hover {
+  background-color: rgb(255 255 255 / 0.2);
+  color: white;
+}
+
+.header-gradient .header-dropdown button {
+  background-color: transparent;
+  color: rgb(55 65 81); /* gray-700 */
+  border-color: transparent;
+}
+.header-gradient .header-dropdown button:hover {
+  background-color: rgb(243 244 246); /* gray-100 */
+  color: rgb(55 65 81);
+}
