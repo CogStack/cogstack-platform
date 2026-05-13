@@ -4,6 +4,8 @@ import { PanelLeftOpen } from 'lucide-react';
 import { mountCohorterApp } from './alpine-runtime';
 import { HeaderControls } from './HeaderControls';
 import { FilterSidebar } from './FilterSidebar';
+import { AdminLoginDialog } from './AdminLoginDialog';
+import { LoadQueryDialog } from './LoadQueryDialog';
 
 // Fixed header height
 const HEADER_HEIGHT = 80;
@@ -23,8 +25,14 @@ function App() {
   // React's useState does not treat the function itself as an updater.
   const [subscribe, setSubscribe] = useState(null);
 
-  // Sidebar is shown by default; the Filters button in HeaderControls toggles it.
+  // Sidebar is shown by default; the Filters button in the content area toggles it.
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Admin login dialog — opened by the Settings menu in HeaderControls.
+  const [adminLoginOpen, setAdminLoginOpen] = useState(false);
+
+  // Load query dialog — opened by the Settings menu in HeaderControls.
+  const [loadQueryOpen, setLoadQueryOpen] = useState(false);
 
   useEffect(() => {
     if (!rootRef.current) return undefined;
@@ -58,7 +66,11 @@ function App() {
         applicationName="Cohorter"
         rightSlot={
           <div className="flex items-center gap-2">
-            <HeaderControls stateRef={stateRef} />
+            <HeaderControls
+              stateRef={stateRef}
+              onAdminLogin={() => setAdminLoginOpen(true)}
+              onLoadQuery={() => setLoadQueryOpen(true)}
+            />
             <UserSection
               applicationName="cohorter"
               userInfoPath={USERINFO_PATH}
@@ -99,6 +111,16 @@ function App() {
           <div ref={rootRef} className="flex flex-col flex-1 min-w-0" />
         </div>
       </div>
+      <AdminLoginDialog
+        isOpen={adminLoginOpen}
+        onClose={() => setAdminLoginOpen(false)}
+        stateRef={stateRef}
+      />
+      <LoadQueryDialog
+        isOpen={loadQueryOpen}
+        onClose={() => setLoadQueryOpen(false)}
+        stateRef={stateRef}
+      />
     </div>
   );
 }

@@ -1,15 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { Sun, Moon, Settings } from 'lucide-react';
-
-// ── Component ─────────────────────────────────────────────────────────────────
-
 /**
  * App-specific controls rendered in the Header's rightSlot.
  *
  * Delegates actions to the Alpine.js reactive state (via stateRef) so that
  * the rest of the app stays in sync without duplicating any logic here.
  */
-export function HeaderControls({ stateRef }) {
+export function HeaderControls({ stateRef, onAdminLogin, onLoadQuery }) {
   // Mirror isDark from localStorage so the icon renders correctly on load.
   const [isDark, setIsDark] = useState(() => localStorage.getItem('theme') === 'dark');
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -38,9 +35,9 @@ export function HeaderControls({ stateRef }) {
 
   const handleTheme = () => { call('toggleTheme'); setIsDark(d => !d); };
   const handleSave    = () => { call('save_query');      setSettingsOpen(false); };
-  const handleLoad    = () => { call('load_query');      setSettingsOpen(false); };
+  const handleLoad    = () => { onLoadQuery?.();         setSettingsOpen(false); };
   const handleExport  = () => { call('export_patients'); setSettingsOpen(false); };
-  const handleAdminLogin  = () => { call('admin_login');  setSettingsOpen(false); };
+  const handleAdminLogin  = () => { onAdminLogin?.();     setSettingsOpen(false); };
   const handleAdminLogout = () => { call('admin_logout'); setSettingsOpen(false); };
 
   // Close settings on outside click or Escape.
