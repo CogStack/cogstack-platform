@@ -144,7 +144,7 @@ export function FilterSidebar({ stateRef, subscribe, isOpen, onToggle }) {
   };
 
   return (
-    <aside className="z-20 w-72 overflow-y-auto bg-white dark:bg-gray-900 shadow flex-shrink-0">
+    <aside className="z-20 w-72 overflow-y-auto bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-shrink-0">
       <div className="py-4 text-gray-500 dark:text-gray-400">
 
         {/* Header row */}
