@@ -33,7 +33,7 @@ CONFIG_JS=/usr/src/app/client-react/dist/config.js
   printf 'window.__RUNTIME_CONFIG__ = {\n'
   printf '  OAUTH2_USERINFO_PATH: "%s",\n' "$(_js_escape "${OAUTH2_USERINFO_PATH:-/oauth2/userinfo}")"
   printf '  OAUTH2_LOGIN_PATH:    "%s",\n' "$(_js_escape "${OAUTH2_LOGIN_PATH:-/oauth2/sign_in}")"
-  printf '  OAUTH2_LOGOUT_PATH:   "%s",\n' "$(_js_escape "${OAUTH2_LOGOUT_PATH:-/oauth2/sign_out?rd=/}")"
+  printf '  OAUTH2_LOGOUT_PATH:   "%s",\n' "$(_js_escape "${OAUTH2_LOGOUT_PATH:-/logout}")"
   printf '};\n'
 } > "$CONFIG_JS"
 

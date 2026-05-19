@@ -73,9 +73,20 @@ These variables are only needed when **oauth2-proxy is deployed in front of the 
 |---|---|---|
 | `OAUTH2_USERINFO_PATH` | `/oauth2/userinfo` | Path the `UserSection` component fetches to get the logged-in user's info. With oauth2-proxy this is intercepted by oauth2-proxy before reaching Express. Without oauth2-proxy it hits the Express fallback endpoint. |
 | `OAUTH2_LOGIN_PATH` | `/oauth2/sign_in` | Path the header's "Sign in" button links to |
-| `OAUTH2_LOGOUT_PATH` | `/oauth2/sign_out?rd=/` | Path the header's "Sign out" button links to |
+| `OAUTH2_LOGOUT_PATH` | `/logout` | Path the header's "Sign out" button links to. The Express `/logout` endpoint chains oauth2-proxy session clearing with a Keycloak RP-initiated logout. Override to `/oauth2/sign_out?rd=/oauth2/sign_in` if not using Keycloak. |
 
-When deploying with oauth2-proxy, the defaults are correct and no override is needed unless the oauth2-proxy is mounted at a non-standard prefix.
+When deploying with oauth2-proxy, set the following two server env vars to enable Keycloak RP-initiated logout:
+
+| Variable | Example | Description |
+|---|---|---|
+| `KEYCLOAK_LOGOUT_URL` | `https://auth.app.cogstack.org/realms/cogstack/protocol/openid-connect/logout?client_id=cogstack-cohorter-oauth2-proxy` | Keycloak `end_session_endpoint` with `client_id` appended. When set, clicking "Sign out" first clears the oauth2-proxy session cookie, then redirects the browser to Keycloak to invalidate the SSO session. |
+| `POST_LOGOUT_REDIRECT_URI` | `https://cohorter.app.cogstack.org/oauth2/sign_in` | URL Keycloak redirects the browser to after the SSO session is cleared. Should be the oauth2-proxy sign-in page (a public route). Must be registered as a valid post-logout redirect URI in the Keycloak client settings. |
+
+When neither variable is set (standalone deployment without oauth2-proxy), the `/logout` endpoint simply redirects to `/`.
+
+> **Keycloak admin setup**: add the `POST_LOGOUT_REDIRECT_URI` value to the **Valid post logout redirect URIs** list in the Keycloak client (`cogstack-cohorter-oauth2-proxy` → Settings → Valid post logout redirect URIs).
+
+When deploying with oauth2-proxy, the `OAUTH2_*` defaults are correct and no override is needed unless the oauth2-proxy is mounted at a non-standard prefix.
 
 In Kubernetes these are set as env vars on the webapp container (via helm `cogstack-cohorter.webapp.env`) and are picked up automatically on the next pod restart.
 

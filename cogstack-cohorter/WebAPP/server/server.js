@@ -677,15 +677,31 @@ app.post('/compare_query', (req, res) => {
 // configurable default user so the Header/UserSection renders correctly
 // without any real authentication.
 app.get("/oauth2/userinfo", (req, res) => {
-    const groups = process.env.DEFAULT_USER_GROUPS || 'cohorter-users'
-        ? process.env.DEFAULT_USER_GROUPS.split(',').map(g => g.trim()).filter(Boolean)
-        : [];
+    const rawGroups = process.env.DEFAULT_USER_GROUPS;
+    const groups = rawGroups
+        ? rawGroups.split(',').map(g => g.trim()).filter(Boolean)
+        : ['cohorter-users'];
     res.status(200).json({
         user:              process.env.DEFAULT_USER_ID    || 'local',
         email:             process.env.DEFAULT_USER_EMAIL || '',
         groups,
         preferredUsername: process.env.DEFAULT_USER_NAME  || 'Local User',
     });
+});
+//========================================================
+
+//========================================================
+// Logout — chains oauth2-proxy session clear with Keycloak RP-initiated logout
+// when KEYCLOAK_LOGOUT_URL and POST_LOGOUT_REDIRECT_URI env vars are set.
+// When KEYCLOAK_LOGOUT_URL is not set (standalone / no oauth2-proxy), redirects to /.
+app.get("/logout", (req, res) => {
+    const keycloakLogoutUrl = process.env.KEYCLOAK_LOGOUT_URL;
+    if (!keycloakLogoutUrl) {
+        return res.redirect('/');
+    }
+    const postLogoutUri = process.env.POST_LOGOUT_REDIRECT_URI || '/oauth2/sign_in';
+    const keycloakUrl = `${keycloakLogoutUrl}&post_logout_redirect_uri=${encodeURIComponent(postLogoutUri)}`;
+    res.redirect(`/oauth2/sign_out?rd=${encodeURIComponent(keycloakUrl)}`);
 });
 //========================================================
 
