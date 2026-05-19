@@ -1,14 +1,4 @@
 FROM node:20
-
-ARG VITE_OAUTH2_USERINFO_PATH
-ARG VITE_OAUTH2_LOGIN_PATH
-ARG VITE_OAUTH2_LOGOUT_PATH
-
-# VITE_* vars must be ENV (not just ARG) for Vite to pick them up at build time.
-ENV VITE_OAUTH2_USERINFO_PATH=${VITE_OAUTH2_USERINFO_PATH}
-ENV VITE_OAUTH2_LOGIN_PATH=${VITE_OAUTH2_LOGIN_PATH}
-ENV VITE_OAUTH2_LOGOUT_PATH=${VITE_OAUTH2_LOGOUT_PATH}
-
 WORKDIR /usr/src/app/client-react
 COPY client-react/package*.json ./
 RUN --mount=type=secret,id=npm_token,required=true \

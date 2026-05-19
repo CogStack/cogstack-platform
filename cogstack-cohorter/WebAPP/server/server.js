@@ -675,13 +675,9 @@ app.post('/compare_query', (req, res) => {
 //
 // During development (or when OAuth2 is not yet deployed) this returns a
 // configurable default user so the Header/UserSection renders correctly
-// without any real authentication.  Override the defaults via env vars:
-//   DEFAULT_USER_NAME  — displayed username  (default: "Local User")
-//   DEFAULT_USER_EMAIL — user email          (default: "")
-//   DEFAULT_USER_ID    — opaque user id      (default: "local")
-//   DEFAULT_USER_GROUPS — comma-separated groups (default: "")
+// without any real authentication.
 app.get("/oauth2/userinfo", (req, res) => {
-    const groups = process.env.DEFAULT_USER_GROUPS
+    const groups = process.env.DEFAULT_USER_GROUPS || 'cohorter-users'
         ? process.env.DEFAULT_USER_GROUPS.split(',').map(g => g.trim()).filter(Boolean)
         : [];
     res.status(200).json({

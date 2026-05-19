@@ -46,6 +46,39 @@ Please make sure to have the six data files ready in the `server/data/` folder b
 
 The recommended way to run the full stack (webapp + NL2DSL + MedCAT + Ollama) is via `docker-compose` from the `cogstack-cohorter/` root — see the root-level README and `.env.example` for details. The `NPM_TOKEN` is passed as a BuildKit secret; set it in the `.env` file before building.
 
+### Environment variables
+
+The webapp is configured entirely through environment variables — no rebuild is required to change settings.
+
+#### Server (Express backend)
+
+| Variable | Default                             | Description |
+|---|-------------------------------------|---|
+| `PORT` | `3000`                              | Port the Express server listens on |
+| `NL2DSL_SERVER` | `http://localhost:3002/api/compile` | URL of the NL2DSL service |
+| `RANDOM_DATA` | `true`                              | `true` → generate and serve synthetic demo data; `false` → load real data from `server/data/` |
+| `PASSWORD` | `admin_pass`                        | Password for the admin export panel |
+| `DEFAULT_USER_NAME` | `Local User`                        | Display name shown in the header when no oauth2-proxy is deployed |
+| `DEFAULT_USER_EMAIL` | _(empty)_                           | Email shown in the user panel when no oauth2-proxy is deployed |
+| `DEFAULT_USER_ID` | `local`                             | Opaque user ID returned by `/oauth2/userinfo` when no oauth2-proxy is deployed |
+| `DEFAULT_USER_GROUPS` | `cohorter-users`                    | Comma-separated groups returned by `/oauth2/userinfo` when no oauth2-proxy is deployed |
+
+#### Frontend runtime config (written to `config.js` at container startup)
+
+At startup `entrypoint.sh` writes `/config.js` into the pre-built static assets folder. `index.html` loads this file before the React bundle, so the values are available as `window.__RUNTIME_CONFIG__` without a rebuild.
+
+These variables are only needed when **oauth2-proxy is deployed in front of the app**. The defaults work correctly for standalone deployments — the Express server handles `/oauth2/userinfo` itself and returns the `DEFAULT_USER_*` values above.
+
+| Variable | Default | Description |
+|---|---|---|
+| `OAUTH2_USERINFO_PATH` | `/oauth2/userinfo` | Path the `UserSection` component fetches to get the logged-in user's info. With oauth2-proxy this is intercepted by oauth2-proxy before reaching Express. Without oauth2-proxy it hits the Express fallback endpoint. |
+| `OAUTH2_LOGIN_PATH` | `/oauth2/sign_in` | Path the header's "Sign in" button links to |
+| `OAUTH2_LOGOUT_PATH` | `/oauth2/sign_out?rd=/` | Path the header's "Sign out" button links to |
+
+When deploying with oauth2-proxy, the defaults are correct and no override is needed unless the oauth2-proxy is mounted at a non-standard prefix.
+
+In Kubernetes these are set as env vars on the webapp container (via helm `cogstack-cohorter.webapp.env`) and are picked up automatically on the next pod restart.
+
 ### Run using Docker with random data
 
 Set `RANDOM_DATA=true` in your `.env` file (or leave it unset — it defaults to `true`), then from the `cogstack-cohorter/` root:
