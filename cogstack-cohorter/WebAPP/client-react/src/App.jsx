@@ -13,7 +13,7 @@ const HEADER_HEIGHT = 80;
 const runtimeConfig = (typeof window !== 'undefined' && window.__RUNTIME_CONFIG__) || {};
 const USERINFO_PATH = runtimeConfig.OAUTH2_USERINFO_PATH || '/oauth2/userinfo';
 const LOGIN_PATH    = runtimeConfig.OAUTH2_LOGIN_PATH    || '/oauth2/sign_in';
-const LOGOUT_PATH   = runtimeConfig.OAUTH2_LOGOUT_PATH   || '/oauth2/sign_out?rd=/';
+const LOGOUT_PATH   = runtimeConfig.OAUTH2_LOGOUT_PATH   || '/logout';
 
 function App() {
   const rootRef  = useRef(null);
