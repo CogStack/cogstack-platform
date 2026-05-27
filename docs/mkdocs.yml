@@ -54,7 +54,8 @@ nav:
             - Breaking changes: medcat/medcat-v2/docs/breaking_changes.md
           - API Reference: https://docs.cogstack.org/projects/nlp/en/latest/reference/medcat/
       - Medcat Trainer: '!import https://github.com/CogStack/cogstack-nlp?branch=main&docs_dir=medcat-trainer/docs/*&config=medcat-trainer/mkdocs.yml'
-      - Medcat Service:
+      - Medcat Service: '!import https://github.com/CogStack/cogstack-nlp?branch=docs/medcat-service/docs&docs_dir=medcat-service/docs/*&config=medcat-service/mkdocs.yml'
+      - Tutorials:
           - Medcat Service Tutorial: platform/cogstack-ai/medcat-service-tutorial.ipynb
   - Data Engineering:
       - Data Engineering: data-engineering/index.md
