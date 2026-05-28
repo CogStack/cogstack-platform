@@ -219,16 +219,17 @@ COPY ./pyproject.toml ./uv.lock /srv/jupyterhub/
 # https://download.pytorch.org/whl/cpu is out of date on packages, using alternative URL for CPU
 RUN if [ "$GPU_BUILD" = "true" ] && [ "$CPU_ARCHITECTURE" = "amd64" ]; then \
       cd /srv/jupyterhub && \
-      uv export --quiet --locked --format requirements.txt --no-emit-project -o /tmp/requirements.lock.txt && \
-      uv pip install --system --no-cache-dir -r /tmp/requirements.lock.txt && \
+      uv export --quiet --locked --format requirements.txt --no-emit-project -o /tmp/uv-locked-deps.txt && \
+      uv pip install --system --no-cache-dir -r /tmp/uv-locked-deps.txt && \
       python -m medcat download-scripts /srv/jupyterhub/medcat-scripts ; \
     else \
       cd /srv/jupyterhub && \
-      uv export --quiet --locked --format requirements.txt --no-emit-project -o /tmp/requirements.lock.txt && \
-      uv pip install --system --no-cache-dir -r /tmp/requirements.lock.txt --index-url https://pypi.org/simple && \
+      uv export --quiet --locked --format requirements.txt --no-emit-project -o /tmp/uv-locked-deps.txt && \
+      uv pip install --system --no-cache-dir -r /tmp/uv-locked-deps.txt --index-url https://pypi.org/simple && \
       python -m medcat download-scripts /srv/jupyterhub/medcat-scripts ; \
     fi
 
+# medcat download-scripts creates this requirements file inside the image build.
 RUN uv pip install --no-cache-dir --system -r /srv/jupyterhub/medcat-scripts/requirements.txt
 
 # Copy medcat-scripts to default location (for Docker usage)

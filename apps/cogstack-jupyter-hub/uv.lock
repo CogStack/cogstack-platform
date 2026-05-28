@@ -605,16 +605,16 @@ wheels = [
 
 [[package]]
 name = "cogstack-es"
-version = "0.1.0"
+version = "0.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ipython" },
     { name = "pandas" },
     { name = "tqdm" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/85/26/5cbada9f45fee087479257dbfdc912eb0fd02df8908db40674ba84ab5b8b/cogstack_es-0.1.0.tar.gz", hash = "sha256:75f33fef01faa6ed965ea27ffc44f49cc1415f20ac939dd8dd7dffc98068873e", size = 20009, upload-time = "2025-10-29T12:36:08.093Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f0/82/39423695c5ec9c249c8ab097eb3846428a22fdee7b66285b1607ebf798a2/cogstack_es-0.2.0.tar.gz", hash = "sha256:f669683e6fef3de718e77ef1b8ec4033fcd609a8896a20fcb517ade483db427a", size = 20115, upload-time = "2026-05-28T09:13:19.03Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/96/c5/6c9a06aff19fa463ea312a8e7b82fdc547950814ffb2b295825db58265f1/cogstack_es-0.1.0-py3-none-any.whl", hash = "sha256:050439c60f8857486e9e025df5d23ed419ef8c519f194994a3a81c2848b36993", size = 13051, upload-time = "2025-10-29T12:36:06.661Z" },
+    { url = "https://files.pythonhosted.org/packages/b2/5c/6688918a1546d46329f727a2d2e287a3c55dee18d616c558ae6c20b649cc/cogstack_es-0.2.0-py3-none-any.whl", hash = "sha256:c60a65668bc4d1a1ca693e3bcb6e1b812003d026ade82fd275c1ed7ca9a08436", size = 13133, upload-time = "2026-05-28T09:13:17.906Z" },
 ]
 
 [package.optional-dependencies]
@@ -680,7 +680,7 @@ dependencies = [
 requires-dist = [
     { name = "bokeh", specifier = "==3.8.2" },
     { name = "click", specifier = "==8.2.1" },
-    { name = "cogstack-es", extras = ["os"], specifier = "==0.1.0" },
+    { name = "cogstack-es", extras = ["os"], specifier = "==0.2.0" },
     { name = "docker", specifier = "==7.1.0" },
     { name = "dockerspawner", specifier = "==14.0.0" },
     { name = "dvc", specifier = "==3.59.2" },
