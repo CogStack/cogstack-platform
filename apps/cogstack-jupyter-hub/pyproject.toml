@@ -1,4 +1,62 @@
-# pyproject.toml
+[project]
+name = "cogstack-jupyter-hub"
+version = "0.1.0"
+description = "Custom CogStack JupyterHub single-user environment"
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "wheel==0.46.2",
+    "medcat[spacy,meta-cat,deid,rel-cat,dict-ner]==2.8.0",
+    "medcat-den==0.5.4",
+    # TODO: cogstack-es 8/9 handling
+    "cogstack-es[os]==0.2.0",
+    "virtualenv==20.36.1",
+    "ipywidgets==8.1.7",
+    "requests>=2.32.2",
+    "jupyter==1.1.1",
+    "jupyterlab>=4.2.0",
+    "jupyterlab_widgets==3.0.15",
+    "jupyter_contrib_core==0.4.2",
+    "jupyter_contrib_nbextensions==0.7.0",
+    "docker==7.1.0",
+    "dockerspawner==14.0.0",
+    "jupyterhub-client==0.1.0",
+    "pytesseract==0.3.13",
+    "ipyparallel==9.0.1",
+    "py7zr==0.22.0",
+    "isort==6.0.1",
+    "html2text==2025.4.15",
+    "jsoncsv==2.2.5",
+    "simplejson==3.20.1",
+    "nltk==3.9.4",
+    "bokeh==3.8.2",
+    "seaborn==0.13.2",
+    "matplotlib==3.10.3",
+    "graphviz==0.20.3",
+    "plotly==6.1.1",
+    "tqdm>=4.66.5",
+    "pymssql==2.3.4",
+    "mysql-connector-python==9.3.0",
+    "jsonpickle==4.1.0",
+    "jsonext==0.4.2",
+    "psycopg[c,binary,pool]==3.2.9",
+    "pyodbc==5.2.0",
+    "openpyxl==3.1.5",
+    "dvc==3.59.2",
+    "GitPython==3.1.50",
+    "neo4j==5.28.1",
+    "PyYAML==6.0.2",
+    "opencv-python==4.11.0.86",
+    "click==8.2.1",
+    "traitlets==5.14.3",
+    "xnat==0.7.2",
+    "keras==3.13.2",
+    "opensearch-py>=2.8.0",
+    "ruff==0.12.12",
+]
+
+[tool.uv]
+package = false
 
 [tool.ruff]
 line-length = 120

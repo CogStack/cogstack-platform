@@ -35,7 +35,7 @@ Please check the ENV file for additional information, every variable is commente
 
 ## Python packages installed
 
-Full list found in [requirements.txt](./requirements.txt).
+Top-level Python dependencies are declared in [pyproject.toml](./pyproject.toml). Exact resolved versions are pinned in [uv.lock](./uv.lock).
 
 ## Security
 

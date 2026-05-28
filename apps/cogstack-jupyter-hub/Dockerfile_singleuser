@@ -214,15 +214,19 @@ RUN UV_PATH=$(find / -name uv -type f | head -n1) && \
 RUN uv pip install --upgrade --system pip setuptools wheel
 
 # install the rest of the packages including medcat
-COPY ./requirements.txt /srv/jupyterhub/
+COPY ./pyproject.toml ./uv.lock /srv/jupyterhub/
 
 # https://download.pytorch.org/whl/cpu is out of date on packages, using alternative URL for CPU
 RUN if [ "$GPU_BUILD" = "true" ] && [ "$CPU_ARCHITECTURE" = "amd64" ]; then \
-      uv pip install --system --no-cache-dir -r /srv/jupyterhub/requirements.txt && \
-      uv run python -m medcat download-scripts /srv/jupyterhub/medcat-scripts ; \
+      cd /srv/jupyterhub && \
+      uv export --quiet --locked --format requirements.txt --no-emit-project -o /tmp/requirements.lock.txt && \
+      uv pip install --system --no-cache-dir -r /tmp/requirements.lock.txt && \
+      python -m medcat download-scripts /srv/jupyterhub/medcat-scripts ; \
     else \
-      uv pip install --system --no-cache-dir -r /srv/jupyterhub/requirements.txt --index-url https://pypi.org/simple && \
-      uv run python -m medcat download-scripts /srv/jupyterhub/medcat-scripts ; \
+      cd /srv/jupyterhub && \
+      uv export --quiet --locked --format requirements.txt --no-emit-project -o /tmp/requirements.lock.txt && \
+      uv pip install --system --no-cache-dir -r /tmp/requirements.lock.txt --index-url https://pypi.org/simple && \
+      python -m medcat download-scripts /srv/jupyterhub/medcat-scripts ; \
     fi
 
 RUN uv pip install --no-cache-dir --system -r /srv/jupyterhub/medcat-scripts/requirements.txt
