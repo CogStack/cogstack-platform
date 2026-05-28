@@ -52,7 +52,7 @@ dependencies = [
     "xnat==0.7.2",
     "keras==3.13.2",
     "opensearch-py>=2.8.0",
-    "ruff==0.12.12",
+    "ruff==0.15.14",
 ]
 
 [tool.uv]
