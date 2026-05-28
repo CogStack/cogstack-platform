@@ -711,7 +711,7 @@ requires-dist = [
     { name = "opensearch-py", specifier = ">=2.8.0" },
     { name = "plotly", specifier = "==6.1.1" },
     { name = "psycopg", extras = ["c", "binary", "pool"], specifier = "==3.2.9" },
-    { name = "py7zr", specifier = "==0.22.0" },
+    { name = "py7zr", specifier = "==1.1.0" },
     { name = "pymssql", specifier = "==2.3.4" },
     { name = "pyodbc", specifier = "==5.2.0" },
     { name = "pytesseract", specifier = "==0.3.13" },
@@ -3253,9 +3253,10 @@ wheels = [
 
 [[package]]
 name = "py7zr"
-version = "0.22.0"
+version = "1.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "backports-zstd" },
     { name = "brotli", marker = "platform_python_implementation == 'CPython'" },
     { name = "brotlicffi", marker = "platform_python_implementation == 'PyPy'" },
     { name = "inflate64" },
@@ -3264,12 +3265,11 @@ dependencies = [
     { name = "pybcj" },
     { name = "pycryptodomex" },
     { name = "pyppmd" },
-    { name = "pyzstd" },
     { name = "texttable" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/26/c3/0e05c711c16af0b9c47f3f77323303b338b9a871ba020d95d2b8dd6605ae/py7zr-0.22.0.tar.gz", hash = "sha256:c6c7aea5913535184003b73938490f9a4d8418598e533f9ca991d3b8e45a139e", size = 4992926, upload-time = "2024-08-08T13:10:01.514Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/0c/e6/01fb15361ca75ee5d01df6361825a49816a836c99980c5481da0e40c6877/py7zr-1.1.0.tar.gz", hash = "sha256:087b1a94861ad9eb4d21604f6aaa0a8986a7e00580abd79fedd6f82fecf0592c", size = 70855, upload-time = "2025-12-21T03:27:44.653Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d0/59/dd1750002c0f46099281116f8165247bc62dc85edad41cdd26e7b26de19d/py7zr-0.22.0-py3-none-any.whl", hash = "sha256:993b951b313500697d71113da2681386589b7b74f12e48ba13cc12beca79d078", size = 67906, upload-time = "2024-08-08T13:09:58.092Z" },
+    { url = "https://files.pythonhosted.org/packages/f0/9c/762284710ead9076eeecd55fb60509c19cd1f4bea811df5f3603725b44cb/py7zr-1.1.0-py3-none-any.whl", hash = "sha256:5921bc30fb72b5453aafe3b2183664c08ef508cde2655988d5e9bd6078353ef7", size = 71257, upload-time = "2025-12-21T03:27:42.881Z" },
 ]
 
 [[package]]
@@ -3522,21 +3522,20 @@ wheels = [
 
 [[package]]
 name = "pyppmd"
-version = "1.1.1"
+version = "1.3.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/42/8e/06581a619ad31cd28fd897bd55aff2ea945d3d566969b8b3f682599e6dee/pyppmd-1.1.1.tar.gz", hash = "sha256:f1a812f1e7628f4c26d05de340b91b72165d7b62778c27d322b82ce2e8ff00cb", size = 1349281, upload-time = "2024-12-23T04:12:09.391Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/81/d7/803232913cab9163a1a97ecf2236cd7135903c46ac8d49613448d88e8759/pyppmd-1.3.1.tar.gz", hash = "sha256:ced527f08ade4408c1bfc5264e9f97ffac8d221c9d13eca4f35ec1ec0c7b6b2e", size = 1351815, upload-time = "2025-11-27T22:08:44.175Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e1/e5/e4c891ade6fffa0cf9ead432f80a481d069c26a009e78b9f402fe25bad40/pyppmd-1.1.1-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:753c5297c91c059443caef33bccbffb10764221739d218046981638aeb9bc5f2", size = 76148, upload-time = "2024-12-23T04:10:40.373Z" },
-    { url = "https://files.pythonhosted.org/packages/1c/7d/24d4b61c144e03c1bfaa272636e2b44678d7849b0fbe7c308d53f0926784/pyppmd-1.1.1-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:9b5a73da09de480a94793c9064876af14a01be117de872737935ac447b7cde3c", size = 47102, upload-time = "2024-12-23T04:10:41.726Z" },
-    { url = "https://files.pythonhosted.org/packages/7b/19/91fc02ef18ae67c8f4cd54a8b8722d3ce58746622adb80506bfc4a80df58/pyppmd-1.1.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:89c6febb7114dea02a061143d78d04751a945dfcadff77560e9a3d3c7583c24b", size = 47308, upload-time = "2024-12-23T04:10:43.168Z" },
-    { url = "https://files.pythonhosted.org/packages/26/d8/7d4e7106e744c55af7ac7f21388170a6d3c23cbe7d7b9e1a65524f264e37/pyppmd-1.1.1-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:0001e467c35e35e6076a8c32ed9074aa45833615ee16115de9282d5c0985a1d8", size = 138445, upload-time = "2024-12-23T04:10:46.303Z" },
-    { url = "https://files.pythonhosted.org/packages/91/1b/71e47e6dc117f088ab8e7fa3b7ff1dc8e1a6c96d0ffdb0010288c2c42ac6/pyppmd-1.1.1-cp311-cp311-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:c76820db25596afc859336ba06c01c9be0ff326480beec9c699fd378a546a77f", size = 136543, upload-time = "2024-12-23T04:10:47.964Z" },
-    { url = "https://files.pythonhosted.org/packages/46/93/363f6299aa6ab4209e4f91bfa313748c535e348b88b9232957d6175ddda1/pyppmd-1.1.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b67f0a228f8c58750a21ba667c170ae957283e08fd580857f13cb686334e5b3e", size = 141274, upload-time = "2024-12-23T04:10:49.597Z" },
-    { url = "https://files.pythonhosted.org/packages/f4/9a/9d52964af47c351f543c546cf0c21876e384c66029a1b3cb75aa71b4651c/pyppmd-1.1.1-cp311-cp311-musllinux_1_1_aarch64.whl", hash = "sha256:b18f24c14f0b0f1757a42c458ae7b6fd7aa0bce8147ac1016a9c134068c1ccc2", size = 141887, upload-time = "2024-12-23T04:10:53.218Z" },
-    { url = "https://files.pythonhosted.org/packages/90/22/09bb81e7a0c1512a6efb30c9ddb1b07e1ca7ff050e427fcce5e7aeedadfd/pyppmd-1.1.1-cp311-cp311-musllinux_1_1_i686.whl", hash = "sha256:c9e43729161cc3b6ad5b04b16bae7665d3c0cc803de047d8a979aa9232a4f94a", size = 136166, upload-time = "2024-12-23T04:10:54.864Z" },
-    { url = "https://files.pythonhosted.org/packages/6c/bf/24162ac82a502a75ac1042617fa0c69350406c79332a1a033cd96cb28cf6/pyppmd-1.1.1-cp311-cp311-musllinux_1_1_x86_64.whl", hash = "sha256:fe057d254528b4eeebe2800baefde47d6af679bae184d3793c13a06f794df442", size = 145209, upload-time = "2024-12-23T04:10:56.599Z" },
-    { url = "https://files.pythonhosted.org/packages/0f/a5/1cfafa9eea4723bd6b11d0e34519c1947ab26aeb8c78de67dfdbf7e91de7/pyppmd-1.1.1-cp311-cp311-win32.whl", hash = "sha256:faa51240493a5c53c9b544c99722f70303eea702742bf90f3c3064144342da4a", size = 41805, upload-time = "2024-12-23T04:10:59.524Z" },
-    { url = "https://files.pythonhosted.org/packages/cc/30/fd2fb7e431414b520dc3d1ced7158da04232203c0f18ed8768ecd6a1d939/pyppmd-1.1.1-cp311-cp311-win_amd64.whl", hash = "sha256:62486f544d6957e1381147e3961eee647b7f4421795be4fb4f1e29d52aee6cb5", size = 46472, upload-time = "2024-12-23T04:11:01.123Z" },
+    { url = "https://files.pythonhosted.org/packages/04/40/580b99818c9db3a09cbae8e3740f9b5127ef7fd7314daf009c487ab02eb6/pyppmd-1.3.1-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:fdf55aa6ee7aef492f6896464e7a5a528f8615bb9e435f55bc8dff226fcc8292", size = 77550, upload-time = "2025-11-27T22:07:37.839Z" },
+    { url = "https://files.pythonhosted.org/packages/8d/a3/f7b4c49ef920f5b2c9812f8f54f48e01435433cb6b46ec82b1b4e740714d/pyppmd-1.3.1-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:aa820aac385ac4ee57160b26d92862c69d31c08f92272dbef05fe8e619cea8d1", size = 48000, upload-time = "2025-11-27T22:07:38.983Z" },
+    { url = "https://files.pythonhosted.org/packages/bc/c3/30de6f7892e77b83350e55d54a6913420591cc2c5c4d2394c219a4c461ac/pyppmd-1.3.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:e16593ba4ca0a85821ae698ef06847a52937662f5ce1b130c39cca2979a4e8cd", size = 48439, upload-time = "2025-11-27T22:07:40.428Z" },
+    { url = "https://files.pythonhosted.org/packages/39/22/33889cbe22a617c42df2199be54e9e1bf88393fd8643fe911eb9f982849c/pyppmd-1.3.1-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:486dde2294ff9b30465ab5bb0f213b20bd5ac0e4adf21be801a1ceb29aa75d9d", size = 141737, upload-time = "2025-11-27T22:07:41.641Z" },
+    { url = "https://files.pythonhosted.org/packages/0c/f7/940ab2fd78caaef3a9e9833adb36e17b9d03016d8b45ae110cbb4bfc83d1/pyppmd-1.3.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:89730cf026416ae2546c92738966ecf117c8176d52c229ad621a61c34643818b", size = 143643, upload-time = "2025-11-27T22:07:42.892Z" },
+    { url = "https://files.pythonhosted.org/packages/75/51/129ce02d2b28a4f6788bccfe6d0ae1defc45db10eb1c4e4389cde8994ec7/pyppmd-1.3.1-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:e77f5a6770950d464b50da760d53e67bce308a3abc8e3bd51db620b3f8cf1fa8", size = 138625, upload-time = "2025-11-27T22:07:44.54Z" },
+    { url = "https://files.pythonhosted.org/packages/3a/89/f8390d1a21951d3d4619c854a839f7b1431746997cd98b475f614a658305/pyppmd-1.3.1-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:8e3bf8deef44f8e03612689a6067a4a3dd7e50d2ef00af4cf987c59b62ff3006", size = 141663, upload-time = "2025-11-27T22:07:45.814Z" },
+    { url = "https://files.pythonhosted.org/packages/fa/3f/b58dd8875ebbb78436f87567547967bebdf3a5586f5f243c735fc4460843/pyppmd-1.3.1-cp311-cp311-win32.whl", hash = "sha256:a3509b3f881409ebc5522942438108c48a78f8df88bcf3f9d907b74131b9431c", size = 42014, upload-time = "2025-11-27T22:07:47.058Z" },
+    { url = "https://files.pythonhosted.org/packages/b5/d3/5fe05bdccdd7af04461c25a3dc34799f48ad3e9a2bd591aaec9afbc1d10a/pyppmd-1.3.1-cp311-cp311-win_amd64.whl", hash = "sha256:23b83799f33f9a24577f22e092b0feecda8cd1ea33871ad8610a58629874f7bc", size = 46862, upload-time = "2025-11-27T22:07:48.162Z" },
+    { url = "https://files.pythonhosted.org/packages/d4/ba/6414cbe8407c23bacce906dad0599f155b2baf6082da104e64d7f1573717/pyppmd-1.3.1-cp311-cp311-win_arm64.whl", hash = "sha256:234489036a1758670655d1ceafd4caeb93b858bd4c0ca39686837d38aef044c0", size = 45249, upload-time = "2025-11-27T22:07:49.261Z" },
 ]
 
 [[package]]
@@ -3674,19 +3673,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/49/0e/3f0d0d335c6b3abb9b7b723776d0b21fa7f3a6c819a0db6097059aada160/pyzmq-27.1.0-pp311-pypy311_pp73-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:53b40f8ae006f2734ee7608d59ed661419f087521edbfc2149c3932e9c14808c", size = 567747, upload-time = "2025-09-08T23:09:52.698Z" },
     { url = "https://files.pythonhosted.org/packages/a1/cf/f2b3784d536250ffd4be70e049f3b60981235d70c6e8ce7e3ef21e1adb25/pyzmq-27.1.0-pp311-pypy311_pp73-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:f605d884e7c8be8fe1aa94e0a783bf3f591b84c24e4bc4f3e7564c82ac25e271", size = 747371, upload-time = "2025-09-08T23:09:54.563Z" },
     { url = "https://files.pythonhosted.org/packages/01/1b/5dbe84eefc86f48473947e2f41711aded97eecef1231f4558f1f02713c12/pyzmq-27.1.0-pp311-pypy311_pp73-win_amd64.whl", hash = "sha256:c9f7f6e13dff2e44a6afeaf2cf54cee5929ad64afaf4d40b50f93c58fc687355", size = 544862, upload-time = "2025-09-08T23:09:56.509Z" },
-]
-
-[[package]]
-name = "pyzstd"
-version = "0.19.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "backports-zstd" },
-    { name = "typing-extensions" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/4c/66/59fed71d0d2065e02974b40296f836a237c364c8bbe07295f2d0dc33c278/pyzstd-0.19.1.tar.gz", hash = "sha256:36723d3c915b3981de9198d0a2c82b2f5fe3eaa36e4d8d586937830a8afc7d72", size = 69531, upload-time = "2025-12-13T08:15:33.455Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/4d/62/f55d1363512d1b1cc122af6ca5951008e42605b63675c7d6781affc7c475/pyzstd-0.19.1-py3-none-any.whl", hash = "sha256:267e2eb0de0291dfcb7ccfebc4ffe75b2f9d84e7007ac38844f6ccafc6dce081", size = 23779, upload-time = "2025-12-13T08:15:31.979Z" },
 ]
 
 [[package]]

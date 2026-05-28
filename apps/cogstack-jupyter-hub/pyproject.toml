@@ -23,7 +23,7 @@ dependencies = [
     "jupyterhub-client==0.1.0",
     "pytesseract==0.3.13",
     "ipyparallel==9.0.1",
-    "py7zr==0.22.0",
+    "py7zr==1.1.0",
     "isort==6.0.1",
     "html2text==2025.4.15",
     "jsoncsv==2.2.5",
