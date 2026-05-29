@@ -35,7 +35,7 @@ dependencies = [
     "graphviz==0.21",
     "plotly==6.1.1",
     "tqdm>=4.66.5",
-    "pymssql==2.3.4",
+    "pymssql==2.3.13",
     "mysql-connector-python==9.3.0",
     "jsonpickle==4.1.0",
     "jsonext==0.4.2",
