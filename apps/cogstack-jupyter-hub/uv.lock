@@ -687,7 +687,7 @@ requires-dist = [
     { name = "gitpython", specifier = "==3.1.50" },
     { name = "graphviz", specifier = "==0.21" },
     { name = "html2text", specifier = "==2025.4.15" },
-    { name = "ipyparallel", specifier = "==9.0.1" },
+    { name = "ipyparallel", specifier = "==9.2.0" },
     { name = "ipywidgets", specifier = "==8.1.7" },
     { name = "isort", specifier = "==6.0.1" },
     { name = "jsoncsv", specifier = "==2.2.5" },
@@ -1596,7 +1596,7 @@ wheels = [
 
 [[package]]
 name = "ipyparallel"
-version = "9.0.1"
+version = "9.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "decorator" },
@@ -1610,9 +1610,9 @@ dependencies = [
     { name = "tqdm" },
     { name = "traitlets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c5/84/89881d3a43fba6e4e98f92722aa5c87e68b0d347f7bb66a8338627d60abd/ipyparallel-9.0.1.tar.gz", hash = "sha256:2e592cad2200c5a94fbbff639bff36e6ec9122f34b36b2fc6b4d678d9e98f29c", size = 4407324, upload-time = "2025-03-03T10:24:05.295Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/3d/05/f60bd7d99c1eace2d887e8d3c9cdef6b195826bcec866366fae8755e373f/ipyparallel-9.2.0.tar.gz", hash = "sha256:2b31bb4e94708e7ffb4ee6501d7f5f664df7e1c4c572e91e9e0d12484c6a6910", size = 4427734, upload-time = "2026-05-12T20:48:46.987Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/59/3f/f1736d4771388d91db3af22e2aa07ca9af514744f40994adc8cb30675ac6/ipyparallel-9.0.1-py3-none-any.whl", hash = "sha256:cc0702e26af416a1c35c73eb6dbc3a6a2c49417cb24dda4511be85c9fe87ea64", size = 306889, upload-time = "2025-03-03T10:24:03.56Z" },
+    { url = "https://files.pythonhosted.org/packages/30/2c/ebcf7b8ab6bad8667b3884a2d94f006898f75cc3e59f904a207b791529ac/ipyparallel-9.2.0-py3-none-any.whl", hash = "sha256:3d62ffa1f7bb6372c325e4e59798d2ad4ef4c8a43fb7461b97adba7d7951cadd", size = 309861, upload-time = "2026-05-12T20:48:45.059Z" },
 ]
 
 [[package]]
