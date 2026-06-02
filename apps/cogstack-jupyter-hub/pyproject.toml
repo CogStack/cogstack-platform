@@ -11,7 +11,7 @@ dependencies = [
     # TODO: cogstack-es 8/9 handling
     "cogstack-es[os]==0.2.0",
     "virtualenv==20.36.1",
-    "ipywidgets==8.1.7",
+    "ipywidgets==8.1.8",
     "requests>=2.32.2",
     "jupyter==1.1.1",
     "jupyterlab>=4.2.0",
