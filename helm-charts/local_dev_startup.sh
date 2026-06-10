@@ -6,7 +6,7 @@ minikube addons enable metrics-server
 
 minikube dashboard --url=true &
 
-helm upgrade medcat-service ./medcat-service-helm --install --recreate-pods  --wait --timeout 5m0s # Install if it doesnt already exist, else upgrade
+helm upgrade medcat-service ./medcat-service-helm --install --wait --timeout 5m0s # Install if it doesnt already exist, else upgrade
 helm test medcat-service --logs
 
 # Run CT  Lint

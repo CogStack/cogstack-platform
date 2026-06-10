@@ -1,0 +1,14 @@
+# -- Dashboards to be installed
+provisioning:
+  dashboards:
+    enabled: true
+    availability:
+      enabled: true
+    fastapi:
+      enabled: true
+    opensearch:
+      enabled: true
+    jupyterhub:
+      enabled: true
+    minio:
+      enabled: true

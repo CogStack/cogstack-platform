@@ -47,5 +47,16 @@ data:
     {{ .Files.Get "dashboards/jupyterhub-metrics.json" | nindent 4 }}
 ---
 {{- end }}
-
+{{- if .Values.provisioning.dashboards.minio.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "cogstack-observability-helm.fullname" . }}-dashboards-minio
+  labels:
+    grafana_dashboard: "1"
+data:
+  minio-metrics.json: |-
+    {{ .Files.Get "dashboards/minio-metrics.json" | nindent 4 }}
+---
+{{- end }}
 {{- end }}

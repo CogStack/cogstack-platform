@@ -3015,7 +3015,7 @@
     "schemaVersion": 42,
     "tags": [
         "cogstack",
-        "database"
+        "infra"
     ],
     "templating": {
         "list": [
