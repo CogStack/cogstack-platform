@@ -81,7 +81,7 @@
                     },
                     "editorMode": "code",
                     "exemplar": true,
-                    "expr": "sum(rate(http_requests_total[1m]))",
+                    "expr": "sum(rate(http_requests_total{job=~\"$job\"}[1m]))",
                     "instant": true,
                     "interval": "",
                     "legendFormat": "",
@@ -199,7 +199,7 @@
                     },
                     "editorMode": "code",
                     "exemplar": true,
-                    "expr": "rate(http_requests_total[1m])",
+                    "expr": "rate(http_requests_total{job=~\"$job\"}[1m])",
                     "interval": "",
                     "legendFormat": "{{path}}",
                     "range": true,
@@ -277,7 +277,7 @@
                     },
                     "editorMode": "code",
                     "exemplar": false,
-                    "expr": "sum by (handler) (rate(http_request_duration_seconds_sum{handler=\"/api/process\"}[1m])) / \r\nsum by (handler) (rate(http_request_duration_seconds_count{handler=\"/api/process\"}[1m]))",
+                    "expr": "sum by (handler) (rate(http_request_duration_seconds_sum{job=~\"$job\",handler=\"/api/process\"}[1m])) / \r\nsum by (handler) (rate(http_request_duration_seconds_count{job=~\"$job\",handler=\"/api/process\"}[1m]))",
                     "instant": false,
                     "interval": "",
                     "legendFormat": "",
@@ -356,7 +356,7 @@
                     },
                     "editorMode": "code",
                     "exemplar": false,
-                    "expr": "(\r\n  sum by (pod) (rate(http_request_duration_seconds_sum{handler=\"/api/process\"}[1m])) / \r\n  sum by (pod) (rate(http_request_duration_seconds_count{handler=\"/api/process\"}[1m]))\r\n)",
+                    "expr": "(\r\n  sum by (pod) (rate(http_request_duration_seconds_sum{job=~\"$job\",handler=\"/api/process\"}[1m])) / \r\n  sum by (pod) (rate(http_request_duration_seconds_count{job=~\"$job\",handler=\"/api/process\"}[1m]))\r\n)",
                     "instant": false,
                     "interval": "",
                     "legendFormat": "__auto",
@@ -427,28 +427,11 @@
                     },
                     "editorMode": "code",
                     "exemplar": true,
-                    "expr": "sum(rate(http_requests_total{status=\"404\"}[60m]))",
+                    "expr": "sum(increase(http_requests_total{job=~\"$job\",status=~\"4xx|5xx\"}[24h]))",
                     "interval": "",
                     "legendFormat": "",
                     "range": true,
                     "refId": "A"
-                },
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "prometheus"
-                    },
-                    "disableTextWrap": false,
-                    "editorMode": "builder",
-                    "expr": "rate(http_requests_total{status=\"4xx\"}[1h])",
-                    "fullMetaSearch": false,
-                    "hide": false,
-                    "includeNullMetadata": false,
-                    "instant": false,
-                    "legendFormat": "__auto",
-                    "range": true,
-                    "refId": "B",
-                    "useBackend": false
                 }
             ],
             "timeFrom": "24h",
@@ -510,7 +493,7 @@
                     "disableTextWrap": false,
                     "editorMode": "code",
                     "exemplar": true,
-                    "expr": "http_requests_total{job=\"deid-medcat-service\"}",
+                    "expr": "http_requests_total{job=~\"$job\"}",
                     "fullMetaSearch": false,
                     "includeNullMetadata": true,
                     "instant": true,
@@ -638,7 +621,7 @@
                     },
                     "editorMode": "code",
                     "exemplar": true,
-                    "expr": "http_requests_total{path!=\"/metrics\"}",
+                    "expr": "http_requests_total{job=~\"$job\",handler!=\"/metrics\"}",
                     "interval": "",
                     "legendFormat": "__auto",
                     "range": true,
@@ -739,7 +722,7 @@
                     },
                     "editorMode": "code",
                     "exemplar": true,
-                    "expr": "sum(rate(http_requests_total{status=\"2xx\"}[60m])) / sum(rate(http_requests_total[60m]))",
+                    "expr": "sum(rate(http_requests_total{job=~\"$job\",status=\"2xx\"}[60m])) / sum(rate(http_requests_total{job=~\"$job\"}[60m]))",
                     "interval": "",
                     "legendFormat": "__auto",
                     "range": true,
@@ -840,7 +823,7 @@
                     },
                     "editorMode": "code",
                     "exemplar": true,
-                    "expr": "sum(rate(http_requests_total{status=\"4xx\"}[60m])) / sum(rate(http_requests_total[60m]))",
+                    "expr": "sum(rate(http_requests_total{job=~\"$job\",status=\"4xx\"}[60m])) / sum(rate(http_requests_total{job=~\"$job\"}[60m]))",
                     "interval": "",
                     "legendFormat": "{{path}}",
                     "range": true,
@@ -853,7 +836,7 @@
                     },
                     "disableTextWrap": false,
                     "editorMode": "builder",
-                    "expr": "http_requests_total{status=\"4xx\"}",
+                    "expr": "http_requests_total{job=~\"$job\",status=\"4xx\"}",
                     "fullMetaSearch": false,
                     "hide": false,
                     "includeNullMetadata": true,
@@ -957,7 +940,7 @@
                     },
                     "editorMode": "code",
                     "exemplar": true,
-                    "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[60m])) by (le))",
+                    "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job=~\"$job\"}[60m])) by (le))",
                     "interval": "",
                     "legendFormat": "{{path}}",
                     "range": true,
@@ -1052,7 +1035,7 @@
             "targets": [
                 {
                     "editorMode": "code",
-                    "expr": "sum by (pod) (\r\n  rate(http_request_duration_seconds_sum{handler=\"/api/process\"}[1m])\r\n) / \r\nsum by (pod) (\r\n  rate(http_request_duration_seconds_count{handler=\"/api/process\"}[1m])\r\n)",
+                    "expr": "sum by (pod) (\r\n  rate(http_request_duration_seconds_sum{job=~\"$job\",handler=\"/api/process\"}[1m])\r\n) / \r\nsum by (pod) (\r\n  rate(http_request_duration_seconds_count{job=~\"$job\",handler=\"/api/process\"}[1m])\r\n)",
                     "legendFormat": "__auto",
                     "range": true,
                     "refId": "A"
@@ -1065,48 +1048,31 @@
     "preload": false,
     "refresh": "5s",
     "schemaVersion": 41,
-    "tags": [],
+    "tags": [
+        "cogstack",
+        "apps"
+    ],
     "templating": {
         "list": [
             {
                 "current": {
-                    "text": "",
-                    "value": ""
+                    "text": "All",
+                    "value": "$__all"
                 },
                 "datasource": {
                     "type": "prometheus",
                     "uid": "prometheus"
                 },
-                "definition": "label_values(fastapi_app_info{}, app_name)",
-                "includeAll": false,
-                "label": "Application Name",
-                "name": "app_name",
-                "options": [],
+                "definition": "label_values(http_requests_total, job)",
+                "includeAll": true,
+                "label": "Service",
+                "name": "job",
                 "query": {
-                    "query": "label_values(fastapi_app_info{}, app_name)",
+                    "query": "label_values(http_requests_total, job)",
                     "refId": "StandardVariableQuery"
                 },
                 "refresh": 1,
-                "regex": "",
                 "type": "query"
-            },
-            {
-                "current": {
-                    "text": "",
-                    "value": ""
-                },
-                "description": "query with keyword",
-                "label": "Log Query",
-                "name": "log_keyword",
-                "options": [
-                    {
-                        "selected": true,
-                        "text": "",
-                        "value": ""
-                    }
-                ],
-                "query": "",
-                "type": "textbox"
             }
         ]
     },
@@ -1116,7 +1082,7 @@
     },
     "timepicker": {},
     "timezone": "",
-    "title": "FastAPI Observability",
-    "uid": "fastapi-observability",
+    "title": "FastAPI Metrics",
+    "uid": "fastapi-metrics",
     "version": 8
 }

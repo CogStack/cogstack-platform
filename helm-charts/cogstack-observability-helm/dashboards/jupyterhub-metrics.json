@@ -2166,7 +2166,7 @@
     "preload": false,
     "refresh": "",
     "schemaVersion": 42,
-    "tags": [],
+    "tags": ["cogstack", "apps"],
     "templating": {
         "list": []
     },
@@ -2176,7 +2176,7 @@
     },
     "timepicker": {},
     "timezone": "",
-    "title": "JupyterHub Stats",
+    "title": "JupyterHub Metrics",
     "uid": "jupyterhub",
     "version": 2
 }

@@ -110,10 +110,11 @@ kubectl delete namespace observability
 | kube-prometheus-stack.prometheus.prometheusSpec.scrapeConfigSelectorNilUsesHelmValues | bool | `false` |  |
 | kube-prometheus-stack.prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues | bool | `false` |  |
 | nameOverride | string | `""` |  |
-| provisioning | object | `{"dashboards":{"availability":{"enabled":false},"enabled":true,"fastapi":{"enabled":true},"jupyterhub":{"enabled":false},"opensearch":{"enabled":true}}}` | Dashboards to be installed |
+| provisioning | object | `{"dashboards":{"availability":{"enabled":false},"enabled":true,"fastapi":{"enabled":true},"jupyterhub":{"enabled":false},"minio":{"enabled":false},"opensearch":{"enabled":true}}}` | Dashboards to be installed |
 | provisioning.dashboards.availability | object | `{"enabled":false}` | Availability dashboard shows uptime of services |
-| provisioning.dashboards.fastapi | object | `{"enabled":true}` | FastAPI dashboard shows metrics from FastAPI services |
+| provisioning.dashboards.fastapi | object | `{"enabled":true}` | FastAPI dashboard shows metrics from FastAPI services like Medcat Service |
 | provisioning.dashboards.jupyterhub | object | `{"enabled":false}` | JupyterHub dashboard shows metrics from JupyterHub |
+| provisioning.dashboards.minio | object | `{"enabled":false}` | Minio dashboard shows metrics from Minio |
 | provisioning.dashboards.opensearch | object | `{"enabled":true}` | OpenSearch dashboard shows metrics from OpenSearch |
 
 ----------------------------------------------
