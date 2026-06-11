@@ -165,6 +165,8 @@ medcatConfig: |
 
 solr:
   replicaCount: 1
+  # -- Disable default collection creation by setting to empty string. MedCAT trainer does not require the collection to exist.
+  collection: ""
   collectionShards: 1
   collectionReplicas: 1
 
@@ -178,7 +180,7 @@ solr:
     app.kubernetes.io/part-of: cogstack
   image:
     repository: bitnamilegacy/solr
-    # Pin legacy version of postgresql following bitnami change to remove free images. Match prefect version
+    # Pin legacy version of solr following bitnami change to remove free images
     tag: 9.9.0-debian-12-r1
 
   zookeeper:

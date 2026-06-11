@@ -127,6 +127,7 @@ These features are not yet existing but to be added in future:
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
 | serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
 | solr.auth.enabled | bool | `false` |  |
+| solr.collection | string | `""` | Disable default collection creation by setting to empty string. MedCAT trainer does not require the collection to exist. |
 | solr.collectionReplicas | int | `1` |  |
 | solr.collectionShards | int | `1` |  |
 | solr.image.repository | string | `"bitnamilegacy/solr"` |  |
