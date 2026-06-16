@@ -50,7 +50,7 @@ dependencies = [
     "click==8.4.1",
     "traitlets==5.14.3",
     "xnat==0.7.2",
-    "keras==3.13.2",
+    "keras==3.14.1",
     "opensearch-py>=2.8.0",
     "ruff==0.15.15",
 ]
