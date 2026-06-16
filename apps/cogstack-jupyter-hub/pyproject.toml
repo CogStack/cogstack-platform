@@ -44,7 +44,7 @@ dependencies = [
     "openpyxl==3.1.5",
     "dvc==3.59.2",
     "GitPython==3.1.50",
-    "neo4j==5.28.1",
+    "neo4j==6.2.0",
     "PyYAML==6.0.2",
     "opencv-python==4.13.0.92",
     "click==8.4.1",
