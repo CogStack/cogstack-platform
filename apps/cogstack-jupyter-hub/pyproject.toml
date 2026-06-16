@@ -36,7 +36,7 @@ dependencies = [
     "plotly==6.8.0",
     "tqdm>=4.66.5",
     "pymssql==2.3.13",
-    "mysql-connector-python==9.3.0",
+    "mysql-connector-python==9.7.0",
     "jsonpickle==4.1.0",
     "jsonext==0.4.2",
     "psycopg[c,binary,pool]==3.2.9",
