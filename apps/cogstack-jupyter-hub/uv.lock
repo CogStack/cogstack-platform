@@ -701,7 +701,7 @@ requires-dist = [
     { name = "jupyterlab-widgets", specifier = "==3.0.16" },
     { name = "keras", specifier = "==3.14.1" },
     { name = "matplotlib", specifier = "==3.10.3" },
-    { name = "medcat", extras = ["spacy", "meta-cat", "deid", "rel-cat", "dict-ner"], specifier = "==2.8.0" },
+    { name = "medcat", extras = ["spacy", "meta-cat", "deid", "rel-cat", "dict-ner"], specifier = "==2.8.2" },
     { name = "medcat-den", specifier = "==0.5.4" },
     { name = "mysql-connector-python", specifier = "==9.3.0" },
     { name = "neo4j", specifier = "==6.2.0" },
@@ -2329,9 +2329,10 @@ wheels = [
 
 [[package]]
 name = "medcat"
-version = "2.8.0"
+version = "2.8.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "click" },
     { name = "dill" },
     { name = "numpy" },
     { name = "packaging" },
@@ -2344,9 +2345,9 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "xxhash" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d2/0b/f9a22205cec173f4c00c18a8a8ed500b7d9bb8ee6c71076b53a9a5254662/medcat-2.8.0.tar.gz", hash = "sha256:acc26892a82bd324e90e8a527e657eb08c8e26387c848ddc7133d495f90962d4", size = 958379, upload-time = "2026-05-28T10:12:00.534Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e4/69/d2148cf3a09d771a50bb6de2ffdf8d0a0dbbd63f674b8beecefe9bd13152/medcat-2.8.2.tar.gz", hash = "sha256:15c31c12eaf7ddbf5d2c854421ba8106d2d4eb03112bddf13592866fb785a8c4", size = 958789, upload-time = "2026-06-04T10:06:08.062Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/eb/1a/55f517f9413fd731546462b87312333dbda483130853a29f6d839f9b203d/medcat-2.8.0-py3-none-any.whl", hash = "sha256:ea5d4c65c288b974fed7fabd158d1f0dc7537f44118821b5234e205e8209d27b", size = 316327, upload-time = "2026-05-28T10:11:58.571Z" },
+    { url = "https://files.pythonhosted.org/packages/81/51/c64b003834490664ad13223a20349c31b28a5101c0fd440f29176b63db8a/medcat-2.8.2-py3-none-any.whl", hash = "sha256:13e945d48c90dad4d1160670c56c6f16a8712acebf516955ba3a52337ae13636", size = 316361, upload-time = "2026-06-04T10:06:06.199Z" },
 ]
 
 [package.optional-dependencies]
