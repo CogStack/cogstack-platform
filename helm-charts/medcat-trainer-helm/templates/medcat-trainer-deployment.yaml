@@ -121,8 +121,8 @@ spec:
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          image: "{{ .Values.nginxImage.repository }}:{{ .Values.nginxImage.tag }}"
-          imagePullPolicy: {{ .Values.nginxImage.pullPolicy }}
+          image: "{{ .Values.nginx.image.repository }}:{{ .Values.nginx.image.tag }}"
+          imagePullPolicy: {{ .Values.nginx.image.pullPolicy }}
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
@@ -135,7 +135,7 @@ spec:
           readinessProbe:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.resources }}
+          {{- with .Values.nginx.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
