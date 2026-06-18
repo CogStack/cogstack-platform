@@ -13,14 +13,6 @@ image:
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   # tag: "latest"
-# -- This sets the container image for the nginx server more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
-nginxImage:
-  # -- Image repository for the nginx server
-  repository: nginx
-  # -- This sets the pull policy for images.
-  pullPolicy: IfNotPresent
-  # -- This sets the image tag for the nginx server
-  tag: "1.29.1"
 
 # -- Add any environment variables here that should be set in the medcat-trainer container
 env:
@@ -296,7 +288,16 @@ startupProbe:
   periodSeconds: 10
   initialDelaySeconds: 15
 
+# -- Configuration for the UI pod running nginx.
 nginx:
+  # -- Resources for the nginx container. More information can be found here: https://kubernetes.io/docs/concepts/containers/
+  resources: {}
+  # limits:
+  #   cpu: 1 # Recommended to leave unset
+  #   memory: 500Mi
+  # requests:
+  #   cpu: 100m  # For reference loading the examples on startup measured to use 2CPU and 2Gi memory
+  #   memory: 200Mi
   livenessProbe:
     httpGet:
       path: /nginx/health/live
@@ -305,6 +306,14 @@ nginx:
     httpGet:
       path: /nginx/health/live
       port: http
+  # -- This sets the container image for the nginx server more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
+  image:
+    # -- Image repository for the nginx server
+    repository: nginx
+    # -- This sets the pull policy for images.
+    pullPolicy: IfNotPresent
+    # -- This sets the image tag for the nginx server
+    tag: "1.29.1"
 
 # This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
 autoscaling:

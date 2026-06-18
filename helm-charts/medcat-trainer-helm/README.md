@@ -84,14 +84,12 @@ These features are not yet existing but to be added in future:
 | livenessProbe.httpGet.port | string | `"api"` |  |
 | medcatConfig | string | Default config for MedCAT Trainer | MedCAT config as described here: [MedCAT config](https://github.com/CogStack/cogstack-nlp/blob/main/medcat-v2/medcat/config/config.py) |
 | nameOverride | string | `""` | This is to override the chart name. |
-| nginx.livenessProbe.httpGet.path | string | `"/nginx/health/live"` |  |
-| nginx.livenessProbe.httpGet.port | string | `"http"` |  |
-| nginx.readinessProbe.httpGet.path | string | `"/nginx/health/live"` |  |
-| nginx.readinessProbe.httpGet.port | string | `"http"` |  |
-| nginxImage | object | `{"pullPolicy":"IfNotPresent","repository":"nginx","tag":"1.29.1"}` | This sets the container image for the nginx server more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
-| nginxImage.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
-| nginxImage.repository | string | `"nginx"` | Image repository for the nginx server |
-| nginxImage.tag | string | `"1.29.1"` | This sets the image tag for the nginx server |
+| nginx | object | `{"image":{"pullPolicy":"IfNotPresent","repository":"nginx","tag":"1.29.1"},"livenessProbe":{"httpGet":{"path":"/nginx/health/live","port":"http"}},"readinessProbe":{"httpGet":{"path":"/nginx/health/live","port":"http"}},"resources":{}}` | Configuration for the UI pod running nginx. |
+| nginx.image | object | `{"pullPolicy":"IfNotPresent","repository":"nginx","tag":"1.29.1"}` | This sets the container image for the nginx server more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
+| nginx.image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
+| nginx.image.repository | string | `"nginx"` | Image repository for the nginx server |
+| nginx.image.tag | string | `"1.29.1"` | This sets the image tag for the nginx server |
+| nginx.resources | object | `{}` | Resources for the nginx container. More information can be found here: https://kubernetes.io/docs/concepts/containers/ |
 | nginxUpdateStrategy.type | string | `"RollingUpdate"` |  |
 | nodeSelector | object | `{}` |  |
 | persistence.media.size | string | `"8Gi"` |  |
