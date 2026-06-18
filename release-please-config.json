@@ -5,7 +5,7 @@
     "packages": {
         "helm-charts/medcat-trainer-helm": {
             "release-type": "helm",
-            "component": "helm-charts/medcat-trainer",
+            "component": "helm-charts/medcat-trainer-helm",
             "changelog-path": "CHANGELOG.md",
             "bump-minor-pre-major": false,
             "bump-patch-for-minor-pre-major": false,
@@ -14,7 +14,7 @@
         },
         "helm-charts/medcat-service-helm": {
             "release-type": "helm",
-            "component": "helm-charts/medcat-service",
+            "component": "helm-charts/medcat-service-helm",
             "changelog-path": "CHANGELOG.md",
             "bump-minor-pre-major": false,
             "bump-patch-for-minor-pre-major": false,
@@ -23,7 +23,7 @@
         },
         "helm-charts/cogstack-ce-helm": {
             "release-type": "helm",
-            "component": "helm-charts/cogstack-ce",
+            "component": "helm-charts/cogstack-ce-helm",
             "changelog-path": "CHANGELOG.md",
             "bump-minor-pre-major": false,
             "bump-patch-for-minor-pre-major": false,
@@ -32,7 +32,7 @@
         },
         "helm-charts/cogstack-cohorter-helm": {
             "release-type": "helm",
-            "component": "helm-charts/cogstack-cohorter",
+            "component": "helm-charts/cogstack-cohorter-helm",
             "changelog-path": "CHANGELOG.md",
             "bump-minor-pre-major": false,
             "bump-patch-for-minor-pre-major": false,
@@ -41,7 +41,7 @@
         },
         "helm-charts/cogstack-observability-helm": {
             "release-type": "helm",
-            "component": "helm-charts/cogstack-observability",
+            "component": "helm-charts/cogstack-observability-helm",
             "changelog-path": "CHANGELOG.md",
             "bump-minor-pre-major": false,
             "bump-patch-for-minor-pre-major": false,
@@ -50,7 +50,7 @@
         },
         "helm-charts/cogstack-jupyterhub-helm": {
             "release-type": "helm",
-            "component": "helm-charts/cogstack-jupyterhub",
+            "component": "helm-charts/cogstack-jupyterhub-helm",
             "changelog-path": "CHANGELOG.md",
             "bump-minor-pre-major": false,
             "bump-patch-for-minor-pre-major": false,

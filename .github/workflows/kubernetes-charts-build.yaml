@@ -1,3 +1,16 @@
+# Lint, test, and publish Helm charts under helm-charts/.
+#
+# Triggers:
+#   - Pull requests touching helm-charts/ or this workflow: lint and install-test
+#     changed charts only; does not publish.
+#   - Push to main (helm-charts/ paths): lint/test all charts, then package and
+#     push every top-level chart to Docker Hub OCI at version 0.0.1.
+#   - Per-chart release tags (e.g. helm-charts/medcat-trainer-helm-v0.1.2):
+#     lint/test all charts, then package and push only the tagged chart at the
+#     version from the tag; creates a draft GitHub release with the chart archive.
+#
+# Charts are discovered automatically from top-level Chart.yaml files. Release
+# versions for tagged releases are managed by release-please.
 name: Kubernetes - Lint, Test, and Publish Helm Charts
 
 on:
@@ -11,7 +24,7 @@ on:
   pull_request:
     paths:
       - "helm-charts/**"
-      - ".github/workflows/kubernetes**"
+      - ".github/workflows/kubernetes-charts-build**"
 
 defaults:
   run:
@@ -177,10 +190,9 @@ jobs:
             helm push "./$CHART-$VERSION.tgz" oci://registry-1.docker.io/cogstacksystems
           done
 
-      - name: Release
+      - name: Attach chart to GitHub Release
         uses: softprops/action-gh-release@v2
         if: github.ref_type == 'tag'
         with:
-          draft: true
-          files: |
-            helm-charts/*.tgz
+          tag_name: ${{ github.ref_name }}
+          files: helm-charts/${{ steps.charts.outputs.chart }}-${{ steps.version.outputs.chart_version }}.tgz
