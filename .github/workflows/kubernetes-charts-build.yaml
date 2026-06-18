@@ -7,7 +7,8 @@
 #     push every top-level chart to Docker Hub OCI at version 0.0.1.
 #   - Per-chart release tags (e.g. helm-charts/medcat-trainer-helm-v0.1.2):
 #     lint/test all charts, then package and push only the tagged chart at the
-#     version from the tag; creates a draft GitHub release with the chart archive.
+#     version from the tag; attaches the chart archive to the GitHub release
+#     created by release-please.
 #
 # Charts are discovered automatically from top-level Chart.yaml files. Release
 # versions for tagged releases are managed by release-please.
