@@ -32,15 +32,15 @@ icon: "https://avatars.githubusercontent.com/u/28688163"
 dependencies:
   - name: medcat-service-helm
     alias: medcat-service
-    version: "0.0.1"
+    version: ">=0.0.1"
     repository: "file://../medcat-service-helm"
   - name: medcat-service-helm
     alias: anoncat-service
-    version: "0.0.1"
+    version: ">=0.0.1"
     repository: "file://../medcat-service-helm"
   - name: medcat-trainer-helm
     alias: medcat-trainer
-    version: "0.0.1"
+    version: ">=0.0.1"
     repository: "file://../medcat-trainer-helm"
   - name: opensearch
     condition: opensearch.enabled
@@ -53,5 +53,5 @@ dependencies:
   - name: cogstack-jupyterhub-helm
     alias: cogstack-jupyterhub
     condition: cogstack-jupyterhub.enabled
-    version: "0.0.1"
+    version: ">=0.0.1"
     repository: "file://../cogstack-jupyterhub-helm"
