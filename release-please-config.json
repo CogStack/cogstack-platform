@@ -1,0 +1,61 @@
+{
+    "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+    "bootstrap-sha": "07501a49fcf25b639443cd53b39d88c7a1f092e9",
+    "separate-pull-requests": true,
+    "packages": {
+        "helm-charts/medcat-trainer-helm": {
+            "release-type": "helm",
+            "component": "helm-charts/medcat-trainer",
+            "changelog-path": "CHANGELOG.md",
+            "bump-minor-pre-major": false,
+            "bump-patch-for-minor-pre-major": false,
+            "draft": false,
+            "prerelease": false
+        },
+        "helm-charts/medcat-service-helm": {
+            "release-type": "helm",
+            "component": "helm-charts/medcat-service",
+            "changelog-path": "CHANGELOG.md",
+            "bump-minor-pre-major": false,
+            "bump-patch-for-minor-pre-major": false,
+            "draft": false,
+            "prerelease": false
+        },
+        "helm-charts/cogstack-ce-helm": {
+            "release-type": "helm",
+            "component": "helm-charts/cogstack-ce",
+            "changelog-path": "CHANGELOG.md",
+            "bump-minor-pre-major": false,
+            "bump-patch-for-minor-pre-major": false,
+            "draft": false,
+            "prerelease": false
+        },
+        "helm-charts/cogstack-cohorter-helm": {
+            "release-type": "helm",
+            "component": "helm-charts/cogstack-cohorter",
+            "changelog-path": "CHANGELOG.md",
+            "bump-minor-pre-major": false,
+            "bump-patch-for-minor-pre-major": false,
+            "draft": false,
+            "prerelease": false
+        },
+        "helm-charts/cogstack-observability-helm": {
+            "release-type": "helm",
+            "component": "helm-charts/cogstack-observability",
+            "changelog-path": "CHANGELOG.md",
+            "bump-minor-pre-major": false,
+            "bump-patch-for-minor-pre-major": false,
+            "draft": false,
+            "prerelease": false
+        },
+        "helm-charts/cogstack-jupyterhub-helm": {
+            "release-type": "helm",
+            "component": "helm-charts/cogstack-jupyterhub",
+            "changelog-path": "CHANGELOG.md",
+            "bump-minor-pre-major": false,
+            "bump-patch-for-minor-pre-major": false,
+            "draft": false,
+            "prerelease": false
+        }
+    }
+}
