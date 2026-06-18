@@ -75,6 +75,20 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Recursive dependency update (all charts, including nested)
+        run: |
+          # Run twice so nested subcharts (like cogstack-jupyterhub -> jupyterhub) are fully updated
+          for _ in 1 2; do
+            # Find every Chart.yaml under helm-charts and run helm dependency update in its directory
+            while IFS= read -r chartfile; do
+              chart_dir="$(dirname "$chartfile")"
+              if grep -q "^dependencies:" "$chartfile" 2>/dev/null; then
+                echo "Updating dependencies for $chart_dir"
+                helm dependency update "$chart_dir"
+              fi
+            done < <(find . -type f -name Chart.yaml)
+          done
+
       - name: Run chart-testing (lint)
         if: steps.list-changed.outputs.changed == 'true'
         working-directory: .
@@ -114,15 +128,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Set up Python
-        uses: actions/setup-python@v6.0.0
-        with:
-          python-version: "3.x"
-          check-latest: true
-
-      - name: Set up chart-testing
-        uses: helm/chart-testing-action@v2.8.0
-
       - name: Determine version
         id: version
         run: |
@@ -152,13 +157,22 @@ jobs:
             echo "charts=${CHARTS[*]}" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Update chart dependencies
-        working-directory: .
-        env:
-          CT_CHECK_VERSION_INCREMENT: "false"
+      - name: Recursive dependency update (all charts, including nested)
+        # Waiting on helm recursive feature https://github.com/helm/helm/pull/30855
+        # Could alternatively switch to helm "cascade" plugin
         run: |
-          CHARTS_CSV="${{ steps.charts.outputs.charts }}"
-          ct lint --config .github/linters/ct.yaml --charts "${CHARTS_CSV// /,}" --validate-maintainers=false
+          # Run twice so nested subcharts (like cogstack-jupyterhub -> jupyterhub) are fully updated
+          for _ in 1 2; do
+            for CHART in ${{ steps.charts.outputs.charts }}; do
+              while IFS= read -r chartfile; do
+                chart_dir="$(dirname "$chartfile")"
+                if grep -q "^dependencies:" "$chartfile" 2>/dev/null; then
+                  echo "Updating dependencies for $chart_dir"
+                  helm dependency update "$chart_dir"
+                fi
+              done < <(find "./$CHART" -type f -name Chart.yaml)
+            done
+          done
 
       - name: Package Helm Charts
         run: |
