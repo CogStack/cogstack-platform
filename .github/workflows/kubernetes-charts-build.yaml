@@ -1,17 +1,31 @@
+# Lint, test, and publish Helm charts under helm-charts/.
+#
+# Triggers:
+#   - Pull requests touching helm-charts/ or this workflow: lint and install-test
+#     changed charts only; does not publish.
+#   - Push to main (helm-charts/ paths): lint/test all charts, then package and
+#     push every top-level chart to Docker Hub OCI at version 0.0.1.
+#   - Per-chart release tags (e.g. helm-charts/medcat-trainer-helm-v0.1.2):
+#     lint/test all charts, then package and push only the tagged chart at the
+#     version from the tag; attaches the chart archive to the GitHub release
+#     created by release-please.
+#
+# Charts are discovered automatically from top-level Chart.yaml files. Release
+# versions for tagged releases are managed by release-please.
 name: Kubernetes - Lint, Test, and Publish Helm Charts
 
 on:
   push:
     branches: [main]
     tags:
-      - "helm-charts-v*.*.*" # e.g., helm-charts-v0.1.1
+      - "helm-charts/*-v*.*.*" # e.g., helm-charts/medcat-trainer-helm-v0.1.2
     paths:
       - "helm-charts/**"
       - ".github/workflows/kubernetes-charts-build**"
   pull_request:
     paths:
       - "helm-charts/**"
-      - ".github/workflows/kubernetes**"
+      - ".github/workflows/kubernetes-charts-build**"
 
 defaults:
   run:
@@ -41,7 +55,10 @@ jobs:
           df -h # Optional: Check space before build
 
       - name: Set up Helm
-        uses: azure/setup-helm@v4.3.1
+        uses: azure/setup-helm@v4.2.0
+        with:
+          version: v3.17.0
+
 
       - name: Set up Python
         uses: actions/setup-python@v6.0.0
@@ -93,6 +110,7 @@ jobs:
 
   helm-publish:
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' && github.repository == 'CogStack/cogstack-platform'
     needs: helm-lint-test
     permissions:
       contents: write
@@ -117,12 +135,30 @@ jobs:
         id: version
         run: |
           if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
-            # Strip the tag prefix helm-charts-v
-            CHART_VERSION="${GITHUB_REF_NAME#helm-charts-v}"
+            TAG="${GITHUB_REF_NAME}"
+            CHART="${TAG#helm-charts/}"
+            CHART="${CHART%-v*}"
+            CHART_VERSION="${TAG##*-v}"
+            echo "chart=$CHART" >> "$GITHUB_OUTPUT"
+            echo "single_chart=true" >> "$GITHUB_OUTPUT"
           else
             CHART_VERSION="$DEFAULT_CHART_VERSION"
+            echo "single_chart=false" >> "$GITHUB_OUTPUT"
           fi
           echo "chart_version=$CHART_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Discover charts
+        id: charts
+        run: |
+          if [[ "${{ steps.version.outputs.single_chart }}" == "true" ]]; then
+            echo "charts=${{ steps.version.outputs.chart }}" >> "$GITHUB_OUTPUT"
+          else
+            CHARTS=()
+            while IFS= read -r chartfile; do
+              CHARTS+=("$(basename "$(dirname "$chartfile")")")
+            done < <(find . -maxdepth 2 -mindepth 2 -type f -name Chart.yaml | sort)
+            echo "charts=${CHARTS[*]}" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Recursive dependency update (all charts, including nested)
         # Waiting on helm recursive feature https://github.com/helm/helm/pull/30855
@@ -130,41 +166,37 @@ jobs:
         run: |
           # Run twice so nested subcharts (like cogstack-jupyterhub -> jupyterhub) are fully updated
           for _ in 1 2; do
-            # Find every Chart.yaml under helm-charts and run helm dependency update in its directory
-            while IFS= read -r chartfile; do
-              chart_dir="$(dirname "$chartfile")"
-              if grep -q "^dependencies:" "$chartfile" 2>/dev/null; then
-                echo "Updating dependencies for $chart_dir"
-                helm dependency update "$chart_dir"
-              fi
-            done < <(find . -type f -name Chart.yaml)
+            for CHART in ${{ steps.charts.outputs.charts }}; do
+              while IFS= read -r chartfile; do
+                chart_dir="$(dirname "$chartfile")"
+                if grep -q "^dependencies:" "$chartfile" 2>/dev/null; then
+                  echo "Updating dependencies for $chart_dir"
+                  helm dependency update "$chart_dir"
+                fi
+              done < <(find "./$CHART" -type f -name Chart.yaml)
+            done
           done
 
       - name: Package Helm Charts
         run: |
-          helm package ./medcat-service-helm --version  ${{ steps.version.outputs.chart_version }}
-          helm package ./medcat-trainer-helm --version  ${{ steps.version.outputs.chart_version }} --dependency-update 
-          helm package ./cogstack-ce-helm --version  ${{ steps.version.outputs.chart_version }} --dependency-update
-          helm package ./cogstack-cohorter-helm --version  ${{ steps.version.outputs.chart_version }} --dependency-update
-          helm package ./cogstack-observability-helm --version  ${{ steps.version.outputs.chart_version }} --dependency-update
-          helm package ./cogstack-jupyterhub-helm --version  ${{ steps.version.outputs.chart_version }} --dependency-update
+          VERSION="${{ steps.version.outputs.chart_version }}"
+          for CHART in ${{ steps.charts.outputs.charts }}; do
+            helm package "./$CHART" --version "$VERSION"
+          done
 
       - name: Helm OCI login to Docker Hub
         run: helm registry login registry-1.docker.io -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Push Helm Chart to Docker Hub OCI
+      - name: Push Helm Charts to Docker Hub OCI
         run: |
-          helm push ./medcat-service-helm-${{ steps.version.outputs.chart_version }}.tgz oci://registry-1.docker.io/cogstacksystems
-          helm push ./medcat-trainer-helm-${{ steps.version.outputs.chart_version }}.tgz oci://registry-1.docker.io/cogstacksystems
-          helm push ./cogstack-ce-helm-${{ steps.version.outputs.chart_version }}.tgz oci://registry-1.docker.io/cogstacksystems
-          helm push ./cogstack-cohorter-helm-${{ steps.version.outputs.chart_version }}.tgz oci://registry-1.docker.io/cogstacksystems
-          helm push ./cogstack-observability-helm-${{ steps.version.outputs.chart_version }}.tgz oci://registry-1.docker.io/cogstacksystems
-          helm push ./cogstack-jupyterhub-helm-${{ steps.version.outputs.chart_version }}.tgz oci://registry-1.docker.io/cogstacksystems
+          VERSION="${{ steps.version.outputs.chart_version }}"
+          for CHART in ${{ steps.charts.outputs.charts }}; do
+            helm push "./$CHART-$VERSION.tgz" oci://registry-1.docker.io/cogstacksystems
+          done
 
-      - name: Release
+      - name: Attach chart to GitHub Release
         uses: softprops/action-gh-release@v2
         if: github.ref_type == 'tag'
         with:
-          draft: true
-          files: |
-            helm-charts/*.tgz
+          tag_name: ${{ github.ref_name }}
+          files: helm-charts/${{ steps.charts.outputs.chart }}-${{ steps.version.outputs.chart_version }}.tgz

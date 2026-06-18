@@ -1,0 +1,8 @@
+{
+    "helm-charts/medcat-service-helm": "0.4.1",
+    "helm-charts/medcat-trainer-helm": "0.4.1",
+    "helm-charts/cogstack-ce-helm": "0.4.1",
+    "helm-charts/cogstack-cohorter-helm": "0.4.1",
+    "helm-charts/cogstack-observability-helm": "0.4.1",
+    "helm-charts/cogstack-jupyterhub-helm": "0.4.1"
+}
