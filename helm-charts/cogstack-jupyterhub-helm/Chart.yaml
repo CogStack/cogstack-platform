@@ -16,4 +16,4 @@ icon: "https://avatars.githubusercontent.com/u/28688163"
 dependencies:
   - name: jupyterhub
     version: 4.3.2
-    repository: https://hub.jupyter.org/helm-chart/
+    repository: "@jupyterhub"
