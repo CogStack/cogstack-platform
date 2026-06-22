@@ -684,7 +684,7 @@ requires-dist = [
     { name = "cogstack-es", extras = ["os"], specifier = "==0.2.0" },
     { name = "docker", specifier = "==7.1.0" },
     { name = "dockerspawner", specifier = "==14.0.0" },
-    { name = "dvc", specifier = "==3.59.2" },
+    { name = "dvc", specifier = "==3.67.1" },
     { name = "gitpython", specifier = "==3.1.50" },
     { name = "graphviz", specifier = "==0.21" },
     { name = "html2text", specifier = "==2025.4.15" },
@@ -1038,7 +1038,7 @@ wheels = [
 
 [[package]]
 name = "dvc"
-version = "3.59.2"
+version = "3.67.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "attrs" },
@@ -1084,14 +1084,14 @@ dependencies = [
     { name = "voluptuous" },
     { name = "zc-lockfile" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f3/9d/c7c143684a87119213dcbe1a7da36d5e5d701467a2da3a9d0ae1d428e3b9/dvc-3.59.2.tar.gz", hash = "sha256:3eecc058b5d43e4e3ff7dfa72970a5c7d26e7b19f48395946ab314ce479bc1ce", size = 653386, upload-time = "2025-05-06T10:58:58.899Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/13/1e/957a50eab8af18a5837bf47f148b90dac36650150faca840d5c020272098/dvc-3.67.1.tar.gz", hash = "sha256:0a941016a10ac8c99b5342e5a964c9bff29c191f7b3539ff3e04910d828f82ab", size = 675009, upload-time = "2026-03-31T05:07:30.558Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/60/14/68ea35da74b9d0e4707f9a8384d86e7ccf9544193d3e24bf10f921fc379b/dvc-3.59.2-py3-none-any.whl", hash = "sha256:1fe6ea628e6565b131b6c2911934b220f91dca1d7c60d2b19428c893d0573999", size = 457918, upload-time = "2025-05-06T10:58:56.249Z" },
+    { url = "https://files.pythonhosted.org/packages/6d/30/088486ccb2ceb0c93461f6410cfa43d8dbe2083fdb61e334a666e3e8a0a2/dvc-3.67.1-py3-none-any.whl", hash = "sha256:b1ea7d8d690a637adbcba74591555f811eed1ab96cc74d808dfd861669d030ed", size = 470073, upload-time = "2026-03-31T05:07:27.996Z" },
 ]
 
 [[package]]
 name = "dvc-data"
-version = "3.16.12"
+version = "3.18.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "attrs" },
@@ -1105,9 +1105,9 @@ dependencies = [
     { name = "sqltrie" },
     { name = "tqdm" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d6/49/9476147025cbabfa2695700dd0b4564bbeee085729bb2faa221605d85e3c/dvc_data-3.16.12.tar.gz", hash = "sha256:f92cc03ffdddb5bd3a7a7da78d595dec6915311256a4cfefe250967d6ce3d194", size = 81910, upload-time = "2025-08-18T11:27:33.983Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c3/2f/e00e933d10512ca7ec4f3f2f450d915e6bed4c01cf666d50a1a8f9b033ff/dvc_data-3.18.3.tar.gz", hash = "sha256:61c8085a7c5b5e3ecaa86d63c3f22dc7c951a5dc55bd0a1bb5afa15377a25b1a", size = 84527, upload-time = "2026-02-27T05:12:44.58Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7c/7c/2acac71d2366328ae9da1a0b68292fed07aef28ed6114ce3320f3253c8a2/dvc_data-3.16.12-py3-none-any.whl", hash = "sha256:39c183caecd142cf44bc16186c8e5ef3bb4d739111e41f80682c999db30b8cee", size = 78201, upload-time = "2025-08-18T11:27:32.353Z" },
+    { url = "https://files.pythonhosted.org/packages/65/e0/695d043a0a2a4e830456e841c4a14be99d31305198fc4feccaeaace0b979/dvc_data-3.18.3-py3-none-any.whl", hash = "sha256:ab459a033c07ad94ec23ad4e83c14c68b73e7291367629813e751f882b10b4f3", size = 79324, upload-time = "2026-02-27T05:12:43.27Z" },
 ]
 
 [[package]]
