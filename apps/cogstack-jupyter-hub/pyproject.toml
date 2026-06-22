@@ -29,7 +29,7 @@ dependencies = [
     "jsoncsv==2.2.5",
     "simplejson==3.20.1",
     "nltk==3.9.4",
-    "bokeh==3.8.2",
+    "bokeh==3.9.1",
     "seaborn==0.13.2",
     "matplotlib==3.10.3",
     "graphviz==0.21",
