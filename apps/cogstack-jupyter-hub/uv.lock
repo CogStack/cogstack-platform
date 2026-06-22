@@ -726,7 +726,7 @@ requires-dist = [
     { name = "traitlets", specifier = "==5.14.3" },
     { name = "virtualenv", specifier = "==20.36.1" },
     { name = "wheel", specifier = "==0.46.2" },
-    { name = "xnat", specifier = "==0.7.2" },
+    { name = "xnat", specifier = "==0.8.0" },
 ]
 
 [[package]]
@@ -4642,7 +4642,7 @@ wheels = [
 
 [[package]]
 name = "xnat"
-version = "0.7.2"
+version = "0.8.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -4655,9 +4655,9 @@ dependencies = [
     { name = "pyyaml" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9a/04/1959d42ff1e0e3e83d8eba29b4a80701ffcaeca13ea03a3dfd8de76b3ec9/xnat-0.7.2.tar.gz", hash = "sha256:61b64997a96f86e86999e0bed0b8a466084812c4763987b43a6e8847165c0708", size = 116606, upload-time = "2025-05-28T13:12:35.277Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/31/3a/bdfaf5ca7b29e03e810a5d517fc2dc0f83eea54c21beb6162f3cccee1454/xnat-0.8.0.tar.gz", hash = "sha256:f39a67453c731c7599f45641a37e57241241606d69bbf499eea7c5ac7f8dae70", size = 94075132, upload-time = "2026-05-26T13:21:59.96Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/96/24/691d06314e5078c31662ceb1bf83d76c6a5fb11aeb17b5477cd26378b5de/xnat-0.7.2-py2.py3-none-any.whl", hash = "sha256:ad0d5006525be2834f50457d0dccb8e91356d31f3df3f13b56e6690443a8c62b", size = 113052, upload-time = "2025-05-28T13:12:33.947Z" },
+    { url = "https://files.pythonhosted.org/packages/f4/86/97d3a2b08a49ae848e2fbd2f1d6ae5159ff448054e75f20609ac87411f59/xnat-0.8.0-py2.py3-none-any.whl", hash = "sha256:a034df3a79b1afd1e61fb3f925be5cd5b0fb692052a1ab08959c2e6e737e705b", size = 120144, upload-time = "2026-05-26T13:21:55.845Z" },
 ]
 
 [[package]]
