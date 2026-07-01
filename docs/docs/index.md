@@ -66,11 +66,12 @@ The AI and Data Engineering layer comprises of:
 - MLOps tooling for model training and validation
 
 !!! tip
-Many of these apps and tools are open source and available on GitHub (subject to the licensing in each project), in the [CogStack GitHub](https://github.com/CogStack).
+
+    Many of these apps and tools are open source and available on GitHub (subject to the licensing in each project), in the [CogStack GitHub](https://github.com/CogStack).
 
     The public documentation on this page covers these open source community offerings.
 
-    For advanced features and enterprise level features see our range of [products](https://cogstack.org/products/).
+    For advanced use cases and enterprise features see our range of [products](https://cogstack.org/products/).
 
 ## Next Steps
 
