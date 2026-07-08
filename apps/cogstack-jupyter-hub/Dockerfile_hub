@@ -1,4 +1,4 @@
-FROM jupyterhub/jupyterhub:5.4
+FROM jupyterhub/jupyterhub:5.5
 
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
