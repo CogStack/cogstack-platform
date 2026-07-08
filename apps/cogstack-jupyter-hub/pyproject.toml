@@ -48,7 +48,7 @@ dependencies = [
     "PyYAML==6.0.2",
     "opencv-python==4.13.0.92",
     "click==8.4.1",
-    "traitlets==5.14.3",
+    "traitlets==5.15.1",
     "xnat==0.8.0",
     "keras==3.14.1",
     "opensearch-py>=2.8.0",
