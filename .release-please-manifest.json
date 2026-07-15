@@ -1,5 +1,5 @@
 {
-    "helm-charts/medcat-service-helm": "0.4.1",
+    "helm-charts/medcat-service-helm": "0.5.0",
     "helm-charts/medcat-trainer-helm": "0.4.2",
     "helm-charts/cogstack-ce-helm": "0.4.2",
     "helm-charts/cogstack-cohorter-helm": "0.4.1",
