@@ -10,7 +10,14 @@
             "bump-minor-pre-major": false,
             "bump-patch-for-minor-pre-major": false,
             "draft": false,
-            "prerelease": false
+            "prerelease": false,
+            "changelog-sections": [
+                { "type": "feat", "section": "Features" },
+                { "type": "fix", "section": "Bug Fixes" },
+                { "type": "build", "section": "Dependencies" },
+                { "type": "refactor", "section": "Code Refactoring" },
+                { "type": "revert", "section": "Reverts" }
+            ]
         },
         "helm-charts/medcat-service-helm": {
             "release-type": "helm",
@@ -19,7 +26,14 @@
             "bump-minor-pre-major": false,
             "bump-patch-for-minor-pre-major": false,
             "draft": false,
-            "prerelease": false
+            "prerelease": false,
+            "changelog-sections": [
+                { "type": "feat", "section": "Features" },
+                { "type": "fix", "section": "Bug Fixes" },
+                { "type": "build", "section": "Dependencies" },
+                { "type": "refactor", "section": "Code Refactoring" },
+                { "type": "revert", "section": "Reverts" }
+            ]
         },
         "helm-charts/cogstack-ce-helm": {
             "release-type": "helm",
@@ -28,7 +42,14 @@
             "bump-minor-pre-major": false,
             "bump-patch-for-minor-pre-major": false,
             "draft": false,
-            "prerelease": false
+            "prerelease": false,
+            "changelog-sections": [
+                { "type": "feat", "section": "Features" },
+                { "type": "fix", "section": "Bug Fixes" },
+                { "type": "build", "section": "Dependencies" },
+                { "type": "refactor", "section": "Code Refactoring" },
+                { "type": "revert", "section": "Reverts" }
+            ]
         },
         "helm-charts/cogstack-cohorter-helm": {
             "release-type": "helm",
@@ -37,7 +58,14 @@
             "bump-minor-pre-major": false,
             "bump-patch-for-minor-pre-major": false,
             "draft": false,
-            "prerelease": false
+            "prerelease": false,
+            "changelog-sections": [
+                { "type": "feat", "section": "Features" },
+                { "type": "fix", "section": "Bug Fixes" },
+                { "type": "build", "section": "Dependencies" },
+                { "type": "refactor", "section": "Code Refactoring" },
+                { "type": "revert", "section": "Reverts" }
+            ]
         },
         "helm-charts/cogstack-observability-helm": {
             "release-type": "helm",
@@ -46,7 +74,14 @@
             "bump-minor-pre-major": false,
             "bump-patch-for-minor-pre-major": false,
             "draft": false,
-            "prerelease": false
+            "prerelease": false,
+            "changelog-sections": [
+                { "type": "feat", "section": "Features" },
+                { "type": "fix", "section": "Bug Fixes" },
+                { "type": "build", "section": "Dependencies" },
+                { "type": "refactor", "section": "Code Refactoring" },
+                { "type": "revert", "section": "Reverts" }
+            ]
         },
         "helm-charts/cogstack-jupyterhub-helm": {
             "release-type": "helm",
@@ -55,7 +90,14 @@
             "bump-minor-pre-major": false,
             "bump-patch-for-minor-pre-major": false,
             "draft": false,
-            "prerelease": false
+            "prerelease": false,
+            "changelog-sections": [
+                { "type": "feat", "section": "Features" },
+                { "type": "fix", "section": "Bug Fixes" },
+                { "type": "build", "section": "Dependencies" },
+                { "type": "refactor", "section": "Code Refactoring" },
+                { "type": "revert", "section": "Reverts" }
+            ]
         }
     }
 }
