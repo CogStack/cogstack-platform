@@ -23,9 +23,23 @@ version: 0.4.2
 # It is recommended to use it with quotes.
 appVersion: "3.7.1"
 
+keywords:
+  - cogstack
+  - medcat
+  - nlp
+  - trainer
+  - annotation
+  - biomedical
+
+home: https://docs.cogstack.org/
+sources:
+  - https://github.com/CogStack/cogstack-platform
+  - https://github.com/CogStack/cogstack-nlp
+
 maintainers:
   - name: alhendrickson
     email: alistair@cogstack.org
+    url: https://github.com/CogStack
 
 icon: "https://avatars.githubusercontent.com/u/28688163"
 
