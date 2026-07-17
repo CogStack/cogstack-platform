@@ -47,7 +47,7 @@ dependencies = [
     "neo4j==6.2.0",
     "PyYAML==6.0.2",
     "opencv-python==5.0.0.93",
-    "click==8.4.1",
+    "click==8.4.2",
     "traitlets==5.15.1",
     "xnat==0.8.1",
     "keras==3.15.0",
