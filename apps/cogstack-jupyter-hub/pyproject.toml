@@ -10,7 +10,7 @@ dependencies = [
     "medcat-den==0.5.4",
     # TODO: cogstack-es 8/9 handling
     "cogstack-es[os]==0.2.0",
-    "virtualenv==20.36.1",
+    "virtualenv==21.6.1",
     "ipywidgets==8.1.8",
     "requests>=2.32.2",
     "jupyter==1.1.1",
