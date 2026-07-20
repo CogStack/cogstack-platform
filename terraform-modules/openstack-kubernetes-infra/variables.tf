@@ -98,7 +98,7 @@ check "controller_floating_ip_required_for_non_default_network" {
   assert {
     condition = (var.network == null
       || (var.network.name == "external_4003" && var.network.network_id == null)
-      || (length([for host in var.host_instances : host if host.is_controller == true && host.floating_ip.use_floating_ip == true]) == 1))
+    || (length([for host in var.host_instances : host if host.is_controller == true && host.floating_ip.use_floating_ip == true]) == 1))
     error_message = <<-EOT
 When using a non-default network, the controller host should have a floating IP in order to be accessible by the terraform agent
 EOT
