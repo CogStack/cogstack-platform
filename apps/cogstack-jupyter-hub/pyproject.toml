@@ -39,7 +39,7 @@ dependencies = [
     "mysql-connector-python==9.7.0",
     "jsonpickle==4.1.0",
     "jsonext==0.4.2",
-    "psycopg[c,binary,pool]==3.2.9",
+    "psycopg[c,binary,pool]==3.3.4",
     "pyodbc==5.3.0",
     "openpyxl==3.1.5",
     "dvc==3.67.1",
