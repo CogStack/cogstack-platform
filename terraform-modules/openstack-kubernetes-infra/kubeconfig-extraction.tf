@@ -1,10 +1,16 @@
 resource "null_resource" "copy_kubeconfig" {
   depends_on = [openstack_compute_instance_v2.kubernetes_server, null_resource.kubernetes_server_provisioner]
 
+  # Re-fetch kubeconfig whenever the controller is replaced (new cluster CA/certs).
+  triggers = {
+    server_id  = openstack_compute_instance_v2.kubernetes_server.id
+    ip_address = local.controller_host_instance.ip_address
+  }
+
   provisioner "local-exec" {
     # Copy the kubeconfig file from the host to a local file using SCP.
     # Use ssh-keyscan to prevent interactive prompt on unknown host
-    # Use sed to replace the localhost address in the KUBECONFIG file with the actual IP adddress of the created VM. 
+    # Use sed to replace the localhost address in the KUBECONFIG file with the actual IP adddress of the created VM.
     command = <<EOT
 mkdir -p ${path.root}/.build/ && \
 ssh-keyscan -H ${local.controller_host_instance.ip_address} >> ${path.root}/.build/.known_hosts_cogstack && \
