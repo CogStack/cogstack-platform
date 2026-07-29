@@ -154,7 +154,7 @@ You should see the NVIDIA GPU device listing if the GPU is properly accessible.
 | extraManifests | list | `[]` | Additional manifests to deploy to kubernetes. Can be templated |
 | fullnameOverride | string | `""` |  |
 | hostAliases | list | `[]` | Host aliases for the pod |
-| image | object | `{"pullPolicy":"IfNotPresent","repository":"cogstacksystems/medcat-service"}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
+| image | object | `{"pullPolicy":"IfNotPresent","repository":"cogstacksystems/medcat-service","tag":"latest"}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
 | image.repository | string | `"cogstacksystems/medcat-service"` | Image repository for the MedCAT service container |
 | imagePullSecrets | list | `[]` | This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
