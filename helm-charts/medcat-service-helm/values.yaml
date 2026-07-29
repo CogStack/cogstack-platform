@@ -86,6 +86,7 @@ demoUi:
       # -- Optional key/subPath within the configmap (default: demo-ui-footer.md)
       # subPath: demo-ui-footer.md
     # -- Markdown contents used when existingConfigMap is not set. Mounted as demo-ui-footer.md.
+    # @default -- Default about footer for medcat service.
     content: |
       ## About
 
