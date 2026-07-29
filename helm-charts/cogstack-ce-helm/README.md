@@ -81,10 +81,10 @@ kubectl delete namespace cogstack
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../cogstack-jupyterhub-helm | cogstack-jupyterhub(cogstack-jupyterhub-helm) | 0.0.1 |
-| file://../medcat-service-helm | medcat-service(medcat-service-helm) | 0.0.1 |
-| file://../medcat-service-helm | anoncat-service(medcat-service-helm) | 0.0.1 |
-| file://../medcat-trainer-helm | medcat-trainer(medcat-trainer-helm) | 0.0.1 |
+| file://../cogstack-jupyterhub-helm | cogstack-jupyterhub(cogstack-jupyterhub-helm) | >=0.0.1 |
+| file://../medcat-service-helm | medcat-service(medcat-service-helm) | >=0.0.1 |
+| file://../medcat-service-helm | anoncat-service(medcat-service-helm) | >=0.0.1 |
+| file://../medcat-trainer-helm | medcat-trainer(medcat-trainer-helm) | >=0.0.1 |
 | https://opensearch-project.github.io/helm-charts/ | opensearch | 3.5.0 |
 | https://opensearch-project.github.io/helm-charts/ | opensearch-dashboards | 3.5.0 |
 

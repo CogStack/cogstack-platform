@@ -68,6 +68,10 @@ spec:
           - name: "APP_MEDCAT_MODEL_PACK"
             value: {{ .Values.env.APP_MEDCAT_MODEL_PACK | quote }}
           {{- end}}
+          {{- if .Values.demoUi.footer.custom }}
+          - name: APP_DEMO_UI_CUSTOM_MARKDOWN_PATH
+            value: /config/demo-ui-footer.md
+          {{- end }}
           {{- with .Values.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}
@@ -84,7 +88,7 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if or .Values.model.downloadUrl .Values.volumeMounts }}
+          {{- if or .Values.model.downloadUrl .Values.volumeMounts .Values.demoUi.footer.custom }}
           volumeMounts:
             {{- if .Values.volumeMounts }}
             {{- toYaml .Values.volumeMounts | nindent 12 }}
@@ -92,6 +96,12 @@ spec:
             {{- if .Values.model.downloadUrl }}
             - name: models
               mountPath: /models
+            {{- end }}
+            {{- if .Values.demoUi.footer.custom }}
+            - name: demoui-config
+              mountPath: /config/demo-ui-footer.md
+              subPath: {{ .Values.demoUi.footer.existingConfigMap.subPath | default "demo-ui-footer.md" }}
+              readOnly: true
             {{- end }}
           {{- end }}
       {{- if or .Values.extraInitContainers .Values.model.downloadUrl }}
@@ -133,7 +143,7 @@ spec:
       {{- with .Values.extraInitContainers }}
         {{- tpl (toYaml .) $root | nindent 8 }}
       {{- end }}
-      {{- if or .Values.model.downloadUrl .Values.volumes }}
+      {{- if or .Values.model.downloadUrl .Values.volumes .Values.demoUi.footer.custom }}
       volumes:
         {{- if .Values.volumes }}
         {{- toYaml .Values.volumes | nindent 8 }}
@@ -141,6 +151,15 @@ spec:
         {{- if .Values.model.downloadUrl }}
         - name: models
           emptyDir: {}
+        {{- end }}
+        {{- if .Values.demoUi.footer.custom }}
+        - name: demoui-config
+          configMap:
+          {{- if .Values.demoUi.footer.existingConfigMap.name }}
+            name: {{ .Values.demoUi.footer.existingConfigMap.name }}
+          {{- else }}
+            name: {{ include "medcat-service.fullname" . }}-demoui-config
+          {{- end }}
         {{- end }}
       {{- end }}
       {{- with .Values.nodeSelector }}
