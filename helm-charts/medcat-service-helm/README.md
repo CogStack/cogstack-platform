@@ -2,6 +2,8 @@
 
 A Helm chart to deploy CogStack medcat-service
 
+**Homepage:** <https://docs.cogstack.org/>
+
 ## Installation
 
 ```sh
@@ -130,6 +132,9 @@ You should see the NVIDIA GPU device listing if the GPU is properly accessible.
 | autoscaling.maxReplicas | int | `100` |  |
 | autoscaling.minReplicas | int | `1` |  |
 | autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
+| demoUi.footer.content | string | Default about footer for medcat service. | Markdown contents to be rendered in the demo UI. |
+| demoUi.footer.custom | bool | `false` | Set to true to mount a custom markdown footer for the DemoUI. |
+| demoUi.footer.existingConfigMap | object | `{}` | Optional: Reference an existing configmap for the custom footer markdown. Overrides demoUi.footer.content. |
 | env.APP_ENABLE_DEMO_UI | bool | `true` |  |
 | env.APP_ENABLE_METRICS | bool | `true` | Observability Env Vars |
 | env.APP_ENABLE_TRACING | bool | `false` |  |

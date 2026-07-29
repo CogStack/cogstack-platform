@@ -75,6 +75,27 @@ model: {}
   # Name of the model pack to save to. Will be stored at /models/<name>
   # name: my-model.zip
 
+demoUi:
+  footer:
+    # -- Set to true to mount a custom markdown footer for the DemoUI.
+    custom: false
+    # -- Optional: Reference an existing configmap for the custom footer markdown. Overrides demoUi.footer.content.
+    existingConfigMap: {}
+      # -- The name of an existing configmap. Contains markdown under the key "demo-ui-footer.md"
+      # name: ""
+      # -- Optional key/subPath within the configmap (default: demo-ui-footer.md)
+      # subPath: demo-ui-footer.md
+    # -- Markdown contents to be rendered in the demo UI.
+    # @default -- Default about footer for medcat service.
+    content: |
+      ## About
+
+      MedCAT Service is part of the [CogStack](https://cogstack.org/) open-source NLP toolkit.
+
+      For support or enquiries, contact [contact@cogstack.org](mailto:contact@cogstack.org).
+
+      Source code and documentation: [github.com/CogStack/cogstack-nlp](https://github.com/CogStack/cogstack-nlp).
+
 # -- Allow setting env values from field/configmap/secret references. Defaults to include k8s details for observability.
 envValueFrom:
   K8S_NODE_NAME:

@@ -1,0 +1,14 @@
+{{- if .Values.demoUi.footer.custom }}
+{{- if not .Values.demoUi.footer.existingConfigMap }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "medcat-service.fullname" . }}-demoui-config
+  labels:
+    {{- include "medcat-service.labels" . | nindent 4 }}
+    app.kubernetes.io/component: medcat-service
+data:
+  demo-ui-footer.md: |
+{{ .Values.demoUi.footer.content | indent 4 }}
+{{- end }}
+{{- end }}
