@@ -18,7 +18,7 @@ class LocalNativeAuthenticator(NativeAuthenticator, LocalAuthenticator):
     pass
 
 
-DOCKER_NOTEBOOK_IMAGE = os.getenv("JUPYTER_HUB_SINGLEUSER_DOCKER_NOTEBOOK_IMAGE", 
+DOCKER_NOTEBOOK_IMAGE = os.getenv("JUPYTER_HUB_SINGLEUSER_DOCKER_NOTEBOOK_IMAGE",
                                   "cogstacksystems:jupyterhub/singleuser:latest")
 
 # JupyterHub requires a single-user instance of the Notebook server, so we
@@ -35,8 +35,8 @@ NETWORK_NAME = os.environ.get("JUPYTER_HUB_DOCKER_NETWORK_NAME", "cogstack-net")
 # The IP address or hostname of the JupyterHub container in the Docker network
 HUB_CONTAINER_IP_OR_NAME = os.environ.get("JUPYTER_HUB_DOCKER_CONTAINER_NAME", "cogstack-jupyter-hub")
 
-# The timeout in seconds after which the idle notebook container will be shutdown
-NOTEBOOK_IDLE_TIMEOUT = int(os.environ.get("DOCKER_NOTEBOOK_IDLE_TIMEOUT", "7200"))
+# The timeout in seconds after which the idle notebook container will be shutdown - 7 days
+NOTEBOOK_IDLE_TIMEOUT = int(os.environ.get("DOCKER_NOTEBOOK_IDLE_TIMEOUT", str(7 * 24 * 60 * 60)))
 
 SELECT_NOTEBOOK_IMAGE_ALLOWED = str(os.environ.get("JUPYTERHUB_DOCKER_SELECT_NOTEBOOK_IMAGE_ALLOWED", "false")).lower()
 
@@ -66,10 +66,10 @@ os.environ["NO_PROXY"] = ""
 os.environ["no_proxy"] = ""
 os.environ["HTTP_PROXY"] = ""
 os.environ["HTTPS_PROXY"] = ""
-os.environ["http_proxy"] = ""   
+os.environ["http_proxy"] = ""
 os.environ["https_proxy"] = ""
 
-c: Config = get_config() 
+c: Config = get_config()
 
 # Spawn containers from this image
 # Either use the CoGstack one from the repo which is huge and contains all the stuff needed or,
@@ -380,7 +380,7 @@ c.ConfigurableHTTPProxy.pid_file = "/srv/jupyterhub/jupyter_hub_proxy.pid"
 
 # The date format used by logging formatters for %(asctime)s
 #  Default: "%Y-%m-%d %H:%M:%S"
-# c.Application.log_datefmt = "%Y-%m-%d %H:%M:%S"   
+# c.Application.log_datefmt = "%Y-%m-%d %H:%M:%S"
 
 # The Logging format template
 #  Default: "[%(name)s]%(highlevel)s %(message)s"
@@ -405,30 +405,30 @@ c.Application.log_level = jupyter_log_level
 c.JupyterHub.allow_named_servers = False
 
 # Timeout (in seconds) to wait for spawners to initialize
-# 
+#
 #  Checking if spawners are healthy can take a long time if many spawners are
 #  active at hub start time.
 #
 #  If it takes longer than this timeout to check, init_spawner will be left to
 #  complete in the background and the http server is allowed to start.
-#          
+#
 #  A timeout of -1 means wait forever, which can mean a slow startup of the Hub
 #  but ensures that the Hub is fully consistent by the time it starts responding
 #  to requests. This matches the behavior of jupyterhub 1.0.
-#  
+#
 #  .. versionadded: 1.1.0
 #  Default: 10
 c.JupyterHub.init_spawners_timeout = 720
 
 # Timeout (in seconds) before giving up on a spawned HTTP server
-#  
+#
 #  Once a server has successfully been spawned, this is the amount of time we
 #  wait before assuming that the server is unable to accept connections.
 #  Default: 30
 c.Spawner.http_timeout = 720
 
 # Timeout (in seconds) before giving up on starting of single-user server.
-#  
+#
 #  This is the timeout for start to return, not the timeout for the server to
 #  respond. Callers of spawner.start will assume that startup has failed if it
 #  takes longer than this. start should return when the server process is started
@@ -442,9 +442,9 @@ c.Spawner.start_timeout = 720
 #------------------------------------------------------------------------------
 
 # A Spawner that just uses Popen to start local processes as users.
-# 
+#
 # Requires users to exist on the local system.
-# 
+#
 # This is the default spawner for JupyterHub.
 
 # Seconds to wait for process to halt after SIGINT before proceeding to SIGTERM
