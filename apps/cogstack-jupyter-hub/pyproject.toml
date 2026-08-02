@@ -18,7 +18,7 @@ dependencies = [
     "jupyterlab_widgets==3.0.16",
     "jupyter_contrib_core==0.4.2",
     "jupyter_contrib_nbextensions==0.7.0",
-    "docker==7.1.0",
+    "docker==7.2.0",
     "dockerspawner==14.0.0",
     "jupyterhub-client==0.1.0",
     "pytesseract==0.3.13",
