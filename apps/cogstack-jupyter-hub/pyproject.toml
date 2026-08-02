@@ -43,7 +43,7 @@ dependencies = [
     "pyodbc==5.3.0",
     "openpyxl==3.1.5",
     "dvc==3.67.1",
-    "GitPython==3.1.50",
+    "GitPython==3.1.57",
     "neo4j==6.2.0",
     "PyYAML==6.0.2",
     "opencv-python==5.0.0.93",
