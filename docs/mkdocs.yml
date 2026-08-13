@@ -46,7 +46,7 @@ nav:
       - CogStack AI: cogstack-ai/index.md
       - Natural Language Processing: overview/Natural Language Processing.md
       - MedCAT:
-          - MedCAT: medcat/medcat-v2/docs/index.md
+          - MedCAT: medcat/medcat-v2/README.md
           - Architecture: medcat/medcat-v2/docs/architecture.md
           - Tutorials: '!import https://github.com/CogStack/cogstack-nlp?branch=main&docs_dir=medcat-v2-tutorials/notebooks/*&config=medcat-v2-tutorials/mkdocs.yml'    
           - Upgrading:
@@ -118,6 +118,7 @@ plugins:
           import_url: https://github.com/CogStack/cogstack-nlp?branch=main
           imports:
             - medcat-v2/docs
+            - medcat-v2/README.md
   - search
   - macros
   - gen-files:
