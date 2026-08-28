@@ -46,12 +46,14 @@ nav:
       - CogStack AI: cogstack-ai/index.md
       - Natural Language Processing: overview/Natural Language Processing.md
       - MedCAT:
-          - MedCAT: medcat/medcat-v2/README.md
-          - Architecture: medcat/medcat-v2/docs/architecture.md
-          - Tutorials: '!import https://github.com/CogStack/cogstack-nlp?branch=main&docs_dir=medcat-v2-tutorials/notebooks/*&config=medcat-v2-tutorials/mkdocs.yml'    
+          - MedCAT: medcat/medcat/docs/index.md
+          - Architecture: medcat/medcat/docs/architecture.md
+          - Tutorials: '!import https://github.com/CogStack/cogstack-nlp?branch=main&docs_dir=medcat-tutorials/notebooks/*&config=medcat-tutorials/mkdocs.yml'    
           - Upgrading:
-            - Migration guide (v2): medcat/medcat-v2/docs/migration_guide_v2.md
-            - Breaking changes: medcat/medcat-v2/docs/breaking_changes.md
+            - Information for users coming from MedCAT v1: medcat/medcat/docs/v1_info.md
+            - Migration guide (v2): medcat/medcat/docs/migration_guide_v2.md
+            - Model conversion: medcat/medcat/docs/v1_conversion.md
+            - Breaking changes: medcat/medcat/docs/breaking_changes.md
           - API Reference: https://docs.cogstack.org/projects/nlp/en/latest/reference/medcat/
       - Medcat Trainer: '!import https://github.com/CogStack/cogstack-nlp?branch=main&docs_dir=medcat-trainer/docs/*&config=medcat-trainer/mkdocs.yml'
       - Medcat Service: '!import https://github.com/CogStack/cogstack-nlp?branch=main&docs_dir=medcat-service/docs/*&config=medcat-service/mkdocs.yml'
@@ -117,8 +119,7 @@ plugins:
         - name: medcat
           import_url: https://github.com/CogStack/cogstack-nlp?branch=main
           imports:
-            - medcat-v2/docs
-            - medcat-v2/README.md
+            - medcat/docs
   - search
   - macros
   - gen-files:
