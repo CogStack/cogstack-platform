@@ -63,7 +63,7 @@ nav:
       - Data Engineering: data-engineering/index.md
       - Data pipelines: overview/Data pipelines.md
       - Elasticsearch: overview/Elasticsearch.md
-      - NiFi: https://docs.cogstack.org/projects/nifi/
+      - NiFi: '!import https://github.com/CogStack/CogStack-NiFi?branch=docs/move-to-mkdocs&docs_dir=docs/*&config=mkdocs.yml'
   - Platform:
       - Platform: platform/index.md
       - Deployment:
