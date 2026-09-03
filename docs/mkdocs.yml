@@ -38,17 +38,18 @@ nav:
       - Major Changes: data-engineering/changes.md
 #      - Data pipelines: overview/Data pipelines.md
       - Elasticsearch: overview/Elasticsearch.md
-#      - NiFi: https://docs.cogstack.org/projects/nifi/
-      - NiFi: data-engineering/nifi.md
+#      - NiFi: data-engineering/nifi.md
+      - NiFi: '!import https://github.com/CogStack/CogStack-NiFi?branch=main&docs_dir=docs/*&config=mkdocs.yml'
 
   - NLP:
       - Overview: cogstack-ai/index.md
       - MedCAT:
           - MedCAT: medcat/medcat/docs/index.md
           - Architecture: medcat/medcat/docs/architecture.md
-#          - Tutorials: '!import https://github.com/CogStack/cogstack-nlp?branch=main&docs_dir=medcat-tutorials/notebooks/*&config=medcat-tutorials/mkdocs.yml'
+          - Tutorials: '!import https://github.com/CogStack/cogstack-nlp?branch=main&docs_dir=medcat-tutorials/notebooks/*&config=medcat-tutorials/mkdocs.yml'
           - Upgrading:
               - Migration guide (v2): medcat/medcat/docs/migration_guide_v2.md
+              - Model conversion: medcat/medcat/docs/v1_conversion.md
               - Breaking changes: medcat/medcat/docs/breaking_changes.md
           - API Reference: https://docs.cogstack.org/projects/nlp/en/latest/reference/medcat/
       - MedCAT Trainer: '!import https://github.com/CogStack/cogstack-nlp?branch=main&docs_dir=medcat-trainer/docs/*&config=medcat-trainer/mkdocs.yml'
