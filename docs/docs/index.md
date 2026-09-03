@@ -13,37 +13,43 @@ There are a wide range of features including Generative AI, Natural Language Pro
 
 CogStack is a commercial open-source product, with the code for the community edition available on GitHub: [https://github.com/CogStack/](https://github.com/CogStack/). For enterprise deployments, full platform setup, and advanced features, please [contact us](https://docs.cogstack.org/en/latest/).
 
-<div class="grid cards" markdown>
+## Quickstart
 
--   :zap:{ .lg .middle } **Quickstart Guide**
+Deploy the CogStack Community Edition on an existing Kubernetes cluster using helm.
 
-    ---
+<!-- termynal -->
 
-    Get running in under 5 minutes with our clean templates.
+```sh
+$ helm install \
+    cogstack oci://registry-1.docker.io/cogstacksystems/cogstack-ce-helm \
+    --timeout=15m0s
+---> 100%
+Pulled: registry-1.docker.io/cogstacksystems/cogstack-ce-helm:0.0.1
+Digest: sha256:02e8ad3df7173270f7fdeb3e1ed5133427cec06ffc15b4ce763fa9bb062c8df1
 
-    [:octicons-arrow-right-24: Get started](platform/deployment/get-started/quickstart.md)
+NAME: cogstack
+LAST DEPLOYED: Mon Mar 23 16:19:05 2026
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+DESCRIPTION: Install complete
+NOTES:
+...
+# CogStack Community Edition is installed
+# Setup Complete
+# Run this command line to setup port-forwarding and access services
+# `helm get notes cogstack | bash`
+```
 
--   :book:{ .lg .middle } **Website**
+See [CogStack Community Edition (CE)](cogstack-ce/_index.md) to continue this process.
 
-    ---
+## Architecture
 
-    Get in-depth understanding of what CogStack is, and all that it offers.
-
-    [:octicons-arrow-right-24: Visit site](https://cogstack.org/)
-
--   :key:{ .lg .middle } **Libraries**
-
-    ---
-
-    Peek at the libraries that power CogStack.
-
-    [:octicons-arrow-right-24: Browse](https://github.com/orgs/CogStack/repositories)
-
-</div>
+![CogStack Architecture](overview/attachments/architecture.png)
 
 CogStack is comprised of a suite of applications, all using a common AI and data engineering platform. It is designed to be a self hosted platform where you run your own instances and keep all of your data on premise, with full support for air gapped environments.
 
-**The applications provide features for:**
+The applications provide features for:
 
 - Clinical Coding
 - Search and Audit of EHRs
@@ -52,39 +58,12 @@ CogStack is comprised of a suite of applications, all using a common AI and data
 - DeIdentification of patient records
 - Clinical Decision Support (CDS)
 
----
+The AI and Data Engineering layer comprises of:
 
-## Architecture
-
-![CogStack Architecture](overview/attachments/architecture.png)
-
-To understand the flow of CogStack, and the tools it offers, the below section will provide a brief overview:
-
-## Components of CogStack
-
-### CogStack NiFi
-
-It all begins with Data Engineering, pulling in data from all sources, and creating a data lake for all subsequent resources to use.
-
-Apache NiFi provides fully configurable and scalable data flows with built-in monitoring, data provenance and security features.
-
-[:octicons-arrow-right-24: Explore CogStack NiFi](data-engineering/index.md)
-
-### NLP
-
-Performing Named Entity Recognition and Linking (NER+L), extracting contextual attributes like temporality and subject, and extracting relations between entities is all part of the NLP toolkit.
-
-MedCAT for NER+L, MetaCAT for contextual attribute extraction and RelCAT for relation extraction.
-
-[:octicons-arrow-right-24: Explore NLP](cogstack-ai/overview.md)
-
-### Deployment
-
-To run CogStack and its tools, the deployment guide helps with running, scaling, observing, dashboarding and alerting.
-
-Helm, Docker Compose and cloud options are all covered in the tutorial.
-
-[:octicons-arrow-right-24: Explore Deployment](platform/deployment/_index.md)
+- Healthcare Language Models trained on large data real world data sets
+- The open source MedCAT and AnonCAT natural language processing libraries
+- Data Engineering pipelines using Apache NiFi and OpenSearch to read unstructured and structured data
+- MLOps tooling for model training and validation
 
 !!! tip
 
@@ -94,9 +73,11 @@ Helm, Docker Compose and cloud options are all covered in the tutorial.
 
     For advanced use cases and enterprise features see our range of [products](https://cogstack.org/products/).
 
----
+## Next Steps
 
-## Support
+[Get Started ](overview/getting-started.md){ .md-button .md-button--primary }
+
+## Community and support
 
 - **Questions?** Reach out in the [CogStack community forum](https://discourse.cogstack.org/).
 - **Code and projects:** [CogStack on GitHub](https://github.com/orgs/CogStack/repositories).
