@@ -66,6 +66,10 @@ jobs:
           python-version: "3.x"
           check-latest: true
 
+      - name: Install Python deps for chart scripts
+        run: pip install pyyaml
+        working-directory: .
+
       - name: Set up chart-testing
         uses: helm/chart-testing-action@v2.8.0
 
@@ -79,18 +83,7 @@ jobs:
           fi
 
       - name: Recursive dependency update (all charts, including nested)
-        run: |
-          # Run twice so nested subcharts (like cogstack-jupyterhub -> jupyterhub) are fully updated
-          for _ in 1 2; do
-            # Find every Chart.yaml under helm-charts and run helm dependency update in its directory
-            while IFS= read -r chartfile; do
-              chart_dir="$(dirname "$chartfile")"
-              if grep -q "^dependencies:" "$chartfile" 2>/dev/null; then
-                echo "Updating dependencies for $chart_dir"
-                helm dependency update "$chart_dir"
-              fi
-            done < <(find . -type f -name Chart.yaml)
-          done
+        run: ../.github/scripts/helm-recursive-dependency-update.py
 
       - name: Run chart-testing (lint)
         if: steps.list-changed.outputs.changed == 'true'
@@ -128,6 +121,16 @@ jobs:
         with:
           version: v3.17.0
 
+      - name: Set up Python
+        uses: actions/setup-python@v6.0.0
+        with:
+          python-version: "3.x"
+          check-latest: true
+
+      - name: Install Python deps for chart scripts
+        run: pip install pyyaml
+        working-directory: .
+
       - name: Checkout
         uses: actions/checkout@v5
 
@@ -163,19 +166,7 @@ jobs:
       - name: Recursive dependency update (all charts, including nested)
         # Waiting on helm recursive feature https://github.com/helm/helm/pull/30855
         # Could alternatively switch to helm "cascade" plugin
-        run: |
-          # Run twice so nested subcharts (like cogstack-jupyterhub -> jupyterhub) are fully updated
-          for _ in 1 2; do
-            for CHART in ${{ steps.charts.outputs.charts }}; do
-              while IFS= read -r chartfile; do
-                chart_dir="$(dirname "$chartfile")"
-                if grep -q "^dependencies:" "$chartfile" 2>/dev/null; then
-                  echo "Updating dependencies for $chart_dir"
-                  helm dependency update "$chart_dir"
-                fi
-              done < <(find "./$CHART" -type f -name Chart.yaml)
-            done
-          done
+        run: ../.github/scripts/helm-recursive-dependency-update.py ${{ steps.charts.outputs.charts }}
 
       - name: Package Helm Charts
         run: |
