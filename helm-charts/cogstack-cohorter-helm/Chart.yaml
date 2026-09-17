@@ -21,7 +21,7 @@ dependencies:
 
   # Ollama LLM serving — https://github.com/otwld/ollama-helm
   - name: ollama
-    version: ">=0.1.0"
+    version: "1.54.0"
     repository: "https://otwld.github.io/ollama-helm/"
     alias: ollama
     condition: ollama.enabled
