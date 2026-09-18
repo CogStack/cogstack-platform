@@ -703,7 +703,7 @@ requires-dist = [
     { name = "keras", specifier = "==3.15.1" },
     { name = "matplotlib", specifier = "==3.11.1" },
     { name = "medcat", extras = ["spacy", "meta-cat", "deid", "rel-cat", "dict-ner"], specifier = "==2.9.0" },
-    { name = "medcat-den", specifier = "==0.5.4" },
+    { name = "medcat-den", specifier = "==0.6.0" },
     { name = "mysql-connector-python", specifier = "==26.7.0" },
     { name = "neo4j", specifier = "==6.3.0" },
     { name = "nltk", specifier = "==3.10.3" },
@@ -2398,17 +2398,19 @@ spacy = [
 
 [[package]]
 name = "medcat-den"
-version = "0.5.4"
+version = "0.6.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "click" },
     { name = "diskcache" },
     { name = "medcat", extra = ["deid", "meta-cat", "rel-cat", "spacy"] },
     { name = "platformdirs" },
     { name = "pydantic" },
+    { name = "typer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ef/68/dd3f7ccea257b440d946163aad06bbc7c0ae03f817aad7f8279b4119f575/medcat_den-0.5.4.tar.gz", hash = "sha256:3683363b9e0cdb9a4e37e5baffa881c64d43a8569b210f35880be004bfc26232", size = 76256204, upload-time = "2026-04-24T13:55:07.705Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/14/06/fe0adad7fef6b7eb3e8bb3a3436dc84b31a293bdba64690d3d595bf306af/medcat_den-0.6.0.tar.gz", hash = "sha256:8f895f800c0083fdbe449d79b6cd2a183fa14126ce5a6d7a22ebc77abaf7e217", size = 46125, upload-time = "2026-09-02T08:04:09.099Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/fc/3e/b76577ed6bf605d4c14d9f34a49680b9a1a86e9183c73a22a6c415389d9f/medcat_den-0.5.4-py3-none-any.whl", hash = "sha256:2b3f419bf6968a9da047c8e0573aa51fd65a14b3e53084f26f7ea3ae9c843baf", size = 30333, upload-time = "2026-04-24T13:55:05.228Z" },
+    { url = "https://files.pythonhosted.org/packages/a1/77/c6f16a6147866513d7c0a17b0a00f2bd290485a12f79322f622d382e8e1c/medcat_den-0.6.0-py3-none-any.whl", hash = "sha256:8d76db0ac946734c876f9d33f2a48cfcf3bde59ad9c128c1ca006e95d2597895", size = 30411, upload-time = "2026-09-02T08:04:07.889Z" },
 ]
 
 [[package]]
