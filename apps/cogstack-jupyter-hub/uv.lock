@@ -702,7 +702,7 @@ requires-dist = [
     { name = "jupyterlab-widgets", specifier = "==3.0.17" },
     { name = "keras", specifier = "==3.15.1" },
     { name = "matplotlib", specifier = "==3.11.1" },
-    { name = "medcat", extras = ["spacy", "meta-cat", "deid", "rel-cat", "dict-ner"], specifier = "==2.8.6" },
+    { name = "medcat", extras = ["spacy", "meta-cat", "deid", "rel-cat", "dict-ner"], specifier = "==2.9.0" },
     { name = "medcat-den", specifier = "==0.5.4" },
     { name = "mysql-connector-python", specifier = "==26.7.0" },
     { name = "neo4j", specifier = "==6.3.0" },
@@ -2348,7 +2348,7 @@ wheels = [
 
 [[package]]
 name = "medcat"
-version = "2.8.6"
+version = "2.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -2364,9 +2364,9 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "xxhash" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9b/b4/74f88348bbe1eeaddb0c86c45d8f7e9be81409644faf5b59a98b4979805a/medcat-2.8.6.tar.gz", hash = "sha256:241d85ed546711ed0bb427b49e1fc02824f9310bca0ca3ad8f0e4527d4697b31", size = 960026, upload-time = "2026-06-23T15:58:34.681Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/4d/16/cf0265cb197dc242b83e2bf8e18d466aaf9c100e3a5a48983f5846d83be2/medcat-2.9.0.tar.gz", hash = "sha256:eb154f10479c3a31c7641283811a1616b446985fff91858ad2b890804a54519f", size = 966503, upload-time = "2026-08-28T10:52:31.381Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/06/b0/3411e675d004f5823ef50fa6804cd73e6185f1445c82ac578a4cd7dc2582/medcat-2.8.6-py3-none-any.whl", hash = "sha256:726dfdd9fc1afafbce5ace3cef58412d0de40d6ef89767bb162ad77cb1386e74", size = 317522, upload-time = "2026-06-23T15:58:32.487Z" },
+    { url = "https://files.pythonhosted.org/packages/22/b6/b01eb50ea3f040b4dac7356bfa49e9968be0647b4f3539eeb53a64d35426/medcat-2.9.0-py3-none-any.whl", hash = "sha256:6f0f1c2f9c275ab08bfe9a4098fb84afd0881a999db72aa8ddc61bdb6dcf61eb", size = 320231, upload-time = "2026-08-28T10:52:29.431Z" },
 ]
 
 [package.optional-dependencies]
