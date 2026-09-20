@@ -1,4 +1,4 @@
-FROM jupyterhub/singleuser:5.5
+FROM jupyterhub/singleuser:6.0
 
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
