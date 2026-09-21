@@ -12,7 +12,6 @@ theme:
     primary: white
 
   features:
-    - navigation.tabs
     - navigation.sections
     - navigation.top
     - navigation.indexes
@@ -32,84 +31,87 @@ repo_name: github.com/CogStack
 docs_dir: docs
 
 nav:
-  - Home:
-      - Home: index.md
-      - Getting started: overview/getting-started.md
-      - CogStack Community Edition:
-          - Overview: cogstack-ce/_index.md
-          - Quickstart: cogstack-ce/tutorial/quickstart-installation.md
-          - Product Tour: cogstack-ce/product-tour.md
-          - Tutorials:
-              - Using JupyterHub: cogstack-ce/tutorial/end-to-end-jupyterhub.md
-              - End To End Tutorial: cogstack-ce/tutorial/medcat-opensearch-e2e.ipynb
-  - CogStack AI:
-      - CogStack AI: cogstack-ai/index.md
-      - Natural Language Processing: overview/Natural Language Processing.md
+  - Getting Started:
+      - Introduction: index.md
+  - Data Engineering:
+      - Overview: data-engineering/index.md
+      - Major Changes: data-engineering/changes.md
+#      - Data pipelines: overview/Data pipelines.md
+      - Elasticsearch: overview/Elasticsearch.md
+#      - NiFi: data-engineering/nifi.md
+      - NiFi: '!import https://github.com/CogStack/CogStack-NiFi?branch=main&docs_dir=docs/*&config=mkdocs.yml'
+
+  - NLP:
+      - Overview: cogstack-ai/index.md
       - MedCAT:
           - MedCAT: medcat/medcat/docs/index.md
           - Architecture: medcat/medcat/docs/architecture.md
-          - Tutorials: '!import https://github.com/CogStack/cogstack-nlp?branch=main&docs_dir=medcat-tutorials/notebooks/*&config=medcat-tutorials/mkdocs.yml'    
+          - Tutorials: '!import https://github.com/CogStack/cogstack-nlp?branch=main&docs_dir=medcat-tutorials/notebooks/*&config=medcat-tutorials/mkdocs.yml'
           - Upgrading:
-            - Information for users coming from MedCAT v1: medcat/medcat/docs/v1_info.md
-            - Migration guide (v2): medcat/medcat/docs/migration_guide_v2.md
-            - Model conversion: medcat/medcat/docs/v1_conversion.md
-            - Breaking changes: medcat/medcat/docs/breaking_changes.md
+              - Migration guide (v2): medcat/medcat/docs/migration_guide_v2.md
+              - Model conversion: medcat/medcat/docs/v1_conversion.md
+              - Breaking changes: medcat/medcat/docs/breaking_changes.md
           - API Reference: https://docs.cogstack.org/projects/nlp/en/latest/reference/medcat/
-      - Medcat Trainer: '!import https://github.com/CogStack/cogstack-nlp?branch=main&docs_dir=medcat-trainer/docs/*&config=medcat-trainer/mkdocs.yml'
-      - Medcat Service: '!import https://github.com/CogStack/cogstack-nlp?branch=main&docs_dir=medcat-service/docs/*&config=medcat-service/mkdocs.yml'
+      - MedCAT Trainer: '!import https://github.com/CogStack/cogstack-nlp?branch=main&docs_dir=medcat-trainer/docs/*&config=medcat-trainer/mkdocs.yml'
+      - MedCAT Service: '!import https://github.com/CogStack/cogstack-nlp?branch=main&docs_dir=medcat-service/docs/*&config=medcat-service/mkdocs.yml'
+      - MedCAT Service Tutorial:
+          - API reference: cogstack-ai/medcat_service_api.md
+          - MedCAT Service Tutorial: platform/cogstack-ai/medcat-service-tutorial.ipynb
+
+
+  - Deployment:
+      - Overview: platform/deployment/index.md
+      - Getting Started:
+          - Overview: platform/deployment/get-started/_index.md
+          - Quickstart: platform/deployment/get-started/quickstart.md
+      - Helm:
+          - Helm: platform/deployment/helm/index.md
+          - Tutorial: platform/deployment/helm/tutorial.md
+          - Charts:
+              - Charts Overview: platform/deployment/helm/charts/index.md
+              - Cogstack CE Helm: platform/deployment/helm/charts/cogstack-ce-helm.md
+              - MedCAT Service Helm: platform/deployment/helm/charts/medcat-service-helm.md
+              - MedCAT Trainer Helm: platform/deployment/helm/charts/medcat-trainer-helm.md
+              - Cogstack Cohorter Helm: platform/deployment/helm/charts/cogstack-cohorter-helm.md
+              - Cogstack Observability Helm: platform/deployment/helm/charts/cogstack-observability-helm.md
+              - Cogstack JupyterHub Helm: platform/deployment/helm/charts/cogstack-jupyterhub-helm.md
+      - Examples:
+          - Examples: platform/deployment/examples/index.md
+          - AWS Kubernetes EKS: platform/deployment/examples/aws-kubernetes-eks.md
+          - Azure Kubernetes AKS: platform/deployment/examples/azure-kubernetes-aks.md
+          - OpenStack Kubernetes K3s: platform/deployment/examples/openstack-kubernetes-k3s.md
+          - OpenStack Docker: platform/deployment/examples/openstack-docker.md
+      - Docker Compose: platform/deployment/reference/docker-compose/_index.md
+
+  - Observability:
+      - Overview: platform/observability/index.md
+      - Getting Started:
+          - Quickstart: platform/observability/get-started/quickstart.md
+          - User Guide Tutorial: platform/observability/get-started/userguide-tutorial.md
+      - Setup:
+          - Production Setup: platform/observability/setup/production-setup.md
+          - Probing: platform/observability/setup/probing.md
+          - Telemetry: platform/observability/setup/telemetry.md
+          - Alerting: platform/observability/setup/alerting.md
+      - Customization:
+          - Customization Overview: platform/observability/customization/_index.md
+          - Custom Dashboards: platform/observability/customization/custom-dashboards.md
+          - Alerts Customization: platform/observability/customization/alerts-customization.md
+          - Custom Prometheus Configs: platform/observability/customization/custom-prometheus-configs.md
+          - Blackbox Exporter Config: platform/observability/customization/blackbox-exporter-config.md
+      - Reference:
+          - Project Details: platform/observability/reference/project-details.md
+          - Concept Materials: platform/observability/reference/concept-materials.md
+          - Quickstart Manual: platform/observability/reference/quickstart-manual.md
+          - Understanding Metrics: platform/observability/reference/understanding-metrics.md
+
+  - CogStack Community Edition:
+      - Overview: cogstack-ce/_index.md
+      - Quickstart: cogstack-ce/tutorial/quickstart-installation.md
+      - Product Tour: cogstack-ce/product-tour.md
       - Tutorials:
-          - Medcat Service Tutorial: platform/cogstack-ai/medcat-service-tutorial.ipynb
-  - Data Engineering:
-      - Data Engineering: data-engineering/index.md
-      - Data pipelines: overview/Data pipelines.md
-      - Elasticsearch: overview/Elasticsearch.md
-      - NiFi: '!import https://github.com/CogStack/CogStack-NiFi?branch=main&docs_dir=docs/*&config=mkdocs.yml'
-  - Platform:
-      - Platform: platform/index.md
-      - Deployment:
-          - Deployment: platform/deployment/index.md
-          - Getting Started:
-              - Overview: platform/deployment/get-started/_index.md
-              - Quickstart: platform/deployment/get-started/quickstart.md
-          - Helm:
-              - Helm: platform/deployment/helm/index.md
-              - Tutorial: platform/deployment/helm/tutorial.md
-              - Charts:
-                  - Charts Overview: platform/deployment/helm/charts/index.md
-                  - Cogstack CE Helm: platform/deployment/helm/charts/cogstack-ce-helm.md
-                  - MedCAT Service Helm: platform/deployment/helm/charts/medcat-service-helm.md
-                  - MedCAT Trainer Helm: platform/deployment/helm/charts/medcat-trainer-helm.md
-                  - Cogstack Cohorter Helm: platform/deployment/helm/charts/cogstack-cohorter-helm.md
-                  - Cogstack Observability Helm: platform/deployment/helm/charts/cogstack-observability-helm.md
-                  - Cogstack JupyterHub Helm: platform/deployment/helm/charts/cogstack-jupyterhub-helm.md
-          - Examples:
-              - Examples: platform/deployment/examples/index.md
-              - AWS Kubernetes EKS: platform/deployment/examples/aws-kubernetes-eks.md
-              - Azure Kubernetes AKS: platform/deployment/examples/azure-kubernetes-aks.md
-              - OpenStack Kubernetes K3s: platform/deployment/examples/openstack-kubernetes-k3s.md
-              - OpenStack Docker: platform/deployment/examples/openstack-docker.md
-          - Docker Compose: platform/deployment/reference/docker-compose/_index.md
-      - Observability:
-          - Observability: platform/observability/index.md
-          - Getting Started:
-              - Quickstart: platform/observability/get-started/quickstart.md
-              - User Guide Tutorial: platform/observability/get-started/userguide-tutorial.md
-          - Setup:
-              - Production Setup: platform/observability/setup/production-setup.md
-              - Probing: platform/observability/setup/probing.md
-              - Telemetry: platform/observability/setup/telemetry.md
-              - Alerting: platform/observability/setup/alerting.md
-          - Customization:
-              - Customization Overview: platform/observability/customization/_index.md
-              - Custom Dashboards: platform/observability/customization/custom-dashboards.md
-              - Alerts Customization: platform/observability/customization/alerts-customization.md
-              - Custom Prometheus Configs: platform/observability/customization/custom-prometheus-configs.md
-              - Blackbox Exporter Config: platform/observability/customization/blackbox-exporter-config.md
-          - Reference:
-              - Project Details: platform/observability/reference/project-details.md
-              - Concept Materials: platform/observability/reference/concept-materials.md
-              - Quickstart Manual: platform/observability/reference/quickstart-manual.md
-              - Understanding Metrics: platform/observability/reference/understanding-metrics.md
+          - Using JupyterHub: cogstack-ce/tutorial/end-to-end-jupyterhub.md
+          - End To End Tutorial: cogstack-ce/tutorial/medcat-opensearch-e2e.ipynb
 
 plugins:
   - multirepo:
@@ -148,7 +150,6 @@ markdown_extensions:
       check_paths: true
       base_path:
         - docs
-        # Repo root (e.g. Read the Docs) vs. docs/ project dir (local `cd docs && mkdocs`)
         - ../deployment-examples
         - deployment-examples
   - pymdownx.tabbed:

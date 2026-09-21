@@ -1,6 +1,7 @@
 # CogStack Community Edition Helm Chart
 
-This is a all in one helm chart that runs CogStack on Kubernetes
+This is a all in one helm chart that runs CogStack on Kubernetes. <br>
+Description for Community Edition (CogStack CE) can be found [here](../../../../cogstack-ce/_index.md)
 
 ## Overview
 
