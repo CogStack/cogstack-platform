@@ -132,7 +132,7 @@ For issues and questions, please visit the [CogStack GitHub repository](https://
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://otwld.github.io/ollama-helm/ | ollama(ollama) | >=0.1.0 |
+| https://otwld.github.io/ollama-helm/ | ollama(ollama) | 1.54.0 |
 | oci://registry-1.docker.io/cogstacksystems | medcat(medcat-service-helm) | 0.0.1 |
 
 ## Values
