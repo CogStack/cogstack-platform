@@ -1,0 +1,33 @@
+# ocr-service Helm Chart
+
+{{ template "chart.description" . }}
+
+{{ template "chart.homepageLine" . }}
+
+## Installation
+
+```sh
+helm install ocr-service oci://registry-1.docker.io/cogstacksystems/ocr-service-helm
+```
+
+## Usage
+For local testing, by default you can port forward the service using this command:
+
+```sh
+kubectl port-forward svc/ocr-service 8090:8090
+```
+
+Then navigate to http://localhost:8090 to try the service. You can also use http://localhost:8090/docs to view the REST APIs
+
+
+## Configuration
+
+To configure the service, create a values.yaml file and install with helm.
+
+
+
+{{ template "chart.requirementsSection" . }}
+
+{{ template "chart.valuesSection" . }}
+
+{{ template "helm-docs.versionFooter" . }}

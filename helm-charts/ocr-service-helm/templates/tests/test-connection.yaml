@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "ocr-service-helm.fullname" . }}-test-connection"
+  labels:
+    {{- include "ocr-service-helm.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['{{ include "ocr-service-helm.fullname" . }}:{{ .Values.service.port }}/api/health', '-U helm-test {{ .Chart.Name }}-v{{ .Chart.Version }}']
+  restartPolicy: Never
