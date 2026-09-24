@@ -2,6 +2,8 @@
 
 This is a all in one helm chart that runs CogStack on Kubernetes
 
+The description for Community Edition (CogStack CE) can be found [here](../../../../cogstack-ce/_index.md)
+
 ## Overview
 
 This chart is an umbrella chart that deploys:
