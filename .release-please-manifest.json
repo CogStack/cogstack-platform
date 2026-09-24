@@ -5,5 +5,5 @@
     "helm-charts/cogstack-cohorter-helm": "0.4.1",
     "helm-charts/cogstack-observability-helm": "0.4.1",
     "helm-charts/cogstack-jupyterhub-helm": "0.4.1",
-    "helm-charts/ocr-service-helm": "0.0.0"
+    "helm-charts/ocr-service-helm": "0.1.0"
 }
