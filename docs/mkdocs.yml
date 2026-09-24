@@ -72,6 +72,7 @@ nav:
               - Cogstack CE Helm: platform/deployment/helm/charts/cogstack-ce-helm.md
               - MedCAT Service Helm: platform/deployment/helm/charts/medcat-service-helm.md
               - MedCAT Trainer Helm: platform/deployment/helm/charts/medcat-trainer-helm.md
+              - OCR Service Helm: platform/deployment/helm/charts/ocr-service-helm.md
               - Cogstack Cohorter Helm: platform/deployment/helm/charts/cogstack-cohorter-helm.md
               - Cogstack Observability Helm: platform/deployment/helm/charts/cogstack-observability-helm.md
               - Cogstack JupyterHub Helm: platform/deployment/helm/charts/cogstack-jupyterhub-helm.md
