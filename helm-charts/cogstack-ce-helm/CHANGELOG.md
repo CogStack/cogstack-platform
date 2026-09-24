@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/CogStack/cogstack-platform/compare/helm-charts/cogstack-ce-helm-v0.5.0...helm-charts/cogstack-ce-helm-v0.6.0) (2026-09-24)
+
+
+### Features
+
+* **helm:** Add OCR Service helm chart ([#127](https://github.com/CogStack/cogstack-platform/issues/127)) ([00b0cac](https://github.com/CogStack/cogstack-platform/commit/00b0cac1dab73fb0a95d3aec243ccacc4999cac1))
+
 ## [0.5.0](https://github.com/CogStack/cogstack-platform/compare/helm-charts/cogstack-ce-helm-v0.4.2...helm-charts/cogstack-ce-helm-v0.5.0) (2026-09-17)
 
 
