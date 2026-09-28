@@ -13,4 +13,4 @@ See the latest documentation on [Readthedocs](https://docs.cogstack.org/en/lates
 ### Apps
 - OCR Service
 - CogStack Cohorter
-- Cogstack Dashboards Demp
+- Cogstack Dashboards Demo
