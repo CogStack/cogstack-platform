@@ -9,3 +9,8 @@ See the latest documentation on [Readthedocs](https://docs.cogstack.org/en/lates
 - CogStack deployment instructions and examples
 - Helm Charts for deployments
 - CogStack platform tools eg Observability. 
+
+### Apps
+- OCR Service
+- CogStack Cohorter
+- Cogstack Dashboards Demo

@@ -1,0 +1,32 @@
+name: docker-ocr-service
+
+on:
+  push:
+    branches: [main]
+    tags: ['ocr-service-v*.*.*']
+    paths:
+      - "apps/ocr-service/**"
+      - ".github/workflows/docker_build.yml"
+      - ".github/workflows/ocr-service-**"
+  pull_request:
+    paths:
+      - "apps/ocr-service/**"
+      - ".github/workflows/docker_build.yml"
+      - ".github/workflows/ocr-service-**"
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    if: github.event_name != 'release' || startsWith(github.event.release.tag_name, 'ocr-service-v')
+    uses: ./.github/workflows/ocr-service-docker-template.yml
+    with:
+      image: cogstacksystems/cogstack-ocr-service
+      context: apps/ocr-service
+      dockerfile: apps/ocr-service/Dockerfile
+      cache_scope: cogstack-ocr-service
+    secrets: inherit
