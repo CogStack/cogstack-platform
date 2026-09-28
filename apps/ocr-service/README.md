@@ -1,9 +1,9 @@
 # OCR-Service
 
-[![docker-ocr-service](https://github.com/CogStack/ocr-service/actions/workflows/docker_build.yml/badge.svg)](https://github.com/CogStack/ocr-service/actions/workflows/docker_build.yml)
-[![tests-ocr-service](https://github.com/CogStack/ocr-service/actions/workflows/run_tests.yml/badge.svg)](https://github.com/CogStack/ocr-service/actions/workflows/run_tests.yml)
-[![codeql-analysis-ocr-service](https://github.com/CogStack/ocr-service/actions/workflows/codeql.yml/badge.svg)](https://github.com/CogStack/ocr-service/actions/workflows/codeql.yml)
-[![docker-smoke-ocr-service](https://github.com/CogStack/ocr-service/actions/workflows/docker_smoke.yml/badge.svg)](https://github.com/CogStack/ocr-service/actions/workflows/docker_smoke.yml)
+[![docker-ocr-service](https://github.com/CogStack/cogstack-platform/actions/workflows/docker_build.yml/badge.svg)](https://github.com/CogStack/cogstack-platform/actions/workflows/docker_build.yml)
+[![tests-ocr-service](https://github.com/CogStack/cogstack-platform/actions/workflows/ocr-service-tests.yml/badge.svg)](https://github.com/CogStack/cogstack-platform/actions/workflows/ocr-service-tests.yml)
+[![codeql-analysis-ocr-service](https://github.com/CogStack/cogstack-platform/actions/workflows/codeql.yml/badge.svg)](https://github.com/CogStack/cogstack-platform/actions/workflows/codeql.yml)
+[![docker-smoke-ocr-service](https://github.com/CogStack/cogstack-platform/actions/workflows/ocr-service-docker-smoke.yml/badge.svg)](https://github.com/CogStack/cogstack-platform/actions/workflows/ocr-service-docker-smoke.yml)
 
 ## Introduction
 

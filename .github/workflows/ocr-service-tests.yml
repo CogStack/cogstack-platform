@@ -192,7 +192,8 @@ jobs:
           export OCR_SERVICE_LOG_LEVEL=10
           export OCR_SERVICE_DEBUG_MODE=True
           export LIBRE_OFFICE_PYTHON_PATH=/usr/bin/python3
-          export OCR_TMP_DIR=${{ github.workspace }}/tmp
+          export OCR_TMP_DIR=${{ github.workspace }}/apps/ocr-service/tmp
+          mkdir -p "$OCR_TMP_DIR"
           source venv/bin/activate
           python -m unittest discover -s ocr_service/tests -p 'test_process.py'
         shell: bash
