@@ -58,17 +58,23 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Docker metadata
+      - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ inputs.image }}
           tags: |
-            type=semver,pattern={{version}},prefix=ocr-service-v
-            type=semver,pattern={{major}}.{{minor}},prefix=ocr-service-v
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/ocr-service-v') }}
-            type=ref,event=branch,enable=${{ github.event_name != 'pull_request' }}
-            type=sha,format=short
+            # set latest tag for default branch
+            type=raw,value=latest,enable={{is_default_branch}}
+            # Include all default tags
+            type=schedule
+            type=ref,event=branch
+            type=ref,event=tag
+            type=ref,event=pr
+            type=sha
+            # Create version tag based on tag prefix
+            type=match,pattern=ocr-service-v(\d+\.\d+\.\d+),group=1
+          flavor: latest=false
 
       - name: Prepare architecture tags
         id: tags
@@ -112,17 +118,23 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Docker metadata (again)
+      - name: Extract metadata (tags, labels) for Docker
         id: meta_manifest
         uses: docker/metadata-action@v5
         with:
           images: ${{ inputs.image }}
           tags: |
-            type=semver,pattern={{version}},prefix=ocr-service-v
-            type=semver,pattern={{major}}.{{minor}},prefix=ocr-service-v
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/ocr-service-v') }}
-            type=ref,event=branch,enable=${{ github.event_name != 'pull_request' }}
-            type=sha,format=short
+            # set latest tag for default branch
+            type=raw,value=latest,enable={{is_default_branch}}
+            # Include all default tags
+            type=schedule
+            type=ref,event=branch
+            type=ref,event=tag
+            type=ref,event=pr
+            type=sha
+            # Create version tag based on tag prefix
+            type=match,pattern=ocr-service-v(\d+\.\d+\.\d+),group=1
+          flavor: latest=false
 
       - name: Create multi-arch manifest
         shell: bash
@@ -152,21 +164,11 @@ jobs:
               echo "normalize: $img:$tag -> $img:$base_tag"
             fi
 
-            # ------------------------------------------
-            # ARCH TAG PREFIX:
-            # semver → use v prefix
-            # latest / sha → no prefix
-            # ------------------------------------------
-            arch_prefix=""
-            if [[ "$base_tag" =~ ^[0-9]+\.[0-9]+ ]]; then
-              arch_prefix="v"
-            fi
-
             echo "⛵ Creating manifest for: ${img}:${base_tag}"
 
             docker buildx imagetools create \
               --tag "${img}:${base_tag}" \
-              "${img}:${arch_prefix}${base_tag}-amd64" \
-              "${img}:${arch_prefix}${base_tag}-arm64"
+              "${img}:${base_tag}-amd64" \
+              "${img}:${base_tag}-arm64"
 
           done < <(printf "%s" "${{ steps.meta_manifest.outputs.tags }}")
