@@ -1,0 +1,26 @@
+services:
+  ocr-service-dev:
+    extends:
+      file: docker-compose.base.yml
+      service: ocr-service
+    container_name: ocr-service-dev
+    ports:
+      - "${OCR_SERVICE_EXTERNAL_PORT:-8090}:${OCR_SERVICE_INTERNAL_PORT:-8090}"
+    build:
+      context: ../
+      dockerfile: "Dockerfile"
+
+  ocr-service-text-only-dev:
+    extends:
+      file: docker-compose.base.yml
+      service: ocr-service-text-only
+    container_name: ocr-service-text-only-dev
+    ports:
+      - "${OCR_SERVICE_TEXT_ONLY_EXTERNAL_PORT:-8091}:${OCR_SERVICE_INTERNAL_PORT:-8090}"
+    build:
+      context: ../
+      dockerfile: "Dockerfile"
+
+networks:
+  cognet:
+    name: ocr-service-dev-net

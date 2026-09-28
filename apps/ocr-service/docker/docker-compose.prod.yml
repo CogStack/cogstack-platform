@@ -1,0 +1,15 @@
+services:
+  ocr-service:
+    extends:
+      file: docker-compose.base.yml
+      service: ocr-service
+
+  ocr-service-text-only:
+    extends:
+      file: docker-compose.base.yml
+      service: ocr-service-text-only
+
+networks:
+  cognet:
+    external: true
+    name: cogstack-net

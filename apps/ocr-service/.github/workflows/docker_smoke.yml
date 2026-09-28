@@ -1,0 +1,151 @@
+name: docker-smoke-ocr-service
+
+on:
+  push:
+    branches: [ "*" ]
+  pull_request:
+    branches: [ "*" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Start stack
+        run: |
+          cd docker
+          make start-dev-build
+
+        env:
+          OCR_SERVICE_EXTERNAL_PORT: 8090
+          OCR_SERVICE_TEXT_ONLY_EXTERNAL_PORT: 8091
+
+      - name: Wait for health
+        env:
+          OCR_SERVICE_EXTERNAL_PORT: 8090
+          OCR_SERVICE_TEXT_ONLY_EXTERNAL_PORT: 8091
+        run: |
+          set -euo pipefail
+          timeout=600
+          interval=10
+          url="http://localhost:${OCR_SERVICE_EXTERNAL_PORT:-8090}/api/health"
+
+          end=$((SECONDS+timeout))
+          while [ $SECONDS -lt $end ]; do
+            if curl -fsS "$url" >/dev/null; then
+              echo "Service healthy at $url"
+              exit 0
+            fi
+            sleep $interval
+          done
+          echo "Service failed to become healthy within ${timeout}s"
+          exit 1
+
+      - name: Check info
+        env:
+          OCR_SERVICE_EXTERNAL_PORT: 8090
+        run: |
+          curl -fsS "http://localhost:${OCR_SERVICE_EXTERNAL_PORT:-8090}/api/info"
+
+      - name: Process sample text
+        env:
+          OCR_SERVICE_EXTERNAL_PORT: 8090
+        run: |
+          set -euo pipefail
+          response="$(curl -fsS -F file=@ocr_service/tests/resources/docs/generic/pat_id_1.txt \
+            "http://localhost:${OCR_SERVICE_EXTERNAL_PORT:-8090}/api/process")"
+          echo "$response" | grep -q '"text"' || { echo "Smoke test failed: missing text field"; exit 1; }
+          echo "$response" | grep -q "Bart Davidson" || { echo "Smoke test failed: expected substring not found"; exit 1; }
+
+      - name: Check health (text-only port)
+        env:
+          OCR_SERVICE_TEXT_ONLY_EXTERNAL_PORT: 8091
+        run: |
+          curl -fsS "http://localhost:${OCR_SERVICE_TEXT_ONLY_EXTERNAL_PORT:-8091}/api/health"
+
+      - name: Logs on failure
+        if: failure()
+        run: |
+          cd docker
+          docker compose -f docker-compose.dev.yml logs --no-color
+
+      - name: Teardown
+        if: always()
+        run: |
+          cd docker
+          make stop-all
+
+  smoke-prebuilt-image:
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Pull and start stack (prebuilt image)
+        env:
+          OCR_SERVICE_EXTERNAL_PORT: 8090
+          OCR_SERVICE_TEXT_ONLY_EXTERNAL_PORT: 8091
+        run: |
+          set -euo pipefail
+          cd docker
+          set -a
+          source ../export_env_vars.sh
+          set +a
+          docker compose -f docker-compose.base.yml -f docker-compose.yml pull
+          docker compose -f docker-compose.base.yml -f docker-compose.yml up -d
+
+      - name: Wait for health
+        env:
+          OCR_SERVICE_EXTERNAL_PORT: 8090
+        run: |
+          set -euo pipefail
+          timeout=600
+          interval=10
+          url="http://localhost:${OCR_SERVICE_EXTERNAL_PORT:-8090}/api/health"
+
+          end=$((SECONDS+timeout))
+          while [ $SECONDS -lt $end ]; do
+            if curl -fsS "$url" >/dev/null; then
+              echo "Service healthy at $url"
+              exit 0
+            fi
+            sleep $interval
+          done
+          echo "Service failed to become healthy within ${timeout}s"
+          exit 1
+
+      - name: Check health (text-only port)
+        env:
+          OCR_SERVICE_TEXT_ONLY_EXTERNAL_PORT: 8091
+        run: |
+          curl -fsS "http://localhost:${OCR_SERVICE_TEXT_ONLY_EXTERNAL_PORT:-8091}/api/health"
+
+      - name: Logs on failure
+        if: failure()
+        run: |
+          cd docker
+          set -a
+          source ../export_env_vars.sh
+          set +a
+          docker compose -f docker-compose.base.yml -f docker-compose.yml logs --no-color
+
+      - name: Teardown
+        if: always()
+        run: |
+          cd docker
+          set -a
+          source ../export_env_vars.sh
+          set +a
+          docker compose -f docker-compose.base.yml -f docker-compose.yml down

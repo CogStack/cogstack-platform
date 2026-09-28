@@ -1,0 +1,69 @@
+
+# IDE envs and system folders
+.DS_Store
+**/.DS_Store
+.idea
+.vscode
+.vscode-test
+*.code-workspace
+.fleet
+.venv
+**/.venv
+.ruff_cache
+.mypy_cache
+.pytest_cache
+.pyre
+.hypothesis
+.tox
+.nox
+.coverage
+.coverage.*
+coverage.xml
+htmlcov
+venv
+**/__pycache__/
+**/venv
+*.py[cod]
+*.pyo
+*.pyd
+
+# Python build artifacts
+build/
+dist/
+*.egg-info/
+pip-wheel-metadata/
+
+# skip the models directory
+models/*
+!models/*.sh
+
+# keys and certificates
+*.pem
+*.key
+*.jks
+*.csr
+*.srl
+*.crt
+*.p12
+*.secrets
+secrets/
+
+# tmp folder
+tmp/*
+
+# docs
+docs/build/*
+
+# Ignore all .env files at any level
+.env
+env/*
+*.env
+*.env.local
+env/*.local
+**/*.env
+!*.env.template
+!**/*.env.template
+
+# log files
+/log/*
+!/log/.gitignore

@@ -1,0 +1,190 @@
+name: tests-ocr-service
+
+permissions:
+  contents: read
+
+on:
+
+  push:
+    branches: [ "*" ]
+  pull_request:
+    branches: [ "*" ]
+    
+  release:
+    types: [published]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-24.04
+    
+    env:
+      working-directory: ./ocr-service
+    
+    strategy:
+      matrix:
+        python-version: ["3.14"]
+      max-parallel: 4
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v5
+
+      - name: Install Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: "x64"
+          cache: 'pip'
+
+      # Cache pip
+      - name: Main Cache pip
+        if: ${{ !env.ACT }}
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+  
+      - name: Prepare apt cache
+        if: ${{ !env.ACT }}
+        run: |
+          sudo mkdir -p /var/cache/apt/archives/partial
+          sudo chown -R $USER:$USER /var/cache/apt/archives
+
+      - name: Cache apt downloads
+        if: ${{ !env.ACT }}
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: ${{ runner.os }}-apt-${{ hashFiles('.github/workflows/run_tests.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-apt-
+
+      - name: Remove cached apt locks
+        if: ${{ !env.ACT }}
+        run: sudo rm -f /var/cache/apt/archives/lock
+
+      - name: Install dependencies
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          export DEBIAN_PRIORITY=critical
+
+          sudo apt update -yq
+          sudo apt install -y --no-install-recommends software-properties-common nodejs debconf-utils apt-utils
+
+          # add extra repos
+          sudo apt-add-repository -y -n multiverse
+          sudo apt-add-repository -y -n universe
+          sudo add-apt-repository -y -n ppa:graphics-drivers/ppa
+          sudo apt update -yq
+          sudo apt upgrade -y
+
+          # install req packages
+          sudo apt install -y --no-install-recommends python3-all-dev python3-dev python3-pip
+          sudo apt -y --no-install-recommends -o Dpkg::Options::="--force-confold" -y -o Dpkg::Options::="--force-confdef" -fuy dist-upgrade
+          sudo apt install -y --no-install-recommends \
+              gnupg \
+              libssl-dev \
+              wget \
+              curl \
+              gnupg \
+              gnupg-agent \
+              dirmngr \
+              ca-certificates \
+              apt-transport-https \
+              fonts-dejavu \
+              build-essential \
+              gfortran \
+              gcc \
+              g++
+          
+          ##### utils for python and TESSERACT
+          echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true" | sudo debconf-set-selections
+              
+          sudo apt install -y --no-install-recommends fontconfig ttf-mscorefonts-installer libimage-exiftool-perl libtcnative-1 \
+              libsm6 libxext6 gstreamer1.0-libav fonts-deva fonts-dejavu fonts-gfs-didot fonts-gfs-didot-classic fonts-junicode fonts-ebgaramond fonts-noto-cjk fonts-takao-gothic fonts-vlgothic \
+              ghostscript ghostscript-x gsfonts gsfonts-other gsfonts-x11 fonts-croscore fonts-crosextra-caladea fonts-crosextra-carlito fonts-liberation fonts-open-sans fonts-noto-core fonts-ibm-plex fonts-urw-base35 \
+              fonts-noto fonts-noto-cjk fonts-noto-extra xfonts-terminus fonts-font-awesome fonts-hack fonts-inconsolata fonts-liberation2 fonts-mononoki \
+              libpcre3 libpcre3-dev \
+              mesa-opencl-icd pocl-opencl-icd libvips-tools libvips libvips-dev \
+              imagemagick libcairo2-dev tesseract-ocr tesseract-ocr-all libtesseract5 libtesseract-dev libleptonica-dev liblept5
+
+          # tessaract language packages
+          sudo apt install -y --no-install-recommends --fix-missing tesseract-ocr-osd tesseract-ocr-lat \
+              tesseract-ocr-eng tesseract-ocr-enm tesseract-ocr-ita tesseract-ocr-osd tesseract-ocr-script-latn \
+              tesseract-ocr-fra tesseract-ocr-frk tesseract-ocr-deu tesseract-ocr-ces tesseract-ocr-dan tesseract-ocr-nld tesseract-ocr-nor \
+              tesseract-ocr-spa tesseract-ocr-swe tesseract-ocr-slk tesseract-ocr-ron tesseract-ocr-script-grek 
+
+          # Pillow package requirements
+          sudo apt install -y --no-install-recommends tcl8.6-dev tk8.6-dev libopenjp2-7-dev libharfbuzz-dev libfribidi-dev libxcb1-dev libtiff5-dev libjpeg8-dev zlib1g-dev libfreetype6-dev liblcms2-dev libwebp-dev libglib2.0-dev libgl1
+
+          # python3 poppler requirement
+          sudo apt install -y --no-install-recommends poppler-utils
+
+          # libre office and java
+          sudo apt install -y --no-install-recommends default-jre libreoffice-java-common libreoffice libreoffice-script-provider-python
+
+          # build font cache
+          sudo fc-cache -f -v
+
+          # there is a bug in the blinker package that causes issues with uwsgi
+          # (this removes software-properties-common)
+          sudo apt remove -y python3-blinker
+
+          # other openCL packages
+          # beignet-opencl-icd
+
+          # keep apt caches so the actions/cache step can reuse downloads
+          sudo rm -f /var/cache/apt/archives/lock
+          sudo chown -R $USER:$USER /var/cache/apt/archives
+     
+      - name: Install python deps & create virtual environment
+        run: |
+
+          # BEFORE creating the venv so the distro Python can run unoserver
+          # the reason for this is that the uno python bindings are tied to the system python
+          # and will not work in a venv
+          # so we need to install unoserver globally to match the version in requirements.txt
+          # this is a bit hacky but it works around the issue of unoserver not being available
+          # via pip for the distro Python used by LibreOffice/UNO
+          set -eux
+
+          UNOSERVER_PIN=$(awk -F'==' '/^unoserver==/ {print $2; exit}' requirements.txt || true)
+          if [ -n "$UNOSERVER_PIN" ]; then
+            /usr/bin/python3 -m pip install --no-cache-dir --break-system-packages "unoserver==${UNOSERVER_PIN}"
+          else
+            /usr/bin/python3 -m pip install --no-cache-dir --break-system-packages unoserver
+          fi
+
+          python${{ matrix.python-version }} -m venv venv
+          source venv/bin/activate
+          python -m pip install --upgrade pip
+          
+          pip install --no-cache-dir -r ./requirements.txt
+          pip install --no-cache-dir -r ./requirements-dev.txt
+
+      - name: Check linting and types
+        run: |
+          source venv/bin/activate
+          mypy . --ignore-missing-imports
+        shell: bash
+
+      - name: Run tests
+        # Since we are using a virtual env we have to make sure we use the right python version
+        env:
+          LIBRE_OFFICE_PYTHON_PATH: ${{ github.workspace }}/venv/bin/python
+        run: |
+          export OCR_SERVICE_LOG_LEVEL=10
+          export OCR_SERVICE_DEBUG_MODE=True
+          export LIBRE_OFFICE_PYTHON_PATH=/usr/bin/python3
+          export OCR_TMP_DIR=${{ github.workspace }}/tmp
+          source venv/bin/activate
+          python -m unittest discover -s ocr_service/tests -p 'test_process.py'
+        shell: bash

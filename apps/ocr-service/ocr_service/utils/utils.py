@@ -1,0 +1,726 @@
+"""Utility helpers for the OCR service.
+
+This module centralizes shared behaviors across the API and processor layers,
+including response shaping, file type detection, text heuristics, LibreOffice
+process management, and logging setup. It also contains a legacy HTML-to-image
+converter kept for reference.
+"""
+
+import contextlib
+import fcntl
+import json
+import logging
+import os
+import shutil
+import string
+import sys
+import xml.sax
+import zipfile
+from datetime import datetime
+from io import BytesIO
+from pathlib import Path
+from sys import platform
+from typing import Any
+
+import filetype
+import olefile
+import psutil
+from html2image import Html2Image
+from PIL import Image
+
+from ocr_service.settings import settings
+
+logger = logging.getLogger(__name__)
+
+PRINTABLE = set(bytes(string.printable, "ascii")) | {9, 10, 13}
+OLE_SIGNATURE = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
+
+ODF_MIME_EXTENSIONS: dict[str, str] = {
+    "application/vnd.oasis.opendocument.text": "odt",
+    "application/vnd.oasis.opendocument.text-template": "ott",
+    "application/vnd.oasis.opendocument.spreadsheet": "ods",
+    "application/vnd.oasis.opendocument.spreadsheet-template": "ots",
+    "application/vnd.oasis.opendocument.presentation": "odp",
+    "application/vnd.oasis.opendocument.presentation-template": "otp",
+    "application/vnd.oasis.opendocument.graphics": "odg",
+    "application/vnd.oasis.opendocument.formula": "odf",
+}
+
+OOXML_PATH_EXTENSIONS: tuple[tuple[str, str], ...] = (
+    ("word/document.xml", "docx"),
+    ("xl/workbook.xml", "xlsx"),
+    ("ppt/presentation.xml", "pptx"),
+)
+
+OLE_STREAM_EXTENSIONS: tuple[tuple[str, str], ...] = (
+    ("worddocument", "doc"),
+    ("workbook", "xls"),
+    ("book", "xls"),
+    ("powerpoint document", "ppt"),
+)
+ENCRYPTED_OOXML_STREAMS = {"encryptedpackage", "encryptioninfo"}
+
+INPUT_FILTERS: dict[str, str] = {
+    # ── Writer / text ──
+    ".odt":   "writer8",
+    ".ott":   "writer8_template",
+    ".fodt":  "OpenDocument Text Flat XML",
+    ".sxw":   "StarOffice XML (Writer)",
+    ".stw":   "writer_StarOffice_XML_Writer_Template",
+    ".hwp":   "writer_MIZI_Hwp_97",
+    ".psw":   "PocketWord File",
+    ".rtf":   "Rich Text Format",
+    ".doc":   "MS Word 97",
+    ".wps":   "MS Word 97",
+    ".dot":   "MS Word 97 Vorlage",
+    ".docx":  "MS Word 2007 XML",
+    ".dotx":  "MS Word 2007 XML Template",
+    ".dotm":  "MS Word 2007 XML Template",
+    ".html":  "HTML (StarWriter)",   # picked Writer as the default
+    ".htm":   "HTML (StarWriter)",
+    ".xhtml": "HTML (StarWriter)",
+    ".txt":   "Text",                # treat as Writer text, not Calc CSV
+
+    # ── Calc / spreadsheets ──
+    ".ods":   "calc8",
+    ".ots":   "calc8_template",
+    ".fods":  "OpenDocument Spreadsheet Flat XML",
+    ".sxc":   "StarOffice XML (Calc)",
+    ".stc":   "calc_StarOffice_XML_Calc_Template",
+
+    ".csv":   "Text - txt - csv (StarCalc)",
+    ".tsv":   "Text - txt - csv (StarCalc)",
+    ".tab":   "Text - txt - csv (StarCalc)",
+    ".dbf":   "dBase",
+
+    ".wk1":   "Lotus",
+    ".wks":   "Lotus",
+    ".123":   "Lotus",
+    ".wb2":   "Quattro Pro 6.0",
+
+    ".xls":   "MS Excel 97",
+    ".xlc":   "MS Excel 97",
+    ".xlm":   "MS Excel 97",
+    ".xlw":   "MS Excel 97",
+    ".xlk":   "MS Excel 97",
+    ".et":    "MS Excel 97",
+
+    ".xlt":   "MS Excel 97 Vorlage/Template",
+    ".ett":   "MS Excel 97 Vorlage/Template",
+
+    ".xlsx":  "Calc Office Open XML",
+    ".xlsm":  "Calc Office Open XML",
+    ".xltx":  "Calc Office Open XML Template",
+    ".xltm":  "Calc Office Open XML Template",
+    ".xlsb":  "Calc MS Excel 2007 Binary",
+
+    ".gnumeric": "Gnumeric Spreadsheet",
+    ".gnm":      "Gnumeric Spreadsheet",
+    ".parquet":  "Apache Parquet Spreadsheet",
+    ".cwk":      "Claris_Resolve_Calc",
+    ".numbers":  "Apple Numbers",
+
+    # ── Impress / presentations ──
+    ".odp":   "impress8",
+    ".otp":   "impress8_template",
+    ".sxi":   "StarOffice XML (Impress)",
+    ".sti":   "impress_StarOffice_XML_Impress_Template",
+    ".ppt":   "MS PowerPoint 97",
+    ".pptx":  "Impress MS PowerPoint 2007 XML",
+    ".key":   "Apple Keynote",
+
+    # ── Draw / graphics ──
+    ".odg":   "draw8",
+    ".std":   "draw_StarOffice_XML_Draw_Template",
+
+    # ── Math / formulas ──
+    ".odf":   "math8",
+}
+
+def get_app_info() -> dict:
+    """Return general information about the application.
+
+    Used by the `/api/info` endpoint.
+
+    Returns:
+        dict: Application information (name, version, model path, config placeholder).
+    """
+    return {"service_app_name": "ocr-service",
+            "service_version": settings.OCR_SERVICE_VERSION,
+            "service_model": settings.TESSDATA_PREFIX,
+            "config": ""}
+
+
+def build_response(
+    text,
+    success: bool = True,
+    log_message: str = "",
+    footer: dict | None = None,
+    metadata: dict | None  = None,
+    allow_empty_text: bool = False
+) -> dict[str, Any]:
+    """Build a standard API response payload.
+
+    Args:
+        text: Extracted/OCR'd text.
+        success: Default success value (overridden by text/allow_empty_text).
+        log_message: Optional status message to attach to metadata.
+        footer: Optional footer payload from the original request.
+        metadata: Document metadata (content-type, pages, confidence, etc.).
+        allow_empty_text: Treat empty text as success (e.g., NO_OCR image inputs).
+
+    Returns:
+        dict[str, Any]: Normalized response structure for the API.
+    """
+
+    if metadata is None:
+        metadata = {}
+
+    if len(text) > 0:
+        success = True
+    elif allow_empty_text:
+        success = True
+        if not log_message:
+            log_message = "OCR skipped; no text generated."
+    else:
+        success = False
+        log_message = "No text has been generated."
+
+    metadata["log_message"] = log_message
+
+    return {
+        "text": text,
+        "footer": footer,
+        "metadata": metadata,
+        "success": str(success),
+        "timestamp": str(datetime.now())
+    }
+
+
+def delete_tmp_files(file_paths: list[str]) -> None:
+    """Delete temporary files if they exist.
+
+    Args:
+        file_paths: Paths to delete (missing paths are ignored).
+    """
+    for file_path in file_paths:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
+def is_file_content_plain_text(stream: bytes, threshold: float = 0.95) -> bool:
+    """Heuristic to determine whether a byte stream is likely plain text.
+
+    Args:
+        stream: Raw bytes to inspect.
+        threshold: Ratio of printable ASCII bytes required to treat as text.
+
+    Returns:
+        bool: True if the stream appears to be text-like.
+    """
+    if not stream:
+        return False
+
+    sample = stream[:4096]
+
+    # If it can't be decoded as UTF-8 at all, treat as binary
+    try:
+        sample.decode("utf-8")
+    except UnicodeDecodeError:
+        return False
+
+    printable = sum(1 for b in sample if b in PRINTABLE)
+    return printable / len(sample) >= threshold
+
+def is_file_type_html(stream: bytes) -> bool:
+    """Detect HTML content by scanning the head of the stream.
+
+    Args:
+        stream: Raw bytes to inspect.
+
+    Returns:
+        bool: True if HTML markers are found.
+    """
+    head = stream[:2048].decode(errors="ignore").lower()
+    return "<html" in head or "<!doctype html" in head
+
+def is_file_type_xml(stream: bytes) -> bool:
+    """Detect XML content by attempting to parse the stream.
+
+    Args:
+        stream: Raw bytes to inspect.
+
+    Returns:
+        bool: True if XML parsing succeeds.
+    """
+    try:
+        xml.sax.parseString(stream, xml.sax.ContentHandler())
+        return True
+    except Exception:
+        logger.debug("Could not determine if file is XML.")
+    return False
+
+def is_file_type_rtf(stream: bytes) -> bool:
+    """Detect RTF content by checking for the RTF header magic bytes.
+
+    Args:
+        stream: Raw bytes to inspect.
+
+    Returns:
+        bool: True if the stream starts with the RTF header.
+    """
+    head = stream[:32].lstrip()
+    return head.startswith(b"{\\rtf")
+
+
+def _infer_zip_office_extension(stream: bytes) -> str | None:
+    try:
+        with zipfile.ZipFile(BytesIO(stream)) as archive:
+            names = set(archive.namelist())
+
+            if "mimetype" in names:
+                mimetype = archive.read("mimetype").decode("ascii", "ignore").strip()
+                extension = ODF_MIME_EXTENSIONS.get(mimetype)
+                if extension:
+                    return extension
+
+            for marker_path, extension in OOXML_PATH_EXTENSIONS:
+                if marker_path in names:
+                    return extension
+
+            lowered_names = {name.lower() for name in names}
+            if any(name.startswith("word/") for name in lowered_names):
+                return "docx"
+            if any(name.startswith("xl/") for name in lowered_names):
+                return "xlsx"
+            if any(name.startswith("ppt/") for name in lowered_names):
+                return "pptx"
+    except Exception:
+        logger.debug("Could not infer Office extension from ZIP container.")
+
+    return None
+
+
+def _ole_stream_names(stream: bytes) -> set[str]:
+    try:
+        with olefile.OleFileIO(BytesIO(stream)) as ole:
+            return {"/".join(path).lower() for path in ole.listdir()}
+    except Exception:
+        logger.debug("Could not inspect OLE streams.")
+
+    return set()
+
+
+def is_encrypted_office_document(stream: bytes) -> bool:
+    """Return True for encrypted OOXML packages stored in an OLE container."""
+    if not stream.startswith(OLE_SIGNATURE):
+        return False
+
+    return ENCRYPTED_OOXML_STREAMS.issubset(_ole_stream_names(stream))
+
+
+def _infer_ole_office_extension(stream: bytes) -> str | None:
+    stream_names = _ole_stream_names(stream)
+    leaf_names = {name.rsplit("/", 1)[-1] for name in stream_names}
+
+    if ENCRYPTED_OOXML_STREAMS.issubset(stream_names):
+        return "docx"
+
+    for stream_name, extension in OLE_STREAM_EXTENSIONS:
+        if stream_name in leaf_names:
+            return extension
+
+    return None
+
+
+def infer_office_extension_from_content(stream: bytes) -> str | None:
+    """Infer Office extensions for containers that generic file sniffing misses."""
+    if stream.startswith(b"PK"):
+        return _infer_zip_office_extension(stream)
+
+    if stream.startswith(OLE_SIGNATURE):
+        return _infer_ole_office_extension(stream)
+
+    return None
+
+
+class TextChecks:
+    """Lazy, cached text-type detection helpers for a single stream."""
+    __slots__ = ("stream", "_is_html", "_is_xml", "_is_rtf", "_is_plain_text")
+
+    def __init__(self, stream: bytes) -> None:
+        """Initialize with the stream to inspect."""
+        self.stream = stream
+        self._is_html: bool | None = None
+        self._is_xml: bool | None = None
+        self._is_rtf: bool | None = None
+        self._is_plain_text: bool | None = None
+
+    def is_html(self) -> bool:
+        """Return True if the stream appears to be HTML."""
+        if self._is_html is None:
+            self._is_html = is_file_type_html(self.stream)
+        return self._is_html
+
+    def is_xml(self) -> bool:
+        """Return True if the stream appears to be XML."""
+        if self._is_xml is None:
+            self._is_xml = is_file_type_xml(self.stream)
+        return self._is_xml
+
+    def is_rtf(self) -> bool:
+        """Return True if the stream appears to be RTF."""
+        if self._is_rtf is None:
+            self._is_rtf = is_file_type_rtf(self.stream)
+        return self._is_rtf
+
+    def is_plain_text(self) -> bool:
+        """Return True if the stream appears to be plain text."""
+        if self._is_plain_text is None:
+            self._is_plain_text = is_file_content_plain_text(self.stream)
+        return self._is_plain_text
+
+    def is_text_like(self) -> bool:
+        """Return True if the stream is HTML/XML/RTF/plain text."""
+        return self.is_plain_text() or self.is_html() or self.is_xml() or self.is_rtf()
+
+
+def preprocess_html_to_img(stream: bytes, file_name: str) -> list[Image.Image]:
+    """Render HTML to a screenshot image via html2image.
+
+    This is a legacy path kept for reference. It requires a working installation
+    of Chromium/Chrome/Firefox on the host or container. The current pipeline
+    uses LibreOffice for HTML to PDF conversion instead.
+    Do not remove this helper; it is kept for anticipated near-term reuse.
+
+    Args:
+        stream: HTML content bytes.
+        file_name: Base name used for the temporary PNG file.
+
+    Returns:
+        list[Image.Image]: A single rendered image.
+    """
+    hti = Html2Image(output_path=settings.TMP_FILE_DIR, temp_path=settings.TMP_FILE_DIR)
+    png_img_file_name: str = file_name + ".png"
+    png_img_file_path = os.path.join(settings.TMP_FILE_DIR, png_img_file_name)
+
+    image: Image.Image = Image.Image()
+
+    try:
+        html_str = stream.decode("utf-8", errors="replace")
+        hti.screenshot(html_str=html_str, save_as=png_img_file_name)
+
+        with Image.open(png_img_file_path) as imgf:
+            image = imgf.convert("RGB").copy() if not settings.OCR_CONVERT_GRAYSCALE_IMAGES else imgf.convert("L")
+
+    finally:
+        delete_tmp_files([png_img_file_path])
+
+    return [image]
+
+
+def detect_file_type(stream: bytes) -> object | None:
+    """Best-effort file type detection using the `filetype` library.
+
+    Args:
+        stream: Raw bytes to inspect.
+
+    Returns:
+        object | None: Detected type descriptor or None if unknown.
+    """
+    file_type = None
+    try:
+        file_type = filetype.guess(stream)
+    except Exception:
+        logger.error("Could not determine file Type")
+    return file_type
+
+
+def normalise_file_name_with_ext(file_name: str, stream: bytes, file_type: object | None = None) -> str:
+    """Normalize filename and ensure an extension is present.
+
+    LibreOffice relies on a reasonable filename with an extension to select
+    conversion filters. This helper preserves any provided extension and
+    falls back to content-based detection when missing. Unknown binary
+    payloads remain extensionless so they are not mislabeled as plain text.
+
+    Args:
+        file_name: Original file name (may be empty or extension-less).
+        stream: File content used for extension inference.
+        file_type: Optional previously detected file type descriptor.
+
+    Returns:
+        str: Normalized file name with an extension.
+    """
+
+    name = file_name or "document"
+    base, ext = os.path.splitext(name)
+
+    if not base:
+        base = "document"
+
+    # 1) if caller already provided an extension, keep it
+    if ext:
+        return base + ext
+
+    # 2) prefer an already detected extension when available
+    detected_ext = getattr(file_type, "extension", None)
+    if detected_ext and detected_ext != "zip":
+        return f"{base}.{str(detected_ext)}"
+
+    # 3) inspect Office containers that generic file sniffing may miss
+    office_ext = infer_office_extension_from_content(stream)
+    if office_ext:
+        return f"{base}.{office_ext}"
+
+    if detected_ext:
+        return f"{base}.{str(detected_ext)}"
+
+    # 4) let filetype guess it from content
+    guessed_ext = filetype.guess_extension(stream)
+    if guessed_ext and guessed_ext != "zip":
+        return f"{base}.{guessed_ext}"
+
+    if guessed_ext:
+        return f"{base}.{guessed_ext}"
+
+    # 5) fallbacks for texty formats our filetype may not catch
+    if is_file_type_html(stream):
+        return base + ".html"
+    if is_file_type_xml(stream):
+        return base + ".xml"
+    if is_file_type_rtf(stream):
+        return base + ".rtf"
+
+    # 6) only tag as plain text when the content actually looks like text
+    if is_file_content_plain_text(stream):
+        return base + ".txt"
+
+    # last resort: preserve extensionless names for unknown/binary content
+    return base
+
+def terminate_hanging_process(process_id: int) -> None:
+    """Terminate a process tree by PID.
+
+    Args:
+        process_id: Process ID to terminate (no-op if falsy).
+    """
+
+    if not process_id:
+        logger.warning("No process ID given or process ID is empty")
+        return
+
+    try:
+        parent = psutil.Process(process_id)
+    except psutil.NoSuchProcess:
+        logger.warning(f"Process {process_id} does not exist")
+        return
+
+    children = parent.children(recursive=True)
+
+    # First try terminate
+    for p in children + [parent]:
+        with contextlib.suppress(Exception):
+            p.terminate()
+
+    gone, alive = psutil.wait_procs(children + [parent], timeout=3)
+
+    # Force kill anything still alive
+    for p in alive:
+        with contextlib.suppress(Exception):
+            p.kill()
+
+    logger.warning(
+        "Killed process tree rooted at pid=%s (children=%s)",
+        process_id,
+        [c.pid for c in children],
+    )
+
+
+def _active_lo_profiles() -> set[str]:
+    """Return the set of LibreOffice profile paths used by running processes.
+
+    Returns:
+        set[str]: Normalized profile paths discovered in running soffice processes.
+    """
+    active: set[str] = set()
+    for proc in psutil.process_iter(attrs=["cmdline"]):
+        try:
+            cmd = proc.info.get("cmdline") or []
+            if "--user-installation" not in cmd:
+                continue
+            idx = cmd.index("--user-installation")
+            if idx + 1 >= len(cmd):
+                continue
+            profile = cmd[idx + 1]
+            profile = profile.replace("file://", "")
+            active.add(os.path.normpath(profile))
+        except Exception:
+            continue
+    return active
+
+
+def cleanup_stale_lo_profiles(tmp_dir: str = settings.TMP_FILE_DIR) -> None:
+    """Remove LibreOffice profile folders not used by any running process.
+
+    Args:
+        tmp_dir: Base directory containing LibreOffice profile folders.
+    """
+    base = Path(tmp_dir)
+
+    logger.debug("checking for active lo profiles in: " + str(base))
+
+    if not base.exists():
+        logger.debug("dir does not exist" + str(base))
+        return
+
+    active_profiles = _active_lo_profiles()
+
+    logger.debug("active lo profiles: " + str(active_profiles))
+
+    for profile_dir in base.glob("lo_profile_*"):
+        try:
+            resolved = os.path.normpath(str(profile_dir))
+            if resolved in active_profiles:
+                continue
+            if profile_dir.is_dir():
+                shutil.rmtree(profile_dir, ignore_errors=True)
+                logger.info("Removed stale LibreOffice profile: %s", profile_dir)
+        except Exception as exc:
+            logger.warning("Failed to remove stale LibreOffice profile %s: %s", profile_dir, exc)
+
+
+def get_process_id_by_process_name(process_name: str = "") -> int:
+    """Return the first matching PID for a process name or path fragment.
+
+    Used primarily to locate LibreOffice/soffice processes for cleanup.
+
+    Args:
+        process_name: Substring to match against process names.
+
+    Returns:
+        int: Matching process ID, or -1 if not found.
+    """
+
+    pid: int = -1
+
+    if "soffice" in process_name:
+        soffice_process_name = "soffice"
+        if platform == "linux" or platform == "linux2":
+            soffice_process_name = "soffice.bin"
+    else:
+        soffice_process_name = ""
+
+    for proc in psutil.process_iter():
+        if proc.name() in process_name or proc.name() in soffice_process_name:
+            pid = proc.pid
+            break
+
+    return pid
+
+
+def sync_port_mapping(worker_id: int = -1, worker_pid: int = -1):
+    """Persist LibreOffice port-to-worker PID mapping for multi-worker setups.
+
+    Args:
+        worker_id: Gunicorn worker index.
+        worker_pid: Process ID for the worker.
+    """
+    open_mode = "r+"
+
+    if not os.path.exists(settings.WORKER_PORT_MAP_FILE_PATH):
+        open_mode = "w+"
+
+    with open(settings.WORKER_PORT_MAP_FILE_PATH, encoding="utf-8", mode=open_mode) as f:
+        fcntl.lockf(f, fcntl.LOCK_EX)
+
+        port_mapping = {}
+        text = f.read()
+
+        if len(text) > 0:
+            port_mapping = json.loads(text)
+
+        logger.debug("reaading: " + str(settings.WORKER_PORT_MAP_FILE_PATH) + "....")
+        logger.debug("found ports: " + str(port_mapping))
+
+        port_mapping[str(settings.LIBRE_OFFICE_LISTENER_PORT_RANGE[0] + worker_id)] = str(worker_pid)
+
+        output = json.dumps(port_mapping, indent=1)
+        
+        f.seek(0)
+        f.truncate(0)
+        f.write(output)
+        fcntl.lockf(f, fcntl.LOCK_UN)
+
+def is_file_locked(path: str) -> bool:
+
+    file_path = Path(path)
+    
+    if not file_path.exists():
+        return False
+
+    with open(file_path, "a+b") as f:
+        try:
+            fcntl.flock(f.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+            return False
+        except OSError:
+            return True
+
+def get_assigned_port(current_worker_pid: int) -> int:
+    """Return the LibreOffice port previously assigned to a worker PID.
+
+    Args:
+        current_worker_pid: PID of the current worker process.
+
+    Returns:
+        int: Assigned port, or the default base port if not found.
+    """
+    port_mapping: dict = {}
+
+    open_mode = "r+"
+
+    if os.path.exists(settings.WORKER_PORT_MAP_FILE_PATH):
+        with open(settings.WORKER_PORT_MAP_FILE_PATH, encoding="utf-8", mode=open_mode) as f:
+            text = f.read()
+            if len(text) > 0:
+                port_mapping = json.loads(text)
+                for port_num, worker_pid in port_mapping.items():
+                    if int(worker_pid) == int(current_worker_pid):
+                        return int(port_num)
+
+    return int(settings.LIBRE_OFFICE_LISTENER_PORT_RANGE[0])
+
+
+def setup_logging(
+    component_name: str = "config_logger",
+    log_level: int = 10,
+    configure_root: bool = False,
+) -> logging.Logger:
+    """Optionally configure root logging, then return a named logger.
+
+    Args:
+        component_name: Logger name to return.
+        log_level: Logging level to set on the logger tree. Falls back to env/default when omitted.
+        configure_root: Whether to configure the process root logger.
+
+    Returns:
+        logging.Logger: Configured logger instance.
+    """
+
+    if configure_root:
+        root_logger = logging.getLogger()
+        gunicorn_error_logger = logging.getLogger("gunicorn.error")
+
+        if gunicorn_error_logger.handlers:
+            root_logger.handlers = gunicorn_error_logger.handlers[:]
+        elif not root_logger.handlers:
+            log_format = "[%(asctime)s] [%(levelname)s] %(name)s: %(message)s"
+            log_handler = logging.StreamHandler(sys.stdout)
+            log_handler.setFormatter(logging.Formatter(fmt=log_format))
+            root_logger.addHandler(log_handler)
+
+        root_logger.setLevel(level=log_level)
+
+    named_logger = logging.getLogger(component_name)
+    named_logger.setLevel(level=log_level)
+    return named_logger

@@ -1,0 +1,563 @@
+from __future__ import annotations
+
+import atexit
+import multiprocessing
+import os
+import re
+import time
+import traceback
+import uuid
+import zipfile
+from html import unescape
+from io import BytesIO
+from subprocess import PIPE, Popen
+from threading import Timer
+from typing import Any, cast
+
+import pypdfium2 as pdfium
+from bs4 import BeautifulSoup
+from filetype.types import DOCUMENT, IMAGE, archive
+from PIL import Image
+from striprtf.striprtf import rtf_to_text
+
+from ocr_service.dto.process_context import ProcessContext
+from ocr_service.settings import settings
+from ocr_service.utils.utils import (
+    INPUT_FILTERS,
+    delete_tmp_files,
+    is_encrypted_office_document,
+    terminate_hanging_process,
+)
+
+CURRENT_PDF_FILE: pdfium.PdfDocument | None = None
+
+
+class DocumentConverter:
+ 
+    MULTI_WHITESPACE = re.compile(r"[ \t]+")
+    MULTI_NEWLINES = re.compile(r"\n{3,}")
+
+    def __init__(self, log, loffice_process_list: dict[str, Any]) -> None:
+        self.log = log
+        self.loffice_process_list = loffice_process_list
+
+    @staticmethod
+    def _build_conversion_paths(file_name: str, uid: str | None = None) -> tuple[str, str]:
+        uid = uid or uuid.uuid4().hex
+        doc_file_path = os.path.join(settings.TMP_FILE_DIR, f"{uid}_{file_name}")
+        doc_root, _ = os.path.splitext(doc_file_path)
+        pdf_file_path = f"{doc_root}.pdf"
+        return doc_file_path, pdf_file_path
+
+    @staticmethod
+    def resolve_content_type(file_type: object | None) -> str:
+        if file_type is not None:
+            return str(file_type.mime)  # type: ignore
+        return "text/plain"
+
+    @staticmethod
+    def finalize_output_text(output_text: str) -> str:
+
+        # normalize line endings
+        output_text = output_text.replace("\r\n", "\n").replace("\r", "\n")
+        # remove multiple whitespaces
+        output_text = DocumentConverter.MULTI_WHITESPACE.sub(" ", output_text)
+        # remove multiple new-lines
+        output_text = DocumentConverter.MULTI_NEWLINES.sub("\n\n", output_text)
+
+        return output_text.encode("utf-8", errors="replace").decode("utf-8").strip()
+
+    def _extract_text_fallback(self, 
+                               stream: bytes, *,
+                               is_html: bool = False,
+                               is_xml: bool = False, 
+                               is_rtf: bool = False) -> str:
+        """Best-effort text extraction when LO conversion fails."""
+        text = ""
+
+        if is_html or is_xml:
+            parser = "html.parser" if is_html else "lxml-xml"
+            try:
+                soup = BeautifulSoup(stream, parser)
+            except Exception:
+                self.log.warning("Failed to parse HTML/XML during fallback with %s; retrying with html.parser", parser)
+                try:
+                    soup = BeautifulSoup(stream, "html.parser")
+                    text = soup.get_text(separator="\n")
+                except Exception:
+                    self.log.warning("Failed to parse HTML/XML during fallback; using raw decode")
+            else:
+                text = soup.get_text(separator="\n")
+
+            # remove XML-ish self-closing tags
+            text = re.sub(r"<[^>]+/>", "", text)
+            # remove empty XML tags
+            text = re.sub(r"</?[\w:.-]+>", "", text)        
+
+        if not text and is_rtf:
+            try:
+                text = rtf_to_text(stream.decode("utf-8", "ignore"))
+            except Exception:
+                self.log.warning("Failed to parse RTF during fallback; using raw decode")
+
+        if not text:
+            text = stream.decode("utf-8", "ignore") 
+
+        return unescape(text)
+
+    def _extract_office_zip_text_fallback(self, stream: bytes, file_name: str) -> str:
+        ext = os.path.splitext(file_name)[1].lower()
+        xml_path = {".docx": "word/document.xml", ".odt": "content.xml"}.get(ext)
+        if not xml_path:
+            return ""
+
+        try:
+            with zipfile.ZipFile(BytesIO(stream)) as archive:
+                return self._extract_text_fallback(archive.read(xml_path), is_xml=True)
+        except Exception:
+            self.log.warning("Failed to extract %s from %s during fallback", xml_path, file_name)
+            return ""
+
+    @staticmethod
+    def initialize_pdf_worker(stream: bytes) -> None:
+        # we are making this a global so that we can use it in the process pool
+        # since Pypdfium2 PdfDocument objects are not thread-safe
+        global CURRENT_PDF_FILE
+        CURRENT_PDF_FILE = pdfium.PdfDocument(stream)
+
+        def _close_pdf():
+            global CURRENT_PDF_FILE
+            if CURRENT_PDF_FILE is not None:
+                CURRENT_PDF_FILE.close()
+
+        atexit.register(_close_pdf)
+
+    @staticmethod
+    def render_page(page_num: int) -> Image.Image:
+        if CURRENT_PDF_FILE is None:
+            raise RuntimeError("PDF worker not initialized")
+        scale = int(settings.OCR_SERVICE_IMAGE_DPI / 72)
+        page = CURRENT_PDF_FILE.get_page(page_num)
+        img = page.render(
+            scale=scale,
+            may_draw_forms=False,
+            no_smoothtext=True,
+            no_smoothimage=True,
+            no_smoothpath=True,
+            rotation=0,
+            crop=(0, 0, 0, 0),
+            grayscale=settings.OCR_CONVERT_GRAYSCALE_IMAGES,
+        ).to_pil()
+
+
+        page.close()
+
+        return img
+
+    def _pdf_to_img(self, stream: bytes) -> tuple[list[Image.Image], dict]:
+
+        pdf_image_pages = []
+        doc_metadata: dict[str, Any] = {}
+
+        pdf = pdfium.PdfDocument(stream)
+        page_count = len(pdf)
+        pdf.close()
+
+        doc_metadata["pages"] = page_count
+
+        pdf_conversion_start_time = time.time()
+
+        ctx = multiprocessing.get_context("spawn")
+
+        with ctx.Pool(processes=min(settings.CONVERTER_THREAD_NUM, page_count),
+                      initializer=DocumentConverter.initialize_pdf_worker,
+                      initargs=(stream,)) as pool:
+            pdf_image_pages = list(pool.imap_unordered(DocumentConverter.render_page, range(page_count), chunksize=1))
+
+        pdf_conversion_end_time = time.time()
+
+        self.log.info("PDF conversion to image(s) finished | Elapsed : " +
+                      str(pdf_conversion_end_time - pdf_conversion_start_time) + " seconds")
+        return pdf_image_pages, doc_metadata
+
+    def _pdf_to_text(self, stream: bytes) -> tuple[str, dict]:
+        doc_metadata = {}
+        output_text = ""
+
+        pdf = pdfium.PdfDocument(stream)
+        _page_number = -1
+
+        try:
+            doc_metadata["pages"] = len(pdf)
+
+            for _page_number, page in enumerate(pdf):
+                textpage: Any | None = None
+                try:
+                    textpage = page.get_textpage()
+                    output_text += textpage.get_text_bounded()
+                finally:
+                    try:
+                        if textpage is not None:
+                            textpage.close()
+                    finally:
+                        page.close()
+        except Exception:
+            failed_page = _page_number + 1 if _page_number >= 0 else "unknown"
+            self.log.exception("PDF text extraction failed on page %s", failed_page)
+            raise
+        finally:
+            pdf.close()
+
+        return output_text, doc_metadata
+
+    def _preprocess_pdf_to_img(self, stream: bytes) -> tuple[list[Image.Image], dict]:
+        """Converts a stream of bytes from a PDF file into images."""
+        self.log.info("pre-processing pdf...")
+
+        pdf_image_pages: list[Image.Image] = []
+        doc_metadata: dict[str, Any] = {}
+
+        try:
+            pdf_image_pages, doc_metadata = self._pdf_to_img(stream)
+        except Exception:
+            self.log.error("preprocessing_pdf exception: " + str(traceback.format_exc()))
+
+        return pdf_image_pages, doc_metadata
+
+    def _preprocess_doc(self, stream: bytes, file_name: str) -> bytes:
+        """Pre-processing step for non-pdf office docs via LibreOffice."""
+        pdf_stream = b""
+        doc_file_path = ""
+        pdf_file_path = ""
+        used_port_num = None
+
+        ext = os.path.splitext(file_name)[1].lower()
+
+        # unoserver 3.0+ (TBD)
+        input_filter = INPUT_FILTERS.get(ext)
+
+        try:
+            doc_file_path, pdf_file_path = self._build_conversion_paths(file_name)
+
+            with open(file=doc_file_path, mode="wb") as tmp_doc_file:
+                tmp_doc_file.write(stream)
+                os.fsync(tmp_doc_file)
+
+            conversion_time_start = time.time()
+
+            loffice_subprocess = None
+
+            for port_num, loffice_process in self.loffice_process_list.items():
+                if loffice_process["used"] is False:
+                    used_port_num = str(port_num)
+                    lo_python = cast(str, settings.LIBRE_OFFICE_PYTHON_PATH)
+                    converter_bootstrap = "from unoserver.client import converter_main; converter_main()"
+                    _args = [
+                        lo_python,
+                        "-c",
+                        converter_bootstrap,
+                        doc_file_path,
+                        pdf_file_path,
+                        "--host",
+                        settings.LIBRE_OFFICE_NETWORK_INTERFACE,
+                        "--port",
+                        str(used_port_num),
+                        "--convert-to",
+                        "pdf"
+                    ]
+
+                    if input_filter:
+                        _args += ["--input-filter", input_filter]
+
+                    self.log.debug("starting unoserver subprocess with args: " + str(_args))
+                    loffice_subprocess = Popen(
+                        args=_args,
+                        cwd=settings.TMP_FILE_DIR,
+                        close_fds=True,
+                        shell=False,
+                        stdout=PIPE,
+                        stderr=PIPE,
+                    )
+                    self.loffice_process_list[used_port_num]["used"] = True
+                    break
+
+            if loffice_subprocess is not None and used_port_num is not None:
+                loffice_timer = Timer(
+                    interval=float(settings.LIBRE_OFFICE_PROCESS_TIMEOUT),
+                    function=loffice_subprocess.kill,
+                )
+                soffice_timer = Timer(
+                    interval=float(settings.LIBRE_OFFICE_PROCESS_TIMEOUT),
+                                      function=terminate_hanging_process,
+                    args=[self.loffice_process_list[used_port_num]["process"].pid],
+                )
+                try:
+                    loffice_timer.start()
+                    stdout, stderr = loffice_subprocess.communicate()
+                    soffice_timer.start()
+
+                    rc = loffice_subprocess.returncode
+                    if rc != 0:
+                        self.log.error(
+                            "unoserver failed rc=%s for %s -> %s\nstdout=%s\nstderr=%s",
+                            rc, doc_file_path, pdf_file_path,
+                            stdout.decode("utf-8", "ignore"),
+                            stderr.decode("utf-8", "ignore"),
+                        )
+
+                finally:
+                    loffice_timer.cancel()
+                    soffice_timer.cancel()
+                    if loffice_subprocess and loffice_subprocess.poll() is None:
+                        loffice_subprocess.kill()
+
+                    if os.path.isfile(pdf_file_path) and os.path.getsize(pdf_file_path) > 0:
+                        with open(file=pdf_file_path, mode="rb") as tmp_pdf_file:
+                            os.fsync(tmp_pdf_file.fileno())
+                            pdf_stream = tmp_pdf_file.read()
+                            
+                            if not pdf_stream.startswith(b"%PDF-"):
+                                self.log.warning("invalid pdf header for file %s", pdf_file_path)
+                                pdf_stream = b""
+                    else:
+                        self.log.info("libre office did not produce any output for file: " +
+                                      str(pdf_file_path) + " | port:" + str(used_port_num))
+
+            else:
+                self.log.error("could not find libre office server process on port:" + str(used_port_num))
+
+            conversion_time_end = time.time()
+            self.log.info("doc conversion to PDF finished | Elapsed : " +
+                          str(conversion_time_end - conversion_time_start) + " seconds")
+
+        except Exception:
+            self.log.exception(
+                "doc name: %s | tmp_file internal name: %s | preprocessing_doc failed",
+                file_name,
+                doc_file_path,
+            )
+
+        finally:
+            if used_port_num:
+                self.loffice_process_list[used_port_num]["used"] = False
+            delete_tmp_files([doc_file_path, pdf_file_path])
+
+        return pdf_stream
+
+    def _preprocess_xml_to_pdf(self, stream: bytes, file_name: str) -> bytes:
+        pdf_stream = b""
+        pdf_file_path = ""
+        xml_file_path = ""
+
+        try:
+            from pyxml2pdf.core.initializer import Initializer
+
+            # generate unique id
+            uid = uuid.uuid4().hex
+            xml_file_path = os.path.join(settings.TMP_FILE_DIR, file_name + "_" + str(uid) + ".xml")
+            pdf_file_path = xml_file_path + ".pdf"
+
+            with open(file=xml_file_path, mode="wb") as tmp_doc_file:
+                tmp_doc_file.write(stream)
+                os.fsync(tmp_doc_file)
+
+            _pdfinit = Initializer(xml_file_path, pdf_file_path)  # noqa: F841
+
+            if os.path.exists(pdf_file_path):
+                with open(file=pdf_file_path, mode="rb") as tmp_pdf_file:
+                    pdf_stream = tmp_pdf_file.read()
+                    os.fsync(tmp_pdf_file)
+        except Exception:
+            self.log.error("xml doc name:" + str(file_name) + " | "
+                           + "preprocess_xml_to_pdf exception: " + str(traceback.format_exc()))
+        finally:
+            delete_tmp_files([xml_file_path, pdf_file_path])
+
+        return pdf_stream
+
+    def _handle_image_stream(self, ctx: ProcessContext) -> list[Image.Image]:
+        if settings.OPERATION_MODE == "NO_OCR":
+            self.log.info("Detected image content; OCR skipped in NO_OCR mode")
+            ctx.metadata["pages"] = 1
+            ctx.metadata["ocr_skipped"] = True
+            return []
+
+        with Image.open(BytesIO(ctx.stream)) as imgf:
+            image = imgf.copy()
+
+        ctx.metadata["pages"] = 1
+        return [image]
+    
+    def _xml_to_text(self, ctx: ProcessContext) -> str:
+        
+        import xml.etree.ElementTree as ET
+
+        root = ET.fromstring(ctx.stream)
+        parts = []
+        for elem in root.iter():
+            if elem.text and elem.text.strip():
+                parts.append(elem.text.strip())
+
+            for value in elem.attrib.values():
+                if value and value.strip():
+                    parts.append(value.strip())
+
+            if elem.tail and elem.tail.strip():
+                parts.append(elem.tail.strip())
+
+        return " ".join(parts)
+
+
+    def _apply_text_fallback(
+        self,
+        ctx: ProcessContext,
+        *,
+        is_html: bool = False,
+        is_xml: bool = False,
+        is_rtf: bool = False,
+        reason: str,
+    ) -> None:
+        self.log.warning(
+            "Falling back to text extraction for %s after %s",
+            ctx.file_name,
+            reason,
+        )
+        ctx.pdf_stream = b""
+        ctx.images = []
+        ctx.output_text = self._extract_office_zip_text_fallback(ctx.stream, ctx.file_name)
+        if not ctx.output_text:
+            ctx.output_text = self._extract_text_fallback(
+                ctx.stream,
+                is_html=is_html,
+                is_xml=is_xml,
+                is_rtf=is_rtf,
+            )
+        ctx.metadata["pages"] = 1
+        ctx.metadata["content-type"] = "text/plain"
+        ctx.metadata["fallback_reason"] = reason
+
+
+    def _handle_pdf_stream(self, ctx: ProcessContext) -> None:
+        if settings.OPERATION_MODE == "OCR":
+            ctx.images, pdf_metadata = self._preprocess_pdf_to_img(ctx.pdf_stream)
+            ctx.metadata.update(pdf_metadata)
+        elif settings.OPERATION_MODE == "NO_OCR":
+            ctx.output_text, pdf_metadata = self._pdf_to_text(ctx.pdf_stream)
+            ctx.metadata.update(pdf_metadata)
+
+
+    def prepare(self, ctx: ProcessContext) -> None:
+
+        self.log.info("Checking file type for doc id: %s", ctx.file_name)
+
+        if is_encrypted_office_document(ctx.stream):
+            self.log.warning(
+                "Encrypted Office document detected for %s; skipping LibreOffice conversion",
+                ctx.file_name,
+            )
+            ctx.metadata["content-type"] = "application/vnd.openxmlformats-officedocument"
+            ctx.metadata["encrypted"] = True
+            ctx.metadata["unsupported_reason"] = "encrypted_office_document"
+            ctx.metadata["pages"] = 0
+            return
+
+        _is_pdf = type(ctx.file_type) is archive.Pdf
+        _is_rtf = type(ctx.file_type) is archive.Rtf or ctx.checks.is_rtf()
+        _is_html = ctx.checks.is_html()
+        _is_xml = ctx.checks.is_xml() and not _is_html
+        _is_plain = ctx.checks.is_plain_text()
+        _has_office_zip_fallback = os.path.splitext(ctx.file_name)[1].lower() in {".docx", ".odt"}
+        text_fallback_allowed = _is_xml or _is_rtf or _has_office_zip_fallback
+
+        if _is_pdf:
+            ctx.pdf_stream = ctx.stream
+
+        elif _is_xml:
+            ctx.metadata["content-type"] = "text/xml"
+            if settings.OPERATION_MODE == "NO_OCR":
+                ctx.output_text = self._xml_to_text(ctx)
+                ctx.metadata["pages"] = 1
+            else:
+                self.log.info("Detected XML content; converting to PDF...")
+                ctx.pdf_stream = self._preprocess_xml_to_pdf(
+                    ctx.stream,
+                    file_name=ctx.file_name,
+                )
+                if not ctx.pdf_stream:
+                    self.log.warning(
+                        "XML->PDF conversion failed for %s; falling back to LibreOffice",
+                        ctx.file_name,
+                    )
+                    ctx.pdf_stream = self._preprocess_doc(
+                        ctx.stream,
+                        file_name=ctx.file_name,
+                    )
+
+        elif _is_html:
+            ctx.metadata["content-type"] = "text/html"
+            if settings.OPERATION_MODE == "NO_OCR":
+                self.log.info("Detected HTML content, handling via fallback, NO_OCR mode")
+                ctx.output_text = self._extract_text_fallback(ctx.stream, is_html=True)
+                ctx.metadata["pages"] = 1
+            else:
+                self.log.info("Detected HTML content; converting to PDF via unoserver/LO")
+                ctx.pdf_stream = self._preprocess_doc(ctx.stream, file_name=ctx.file_name)
+
+        elif ctx.file_type in DOCUMENT or _is_rtf:
+            if settings.OPERATION_MODE == "NO_OCR" and _is_rtf:
+                ctx.output_text = self._extract_text_fallback(ctx.stream, is_rtf=True)
+                ctx.metadata["pages"] = 1
+                ctx.metadata["content-type"] = "text/plain"
+            else:
+                ctx.pdf_stream = self._preprocess_doc(ctx.stream, file_name=ctx.file_name)
+
+        elif ctx.file_type in IMAGE:
+            ctx.images = self._handle_image_stream(ctx)
+
+        elif _is_plain:
+            self.log.info(
+                "Unknown text-like content; treating as plain text, skipping unoserver/LO conversion"
+            )
+            ctx.output_text = ctx.stream.decode("utf-8", "ignore")
+            ctx.metadata["pages"] = 1
+            ctx.metadata["content-type"] = "text/plain"
+
+        else:
+            self.log.info("Unknown file type; attempting to convert to PDF via unoserver/LO")
+            ctx.pdf_stream = self._preprocess_doc(ctx.stream, file_name=ctx.file_name)
+
+        if not ctx.pdf_stream and not ctx.output_text and (ctx.checks.is_text_like() or _has_office_zip_fallback):
+            self._apply_text_fallback(
+                ctx,
+                is_html=_is_html,
+                is_xml=_is_xml,
+                is_rtf=_is_rtf,
+                reason="no_pdf_produced",
+            )
+
+        if ctx.pdf_stream:
+            try:
+                self._handle_pdf_stream(ctx)
+            except Exception:
+                if not text_fallback_allowed:
+                    raise
+                self.log.exception(
+                    "Converted PDF handling failed for %s; trying text fallback",
+                    ctx.file_name,
+                )
+                self._apply_text_fallback(
+                    ctx,
+                    is_html=_is_html,
+                    is_xml=_is_xml,
+                    is_rtf=_is_rtf,
+                    reason="converted_pdf_handling_failed",
+                )
+            else:
+                if text_fallback_allowed and not ctx.output_text and not ctx.images:
+                    self._apply_text_fallback(
+                        ctx,
+                        is_html=_is_html,
+                        is_xml=_is_xml,
+                        is_rtf=_is_rtf,
+                        reason="converted_pdf_handling_failed",
+                    )

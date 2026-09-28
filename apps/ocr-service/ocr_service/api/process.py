@@ -1,0 +1,195 @@
+import base64
+import binascii
+import logging
+import traceback
+import uuid
+from multiprocessing import Pool
+from typing import IO, Any
+
+import orjson
+from fastapi import APIRouter, File, Request, UploadFile
+from fastapi.responses import ORJSONResponse, Response
+from pydantic import ValidationError
+from starlette.datastructures import FormData
+
+from ocr_service.dto.process_request import ProcessRequest
+from ocr_service.dto.process_response import ProcessResponse
+from ocr_service.processor.processor import Processor
+from ocr_service.settings import settings
+from ocr_service.utils.utils import build_response, setup_logging
+
+process_api = APIRouter(prefix="/api")
+log = setup_logging(__name__, log_level=settings.LOG_LEVEL)
+
+
+@process_api.post("/process", response_model=ProcessResponse, response_class=ORJSONResponse)
+def process(request: Request, file: UploadFile | None = File(default=None)) -> ORJSONResponse:
+    """
+     Processes raw binary input stream, file, or
+        JSON containing the binary_data field in base64 format
+
+    Returns:
+        Response: json with the result of the OCR processing
+    """
+
+    footer: dict = {}
+    file_name: str = ""
+    stream: bytes = b""
+    output_text: str = ""
+    doc_metadata: dict = {}
+
+    if file:
+        file_name = file.filename if file.filename else ""
+        stream = file.file.read()
+        log.info(f"Processing file given via 'file' parameter, file name: {file_name}")
+    else:
+        file_name = uuid.uuid4().hex
+        log.info(f"Processing binary as data-binary, generated file name: {file_name}")
+
+        environ: dict = request.scope.get("wsgi_environ", {})
+        input_stream: IO[bytes] = environ.get("wsgi.input", {})
+
+        raw_body: bytes = input_stream.read()
+
+        try:
+            record = orjson.loads(raw_body)
+            if isinstance(record, list) and len(record) > 0:
+                record = record[0]
+
+            log.info("Stream contains valid JSON.")
+
+            if not isinstance(record, dict):
+                return ORJSONResponse(content={"detail": "Invalid JSON payload"}, status_code=422)
+
+            try:
+                payload = ProcessRequest.model_validate(record)
+            except ValidationError as exc:
+                return ORJSONResponse(content={"detail": exc.errors()}, status_code=422)
+
+            footer = payload.footer or {}
+            encoded: str | None = payload.binary_data
+
+            if encoded is None:
+                doc_metadata = {
+                    "ocr_skipped": True,
+                    "skip_reason": "no_binary_data",
+                }
+                log.info("binary_data is null; OCR skipped")
+            elif encoded == "":
+                return ORJSONResponse(
+                    content={"detail": "binary_data cannot be an empty string"},
+                    status_code=422,
+                )
+            else:
+                try:
+                    stream = base64.b64decode(encoded, validate=True)
+                    log.info("binary_data successfully base64-decoded")
+                except (binascii.Error, ValueError):
+                    log.warning("binary_data is not valid base64; treating it as raw UTF-8 text")
+                    stream = encoded.encode("utf-8")
+
+        except Exception:
+            log.warning("Stream does not contain valid JSON." + str(traceback.format_exc()))
+
+            try:
+                try:
+                    stream = base64.b64decode(raw_body, validate=True)
+                    log.info("Attempting to treat as base64 encoded string")
+                except Exception:
+                    log.info("Failed, forcing bytes")
+                    stream = raw_body if isinstance(raw_body, bytes | bytearray) else str(raw_body).encode("utf-8")
+            except Exception:
+                stream = raw_body
+                log.warning("Could not convert raw body to utf-8, using raw input.")
+
+    processor: Processor = request.app.state.processor
+
+    try:
+        if stream:
+            output_text, doc_metadata = processor.process_stream(stream=stream, file_name=file_name)
+    except Exception:
+        return ORJSONResponse(content={"detail": "Service is busy, try again"}, status_code=503)
+    
+    log.debug(f"Stream size: {len(stream)} bytes")
+
+    ocr_skipped = bool(doc_metadata.get("ocr_skipped"))
+    code = 200 if len(output_text) > 0 or not stream or ocr_skipped else 500
+
+    response: dict[Any, Any] = {
+        "result": build_response(
+            output_text,
+            footer=footer,
+            metadata=doc_metadata,
+            allow_empty_text=ocr_skipped,
+        )
+    }
+
+    return ORJSONResponse(content=response, status_code=code, media_type="application/json")
+
+
+@process_api.post("/process_file", response_model=ProcessResponse, response_class=ORJSONResponse)
+def process_file(request: Request, file: UploadFile = File(...)) -> ORJSONResponse:
+
+    file_name: str = file.filename if file.filename else ""
+    stream: bytes = file.file.read()
+    log.info(f"Processing file: {file_name}")
+
+    processor: Processor = request.app.state.processor
+
+    output_text: str = ""
+    doc_metadata: dict = {}
+
+    try:
+        if stream:
+            output_text, doc_metadata = processor.process_stream(stream=stream, file_name=file_name)
+    except Exception:
+        return ORJSONResponse(content={"detail": "Service is busy, try again"}, status_code=503)
+
+    ocr_skipped = bool(doc_metadata.get("ocr_skipped"))
+    code = 200 if len(output_text) > 0 or not stream or ocr_skipped else 500
+
+    response: dict[Any, Any] = {
+        "result": build_response(
+            output_text,
+            metadata=doc_metadata,
+            allow_empty_text=ocr_skipped,
+        )
+    }
+
+    return ORJSONResponse(content=response, status_code=code, media_type="application/json")
+
+
+@process_api.post("/process_bulk")
+def process_bulk(request: Request, files: list[UploadFile] = File(...)) -> Response:
+    """
+        Processes multiple files in a single request (multipart/form-data with multiple 'files').
+    """
+
+    form: FormData | None = request._form
+    file_streams = {}
+
+    proc_results = list()
+    ocr_results = []
+
+    processor: Processor = request.app.state.processor
+
+    if isinstance(form, FormData):
+        # collect uploaded files
+        for _name, file in form.items():
+            if isinstance(file, UploadFile):
+                content = file.read()
+                file_streams[file.filename] = content
+
+        with Pool(processes=settings.CPU_THREADS) as process_pool:
+            for file_name, file_stream in file_streams.items():
+                proc_results.append(process_pool.starmap_async(processor.process_stream,
+                                                               [(file_name, file_stream)],
+                                                               chunksize=1,
+                                                               error_callback=logging.error))
+            try:
+                for result in proc_results:
+                    ocr_results.append(result.get(timeout=settings.TESSERACT_TIMEOUT))
+            except Exception as exception:
+                raise Exception("OCR exception generated by worker: " + str(traceback.format_exc())) from exception
+
+    return Response(content={"response": "Not yet implemented"}, status_code=200)

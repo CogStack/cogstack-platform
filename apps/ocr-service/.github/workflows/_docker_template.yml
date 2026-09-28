@@ -1,0 +1,172 @@
+name: docker-multi-arch-template
+
+permissions:
+  contents: read
+
+on:
+  workflow_call:
+    inputs:
+      image:
+        description: "Full image name, e.g. cogstacksystems/cogstack-nifi"
+        required: true
+        type: string
+      context:
+        description: "Docker build context path"
+        required: true
+        type: string
+      dockerfile:
+        description: "Path to Dockerfile"
+        required: true
+        type: string
+      cache_scope:
+        description: "Cache key (unique per image)"
+        required: true
+        type: string
+      build_args:
+        description: "Optional Docker build args (newline-separated)"
+        required: false
+        default: ""
+        type: string
+
+concurrency:
+  group: docker-${{ inputs.image }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------
+  # BUILD PER ARCHITECTURE
+  # ---------------------------------------------------------
+  build:
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        platform: [amd64, arm64]
+        include:
+          - platform: amd64
+            runner: ubuntu-24.04
+          - platform: arm64
+            runner: ubuntu-24.04-arm
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ inputs.image }}
+          tags: |
+            type=semver,pattern={{version}},prefix=v
+            type=semver,pattern={{major}}.{{minor}},prefix=v
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') }}
+            type=ref,event=branch,enable=${{ github.event_name != 'pull_request' }}
+            type=sha,format=short
+
+      - name: Prepare architecture tags
+        id: tags
+        shell: bash
+        run: |
+          set -euo pipefail
+          SUFFIX="-${{ matrix.platform }}"
+
+          echo "tags<<EOF" >> $GITHUB_OUTPUT
+          echo "${{ steps.meta.outputs.tags }}" | sed "s/$/${SUFFIX}/" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Build & push (${{ matrix.platform }})
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ inputs.context }}
+          file: ${{ inputs.dockerfile }}
+          platforms: linux/${{ matrix.platform }}
+          build-args: ${{ inputs.build_args }}
+          tags: ${{ steps.tags.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ inputs.cache_scope }}-${{ matrix.platform }}
+          cache-to: type=gha,mode=max,scope=${{ inputs.cache_scope }}-${{ matrix.platform }}
+          push: ${{ github.event_name != 'pull_request' }}
+          provenance: false
+
+
+  # ---------------------------------------------------------
+  # CREATE MULTI-ARCH MANIFESTS
+  # ---------------------------------------------------------
+  manifest:
+    runs-on: ubuntu-24.04
+    if: github.event_name != 'pull_request'
+    needs: build
+
+    steps:
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Docker metadata (again)
+        id: meta_manifest
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ inputs.image }}
+          tags: |
+            type=semver,pattern={{version}},prefix=v
+            type=semver,pattern={{major}}.{{minor}},prefix=v
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') }}
+            type=ref,event=branch,enable=${{ github.event_name != 'pull_request' }}
+            type=sha,format=short
+
+      - name: Create multi-arch manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          while IFS= read -r ref; do
+            [[ -z "$ref" ]] && continue
+
+            img="${ref%%:*}"
+            tag="${ref#*:}"
+
+            # ------------------------------------------
+            # FILTER: Only process semver and latest
+            # ------------------------------------------
+            if ! [[ "$tag" =~ ^v?[0-9]+\.[0-9]+(\.[0-9]+)?$ || "$tag" == "latest" ]]; then
+              echo "Skipping non-buildable tag: $tag"
+              continue
+            fi
+
+            # ------------------------------------------
+            # NORMALIZE: remove v for manifest tag
+            # ------------------------------------------
+            base_tag="$tag"
+            if [[ "$tag" =~ ^v[0-9]+\.[0-9]+ ]]; then
+              base_tag="${tag#v}"
+              echo "normalize: $img:$tag -> $img:$base_tag"
+            fi
+
+            # ------------------------------------------
+            # ARCH TAG PREFIX:
+            # semver → use v prefix
+            # latest / sha → no prefix
+            # ------------------------------------------
+            arch_prefix=""
+            if [[ "$base_tag" =~ ^[0-9]+\.[0-9]+ ]]; then
+              arch_prefix="v"
+            fi
+
+            echo "⛵ Creating manifest for: ${img}:${base_tag}"
+
+            docker buildx imagetools create \
+              --tag "${img}:${base_tag}" \
+              "${img}:${arch_prefix}${base_tag}-amd64" \
+              "${img}:${arch_prefix}${base_tag}-arm64"
+
+          done < <(printf "%s" "${{ steps.meta_manifest.outputs.tags }}")
