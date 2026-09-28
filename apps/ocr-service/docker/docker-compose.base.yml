@@ -5,11 +5,11 @@ x-logging-common: &ocr-logging-common
     max-file: ${OCR_SERVICE_DOCKER_LOG_NUM_FILES:-10}
 
 x-env-files-full: &ocr-env-files-full
-  - ${DEPLOYMENT_ENV_FILE_PATH_GENERAL:-../env/general.env}
+  - ${OCR_SERVICE_ENV_FILE_PATH_GENERAL:-../env/general.env}
   - ${OCR_SERVICE_ENV_FILE_PATH_CONFIG_FULL_OCR:-../env/ocr_service.env}
 
 x-env-files-text: &ocr-env-files-text
-  - ${DEPLOYMENT_ENV_FILE_PATH_GENERAL:-../env/general.env}
+  - ${OCR_SERVICE_ENV_FILE_PATH_GENERAL:-../env/general.env}
   - ${OCR_SERVICE_ENV_FILE_PATH_CONFIG_FULL_OCR:-../env/ocr_service.env}
   - ${OCR_SERVICE_ENV_FILE_PATH_CONFIG_NO_OCR_TEXT_ONLY:-../env/ocr_service_text_only.env}
 
