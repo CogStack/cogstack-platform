@@ -2,15 +2,16 @@ name: docker-ocr-service
 
 on:
   push:
-    branches: ['**']
+    branches: [main]
     tags: ['ocr-service-v*.*.*']
     paths:
       - "apps/ocr-service/**"
+      - ".github/workflows/docker_build.yml"
       - ".github/workflows/ocr-service-**"
   pull_request:
-    branches: ['**']
     paths:
       - "apps/ocr-service/**"
+      - ".github/workflows/docker_build.yml"
       - ".github/workflows/ocr-service-**"
   release:
     types: [published]
