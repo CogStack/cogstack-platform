@@ -1,17 +1,15 @@
 # Cogstack-Jupyter-Hub
 
-[![docker-jupyter-hub-all](https://github.com/CogStack/cogstack-jupyter-hub/actions/workflows/docker-build.yml/badge.svg?branch=main)](https://github.com/CogStack/cogstack-jupyter-hub/actions/workflows/docker-build.yml)
+[![docker-jupyter-hub-all](https://github.com/CogStack/cogstack-platform/actions/workflows/jupyter-docker-build.yml/badge.svg?branch=main)](https://github.com/CogStack/cogstack-platform/actions/workflows/jupyter-docker-build.yml)
 
 ## Introduction
-
-This repo has been reinstated. The custom jupyter-hub image is specified in the [CogStack-Nifi](https://github.com/CogStack/CogStack-NiFi/tree/main/services/jupyter-hub) project.
 
 This repository contains a custom Jupyter Hub Docker image with example notebooks to play with. \
 The notebooks provided are usually kept up to date with the example data that has been generated using Synthea and MTSamples in the [CogStack-NiFi](https://github.com/cogstack/cogstack-nifi) repository. Additionally, the [working with cogstack](https://github.com/CogStack/working_with_cogstack) scripts are included for production use.
 
-All notebooks are available in the [notebooks](./notebooks/) folder.
+The custom jupyter-hub image is specified in the [CogStack-Nifi](https://github.com/CogStack/CogStack-NiFi/tree/main/services/jupyter-hub) project.
 
-The previous version of the jupyter notebook provided a simple but common environment for people to work on, the new version operates in a centralised manner, the hub docker container starts individual containers for each user, it also allows for easier sharing of data between users via groups (this feature needs testing).
+All notebooks are available in the [notebooks](./notebooks/) folder.
 
 There are 3 images built in this repo:
 
@@ -27,6 +25,9 @@ Images are available for both x86/ARM architectures (post version 1.2.7):
     - jupyter-singleuser-gpu AMD64: `cogstacksystems/jupyter-singleuser-gpu:latest`
 
 Full and more in-depth knowledge on the configuration itself is available in the primary repository [official documentation](https://cogstack-nifi.readthedocs.io/en/latest/deploy/services.html#id12).
+
+The previous version of the jupyter notebook provided a simple but common environment for people to work on, the new version operates in a centralised manner, the hub docker container starts individual containers for each user, it also allows for easier sharing of data between users via groups (this feature needs testing).
+
 
 ## Usage & configuration
 
