@@ -6,31 +6,50 @@
 
 version: 2
 updates:
- - package-ecosystem: "devcontainers"
-   directory: "/"
-   schedule:
-     interval: weekly
+  - package-ecosystem: "devcontainers"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "build"
+    groups:
+      devcontainers-deps:
+        patterns:
+          - "*"
 
   # Keep GitHub Actions (in .github/workflows) up to date
- - package-ecosystem: "github-actions"
-   directory: "/"
-   schedule:
-     interval: "monthly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "build"
 
+  # Keep Dockerfile base images up to date
+  - package-ecosystem: "docker"
+    directory: "/apps/cogstack-jupyter-hub"
+    schedule:
+      interval: "weekly"
+    registries:
+      - dockerhub
+    commit-message:
+      prefix: "build(jupyter)"
+    groups:
+      docker-deps:
+        patterns:
+          - "*"
 
- # Keep Dockerfile base images (in repo root) up to date
- - package-ecosystem: "docker"
-   directory: "/apps/cogstack-jupyter-hub"
-   schedule:
-     interval: "weekly"
-   registries:
-     - dockerhub 
-
- # Keep uv.lock Python dependencies up to date
- - package-ecosystem: "uv"
-   directory: "/apps/cogstack-jupyter-hub"
-   schedule:
-     interval: "weekly"
+  # Keep uv.lock Python dependencies up to date
+  - package-ecosystem: "uv"
+    directory: "/apps/cogstack-jupyter-hub"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "build(jupyter)"
+    groups:
+      uv-deps:
+        patterns:
+          - "*"
 
 registries:
   dockerhub:
