@@ -42,7 +42,7 @@ jobs:
             image: cogstacksystems/cogstack-observability-alloy
     steps:
       - name: Checkout branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Login to DockerHub
         uses: docker/login-action@v3
@@ -85,7 +85,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Python
         uses: actions/setup-python@v4
