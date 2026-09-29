@@ -33,7 +33,7 @@ dependencies = [
     "seaborn==0.13.2",
     "matplotlib==3.11.1",
     "graphviz==0.21",
-    "plotly==7.0.0",
+    "plotly==7.1.0",
     "tqdm>=4.70.0",
     "pymssql==2.4.1",
     "mysql-connector-python==26.7.0",
