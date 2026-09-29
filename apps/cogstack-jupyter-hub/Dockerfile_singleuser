@@ -1,0 +1,270 @@
+FROM jupyterhub/singleuser:6.0
+
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+ARG NO_PROXY
+ARG http_proxy
+ARG https_proxy
+ARG no_proxy
+
+# set to "true" for the GPU build
+ARG GPU_BUILD=false
+
+ENV HTTP_PROXY=$HTTP_PROXY
+ENV HTTPS_PROXY=$HTTPS_PROXY
+ENV NO_PROXY=$NO_PROXY
+ENV http_proxy=$HTTP_PROXY
+ENV https_proxy=$HTTPS_PROXY
+ENV no_proxy=$NO_PROXY
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_PRIORITY=critical
+
+ARG CPU_ARCHITECTURE
+ENV CPU_ARCHITECTURE=${CPU_ARCHITECTURE}
+
+ENV NVIDIA_DRIVER_VERSION=510
+
+# nvidia-container-runtime
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
+
+
+# prefer prebuilt wheels, never build from sdist for known heavy libs
+ENV PIP_PREFER_BINARY=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+ENV PIP_NO_CACHE_DIR=1
+# allow python to write byte code
+ENV PYTHONDONTWRITEBYTECODE=0
+
+USER root
+
+RUN apt-get update && apt-get upgrade -y && \
+     apt-get install -y software-properties-common
+
+# add extra repos
+RUN apt-add-repository multiverse && \
+    apt-add-repository universe && \
+    add-apt-repository ppa:graphics-drivers/ppa && \
+    add-apt-repository ppa:deadsnakes/ppa && \
+    apt-get update && apt-get upgrade -y && \
+    apt-get --force-yes -o Dpkg::Options::="--force-confold" --force-yes -o Dpkg::Options::="--force-confdef" -fuy full-upgrade && \
+    apt-get autoremove -y && \
+    apt-get clean -y && \
+    apt-get install -y \
+    wget \
+    curl \
+    ca-certificates \
+    apt-transport-https
+
+# Microsoft repos
+RUN wget -q -O- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /etc/apt/trusted.gpg.d/packages.microsoft.gpg
+RUN echo "deb [arch=amd64,armhf,arm64] https://packages.microsoft.com/ubuntu/22.04/prod jammy main" | tee -a /etc/apt/sources.list
+
+# Add latest ubuntu repos to sources.list
+# add arch
+RUN if [ "${CPU_ARCHITECTURE}" = "amd64" ]; then \
+        echo "deb http://archive.ubuntu.com/ubuntu/ jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb-src http://archive.ubuntu.com/ubuntu/ jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb http://archive.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb-src http://archive.ubuntu.com/ubuntu/ jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb-src http://archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list ; \
+        echo "deb-src http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list ; \
+    elif [ "${CPU_ARCHITECTURE}" = "arm64" ]; then \
+        echo "deb [arch=arm64] http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list ; \
+        echo "deb-src [arch=arm64] http://archive.canonical.com/ubuntu/ jammy partner" | tee -a /etc/apt/sources.list ; \
+        echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-backports main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+        echo "deb-src [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy main restricted universe multiverse" | tee -a /etc/apt/sources.list ; \
+    else \
+        echo "No valid CPU_ARCHITECTURE specified"; \
+    fi
+
+# run updates
+RUN apt-get update && apt-get upgrade -y && dpkg --configure -a && \
+    apt-get --force-yes -o Dpkg::Options::="--force-confold" --force-yes -o Dpkg::Options::="--force-confdef" -fuy full-upgrade && \
+    apt-get autoremove -y && \
+    apt-get clean -y && \
+    apt-get install -y --no-install-recommends \
+    gnupg \
+    ssl-cert \
+    libevent-dev \
+    libsqlite3-dev \
+    libxml2-dev \
+    libbz2-dev \
+    libxslt1-dev \
+    zlib1g-dev \
+    libssl-dev \
+    gnupg-agent \
+    dirmngr \
+    apt-utils \
+    fonts-dejavu \
+    nano \
+    iputils-ping \
+    cmake \
+    make \
+    build-essential \
+    unixodbc \
+    unixodbc-dev \
+    r-cran-rodbc \
+    gfortran \
+    gcc \
+    g++ \
+    git \
+    ssh \
+    jq \
+    htop \
+    libglx-mesa0 libegl1 libxrandr2 libxss1 \
+    libxcursor1 libxcomposite1 libasound2-dev libxi6 libxtst6 \
+    r-base \
+    libopenblas-dev
+
+# remove newer python version, freeze other versions for max compatibility before updates
+# RUN apt --fix-missing purge $(dpkg -l | grep 'python3\.1[01]' | awk '{print $2}')
+
+################################################################################################################################################################
+# GPU requirements section
+
+# ===== GPU-only system bits (optional) =====
+# Keep this lightweight; most CUDA libs come from host via NVIDIA Container Runtime.
+# If you need CuDNN or CUDA user-space libs inside the container, add them here.
+# This block only runs for amd64 when GPU_BUILD=true.
+RUN if [ "$GPU_BUILD" = "true" ] && [ "$CPU_ARCHITECTURE" = "amd64" ]; then \
+      install -d -m 0755 /etc/apt/keyrings; \
+      curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey \
+        | gpg --dearmor -o /etc/apt/keyrings/nvidia-container-toolkit.gpg; \
+      curl -fsSL https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list \
+        | sed 's#deb https://#deb [signed-by=/etc/apt/keyrings/nvidia-container-toolkit.gpg] https://#' \
+        | tee /etc/apt/sources.list.d/nvidia-container-toolkit.list > /dev/null; \
+      apt-get update; \
+      # OPTIONAL: only if your code needs OpenCL userspace
+      apt-get install -y --no-install-recommends \
+        ocl-icd-libopencl1 ocl-icd-dev opencl-headers libtiff-dev; \
+      rm -rf /var/lib/apt/lists/*; \
+    else \
+      echo "CPU build or non-amd64: skipping NVIDIA repo setup"; \
+    fi
+
+# Not necessary, will corrupt nvidia-doker on install, use with care
+# RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends apnvidia-driver-$NVIDIA_DRIVER_VERSION pocl-opencl-icd intel-opencl-icd \
+#   mesa-opencl-icd nvidia-opencl-dev libpocl-dev beignet-opencl-icd libnvidia-egl-wayland-dev nvidia-cuda-dev nvidia-cuda-toolkit nvidia-headless-$NVIDIA_DRIVER_VERSION
+
+RUN apt --fix-broken install
+
+# Install Python 3.11 system-wide
+RUN apt-get update && apt-get install -y python3.11-full python3.11-dev python3.11-venv python3-pip \
+ && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 2 \
+ && update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 2
+
+# install remaining packages
+RUN apt-get update && apt-get upgrade -y
+RUN apt-get -y --no-install-recommends install unixodbc unixodbc-dev odbcinst
+RUN ACCEPT_EULA=Y apt-get install -y msodbcsql18
+RUN ACCEPT_EULA=Y apt-get install -y mssql-tools18
+RUN echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' >> ~/.bashrc
+
+# deps for psycopg2
+RUN apt-get install -y --no-install-recommends postgresql-server-dev-all
+
+# clean up apt
+RUN apt-get clean autoclean && apt-get autoremove --purge -y
+
+######################################## Python / PIP SECTION ########################################
+RUN conda update conda
+
+# Create a Python 3.11 env and make it the default for builds & kernels
+RUN conda create -y -n py311 python=3.11 ipykernel && conda clean --all -f -y
+ENV CONDA_DEFAULT_ENV=py311
+ENV PATH=/opt/conda/envs/py311/bin:$PATH
+
+RUN conda install --quiet --yes \
+    ipykernel \
+    pip
+
+RUN conda clean --all -f -y
+
+RUN fix-permissions $CONDA_DIR && fix-permissions /home/$NB_USER
+
+# bust cache
+ENV UV_VERSION=latest
+
+# install rust, medcat requirement, install UV
+ENV HOME=/root
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+RUN curl -sSf https://sh.rustup.rs -o /tmp/rustup-init.sh \
+ && chmod +x /tmp/rustup-init.sh \
+ && /tmp/rustup-init.sh -y \
+ && rm /tmp/rustup-init.sh
+
+RUN curl -Ls https://astral.sh/uv/install.sh -o /tmp/install_uv.sh \
+ && bash /tmp/install_uv.sh
+
+RUN UV_PATH=$(find / -name uv -type f | head -n1) && \
+    ln -s "$UV_PATH" /usr/local/bin/uv
+
+# update pip and install basic utilities
+RUN uv pip install --upgrade --system pip setuptools wheel
+
+# install the rest of the packages including medcat
+COPY ./pyproject.toml ./uv.lock /srv/jupyterhub/
+
+# MedCAT's script auto-discovery only checks the first page of GitHub tags.
+ARG MEDCAT_SCRIPTS_TAG=medcat/v2.8.6
+
+# https://download.pytorch.org/whl/cpu is out of date on packages, using alternative URL for CPU
+RUN if [ "$GPU_BUILD" = "true" ] && [ "$CPU_ARCHITECTURE" = "amd64" ]; then \
+      cd /srv/jupyterhub && \
+      uv export --quiet --locked --format requirements.txt --no-emit-project -o /tmp/uv-locked-deps.txt && \
+      uv pip install --system --no-cache-dir -r /tmp/uv-locked-deps.txt && \
+      python -m medcat download-scripts /srv/jupyterhub/medcat-scripts --overwrite-tag "$MEDCAT_SCRIPTS_TAG" ; \
+    else \
+      cd /srv/jupyterhub && \
+      uv export --quiet --locked --format requirements.txt --no-emit-project -o /tmp/uv-locked-deps.txt && \
+      uv pip install --system --no-cache-dir -r /tmp/uv-locked-deps.txt --index-url https://pypi.org/simple && \
+      python -m medcat download-scripts /srv/jupyterhub/medcat-scripts --overwrite-tag "$MEDCAT_SCRIPTS_TAG" ; \
+    fi
+
+# medcat download-scripts creates this requirements file inside the image build.
+RUN uv pip install --no-cache-dir --system -r /srv/jupyterhub/medcat-scripts/requirements.txt
+
+# Copy medcat-scripts to default location (for Docker usage)
+# Keep original at /srv/jupyterhub/medcat-scripts for K8s usage
+RUN cp -r /srv/jupyterhub/medcat-scripts /home/jovyan/work/medcat-scripts
+
+#######################################################################################################
+
+# install R and other dependencies
+COPY ./scripts/r_kernel_install.sh /srv/jupyterhub/
+RUN Rscript /srv/jupyterhub/r_kernel_install.sh
+
+# create jupyterhub shared folder
+RUN mkdir -p /home/jovyan/scratch
+RUN chmod -R 777 /home/jovyan/scratch
+RUN chmod g+s /home/jovyan/scratch
+RUN chmod 0777 /home/jovyan/scratch
+
+# copy scripts and config files
+COPY config/jupyter_notebook_config.py /home/jovyan/.jupyter/
+
+# copy notebooks
+COPY notebooks /home/jovyan/work/
+# Kubernetes does not automatically copy the contents of /home/joyvan before mounting. Therefore also copying notebooks to /srv/jupyterhub for usage by k8s
+COPY notebooks /srv/jupyterhub/notebooks/
+
+WORKDIR /home/jovyan
+USER jovyan
+
+RUN echo "cd /home/jovyan/work" >> /home/jovyan/.bashrc
+
+# Configure container startup
+ENTRYPOINT ["tini", "-g", "--"]
+
+CMD ["start-singleuser.py"]

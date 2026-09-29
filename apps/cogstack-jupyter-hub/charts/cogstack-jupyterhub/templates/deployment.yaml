@@ -1,0 +1,152 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cogstack-jupyterhub.fullname" . }}
+  labels:
+    {{- include "cogstack-jupyterhub.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "cogstack-jupyterhub.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "cogstack-jupyterhub.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        checksum/env-files: {{ include (print $.Template.BasePath "/configmap-env-files.yaml") . | sha256sum }}
+        checksum/hub-files: {{ include (print $.Template.BasePath "/configmap-hub-files.yaml") . | sha256sum }}
+        checksum/hub-secret: {{ include (print $.Template.BasePath "/secret-hub-files.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "cogstack-jupyterhub.serviceAccountName" . }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: hub
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          command:
+            - {{ .Values.runtime.shell | quote }}
+            - -lc
+          args:
+            - |
+              set -eo pipefail
+              if [ -f /etc/cogstack/env/general.env ]; then
+                set -a
+                source /etc/cogstack/env/general.env
+                set +a
+              fi
+              if [ -f /etc/cogstack/env/jupyter.env ]; then
+                set -a
+                source /etc/cogstack/env/jupyter.env
+                set +a
+              fi
+              exec {{ .Values.runtime.command }} -f {{ .Values.runtime.configPath }}
+          ports:
+            - name: https
+              containerPort: {{ .Values.service.targetPort }}
+              protocol: TCP
+          {{- $extraEnv := .Values.extraEnv | default (dict) }}
+          {{- if gt (len $extraEnv) 0 }}
+          env:
+            {{- range $key := keys $extraEnv | sortAlpha }}
+            - name: {{ $key }}
+              value: {{ index $extraEnv $key | quote }}
+            {{- end }}
+          {{- end }}
+          volumeMounts:
+            - name: env-files
+              mountPath: /etc/cogstack/env
+              readOnly: true
+            - name: hub-config
+              mountPath: /srv/jupyterhub/jupyterhub_config.py
+              subPath: jupyterhub_config.py
+              readOnly: true
+            - name: hub-config
+              mountPath: /srv/jupyterhub/userlist
+              subPath: userlist
+              readOnly: true
+            - name: hub-config
+              mountPath: /srv/jupyterhub/teamlist
+              subPath: teamlist
+              readOnly: true
+            - name: hub-secret
+              mountPath: /srv/jupyterhub/security
+              readOnly: true
+            - name: hub-secret
+              mountPath: /srv/jupyterhub/jupyterhub_cookie_secret
+              subPath: jupyterhub_cookie_secret
+              readOnly: true
+            - name: hub-data
+              mountPath: /srv/jupyterhub
+            - name: shared-scratch
+              mountPath: /home/jovyan/scratch
+            {{- if .Values.dockerSocket.enabled }}
+            - name: docker-socket
+              mountPath: /var/run/docker.sock
+            {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      volumes:
+        - name: env-files
+          configMap:
+            name: {{ include "cogstack-jupyterhub.envConfigMapName" . }}
+            defaultMode: 0444
+        - name: hub-config
+          configMap:
+            name: {{ include "cogstack-jupyterhub.hubConfigMapName" . }}
+            defaultMode: 0444
+        - name: hub-secret
+          secret:
+            secretName: {{ include "cogstack-jupyterhub.secretName" . }}
+            defaultMode: 0400
+        - name: hub-data
+          {{- if .Values.persistence.hub.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ default (printf "%s-hub" (include "cogstack-jupyterhub.fullname" .)) .Values.persistence.hub.existingClaim }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        - name: shared-scratch
+          {{- if .Values.persistence.scratch.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ default (printf "%s-scratch" (include "cogstack-jupyterhub.fullname" .)) .Values.persistence.scratch.existingClaim }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        {{- if .Values.dockerSocket.enabled }}
+        - name: docker-socket
+          hostPath:
+            path: {{ .Values.dockerSocket.hostPath }}
+            type: Socket
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -1,0 +1,90 @@
+replicaCount: 1
+
+image:
+  repository: cogstacksystems/jupyter-hub
+  tag: "2.2.3"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: false
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+podSecurityContext: {}
+securityContext:
+  runAsUser: 0
+  runAsGroup: 0
+
+resources: {}
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+extraEnv: {}
+
+service:
+  type: ClusterIP
+  port: 8888
+  targetPort: 443
+  annotations: {}
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: jupyterhub.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+persistence:
+  hub:
+    enabled: true
+    existingClaim: ""
+    storageClassName: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
+  scratch:
+    enabled: true
+    existingClaim: ""
+    storageClassName: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
+
+dockerSocket:
+  enabled: true
+  hostPath: /var/run/docker.sock
+
+envFiles:
+  useBundled: true
+  general: ""
+  jupyter: ""
+
+hubFiles:
+  useBundled: true
+  jupyterhubConfig: ""
+  userlist: ""
+  teamlist: ""
+
+securityFiles:
+  useBundled: true
+  existingSecret: ""
+  cookieSecret: ""
+  tlsKey: ""
+  tlsCert: ""
+
+runtime:
+  shell: /bin/bash
+  command: jupyterhub
+  configPath: /srv/jupyterhub/jupyterhub_config.py

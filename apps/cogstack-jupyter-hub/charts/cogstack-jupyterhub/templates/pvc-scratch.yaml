@@ -1,0 +1,17 @@
+{{- if and .Values.persistence.scratch.enabled (not .Values.persistence.scratch.existingClaim) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "cogstack-jupyterhub.fullname" . }}-scratch
+  labels:
+    {{- include "cogstack-jupyterhub.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    {{- toYaml .Values.persistence.scratch.accessModes | nindent 4 }}
+  {{- if .Values.persistence.scratch.storageClassName }}
+  storageClassName: {{ .Values.persistence.scratch.storageClassName | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.scratch.size | quote }}
+{{- end }}

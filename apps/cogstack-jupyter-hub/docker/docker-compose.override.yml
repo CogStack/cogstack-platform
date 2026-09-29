@@ -1,0 +1,14 @@
+services:
+  cogstack-jupyter-hub:
+    container_name: cogstack-jupyter-hub
+    networks:
+      - cognet
+
+volumes:
+  jupyter-hub-vol:
+  jupyter-hub-shared-scratch:
+
+networks:
+  cognet:
+    name: cogstack-net
+    driver: bridge

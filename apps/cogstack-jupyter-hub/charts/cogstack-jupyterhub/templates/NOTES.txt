@@ -1,0 +1,22 @@
+CogStack JupyterHub has been deployed.
+
+Service name:
+  {{ include "cogstack-jupyterhub.fullname" . }}
+
+Port forward:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "cogstack-jupyterhub.fullname" . }} 8888:{{ .Values.service.port }}
+
+Recommended install command to use repository env/config files directly:
+  helm upgrade --install {{ .Release.Name }} {{ .Chart.Name }} \
+    --namespace {{ .Release.Namespace }} --create-namespace \
+    --set envFiles.useBundled=false \
+    --set hubFiles.useBundled=false \
+    --set securityFiles.useBundled=false \
+    --set-file envFiles.jupyter=env/jupyter.env \
+    --set-file envFiles.general=env/general.env \
+    --set-file hubFiles.jupyterhubConfig=config/jupyterhub_config.py \
+    --set-file hubFiles.userlist=config/userlist \
+    --set-file hubFiles.teamlist=config/teamlist \
+    --set-file securityFiles.cookieSecret=config/jupyterhub_cookie_secret \
+    --set-file securityFiles.tlsKey=security/nifi.key \
+    --set-file securityFiles.tlsCert=security/nifi.pem

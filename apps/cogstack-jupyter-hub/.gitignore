@@ -1,0 +1,30 @@
+# keys and certificates
+**.pem
+**.key
+**.jks
+**.csr
+**.srl
+**.crt
+**.p12
+
+# docs
+docs/build/*
+
+# IDE envs and system folders
+.DS_Store
+**/.DS_Store
+.idea
+.vscode
+.venv
+.ruff_cache
+venv
+**__pycache__
+**/venv
+
+# env files with passwords or local paths
+**.env
+
+config/jupyterhub_cookie_secret
+
+# cert files
+security**

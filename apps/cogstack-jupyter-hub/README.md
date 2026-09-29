@@ -1,0 +1,287 @@
+# Cogstack-Jupyter-Hub
+
+[![docker-jupyter-hub-all](https://github.com/CogStack/cogstack-jupyter-hub/actions/workflows/docker-build.yml/badge.svg?branch=main)](https://github.com/CogStack/cogstack-jupyter-hub/actions/workflows/docker-build.yml)
+
+## Introduction
+
+This repo has been reinstated. The custom jupyter-hub image is specified in the [CogStack-Nifi](https://github.com/CogStack/CogStack-NiFi/tree/main/services/jupyter-hub) project.
+
+This repository contains a custom Jupyter Hub Docker image with example notebooks to play with. \
+The notebooks provided are usually kept up to date with the example data that has been generated using Synthea and MTSamples in the [CogStack-NiFi](https://github.com/cogstack/cogstack-nifi) repository. Additionally, the [working with cogstack](https://github.com/CogStack/working_with_cogstack) scripts are included for production use.
+
+All notebooks are available in the [notebooks](./notebooks/) folder.
+
+The previous version of the jupyter notebook provided a simple but common environment for people to work on, the new version operates in a centralised manner, the hub docker container starts individual containers for each user, it also allows for easier sharing of data between users via groups (this feature needs testing).
+
+There are 3 images built in this repo:
+
+    - jupyter-hub: the hub from which individual user containers are started.
+    - jupyter-singleuser: image used for each user's container, an isolated environment.
+    - jupyter-singleuser-gpu: same as `jupyter-singleuser` but has GPU packages.
+
+Images are available for both x86/ARM architectures (post version 1.2.7):
+
+    - jupyter-hub ARM64/AMD64: `cogstacksystems/jupyter-hub:latest`
+    - minimal official image ARM64/AMD64: `jupyterhub/singleuser:latest`
+    - jupyter-singleuser ARM64/AMD64: `cogstacksystems/jupyter-singleuser:latest`
+    - jupyter-singleuser-gpu AMD64: `cogstacksystems/jupyter-singleuser-gpu:latest`
+
+Full and more in-depth knowledge on the configuration itself is available in the primary repository [official documentation](https://cogstack-nifi.readthedocs.io/en/latest/deploy/services.html#id12).
+
+## Usage & configuration
+
+ENV variables are located in: [env/jupyter.env](./env/jupyter.env) and [env/general.env](./env/general.env).\
+Please check the ENV file for additional information, every variable is commented and described.
+
+## Python packages installed
+
+Top-level Python dependencies are declared in [pyproject.toml](./pyproject.toml). Exact resolved versions are pinned in [uv.lock](./uv.lock).
+
+## Security
+
+Certificates used are located in the `./security/` folder, taken from the [Cogstack-NiFi](https://github.com/CogStack-NiFi) security folder, [nifi.key](https://raw.githubusercontent.com/CogStack/CogStack-NiFi/refs/heads/main/security/certificates/nifi/nifi.key) and [nifi.pem](https://raw.githubusercontent.com/CogStack/CogStack-NiFi/refs/heads/main/security/certificates/nifi/nifi.pem), read the [security section](https://cogstack-nifi.readthedocs.io/en/latest/security.html) for more info on how to generate them from the main NiFi repository.
+
+### Cookie Secret Management
+
+JupyterHub requires a secure cookie secret file with restrictive permissions.  
+To keep the repository clean and avoid permission-related issues, the cookie secret file is ignored by Git and generated locally as needed.
+
+### File Location
+
+    ```bash
+    config/jupyterhub_cookie_secret
+    ```
+
+This file is intentionally listed in `.gitignore`, so it is never tracked or committed.
+
+### Generating a New Cookie Secret
+
+A helper script is provided to generate a fresh secret.
+
+From the repository root:
+
+    ```bash
+    cd scripts
+    ./generate_cookie_secret.sh
+    ```
+
+The script contents are:
+
+    ```bash
+    #!/usr/bin/env bash
+    set -e
+    openssl rand -hex 32 > ../config/jupyterhub_cookie_secret
+    ```
+
+This command creates (or replaces) a 32-byte hex secret at:
+
+    ```bash
+    config/jupyterhub_cookie_secret
+    ```
+
+### Automatic Permission Fix
+
+At container startup, the entrypoint adjusts permissions to ensure the file is protected:
+
+    ```bash
+    chmod 600 config/jupyterhub_cookie_secret
+    ```
+
+This guarantees the cookie secret always has the correct permissions regardless of host OS, repo checkout, or user environment.
+
+## Setting up your own hub
+
+This folder contains a modular Docker Compose setup for running the CogStack Jupyter Hub across multiple environments.
+
+    ```bash
+        docker/
+        ├── docker-compose.base.yml        # Canonical base definition
+        ├── docker-compose.yml             # Extends the base (always loaded)
+        ├── docker-compose.override.yml    # Local overrides (auto-loaded)
+        ├── docker-compose.dev.yml         # Dev overrides
+        ├── docker-compose.prod.yml        # Prod overrides
+        ├── Makefile                       # Helper commands (up, down, ps, show-env)
+        └── export_env_vars.sh             # Loads ../env/*.env files
+    ```
+
+### 🧩 Usage
+
+- **Local:** `make start` → uses base + override (bridge network)
+- **Dev:** `make start-dev` → uses base + dev overrides
+- **Prod:** `make start-prod` → uses base + prod overrides
+- **Stop:** `make down`  
+- **Load envs:** `make load-env`
+- **Show envs:** `make show-env`
+- **Show logs:** `make logs`, `make logs-dev` - dev container
+- **Health check:** `make health-check`
+- **Stop all containers:** `make stop-all`
+
+For any other commands that are available but may not be listed here, please check the [Makefile](./docker/Makefile).
+
+This structure keeps the base clean while allowing environment-specific overlays.
+
+Check the [env/general.env](./env/general.env), set the `CPU_ARCHITECTURE` variable to whatever you need, the default for most Laptops/PCs is `amd64`, if you have an ARM laptop/device then set to `arm64`, that should suffice.
+
+Execute the following in the main repo directory:
+
+    ```bash
+        cd docker
+        make start
+    ```
+
+Updating certificates and env settings from the main repo:
+    - sometimes it is necessary to grab new certificates if the old ones expired (from the main Cogstack-NiFi repo)
+    - from the main repo directory, execute `bash scripts/update_env_cert_from_nifi_repo.sh`
+
+## Deploy with Helm (Kubernetes)
+
+This repository includes a Helm chart at [charts/cogstack-jupyterhub](./charts/cogstack-jupyterhub).
+
+To deploy with the same env/config inputs used by Docker Compose, run from the repo root:
+
+```bash
+helm upgrade --install cogstack-jupyterhub ./charts/cogstack-jupyterhub \
+  --namespace cogstack --create-namespace \
+  --set envFiles.useBundled=false \
+  --set hubFiles.useBundled=false \
+  --set securityFiles.useBundled=false \
+  --set-file envFiles.jupyter=env/jupyter.env \
+  --set-file envFiles.general=env/general.env \
+  --set-file hubFiles.jupyterhubConfig=config/jupyterhub_config.py \
+  --set-file hubFiles.userlist=config/userlist \
+  --set-file hubFiles.teamlist=config/teamlist \
+  --set-file securityFiles.cookieSecret=config/jupyterhub_cookie_secret \
+  --set-file securityFiles.tlsKey=security/nifi.key \
+  --set-file securityFiles.tlsCert=security/nifi.pem
+```
+
+For chart values and additional options, see [charts/cogstack-jupyterhub/README.md](./charts/cogstack-jupyterhub/README.md).
+
+### Helm smoke tests
+
+Run local smoke checks for Helm/Kubernetes manifests:
+
+```bash
+bash scripts/helm_k8s_smoke_test.sh
+```
+
+CI also runs this via [`.github/workflows/helm-smoke-test.yml`](./.github/workflows/helm-smoke-test.yml) for changes affecting chart/env/config/security files.
+
+## Access and account control
+
+To access Jupyter Hub on the host machine (e.g.localhost), one can type in the browser `https://localhost:8888`.
+
+Creating accounts for other users is possible, just go to the admin page `https://localhost:8888/hub/admin#/`, click on add users and follow the instructions (make sure usernames are lower-cased and DO NOT contain symbols, if usernames contain uppercase they will be converted to lower case in the creation process).
+
+The default password is blank, you can set the password for the admin user the first time you LOG IN, remember it.
+
+Or you can set the password is defined by a local variable `JUPYTERHUB_PASSWORD` in `.env` file that is the password SHA-1 value if the authenticator is set to either LocalAuthenticator or Native read more in [jupyter doc](https://jupyterhub.readthedocs.io/en/stable/api/auth.html?highlight#) about this.
+
+**Users must use the "/work/"directory for their work, otherwise files might not get saved!**
+
+## Enabling OIDC Authentication
+
+JupyterHub can be configured to authenticate users via OAuth2/OIDC using Keycloak (or other OIDC providers). The implementation uses the `GenericOAuthenticator` from the `oauthenticator` package, which provides flexible OIDC integration.
+
+### Configuration Steps
+
+1. **Enable OIDC Authentication**
+
+   Set the following in [env/jupyter.env](./env/jupyter.env):
+   ```bash
+   JUPYTERHUB_DOCKER_ENABLE_OIDC_AUTH="true"
+   ```
+
+2. **Configure OAuth Client Settings**
+
+   The following environment variables must be configured in [env/jupyter.env](./env/jupyter.env):
+
+   | Variable | Description | Example |
+   |----------|-------------|---------|
+   | `JUPYTERHUB_OAUTH_CLIENT_ID` | OAuth client ID registered in Keycloak | `cogstack-jupyterhub` |
+   | `JUPYTERHUB_OAUTH_CLIENT_SECRET` | OAuth client secret from Keycloak | `your-secure-secret-here` |
+   | `JUPYTERHUB_OAUTH_CALLBACK_URL` | OAuth callback URL (must match Keycloak config) | `https://localhost:8888/hub/oauth_callback` |
+   | `JUPYTERHUB_KEYCLOAK_URL_PUBLIC` | Browser-accessible Keycloak URL | `http://keycloak.cogstack.localhost` |
+   | `JUPYTERHUB_KEYCLOAK_URL_INTERNAL` | Internal container-to-container Keycloak URL | `http://keycloak:8080` |
+   | `JUPYTERHUB_KEYCLOAK_REALM` | Keycloak realm name | `cogstack-realm` |
+
+   **Security Note:** Change `JUPYTERHUB_OAUTH_CLIENT_SECRET` to a secure value obtained from your Keycloak client configuration. Do not use the example value in production.
+
+### Keycloak Configuration Requirements
+
+To use OIDC authentication, configure your Keycloak client with the following:
+
+1. **Client Settings:**
+   - Client Protocol: `openid-connect`
+   - Access Type: `confidential`
+   - Valid Redirect URIs: Must include your `JUPYTERHUB_OAUTH_CALLBACK_URL`
+   - Base URL: Your JupyterHub URL
+
+2. **Client Scopes:**
+   - Enable `openid`, `profile`, `email`, and `groups` scopes
+
+3. **Mappers:**
+   - Add a Group Membership mapper to include user groups in the token
+   - Ensure the mapper uses the token claim name: `groups`
+
+4. **Groups (Optional but Recommended):**
+   - Create groups in Keycloak: `jupyterhub-users` and `jupyterhub-admins`
+   - Assign users to appropriate groups for access control
+
+### Authentication Behavior
+
+When OIDC is enabled:
+- Users are automatically redirected to Keycloak for authentication (no local login page)
+- Only users in the `jupyterhub-users` or `jupyterhub-admins` groups can access JupyterHub (see config/jupyterhub_config.py:318)
+- Users in the `jupyterhub-admins` group receive admin privileges in JupyterHub
+- Group-based authorization is enabled by default
+
+### Network Architecture
+
+The configuration uses separate URLs for different network paths:
+- **`JUPYTERHUB_KEYCLOAK_URL_PUBLIC`**: Used for browser redirects (authorize endpoint)
+- **`JUPYTERHUB_KEYCLOAK_URL_INTERNAL`**: Used for backend API calls (token and userinfo endpoints)
+
+This separation allows JupyterHub to communicate with Keycloak via Docker network while users' browsers access Keycloak via public URL.
+
+### Troubleshooting
+
+- Verify the callback URL matches exactly between JupyterHub config and Keycloak client settings
+- Check that the client secret is correctly copied from Keycloak
+- Ensure the Keycloak groups mapper is configured and users are assigned to groups
+- Review JupyterHub logs: `make logs` or `docker logs cogstack-jupyter-hub-dev`
+- Set `JUPYTERHUB_LOG_LEVEL="DEBUG"` in jupyter.env for detailed authentication logs
+
+## Enabling GPU support
+
+Pre-requisites (for Linux and Windows): - for Linux, you need to install the nvidia-docker2 package / nvidia toolkit package that adds gpu spport for docker, official documentation here - this also needs to be done for Windows machines, please read the the documentation for WSL2 [here](https://docs.nvidia.com/cuda/wsl-user-guide/index.html).
+
+In [env/jupyter.env](./env/jupyter.env):
+
+    - change `JUPYTERHUB_DOCKER_ENABLE_GPU_SUPPORT` from `false` to `true`.
+    - change `JUPYTERHUB_JUPYTER_HUB_SINGLEUSER_DOCKER_NOTEBOOK_IMAGE` from `cogstacksystems/jupyter-singleuser:latest` to `cogstacksystems/jupyter-singleuser-gpu:latest`.
+    - in the main repo folder, execute the following command in terminal: `source env/jupyter.env`, then `docker compose up -d`.
+
+*Use any release version you want instead of `latest` as necessary.
+
+## User resource limits
+
+Users can have their resources limited (currently only CPU + RAM), there is a default `USER` and `ADMIN` role, future work will add more configurable roles.\
+Change the corresponding variables in [env/jupyter.env](./env/jupyter.env):
+
+    *   General user resource cap per container, default 2 cores, 2GB ram:
+        - `JUPYTER_HUB_SINGLEUSER_RESOURCE_ALLOCATION_USER_CPU_LIMIT`="2"
+        - `JUPYTER_HUB_SINGLEUSER_RESOURCE_ALLOCATION_USER_RAM_LIMIT`="2.0G"
+
+    *   Admin resource cap per container, default 2 cores, 4 GB RAM:
+        - `JUPYTER_HUB_SINGLEUSER_RESOURCE_ALLOCATION_ADMIN_CPU_LIMIT`="2"
+        - `JUPYTER_HUB_SINGLEUSER_RESOURCE_ALLOCATION_ADMIN_RAM_LIMIT`="4.0G"
+
+## Sharing storage between users
+
+It is possible to configure a `scratch` folder/partition that is just a volume that will be shared by multiple users belonging to the same group.
+This feature is currently experimental, it requires admins to add users to the same group and then define a folder to be shared (difficult as it is mainly done via config file at present) .
+
+## DEVELOPING
+
+Please make sure to set JUPYTER_HUB_DOCKER_CONTAINER_NAME="cogstack-jupyter-hub-dev" in the `env/jupyter.env` otherwise singleuser containers won't be able to start.

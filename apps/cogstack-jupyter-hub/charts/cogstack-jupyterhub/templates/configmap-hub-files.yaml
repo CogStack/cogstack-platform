@@ -1,0 +1,34 @@
+{{- if and (not .Values.hubFiles.useBundled) (eq (trim .Values.hubFiles.jupyterhubConfig) "") }}
+{{- fail "hubFiles.jupyterhubConfig is required when hubFiles.useBundled=false" }}
+{{- end }}
+{{- if and (not .Values.hubFiles.useBundled) (eq (trim .Values.hubFiles.userlist) "") }}
+{{- fail "hubFiles.userlist is required when hubFiles.useBundled=false" }}
+{{- end }}
+{{- if and (not .Values.hubFiles.useBundled) (eq (trim .Values.hubFiles.teamlist) "") }}
+{{- fail "hubFiles.teamlist is required when hubFiles.useBundled=false" }}
+{{- end }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "cogstack-jupyterhub.hubConfigMapName" . }}
+  labels:
+    {{- include "cogstack-jupyterhub.labels" . | nindent 4 }}
+data:
+  jupyterhub_config.py: |
+{{- if ne (trim .Values.hubFiles.jupyterhubConfig) "" }}
+{{- .Values.hubFiles.jupyterhubConfig | nindent 4 }}
+{{- else }}
+{{- .Files.Get "files/config/jupyterhub_config.py" | nindent 4 }}
+{{- end }}
+  userlist: |
+{{- if ne (trim .Values.hubFiles.userlist) "" }}
+{{- .Values.hubFiles.userlist | nindent 4 }}
+{{- else }}
+{{- .Files.Get "files/config/userlist" | nindent 4 }}
+{{- end }}
+  teamlist: |
+{{- if ne (trim .Values.hubFiles.teamlist) "" }}
+{{- .Values.hubFiles.teamlist | nindent 4 }}
+{{- else }}
+{{- .Files.Get "files/config/teamlist" | nindent 4 }}
+{{- end }}
