@@ -89,7 +89,7 @@ jobs:
 
       - name: Build & push (${{ matrix.platform }})
         id: push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ${{ inputs.context }}
           file: ${{ inputs.dockerfile }}
