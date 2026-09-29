@@ -4,33 +4,25 @@ permissions:
   contents: read
 
 on:
+  push:
+    branches: [main]
+    tags: ['cogstack-jupyter-hub-v*.*.*']
+    paths:
+      - "apps/cogstack-jupyter-hub/**"
+      - ".github/workflows/docker-smoke-test.yml"
   pull_request:
     paths:
-      - "Dockerfile_hub"
-      - "Dockerfile_singleuser"
-      - "docker/**"
-      - "env/**"
-      - "config/**"
-      - "scripts/**"
-      - "export_env_vars.sh"
-      - ".github/workflows/docker-smoke-test.yml"
-  push:
-    branches:
-      - "main"
-    paths:
-      - "Dockerfile_hub"
-      - "Dockerfile_singleuser"
-      - "docker/**"
-      - "env/**"
-      - "config/**"
-      - "scripts/**"
-      - "export_env_vars.sh"
+      - "apps/cogstack-jupyter-hub/**"
       - ".github/workflows/docker-smoke-test.yml"
   workflow_dispatch:
 
 concurrency:
   group: docker-smoke-${{ github.ref }}
   cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: apps/cogstack-jupyter-hub
 
 jobs:
   smoke:

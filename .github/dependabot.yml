@@ -36,5 +36,5 @@ registries:
   dockerhub:
     type: "docker-registry"
     url: "https://index.docker.io"
-    username: "${{secrets.DOCKER_HUB_USERNAME}}"
-    password: "${{secrets.DOCKER_HUB_ACCESS_TOKEN}}"
+    username: "${{secrets.DOCKERHUB_USERNAME}}"
+    password: "${{secrets.DOCKERHUB_TOKEN}}"
