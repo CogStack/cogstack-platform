@@ -10,3 +10,31 @@ updates:
    directory: "/"
    schedule:
      interval: weekly
+
+  # Keep GitHub Actions (in .github/workflows) up to date
+ - package-ecosystem: "github-actions"
+   directory: "/"
+   schedule:
+     interval: "monthly"
+
+
+ # Keep Dockerfile base images (in repo root) up to date
+ - package-ecosystem: "docker"
+   directory: "/apps/cogstack-jupyter-hub"
+   schedule:
+     interval: "weekly"
+   registries:
+     - dockerhub 
+
+ # Keep uv.lock Python dependencies up to date
+ - package-ecosystem: "uv"
+   directory: "/apps/cogstack-jupyter-hub"
+   schedule:
+     interval: "weekly"
+
+registries:
+  dockerhub:
+    type: "docker-registry"
+    url: "https://index.docker.io"
+    username: "${{secrets.DOCKERHUB_USERNAME}}"
+    password: "${{secrets.DOCKERHUB_TOKEN}}"
