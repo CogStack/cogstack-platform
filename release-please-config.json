@@ -147,7 +147,14 @@
             "bump-minor-pre-major": false,
             "bump-patch-for-minor-pre-major": false,
             "draft": false,
-            "prerelease": false
+            "prerelease": false,
+            "extra-files": [
+                {
+                    "type": "toml",
+                    "path": "uv.lock",
+                    "jsonpath": "$.package[?(@.name=='cogstack-jupyter-hub')].version"
+                }
+            ]
         }
     }
 }
