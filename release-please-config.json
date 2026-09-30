@@ -139,6 +139,15 @@
             "bump-patch-for-minor-pre-major": false,
             "draft": false,
             "prerelease": false
+        },
+        "apps/cogstack-jupyter-hub": {
+            "release-type": "python",
+            "component": "cogstack-jupyter-hub",
+            "changelog-path": "CHANGELOG.md",
+            "bump-minor-pre-major": false,
+            "bump-patch-for-minor-pre-major": false,
+            "draft": false,
+            "prerelease": false
         }
     }
 }
