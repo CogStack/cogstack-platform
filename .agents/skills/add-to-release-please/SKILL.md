@@ -4,8 +4,9 @@ description: >-
   Register a package in release-please by updating release-please-config.json
   and .release-please-manifest.json, and aligning publish workflows to the new
   tag prefix. Use when adding an app, Helm chart, or package to release-please,
-  onboarding a new release path, or when the user mentions release-please
-  config or manifest.
+  onboarding a new release path, when the user mentions release-please config
+  or manifest, or when a Python/uv package needs uv.lock kept in sync for
+  --locked installs.
 ---
 
 # Add to release-please
@@ -79,6 +80,26 @@ Add under `packages`. Match the file's 4-space indent.
 ]
 ```
 
+### Python projects with `uv.lock` (and `uv … --locked`)
+
+`release-type: python` updates `pyproject.toml` only. `uv` also records the local project in `uv.lock` as a virtual package (`source = { virtual = "." }`). Installs that use `uv sync --locked` / `uv pip install --locked` (or Docker builds that copy the lockfile and pass `--locked`) fail if that lock entry’s version does not match `pyproject.toml`.
+
+When the package directory has a `uv.lock`, add an `extra-files` entry so release-please bumps the lockfile too. Use `@.name.value` (not `@.name`): release-please’s TOML parser wraps scalars in tagged objects, so a plain name filter matches nothing.
+
+`<project-name>` is the `[project].name` from `pyproject.toml` (for example `cogstack-jupyter-hub`):
+
+```json
+"extra-files": [
+    {
+        "type": "toml",
+        "path": "uv.lock",
+        "jsonpath": "$.package[?(@.name.value=='<project-name>')].version"
+    }
+]
+```
+
+This is sourced from [release-please#2561](https://github.com/googleapis/release-please/issues/2561)
+
 ### Helm charts
 
 Copy an existing chart entry such as `helm-charts/medcat-service-helm`. Charts here always use `release-type` `helm`, `component` equal to the package key, and these changelog sections. Do not add `extra-files`.
@@ -137,5 +158,6 @@ rg -n '<old-prefix>|tags:' .github/workflows/<package>*
 - [ ] Path chosen (or confirmed with user)
 - [ ] `packages` entry in `release-please-config.json`
 - [ ] Helm charts use the path, `component`, and `changelog-sections` from [Helm charts](#helm-charts)
+- [ ] Python packages with `uv.lock` include the `uv.lock` `extra-files` entry from [Python projects with `uv.lock`](#python-projects-with-uvlock-and-uv--locked)
 - [ ] Manifest entry is the latest git tag, or `0.0.0` plus `initial-version` when the package has never been released
 - [ ] Workflows updated if the tag prefix changed, except Helm charts that already match `helm-charts/*-v*.*.*`
