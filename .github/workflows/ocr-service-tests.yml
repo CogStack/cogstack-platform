@@ -53,7 +53,7 @@ jobs:
       # Cache pip
       - name: Main Cache pip
         if: ${{ !env.ACT }}
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('apps/ocr-service/requirements.txt', 'apps/ocr-service/requirements-dev.txt') }}
@@ -68,7 +68,7 @@ jobs:
 
       - name: Cache apt downloads
         if: ${{ !env.ACT }}
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: /var/cache/apt/archives
           key: ${{ runner.os }}-apt-${{ hashFiles('.github/workflows/ocr-service-tests.yml') }}
