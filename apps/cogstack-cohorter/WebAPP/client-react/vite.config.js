@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 // Express server port (same origin in production; proxied in dev)
 const API_ORIGIN = 'http://localhost:3000';
 
-// Point Vite at the cogstack-cohorter/ root so that it reads the same .env
+// Point Vite at the apps/cogstack-cohorter/ root so that it reads the same .env
 // as docker-compose, eliminating the need for a separate client-react/.env.
 // Both `npm run dev` (Vite) and `docker-compose build` resolve vars from one file.
 const ENV_DIR = '../../';

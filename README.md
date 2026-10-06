@@ -51,7 +51,7 @@ See the latest documentation on [Readthedocs](https://docs.cogstack.org/en/lates
   </tr>
   <tr>
     <td align="center" valign="top" width="50%">
-      <a href="cogstack-cohorter">
+      <a href="apps/cogstack-cohorter">
         <img src="docs/docs/assets/cogstack-logo.png" alt="CogStack Cohorter" height="56"/>
         <br/><strong>CogStack Cohorter</strong>
       </a>
