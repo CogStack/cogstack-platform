@@ -21,7 +21,7 @@ It keeps the existing Alpine-style template/data model behaviour, while using Re
 
 ## Environment variables
 
-A single `.env` file at the **`cogstack-cohorter/` root** (one level up from `WebAPP/`) is shared between Vite and `docker-compose`. Copy `.env.example` there and fill in values:
+A single `.env` file at the **`apps/cogstack-cohorter/` root** (one level up from `WebAPP/`) is shared between Vite and `docker-compose`. Copy `.env.example` there and fill in values:
 
 ```bash
 cp ../../.env.example ../../.env

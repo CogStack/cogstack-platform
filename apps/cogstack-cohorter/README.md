@@ -27,7 +27,7 @@ A lightweight cohort discovery application that combines:
 - (Optional) GPU setup if you want Ollama GPU acceleration (depends on your host OS)
 
 ### 1) Build and start all services
-From the repo root:
+From this directory:
 
 ```bash
 docker compose up --build

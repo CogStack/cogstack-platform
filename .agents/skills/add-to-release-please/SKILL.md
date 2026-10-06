@@ -29,7 +29,7 @@ The path is the package key in both config files (repo-relative directory). Conf
 
 | Kind | Path examples |
 |---|---|
-| App | `cogstack-cohorter` |
+| App | `apps/cogstack-cohorter` |
 | Helm chart | `helm-charts/medcat-service-helm` |
 
 Helm charts in this repo are top-level directories under `helm-charts/<chart>/` with a `Chart.yaml`. The package key is that directory. See [Helm charts](#helm-charts) before editing.

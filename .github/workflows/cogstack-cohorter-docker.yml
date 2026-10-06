@@ -6,11 +6,11 @@ on:
     tags:
       - "cohorter-v*.*.*" # e.g., cohorter-v1.2.3
     paths:
-      - "cogstack-cohorter/**"
+      - "apps/cogstack-cohorter/**"
       - ".github/workflows/cogstack-cohorter-docker**"
   pull_request:
     paths:
-      - "cogstack-cohorter/**"
+      - "apps/cogstack-cohorter/**"
       - ".github/workflows/cogstack-cohorter-docker**"
 
 jobs:
@@ -24,13 +24,13 @@ jobs:
       matrix:
         include:
           - name: nl2dsl
-            context: cogstack-cohorter/NL2DSL
-            dockerfile: cogstack-cohorter/NL2DSL/Dockerfile
+            context: apps/cogstack-cohorter/NL2DSL
+            dockerfile: apps/cogstack-cohorter/NL2DSL/Dockerfile
             image: cogstacksystems/cogstack-cohorter-nl2dsl
 
           - name: webapp
-            context: cogstack-cohorter/WebAPP
-            dockerfile: cogstack-cohorter/WebAPP/Dockerfile
+            context: apps/cogstack-cohorter/WebAPP
+            dockerfile: apps/cogstack-cohorter/WebAPP/Dockerfile
             image: cogstacksystems/cogstack-cohorter-webapp
 
     steps:
