@@ -6,13 +6,13 @@ process management, and logging setup. It also contains a legacy HTML-to-image
 converter kept for reference.
 """
 
+import codecs
 import contextlib
 import fcntl
 import json
 import logging
 import os
 import shutil
-import string
 import sys
 import xml.sax
 import zipfile
@@ -32,7 +32,6 @@ from ocr_service.settings import settings
 
 logger = logging.getLogger(__name__)
 
-PRINTABLE = set(bytes(string.printable, "ascii")) | {9, 10, 13}
 OLE_SIGNATURE = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
 
 ODF_MIME_EXTENSIONS: dict[str, str] = {
@@ -207,29 +206,49 @@ def delete_tmp_files(file_paths: list[str]) -> None:
         if os.path.exists(file_path):
             os.remove(file_path)
 
+def decode_plain_text(stream: bytes, threshold: float = 0.95) -> str | None:
+    """Decode Unicode text, returning None for binary or invalid input.
+
+    BOMs identify UTF-16/32; otherwise require UTF-8. Validate the whole
+    stream before checking printable Unicode characters in a bounded sample.
+    This avoids both splitting a multibyte character and silently dropping
+    invalid bytes beyond the sample.
+    """
+    if not stream:
+        return None
+
+    # UTF-32 LE starts with the UTF-16 LE BOM, so check UTF-32 first.
+    if stream.startswith((codecs.BOM_UTF32_LE, codecs.BOM_UTF32_BE)):
+        encoding = "utf-32"
+    elif stream.startswith((codecs.BOM_UTF16_LE, codecs.BOM_UTF16_BE)):
+        encoding = "utf-16"
+    else:
+        encoding = "utf-8-sig"
+
+    try:
+        text = stream.decode(encoding)
+    except UnicodeDecodeError:
+        return None
+
+    if not text or "\x00" in text:
+        return None
+
+    sample = text[:4096]
+    printable = sum(char.isprintable() or char in "\t\n\r\v\f" for char in sample)
+    return text if printable / len(sample) >= threshold else None
+
+
 def is_file_content_plain_text(stream: bytes, threshold: float = 0.95) -> bool:
-    """Heuristic to determine whether a byte stream is likely plain text.
+    """Heuristic to determine whether a byte stream is likely Unicode text.
 
     Args:
         stream: Raw bytes to inspect.
-        threshold: Ratio of printable ASCII bytes required to treat as text.
+        threshold: Ratio of printable Unicode characters required to treat as text.
 
     Returns:
         bool: True if the stream appears to be text-like.
     """
-    if not stream:
-        return False
-
-    sample = stream[:4096]
-
-    # If it can't be decoded as UTF-8 at all, treat as binary
-    try:
-        sample.decode("utf-8")
-    except UnicodeDecodeError:
-        return False
-
-    printable = sum(1 for b in sample if b in PRINTABLE)
-    return printable / len(sample) >= threshold
+    return decode_plain_text(stream, threshold) is not None
 
 def is_file_type_html(stream: bytes) -> bool:
     """Detect HTML content by scanning the head of the stream.
