@@ -24,6 +24,7 @@ from ocr_service.dto.process_context import ProcessContext
 from ocr_service.settings import settings
 from ocr_service.utils.utils import (
     INPUT_FILTERS,
+    decode_plain_text,
     delete_tmp_files,
     is_encrypted_office_document,
     terminate_hanging_process,
@@ -101,7 +102,7 @@ class DocumentConverter:
                 self.log.warning("Failed to parse RTF during fallback; using raw decode")
 
         if not text:
-            text = stream.decode("utf-8", "ignore") 
+            text = decode_plain_text(stream) or stream.decode("utf-8", "ignore")
 
         return unescape(text)
 
@@ -518,7 +519,7 @@ class DocumentConverter:
             self.log.info(
                 "Unknown text-like content; treating as plain text, skipping unoserver/LO conversion"
             )
-            ctx.output_text = ctx.stream.decode("utf-8", "ignore")
+            ctx.output_text = decode_plain_text(ctx.stream) or ""
             ctx.metadata["pages"] = 1
             ctx.metadata["content-type"] = "text/plain"
 
