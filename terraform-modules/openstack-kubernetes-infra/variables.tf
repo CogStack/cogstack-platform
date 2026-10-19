@@ -9,6 +9,13 @@ variable "ubuntu_immage_name" {
   description = "Name of an available Machine Image running ubuntu in the openstack environment"
 }
 
+variable "k3s_version" {
+  type        = string
+  default     = null
+  nullable    = true
+  description = "Optional k3s version to install (INSTALL_K3S_VERSION), for example v1.32.2+k3s1. When unset, the installer downloads from the stable channel."
+}
+
 variable "host_instances" {
   description = <<EOT
 Hosts to Create:
