@@ -40,10 +40,11 @@ runcmd:
   - |
     INSTALL_K3S_EXEC=""
     TF_K3S_NODE_EXTERNAL_IP=${TF_K3S_NODE_EXTERNAL_IP}
+    TF_K3S_VERSION="${TF_K3S_VERSION}"
     if [ -n "$TF_K3S_NODE_EXTERNAL_IP" ]; then
       INSTALL_K3S_EXEC="--node-external-ip $TF_K3S_NODE_EXTERNAL_IP"
     fi
-    curl -sfL https://get.k3s.io | K3S_URL=https://${TF_K3S_SERVER_IP_ADDRESS}:6443 K3S_TOKEN="${TF_K3S_TOKEN}" INSTALL_K3S_EXEC="$INSTALL_K3S_EXEC" sh -
+    curl -sfL https://get.k3s.io | K3S_URL=https://${TF_K3S_SERVER_IP_ADDRESS}:6443 K3S_TOKEN="${TF_K3S_TOKEN}" INSTALL_K3S_VERSION="$TF_K3S_VERSION" INSTALL_K3S_EXEC="$INSTALL_K3S_EXEC" sh -
   - echo "Completed Installing K3S"
  # - sudo chmod 644 /etc/rancher/k3s/k3s.yaml
 

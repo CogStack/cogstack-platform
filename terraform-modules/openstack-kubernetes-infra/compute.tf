@@ -127,6 +127,7 @@ data "cloudinit_config" "init_docker" {
         TF_K3S_TOKEN             = random_password.k3s_token.result
         TF_K3S_SERVER_IP_ADDRESS = openstack_compute_instance_v2.kubernetes_server.access_ip_v4
         TF_K3S_NODE_EXTERNAL_IP  = each.value.floating_ip != null && each.value.floating_ip.use_floating_ip ? each.value.floating_ip.address : ""
+        TF_K3S_VERSION           = var.k3s_version != null ? var.k3s_version : ""
       }
     )
   }
@@ -145,6 +146,7 @@ data "cloudinit_config" "init_docker_controller" {
         TF_K3S_TOKEN            = random_password.k3s_token.result
         TF_K3S_TLS_SAN          = local.controller_host_has_floating_ip ? local.controller_host.floating_ip.address : ""
         TF_K3S_NODE_EXTERNAL_IP = local.controller_host_has_floating_ip ? local.controller_host.floating_ip.address : ""
+        TF_K3S_VERSION          = var.k3s_version != null ? var.k3s_version : ""
       }
     )
   }
