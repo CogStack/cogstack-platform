@@ -4,7 +4,7 @@ This is an example deployment of CogStack in Azure.
 
 The recommended deployment of CogStack in Azure is based on using Kubernetes through Azure Kubernetes Service.
 
-This example will create a AKS cluster, setup any necessary config, deploy CogStack to the cluster, and test that it is available. It will create publically accessible services, so is not suitable for production deployment. 
+This example will create a AKS cluster, setup any necessary config, deploy CogStack Community to the cluster, and test that it is available. We will deploy the CogStack Community Edition in this tutorial, see here for everything you will get https://docs.cogstack.org/en/latest/cogstack-ce/_index/
 
 We create a cluster following the Official Azure Verified Modules patterns in https://azure.github.io/Azure-Verified-Modules/indexes/terraform/tf-pattern-modules/ to create AKS clusters with their recommended defaults. 
 
@@ -55,14 +55,41 @@ terraform apply --auto-approve
 
 ### 3. Accessing the CogStack Platform
 
-Once the deployment is complete and all services are running, you can access the CogStack platform and its components using the following URLs:
+Once the deployment is complete and all services are running, you can access the CogStack platform and its components.
 
-TODO: Create a public ingress url
+We will use kubernetes port-forwarding to make the services accessible locally.
+
+Run this command:
+
 ```bash
-# terraform output service_urls
-kubectl port-forward deployment/medcat-service-terraform-medcat-service-helm 5000:5000
-http://localhost:5000/demo
+terraform output -raw cogstack_notes | bash
 ```
+
+The console will now print all the URLs you can visit to access your CogStack deployment.
+
+<!-- termynal -->
+```bash
+$ terraform output -raw cogstack_notes | bash
+Forwarding from 127.0.0.1:5001 -> 5000
+Forwarding from [::1]:5001 -> 5000
+Forwarding from 127.0.0.1:5000 -> 5000
+Forwarding from [::1]:5000 -> 5000
+Visit http://127.0.0.1:5000 to use MedCAT Service
+Visit http://127.0.0.1:5001 to use AnonCAT
+Visit http://127.0.0.1:8080 to use MedCAT Trainer
+Visit https://127.0.0.1:9200 to use OpenSearch
+Visit http://127.0.0.1:5601 to use OpenSearch Dashboards
+Visit http://127.0.0.1:8000 to use jupyterhub
+Visit http://127.0.0.1:8000/user/admin/notebooks/medcat-service-tutorial.ipynb to get started with a tutorial
+```
+
+### 4. Continue with the CogStack Tutorials
+
+You've now got a fully working deployment of CogStack Community Edition!
+
+Now you can look at the product tour and interactively follow along with this: https://docs.cogstack.org/en/latest/cogstack-ce/product-tour/ .
+
+You've already port-forwarded the services, so you should be able to just open all the URLs and try out the applications.
 
 
 ### Optional - Destroy
@@ -106,10 +133,5 @@ You can then interact with kubernetes via the CLI for example:
 
 ```bash
 # Run Medcat service
-helm install my-medcat oci://registry-1.docker.io/cogstacksystems/medcat-service-helm --wait --timeout 10m0s
-
-# Create the ingress
-kubectl apply -f resources/ingress-medcat-service.yaml
-# Find public url
-kubectl get ingress
+helm install medcat-service oci://registry-1.docker.io/cogstacksystems/medcat-service-helm --wait --timeout 10m0s
 ```
