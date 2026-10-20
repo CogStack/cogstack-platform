@@ -1,3 +1,16 @@
+resource "helm_release" "cogstack-ce" {
+  name         = "cogstack"
+  chart        = "oci://registry-1.docker.io/cogstacksystems/cogstack-ce-helm"
+  version      = "0.6.0"
+  timeout      = 600
+  atomic       = true
+  render_subchart_notes = false
+  values = [ <<EOT
+    opensearch:
+      replicas: 1
+    EOT
+  ]
+}
 
 provider "helm" {
   kubernetes = {
@@ -9,42 +22,10 @@ provider "kubernetes" {
   config_path = var.kubeconfig_file
 }
 
-resource "kubernetes_ingress_class" "application_load_balancer" {
-  # An Application Load Balancer  is required in order to create public URLs. 
-  # The load balancer controller creates instances of the ALB when it sees ingress objects with the right annotations.
-  metadata {
-    name = "alb"
-    labels = {
-      "app.kubernetes.io/name" = "LoadBalancerController"
-    }
-  }
-  spec {
-    controller = "eks.amazonaws.com/alb"
-  }
+variable "kubeconfig_file" {
+  description = "Path to the generated KUBECONFIG file used to connect to kubernetes"
 }
 
-
-locals {
-  services = {
-    medcat_service = {
-      path_prefix = "medcat-service"
-    }
-  }
+output "cogstack_notes" {
+  value = helm_release.cogstack-ce.metadata.notes
 }
-module "cogstack_helm_services" {
-  depends_on            = [kubernetes_ingress_class.application_load_balancer]
-source                = "github.com/CogStack/cogstack-platform-toolkit//deployment/terraform/modules/cogstack-helm-services?ref=terraform-modules-v0.1.0"
-  medcat_service_values = <<EOT
-ingress:
-    annotations:
-        alb.ingress.kubernetes.io/scheme: internet-facing
-        alb.ingress.kubernetes.io/target-type: ip
-        alb.ingress.kubernetes.io/healthcheck-path: /api/health/live
-    className: alb
-    http:
-    - paths:
-        - path: /${local.services.medcat_service.path_prefix}
-          pathType: Prefix
-EOT
-}
-
