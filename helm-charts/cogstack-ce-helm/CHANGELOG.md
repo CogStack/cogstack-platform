@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/CogStack/cogstack-platform/compare/helm-charts/cogstack-ce-helm-v0.6.0...helm-charts/cogstack-ce-helm-v0.6.1) (2026-10-20)
+
+
+### Bug Fixes
+
+* **helm:** Trainer strategy should be recreate ([#172](https://github.com/CogStack/cogstack-platform/issues/172)) ([0cdac76](https://github.com/CogStack/cogstack-platform/commit/0cdac7628abcb3f0193445611cd6dbf72588d8d4))
+
 ## [0.6.0](https://github.com/CogStack/cogstack-platform/compare/helm-charts/cogstack-ce-helm-v0.5.0...helm-charts/cogstack-ce-helm-v0.6.0) (2026-10-20)
 
 
