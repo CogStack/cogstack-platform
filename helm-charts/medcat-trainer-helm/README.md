@@ -90,7 +90,6 @@ These features are not yet existing but to be added in future:
 | nginx.image.repository | string | `"nginx"` | Image repository for the nginx server |
 | nginx.image.tag | string | `"1.29.1"` | This sets the image tag for the nginx server |
 | nginx.resources | object | `{}` | Resources for the nginx container. More information can be found here: https://kubernetes.io/docs/concepts/containers/ |
-| nginxUpdateStrategy.type | string | `"RollingUpdate"` |  |
 | nodeSelector | object | `{}` |  |
 | persistence.media.size | string | `"8Gi"` |  |
 | persistence.sqlite.backupDbSize | string | `"300Mi"` |  |
@@ -153,7 +152,7 @@ These features are not yet existing but to be added in future:
 | tracing.otlp.http.endpoint | string | `"http://unused:4318"` |  |
 | tracing.resourceAttributes | object | Adds semantic k8s attributes for tracing | Resource attributes to add to the traces. Can be templated |
 | tracing.serviceName | string | `"medcat-trainer"` |  |
-| updateStrategy.type | string | `"RollingUpdate"` | Used for Kubernetes deployment .spec.strategy.type. Allowed values are "Recreate" or "RollingUpdate". |
+| updateStrategy.type | string | `"Recreate"` | Used for Kubernetes deployment .spec.strategy.type. Allowed values are "Recreate" or "RollingUpdate". |
 | volumeMounts | list | `[]` | Additional volumeMounts on the output Deployment definition. |
 | volumes | list | `[]` | Additional volumes on the output Deployment definition. |
 
