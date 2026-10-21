@@ -38,7 +38,13 @@ There are public models available, that will require a NIH profile or UMLS licen
 !!! tip
     For access to high performing models trained on real world clinical datasets, contact us
 
+
+## Architecture
+
+See [CogStack CE architecture](./reference.md) for a diagram of the deployed services and how the tutorials connect them.
+
 ## Next Steps
 After setting up and trying CogStack Community edition, you can look into the details and wider tools in the platform
 
 - [Getting Started with CogStack Platform](../overview/getting-started.md)
+- View the cloud deployment examples for running it in [AWS](../platform/deployment/examples/aws-kubernetes-eks.md) or [Azure](../platform/deployment/examples/azure-kubernetes-aks.md)

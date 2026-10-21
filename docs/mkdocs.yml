@@ -109,6 +109,7 @@ nav:
 
   - CogStack Community Edition:
       - Overview: cogstack-ce/_index.md
+      - Architecture: cogstack-ce/reference.md
       - Quickstart: cogstack-ce/tutorial/quickstart-installation.md
       - Product Tour: cogstack-ce/product-tour.md
       - Tutorials:
