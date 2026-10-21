@@ -6,6 +6,11 @@ CogStack CE aims to show what is possible with the open source CogStack products
 
 It is installed with a one line command, and comes preconfigured with default data sets, configurations, and example dashboards already setup for you. It is built to run in Kubernetes, from local instances using Minikube, and scale up to production clusters and managed cloud environments.
 
+## Where to start
+
+1. [Quickstart](./tutorial/quickstart-installation.md) for the installation
+2. [Product Tour](./product-tour/) to see examples of the features
+
 ## What is included in CogStack CE?
 
 It combines model serving, de-identification, model training, notebook-based analysis, and search tooling into one Helm release.
@@ -18,10 +23,8 @@ It combines model serving, de-identification, model training, notebook-based ana
 | JupyterHub | Run notebooks for experimentation and end-to-end workflows. |
 | OpenSearch + Dashboards | Index, search, and explore operational or NLP data. |
 
-## Where to start
+![CogStack CE Architecture](./assets/cogstack-ce-architecture.png)
 
-1. [Quickstart](./tutorial/quickstart-installation.md) for the installation
-2. [Product Tour](./tutorial/end-to-end-jupyterhub.md)
 
 ## Installation and customization (reference)
 
@@ -38,7 +41,13 @@ There are public models available, that will require a NIH profile or UMLS licen
 !!! tip
     For access to high performing models trained on real world clinical datasets, contact us
 
+
+## Architecture
+
+See [CogStack CE architecture](./reference.md) for a diagram of the deployed services and how the tutorials connect them.
+
 ## Next Steps
 After setting up and trying CogStack Community edition, you can look into the details and wider tools in the platform
 
 - [Getting Started with CogStack Platform](../overview/getting-started.md)
+- View the cloud deployment examples for running it in [AWS](../platform/deployment/examples/aws-kubernetes-eks.md) or [Azure](../platform/deployment/examples/azure-kubernetes-aks.md)
