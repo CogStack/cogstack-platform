@@ -104,6 +104,24 @@ http://{{ include "anoncat-service.service-name" . }}:{{ include "anoncat-servic
 {{- end -}}
 {{- end -}}
 
+{{- define "ocr-service.service-name" -}}
+{{ include "ocr-service-helm.fullname" (dict "Values" .Values "Chart" (dict "Name" "ocr-service") "Release" .Release ) }}
+{{- end -}}
+
+{{- define "ocr-service.port" -}}
+{{ index .Values "ocr-service" "service" "port" }}
+{{- end -}}
+
+{{- define "ocr-service.url" -}}
+{{- $url := (index .Values "ocr-service" "url") | default "" -}}
+{{- if $url -}}
+{{ $url }}
+{{- else if not (index .Values "ocr-service" "enabled") -}}
+"unset"
+{{- else -}}
+http://{{ include "ocr-service.service-name" . }}:{{ include "ocr-service.port" . }}
+{{- end -}}
+{{- end -}}
 
 
 {{- define "opensearch.url" -}}

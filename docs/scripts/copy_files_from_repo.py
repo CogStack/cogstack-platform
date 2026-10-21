@@ -29,6 +29,10 @@ COPY_SPECS = [
         "sourceFilePath": "helm-charts/cogstack-jupyterhub-helm/examples/medcat-opensearch-e2e.ipynb",
         "outputFilePath": "cogstack-ce/tutorial/medcat-opensearch-e2e.ipynb",
     },
+    {
+        "sourceFilePath": "helm-charts/cogstack-jupyterhub-helm/examples/ocr-service-tutorial.ipynb",
+        "outputFilePath": "data-engineering/ocr-service-tutorial.ipynb",
+    },
 ]
 
 

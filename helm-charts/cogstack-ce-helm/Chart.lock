@@ -1,13 +1,13 @@
 dependencies:
 - name: medcat-service-helm
   repository: file://../medcat-service-helm
-  version: 0.5.0
+  version: 0.6.0
 - name: medcat-service-helm
   repository: file://../medcat-service-helm
-  version: 0.5.0
+  version: 0.6.0
 - name: medcat-trainer-helm
   repository: file://../medcat-trainer-helm
-  version: 0.5.0
+  version: 0.5.1
 - name: opensearch
   repository: https://opensearch-project.github.io/helm-charts/
   version: 3.5.0
@@ -17,5 +17,8 @@ dependencies:
 - name: cogstack-jupyterhub-helm
   repository: file://../cogstack-jupyterhub-helm
   version: 0.0.1
-digest: sha256:53f0d3986395d1e402a5409d7b69beb576ead2376630a05f608e44acd451c2c9
-generated: "2026-09-17T09:23:54.811701571Z"
+- name: ocr-service-helm
+  repository: file://../ocr-service-helm
+  version: 0.1.0
+digest: sha256:f03a094b399753bca80b2ebe922bdd1f365bcde4f3c0d5c4d678b61b3834c3c2
+generated: "2026-10-21T09:43:39.637902212Z"

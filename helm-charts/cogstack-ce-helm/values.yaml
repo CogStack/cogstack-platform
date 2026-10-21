@@ -38,6 +38,17 @@ medcat-service:
   # -- MedCAT service image tag.
   # tag: "1.3.0"
 
+ocr-service:
+  # -- Enable MedCAT service deployment.
+  enabled: true
+  # -- Number of MedCAT service replicas.
+  replicasCount: 1
+  # image:
+  # -- OCR service image repository.
+  # repository: cogstacksystems/ocr-service
+  # -- OCR service image tag.
+  # tag: "1.1.1"
+
 medcat-trainer:
   # -- Enable MedCAT Trainer deployment.
   enabled: true
@@ -126,3 +137,9 @@ cogstack-jupyterhub:
             configMapKeyRef:
               name: cogstack-ce-helm-jupyterhub-config
               key: ANONCAT_SERVICE_URL
+        OCR_SERVICE_URL:
+          name: OCR_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: cogstack-ce-helm-jupyterhub-config
+              key: OCR_SERVICE_URL

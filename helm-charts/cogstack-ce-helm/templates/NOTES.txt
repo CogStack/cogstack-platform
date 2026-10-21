@@ -36,6 +36,13 @@ export JUPYTERHUB_PROXY_SERVICE_PORT=$(kubectl get svc $JUPYTERHUB_PROXY_PUBLIC_
 kubectl --namespace {{ .Release.Namespace }} port-forward svc/$JUPYTERHUB_PROXY_PUBLIC_SERVICE 8000:$JUPYTERHUB_PROXY_SERVICE_PORT &
 {{- end }}
 
+{{- if index .Values "ocr-service" "enabled" }}
+# 5. OCR Service
+export OCR_SERVICE_POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name=ocr-service,app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
+export CONTAINER_PORT=$(kubectl get pod --namespace {{ .Release.Namespace }} $OCR_SERVICE_POD_NAME -o jsonpath="{.spec.containers[0].ports[0].containerPort}")
+kubectl --namespace {{ .Release.Namespace }} port-forward $OCR_SERVICE_POD_NAME 8090:$CONTAINER_PORT --pod-running-timeout=5m0s & 
+{{- end }}
+
 echo "Visit http://127.0.0.1:5000 to use MedCAT Service"
 echo "Visit http://127.0.0.1:5001 to use AnonCAT"
 echo "Visit http://127.0.0.1:8080 to use MedCAT Trainer"
@@ -43,6 +50,7 @@ echo "Visit http://127.0.0.1:8080 to use MedCAT Trainer"
 {{ if index .Values "opensearch-dashboards" "enabled" }}echo "Visit http://127.0.0.1:5601 to use OpenSearch Dashboards"{{- end }}
 {{ if index .Values "cogstack-jupyterhub" "enabled" }}echo "Visit http://127.0.0.1:8000 to use jupyterhub"{{- end }}
 {{ if index .Values "cogstack-jupyterhub" "enabled" }}echo "Visit http://127.0.0.1:8000/user/admin/notebooks/medcat-service-tutorial.ipynb to get started with a tutorial"{{- end }}
+{{ if index .Values "ocr-service" "enabled" }}echo "Visit http://127.0.0.1:8090/ to use OCR Service"{{- end }}
 
 # Setup Complete
 # Run this command line to setup port-forwarding and access services

@@ -87,6 +87,7 @@ kubectl delete namespace cogstack
 | file://../medcat-service-helm | medcat-service(medcat-service-helm) | >=0.0.1 |
 | file://../medcat-service-helm | anoncat-service(medcat-service-helm) | >=0.0.1 |
 | file://../medcat-trainer-helm | medcat-trainer(medcat-trainer-helm) | >=0.0.1 |
+| file://../ocr-service-helm | ocr-service(ocr-service-helm) | >=0.0.1 |
 | https://opensearch-project.github.io/helm-charts/ | opensearch | 3.5.0 |
 | https://opensearch-project.github.io/helm-charts/ | opensearch-dashboards | 3.5.0 |
 
@@ -111,6 +112,9 @@ kubectl delete namespace cogstack
 | cogstack-jupyterhub.jupyterhub.singleuser.extraEnv.ANONCAT_SERVICE_URL.valueFrom.configMapKeyRef.name | string | `"cogstack-ce-helm-jupyterhub-config"` |  |
 | cogstack-jupyterhub.jupyterhub.singleuser.extraEnv.MEDCAT_SERVICE_URL.valueFrom.configMapKeyRef.key | string | `"MEDCAT_SERVICE_URL"` |  |
 | cogstack-jupyterhub.jupyterhub.singleuser.extraEnv.MEDCAT_SERVICE_URL.valueFrom.configMapKeyRef.name | string | `"cogstack-ce-helm-jupyterhub-config"` |  |
+| cogstack-jupyterhub.jupyterhub.singleuser.extraEnv.OCR_SERVICE_URL.name | string | `"OCR_SERVICE_URL"` |  |
+| cogstack-jupyterhub.jupyterhub.singleuser.extraEnv.OCR_SERVICE_URL.valueFrom.configMapKeyRef.key | string | `"OCR_SERVICE_URL"` |  |
+| cogstack-jupyterhub.jupyterhub.singleuser.extraEnv.OCR_SERVICE_URL.valueFrom.configMapKeyRef.name | string | `"cogstack-ce-helm-jupyterhub-config"` |  |
 | cogstack-jupyterhub.jupyterhub.singleuser.image.name | string | `"cogstacksystems/jupyter-singleuser"` | JupyterHub singleuser image name. |
 | cogstack-jupyterhub.jupyterhub.singleuser.image.pullPolicy | string | `"IfNotPresent"` | JupyterHub singleuser image pull policy. |
 | cogstack-jupyterhub.jupyterhub.singleuser.image.tag | string | `"2.2.2"` | JupyterHub singleuser image tag. |
@@ -124,6 +128,8 @@ kubectl delete namespace cogstack
 | medcat-trainer.provisioning.enabled | bool | `true` | Enable provisioning of projects and models on startup. |
 | medcat-trainer.provisioning.existingConfigMap.name | string | `"cogstack-ce-helm-example-trainer-provisioining"` | Existing ConfigMap name containing the provisioning configuration. |
 | nameOverride | string | `""` | This is to override the chart name. |
+| ocr-service.enabled | bool | `true` | Enable MedCAT service deployment. |
+| ocr-service.replicasCount | int | `1` | Number of MedCAT service replicas. |
 | opensearch-dashboards.enabled | bool | `true` | Deploy an opensearch-dashboards instance |
 | opensearch.enabled | bool | `true` | Deploy an opensearch cluster |
 | opensearch.extraEnvs | list | Sets the initial admin password for OpenSearch | Extra environment variables to pass to OpenSearch. |
