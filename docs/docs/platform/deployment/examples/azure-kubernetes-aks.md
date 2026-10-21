@@ -122,7 +122,7 @@ terraform destroy
 ```
 
 
-## Optionally use the K8s cluster as normal with the CLI
+## Optional - Use the kubectl CLI to interact with the cluster
 After setting up the cluster, it is possible to interact directly with it using the kubectl CLI
 
 The requirement is to get the KUBECONFIG file created by the terraform apply.
@@ -147,11 +147,8 @@ az aks get-credentials --resource-group $MY_RESOURCE_GROUP_NAME --name $MY_AKS_C
 You can then interact with kubernetes via the CLI for example:
 
 ```bash
+kubectl get pods
+
 # Run Medcat service
 helm install my-medcat oci://registry-1.docker.io/cogstacksystems/medcat-service-helm --wait --timeout 10m0s
-
-# Create the ingress
-kubectl apply -f resources/ingress-medcat-service.yaml
-# Find public url
-kubectl get ingress
 ```
