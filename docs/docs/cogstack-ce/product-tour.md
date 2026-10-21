@@ -24,7 +24,7 @@ In this tour, we will:
 
 ## Product Tour
 
-### Medcat Service
+### Annotate Entities - Medcat Service
 
 Open the MedCAT UI at `http://127.0.0.1:5000`, load the sample text, and click Annotate. The concepts and annotations will appear in the results panel on the right.
 
@@ -39,7 +39,7 @@ To learn more about MedCAT and related services, see [CogStack NLP on GitHub](ht
 
 By default the cogstack community edition uses a tiny model that only learned one concept, so it wont give very good results if you try with other inputs. Check the medcat documentation for access to public models, or contact us if you want access to the best performing private models.
 
-### AnonCAT Service
+### Deidentify Notes - AnonCAT Service
 
 Open the AnonCAT UI at `http://127.0.0.1:5001`, load the sample, and click Annotate. The processed/anonymised output will be shown on the right.
 
@@ -51,7 +51,7 @@ To learn more about AnonCAT and related services, see [CogStack NLP on GitHub](h
   <source src="../../assets/tour/anoncat-service-demo.webm" type="video/webm">
 </video>
 
-### MedCAT Trainer
+### Train new Models - MedCAT Trainer
 
 Open MedCAT Trainer at `http://127.0.0.1:8080` and log in with your credentials. You should see it provisioned with two projects corresponding to the two services; open either project to view the documents and start annotating.
 
@@ -61,7 +61,7 @@ For a deeper guide to projects and annotation workflows, see the [MedCATtrainer 
   <source src="../../assets/tour/medcat-trainer-demo.webm" type="video/webm">
 </video>
 
-### JupyterHub
+### Integrate everything together - JupyterHub
 
 Open JupyterHub at `http://127.0.0.1:8000` and log in with your credentials, then wait for your server to start. Open the demo notebook and run it to see the example workflow.
 
@@ -77,7 +77,7 @@ For more details on the JupyterHub setup used here, see [CogStack Jupyter Hub on
   <source src="../../assets/tour/jupyterhub-demo.webm" type="video/webm">
 </video>
 
-### OpenSearch Dashboards
+### Analyse your data - OpenSearch Dashboards
 
 Open OpenSearch Dashboards at `http://127.0.0.1:5601` and log in with your credentials. Browse to Dashboards and open the sample dashboard to explore the visualisations.
 
