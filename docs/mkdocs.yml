@@ -35,6 +35,7 @@ nav:
       - Introduction: index.md
   - Data Engineering:
       - Overview: data-engineering/index.md
+      - OCR Service Tutorial: data-engineering/ocr-service-tutorial.ipynb
       - Major Changes: data-engineering/changes.md
 #      - Data pipelines: overview/Data pipelines.md
       - Elasticsearch: overview/Elasticsearch.md
