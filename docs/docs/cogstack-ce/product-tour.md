@@ -62,6 +62,7 @@ For a deeper guide to projects and annotation workflows, see the [MedCATtrainer 
 </video>
 
 ### Integrate everything together - JupyterHub
+Using JupyterHub we can now integrate all the services and get value out of your data using the CogStack Community Edition.
 
 Open JupyterHub at `http://127.0.0.1:8000` and log in with your credentials, then wait for your server to start. Open the demo notebook and run it to see the example workflow.
 
