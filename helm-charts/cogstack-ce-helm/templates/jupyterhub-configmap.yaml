@@ -5,3 +5,4 @@ metadata:
 data:
   MEDCAT_SERVICE_URL: {{ include "medcat-service.url" . }}
   ANONCAT_SERVICE_URL: {{ include "anoncat-service.url" . }}
+  OCR_SERVICE_URL: {{ include "ocr-service.url" . }}
