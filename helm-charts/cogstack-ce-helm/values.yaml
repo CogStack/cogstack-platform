@@ -54,7 +54,7 @@ medcat-trainer:
   enabled: true
   image:
     # -- MedCAT Trainer image tag (can be a digest-pinned tag).
-    tag: latest@sha256:103215a7540ad614c32866f4cb00ddd91e7aff37cea9abc25dc226c577f9506d
+    #tag: 3.9.0
   provisioning:
     # -- Enable provisioning of projects and models on startup.
     enabled: true
