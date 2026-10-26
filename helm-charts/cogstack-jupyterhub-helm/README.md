@@ -104,6 +104,7 @@ See [Enabling OIDC Authentication](https://github.com/CogStack/cogstack-jupyter-
 | jupyterhub.hub.extraConfig.01-prometheus-authentication | string | `"c.JupyterHub.authenticate_prometheus = False\n"` | Allow /hub/metrics to be scraped without authentication |
 | jupyterhub.hub.image.name | string | `"cogstacksystems/jupyter-hub"` | Image repository for the JupyterHub hub. |
 | jupyterhub.hub.image.pullPolicy | string | `"IfNotPresent"` | Pull policy for the JupyterHub hub. |
+| jupyterhub.hub.image.tag | string | `"2.3.6"` | Image tag for the JupyterHub hub. |
 | jupyterhub.hub.networkPolicy.ingress[0].from[0].podSelector.matchLabels."app.kubernetes.io/name" | string | `"prometheus"` |  |
 | jupyterhub.hub.networkPolicy.ingress[0].ports[0].port | string | `"http"` |  |
 | jupyterhub.hub.networkPolicy.ingress[0].ports[0].protocol | string | `"TCP"` |  |
