@@ -52,7 +52,7 @@ ocr-service:
 medcat-trainer:
   # -- Enable MedCAT Trainer deployment.
   enabled: true
-  image:
+  # image:
     # -- MedCAT Trainer image tag (can be a digest-pinned tag).
     # tag: 3.9.0
   provisioning:
