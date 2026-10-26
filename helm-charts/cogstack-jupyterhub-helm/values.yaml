@@ -5,7 +5,7 @@ jupyterhub:
         # -- Image repository for the JupyterHub hub.
       name: cogstacksystems/jupyter-hub
       # -- Image tag for the JupyterHub hub.
-      tag: "2.2.2"
+      tag: "2.3.6"
       # -- Pull policy for the JupyterHub hub.
       pullPolicy: IfNotPresent
 
@@ -62,7 +62,7 @@ jupyterhub:
   singleuser:
     image:
       name: cogstacksystems/jupyter-singleuser
-      tag: "2.2.2"
+      tag: "2.3.6"
       pullPolicy: IfNotPresent
     lifecycleHooks:
       # -- Lifecycle hook to copy notebooks from image to PVC on first run

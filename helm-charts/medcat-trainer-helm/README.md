@@ -71,6 +71,7 @@ These features are not yet existing but to be added in future:
 | hostAliases | list | `[]` | Host aliases for the pod |
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
 | image.repository | string | `"cogstacksystems/medcat-trainer"` | Image repository for the MedCAT service container |
+| image.tag | string | `""` |  |
 | imagePullSecrets | list | `[]` | This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
 | ingress.annotations | object | `{}` |  |
 | ingress.className | string | `""` |  |

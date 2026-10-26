@@ -124,7 +124,7 @@ kubectl delete namespace cogstack
 | medcat-service.replicasCount | int | `1` | Number of MedCAT service replicas. |
 | medcat-trainer.enabled | bool | `true` | Enable MedCAT Trainer deployment. |
 | medcat-trainer.env.CSRF_TRUSTED_ORIGINS | string | `"http://localhost:8080"` | CSRF trusted origins for the MedCAT Trainer frontend (set for your deployment/port-forward). |
-| medcat-trainer.image.tag | string | `"latest@sha256:103215a7540ad614c32866f4cb00ddd91e7aff37cea9abc25dc226c577f9506d"` | MedCAT Trainer image tag (can be a digest-pinned tag). |
+| medcat-trainer.provisioning | object | `{"enabled":true,"existingConfigMap":{"name":"cogstack-ce-helm-example-trainer-provisioining"}}` | MedCAT Trainer image tag (can be a digest-pinned tag). tag: 3.9.0 |
 | medcat-trainer.provisioning.enabled | bool | `true` | Enable provisioning of projects and models on startup. |
 | medcat-trainer.provisioning.existingConfigMap.name | string | `"cogstack-ce-helm-example-trainer-provisioining"` | Existing ConfigMap name containing the provisioning configuration. |
 | nameOverride | string | `""` | This is to override the chart name. |

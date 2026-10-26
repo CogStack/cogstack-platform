@@ -2,7 +2,7 @@
 export MINIKUBE_HOME="$HOME/.minikube-${HOSTNAME}"
 export KUBECONFIG="$HOME/.kube/config-${HOSTNAME}"
 minikube start -p cogstack-platform --cni=calico --cpus=no-limit --memory=no-limit
-minikube addons enable metrics-server
+minikube addons enable metrics-server -p cogstack-platform
 
 minikube dashboard --url=true &
 

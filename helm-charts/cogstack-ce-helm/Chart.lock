@@ -16,9 +16,9 @@ dependencies:
   version: 3.5.0
 - name: cogstack-jupyterhub-helm
   repository: file://../cogstack-jupyterhub-helm
-  version: 0.0.1
+  version: 0.5.0
 - name: ocr-service-helm
   repository: file://../ocr-service-helm
   version: 0.1.0
-digest: sha256:f03a094b399753bca80b2ebe922bdd1f365bcde4f3c0d5c4d678b61b3834c3c2
-generated: "2026-10-21T09:43:39.637902212Z"
+digest: sha256:ef731aed7412de9d517125da8e52ce751008c1ff7c4923c40dcfd453e357b460
+generated: "2026-10-26T15:26:36.249703048Z"

@@ -104,7 +104,7 @@ See [Enabling OIDC Authentication](https://github.com/CogStack/cogstack-jupyter-
 | jupyterhub.hub.extraConfig.01-prometheus-authentication | string | `"c.JupyterHub.authenticate_prometheus = False\n"` | Allow /hub/metrics to be scraped without authentication |
 | jupyterhub.hub.image.name | string | `"cogstacksystems/jupyter-hub"` | Image repository for the JupyterHub hub. |
 | jupyterhub.hub.image.pullPolicy | string | `"IfNotPresent"` | Pull policy for the JupyterHub hub. |
-| jupyterhub.hub.image.tag | string | `"2.2.2"` | Image tag for the JupyterHub hub. |
+| jupyterhub.hub.image.tag | string | `"2.3.6"` | Image tag for the JupyterHub hub. |
 | jupyterhub.hub.networkPolicy.ingress[0].from[0].podSelector.matchLabels."app.kubernetes.io/name" | string | `"prometheus"` |  |
 | jupyterhub.hub.networkPolicy.ingress[0].ports[0].port | string | `"http"` |  |
 | jupyterhub.hub.networkPolicy.ingress[0].ports[0].protocol | string | `"TCP"` |  |
@@ -117,7 +117,7 @@ See [Enabling OIDC Authentication](https://github.com/CogStack/cogstack-jupyter-
 | jupyterhub.singleuser.fsGid | int | `0` |  |
 | jupyterhub.singleuser.image.name | string | `"cogstacksystems/jupyter-singleuser"` |  |
 | jupyterhub.singleuser.image.pullPolicy | string | `"IfNotPresent"` |  |
-| jupyterhub.singleuser.image.tag | string | `"2.2.2"` |  |
+| jupyterhub.singleuser.image.tag | string | `"2.3.6"` |  |
 | jupyterhub.singleuser.lifecycleHooks.postStart | object | `{"exec":{"command":["sh","-c","if [ ! -f /home/jovyan/work/.notebooks_initialized ]; then\n  echo \"First run - copying notebooks and medcat-scripts...\";\n  cp -r /srv/jupyterhub/notebooks/* /home/jovyan/work/;\n  cp -r /srv/jupyterhub/medcat-scripts /home/jovyan/work/;\n  touch /home/jovyan/work/.notebooks_initialized;\n  echo \"Notebooks initialized successfully\";\nelse\n  echo \"Notebooks already initialized - skipping\";\nfi\n"]}}` | Lifecycle hook to copy notebooks from image to PVC on first run |
 | jupyterhub.singleuser.networkPolicy.enabled | bool | `false` |  |
 | jupyterhub.singleuser.startTimeout | int | `600` |  |
