@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.2](https://github.com/CogStack/cogstack-platform/compare/helm-charts/medcat-trainer-helm-v0.5.1...helm-charts/medcat-trainer-helm-v0.5.2) (2026-10-26)
+
+
+### Dependencies
+
+* **helm:** Update trainer and jupyterhub image in helm ([#182](https://github.com/CogStack/cogstack-platform/issues/182)) ([0e3ba0d](https://github.com/CogStack/cogstack-platform/commit/0e3ba0de0573b88acb6063bdd9958460d5893037))
+
 ## [0.5.1](https://github.com/CogStack/cogstack-platform/compare/helm-charts/medcat-trainer-helm-v0.5.0...helm-charts/medcat-trainer-helm-v0.5.1) (2026-10-20)
 
 
