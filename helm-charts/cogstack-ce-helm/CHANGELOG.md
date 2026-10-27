@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.1](https://github.com/CogStack/cogstack-platform/compare/helm-charts/cogstack-ce-helm-v0.7.0...helm-charts/cogstack-ce-helm-v0.7.1) (2026-10-27)
+
+
+### Dependencies
+
+* **helm:** Update trainer and jupyterhub image in helm ([#182](https://github.com/CogStack/cogstack-platform/issues/182)) ([0e3ba0d](https://github.com/CogStack/cogstack-platform/commit/0e3ba0de0573b88acb6063bdd9958460d5893037))
+
 ## [0.7.0](https://github.com/CogStack/cogstack-platform/compare/helm-charts/cogstack-ce-helm-v0.6.1...helm-charts/cogstack-ce-helm-v0.7.0) (2026-10-23)
 
 
