@@ -10,7 +10,7 @@ It is installed with a one line command, and comes preconfigured with default da
 !!! tip AI Model Access
     The Cogstack CE runs with a basic open source AI model by default.
 
-    If you have a NIH / UMLS API key, you will be able to get a better performing model for free by following these steps [OSS Models](https://docs.cogstack.org/en/latest/medcat/medcat/docs/#available-models)
+    If you have a NIH / UMLS API key, you will be able to get a better performing model for free by following these steps: [CogStack Models](https://docs.cogstack.org/en/latest/medcat/medcat/docs/#available-models)
 
     For access to the proprietary best performing models trained on real world clinical datasets, contact us!
 
