@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.5.1](https://github.com/CogStack/cogstack-platform/compare/helm-charts/cogstack-jupyterhub-helm-v0.5.0...helm-charts/cogstack-jupyterhub-helm-v0.5.1) (2026-10-26)
+## [0.5.1](https://github.com/CogStack/cogstack-platform/compare/helm-charts/cogstack-jupyterhub-helm-v0.5.0...helm-charts/cogstack-jupyterhub-helm-v0.5.1) (2026-10-27)
 
 
 ### Dependencies
