@@ -9,6 +9,12 @@ The install should take around 15 minutes, and by the end of this tutorial you w
 - A Kubernetes cluster
 - Helm 3+
 
+You will need a running kubernetes cluster and helm for this to work.
+
+One easy option to get a local kubernetes is to use minikube, see https://minikube.sigs.k8s.io/docs/start/ for a guide. If you're running docker desktop, it also makes it easy to run one.
+
+Helm can be installed by following https://helm.sh/docs/intro/install/ . To directly quote that page if you just want to be quick, "Yes, you can `curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4 | bash` if you want to live on the edge."
+
 ## 1. Install CogStack CE
 
 Run:
