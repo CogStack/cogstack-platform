@@ -6,6 +6,15 @@ CogStack CE aims to show what is possible with the open source CogStack products
 
 It is installed with a one line command, and comes preconfigured with default data sets, configurations, and example dashboards already setup for you. It is built to run in Kubernetes, from local instances using Minikube, and scale up to production clusters and managed cloud environments.
 
+
+!!! tip AI Model Access
+    The Cogstack CE runs with a basic open source AI model by default.
+
+    If you have a NIH / UMLS API key, you will be able to get a better performing model for free by following these steps [OSS Models](https://docs.cogstack.org/en/latest/medcat/medcat/docs/#available-models)
+
+    For access to the proprietary best performing models trained on real world clinical datasets, contact us!
+
+
 ## Where to start
 
 1. [Quickstart](./tutorial/quickstart-installation.md) for the installation
@@ -22,6 +31,7 @@ It combines model serving, de-identification, model training, notebook-based ana
 | MedCAT Trainer | Train, tune, and manage MedCAT models. |
 | JupyterHub | Run notebooks for experimentation and end-to-end workflows. |
 | OpenSearch + Dashboards | Index, search, and explore operational or NLP data. |
+| OCR service | Run Optical Character Recognition to parse scanned docs into text |
 
 ![CogStack CE Architecture](./assets/cogstack-ce-architecture.png)
 
@@ -30,7 +40,8 @@ It combines model serving, de-identification, model training, notebook-based ana
 
 For the full installation reference, deployment instructions, and customizations, see:
 
-- [Deployment](../platform/deployment/index.md)
+- [Quickstart](./tutorial/quickstart-installation.md) for the installation
+- [Deployment](../platform/deployment/index.md) for in depth deployment options including how to run on the cloud
 - [CogStack CE Helm chart (install + customization)](../platform/deployment/helm/charts/cogstack-ce-helm.md)
 
 ## Models
