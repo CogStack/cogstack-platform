@@ -2,7 +2,7 @@ resource "openstack_compute_instance_v2" "kubernetes_server" {
 
   name      = local.prefix != "" ? "${local.prefix}-${local.controller_host.name}" : local.controller_host.name
   flavor_id = data.openstack_compute_flavor_v2.available_compute_flavors[local.controller_host.flavour].id
-  key_pair = openstack_compute_keypair_v2.compute_keypair.name
+  key_pair  = openstack_compute_keypair_v2.compute_keypair.name
 
   user_data = data.cloudinit_config.init_docker_controller.rendered
 
@@ -53,7 +53,7 @@ resource "openstack_compute_instance_v2" "kubernetes_nodes" {
 
   name      = local.prefix != "" ? "${local.prefix}-${each.value.name}" : each.value.name
   flavor_id = data.openstack_compute_flavor_v2.available_compute_flavors[each.value.flavour].id
-  key_pair = openstack_compute_keypair_v2.compute_keypair.name
+  key_pair  = openstack_compute_keypair_v2.compute_keypair.name
 
   user_data = data.cloudinit_config.init_docker[each.key].rendered
   security_groups = ["default",
