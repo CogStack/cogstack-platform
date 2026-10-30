@@ -4,7 +4,7 @@ variable "allowed_ingress_ips_cidr" {
   description = "CIDR Block that is allowed ingress to deployed services"
 }
 
-variable "ubuntu_immage_name" {
+variable "ubuntu_image_name" {
   type        = string
   description = "Name of an available Machine Image running ubuntu in the openstack environment"
 }
@@ -23,7 +23,7 @@ name = Human readable hostname for this host.
 is_controller = Must be true for exactly one host. This will run the k3s "server". All other nodes run the k3s "agent".
 flavour = The openstack_compute_flavor_v2 for the host
 volume_size = Size in GB for the disk volume for the node
-image_uuid = (Optional) The Openstack image you want to run, to override the default in ubuntu_immage_name
+image_uuid = (Optional) The Openstack image you want to run, to override the default in ubuntu_image_name
 floating_ip = (Optional) Floating IP configuration. Set use_floating_ip to true and provide address to associate a floating IP with this host
 EOT
   type = list(object({

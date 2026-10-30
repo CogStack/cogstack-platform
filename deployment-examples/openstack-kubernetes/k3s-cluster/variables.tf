@@ -19,7 +19,7 @@ variable "allowed_ingress_ips_cidr" {
   type        = string
 }
 
-variable "ubuntu_immage_name" {
+variable "ubuntu_image_name" {
   type        = string
   description = "Name of an available Machine Image running ubuntu in the openstack environment"
 }

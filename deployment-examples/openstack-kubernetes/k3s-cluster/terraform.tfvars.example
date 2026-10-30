@@ -7,4 +7,4 @@ openstack_environment = {
 
 allowed_ingress_ips_cidr = "10.0.0.1/23"
 
-ubuntu_immage_name = "my_ubuntu_image"
+ubuntu_image_name = "my_ubuntu_image"
