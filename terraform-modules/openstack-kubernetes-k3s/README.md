@@ -19,7 +19,8 @@ This example deploys a two node kubernetes cluster in Openstack with K3s.
 
 ```hcl
 module "openstack_kubernetes_cluster" {
-  source = "../.."
+  source  = "CogStack/kubernetes-k3s/openstack"
+  version = "0.1.0"
 
   ubuntu_image_name = "ubuntu-22.04"
   network = {
@@ -42,11 +43,11 @@ module "openstack_kubernetes_cluster" {
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_cloudinit"></a> [cloudinit](#provider\_cloudinit) | 2.4.1 |
-| <a name="provider_local"></a> [local](#provider\_local) | 2.9.1 |
-| <a name="provider_null"></a> [null](#provider\_null) | 3.3.2 |
-| <a name="provider_openstack"></a> [openstack](#provider\_openstack) | 3.0.0 |
-| <a name="provider_random"></a> [random](#provider\_random) | 3.9.1 |
+| <a name="provider_cloudinit"></a> [cloudinit](#provider\_cloudinit) | n/a |
+| <a name="provider_local"></a> [local](#provider\_local) | n/a |
+| <a name="provider_null"></a> [null](#provider\_null) | n/a |
+| <a name="provider_openstack"></a> [openstack](#provider\_openstack) | ~> 3.0.0 |
+| <a name="provider_random"></a> [random](#provider\_random) | n/a |
 
 
 
@@ -114,7 +115,8 @@ Please see this example for using this module with a custom network and floating
 
 ```hcl
 module "openstack_kubernetes_cluster" {
-  source = "../.."
+  source  = "CogStack/kubernetes-k3s/openstack"
+  version = "0.1.0"
 
   ubuntu_image_name = "ubuntu-22.04"
   network = {
@@ -163,3 +165,10 @@ data "openstack_networking_network_v2" "public" {
 
 When using a non-default network, ensure the controller host has a floating IP so Terraform can access it for provisioning.
 <!-- END_TF_DOCS -->
+
+
+## Contributing
+
+The source for this module lives in [CogStack/cogstack-platform](https://github.com/CogStack/cogstack-platform) at [`terraform-modules/openstack-kubernetes-k3s`](https://github.com/CogStack/cogstack-platform/tree/main/terraform-modules/openstack-kubernetes-k3s). Contribute by opening pull requests or forks against that repository, with your changes in that directory.
+
+[CogStack/terraform-openstack-kubernetes-k3s](https://github.com/CogStack/terraform-openstack-kubernetes-k3s) is a read-only mirror. When a tag is created in cogstack-platform as `terraform-modules/openstack-kubernetes-k3s-v*.*.*` all the files will be synced accross.
