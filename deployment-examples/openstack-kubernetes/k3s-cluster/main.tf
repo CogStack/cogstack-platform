@@ -17,7 +17,7 @@ module "openstack_cogstack_infra" {
     },
   ]
   allowed_ingress_ips_cidr = var.allowed_ingress_ips_cidr
-  ubuntu_immage_name       = var.ubuntu_immage_name
+  ubuntu_image_name       = var.ubuntu_image_name
   # generate_random_name_prefix = false
   # prefix                      = "dev"
   # network = {

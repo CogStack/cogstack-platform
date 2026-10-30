@@ -161,7 +161,7 @@ data "openstack_networking_network_v2" "network" {
 }
 
 data "openstack_images_image_v2" "ubuntu" {
-  name        = var.ubuntu_immage_name
+  name        = var.ubuntu_image_name
   most_recent = true
 }
 

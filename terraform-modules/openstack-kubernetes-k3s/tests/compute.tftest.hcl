@@ -28,7 +28,7 @@ run "server_and_node" {
   command = plan
 
   variables {
-    ubuntu_immage_name          = "ubuntu"
+    ubuntu_image_name          = "ubuntu"
     generate_random_name_prefix = false
     prefix                      = "test"
     network                     = { name = "public" }
@@ -58,7 +58,7 @@ run "required_only" {
   command = plan
 
   variables {
-    ubuntu_immage_name = "ubuntu"
+    ubuntu_image_name = "ubuntu"
     network            = { name = "public" }
     host_instances = [
       { name = "controller", is_controller = true, flavour = "m1.small" },
@@ -86,7 +86,7 @@ run "all_variables" {
   command = plan
 
   variables {
-    ubuntu_immage_name          = "ubuntu"
+    ubuntu_image_name          = "ubuntu"
     allowed_ingress_ips_cidr    = "10.1.2.0/24"
     k3s_version                 = "v1.32.2+k3s1"
     generate_random_name_prefix = false

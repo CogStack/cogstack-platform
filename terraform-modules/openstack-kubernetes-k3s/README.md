@@ -30,7 +30,7 @@ module "openstack_kubernetes_cluster" {
     name = "public"
   }
   allowed_ingress_ips_cidr = "0.0.0.0/24"
-  ubuntu_immage_name       = "ubuntu-22.04"
+  ubuntu_image_name       = "ubuntu-22.04"
   ssh_key_pair = {
     private_key_file = "~/.ssh/id_rsa",
     public_key_file  = "~/.ssh/id_rsa.pub",
