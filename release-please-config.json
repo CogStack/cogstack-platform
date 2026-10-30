@@ -131,6 +131,16 @@
                 { "type": "revert", "section": "Reverts" }
             ]
         },
+        "terraform-modules/openstack-kubernetes-k3s": {
+            "release-type": "simple",
+            "component": "terraform-modules/openstack-kubernetes-k3s",
+            "initial-version": "1.0.0",
+            "changelog-path": "CHANGELOG.md",
+            "bump-minor-pre-major": false,
+            "bump-patch-for-minor-pre-major": false,
+            "draft": false,
+            "prerelease": false
+        },
         "apps/ocr-service": {
             "release-type": "python",
             "component": "ocr-service",

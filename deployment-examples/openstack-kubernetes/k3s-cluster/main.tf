@@ -1,5 +1,5 @@
 module "openstack_cogstack_infra" {
-  source = "../../../deployment/terraform/modules/openstack-kubernetes-infra"
+  source = "../../../terraform-modules/openstack-kubernetes-k3s"
   host_instances = [
     {
       name          = "cogstack-k3s",

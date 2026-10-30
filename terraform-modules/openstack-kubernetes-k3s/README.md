@@ -16,7 +16,7 @@ Terraform Module for provisioning VMs on Openstack as a kubernetes cluster using
 
 ```hcl
 module "openstack_kubernetes_cluster" {
-  source = "../../modules/openstack-kubernetes-infra"
+  source = "../../modules/openstack-kubernetes-k3s"
   host_instances = [
     { name = "cogstack-k3s-server", is_controller = true, flavour = "m1.small" },
     { 
