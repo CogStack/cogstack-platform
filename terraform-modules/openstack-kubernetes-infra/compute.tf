@@ -2,8 +2,7 @@ resource "openstack_compute_instance_v2" "kubernetes_server" {
 
   name      = local.prefix != "" ? "${local.prefix}-${local.controller_host.name}" : local.controller_host.name
   flavor_id = data.openstack_compute_flavor_v2.available_compute_flavors[local.controller_host.flavour].id
-  key_pair  = openstack_compute_keypair_v2.compute_keypair.name
-  region    = "RegionOne"
+  key_pair = openstack_compute_keypair_v2.compute_keypair.name
 
   user_data = data.cloudinit_config.init_docker_controller.rendered
 
@@ -54,8 +53,7 @@ resource "openstack_compute_instance_v2" "kubernetes_nodes" {
 
   name      = local.prefix != "" ? "${local.prefix}-${each.value.name}" : each.value.name
   flavor_id = data.openstack_compute_flavor_v2.available_compute_flavors[each.value.flavour].id
-  key_pair  = openstack_compute_keypair_v2.compute_keypair.name
-  region    = "RegionOne"
+  key_pair = openstack_compute_keypair_v2.compute_keypair.name
 
   user_data = data.cloudinit_config.init_docker[each.key].rendered
   security_groups = ["default",
@@ -81,10 +79,9 @@ resource "openstack_compute_instance_v2" "kubernetes_nodes" {
 }
 
 locals {
-  is_default_network    = var.network != null && var.network == { name = "external_4003" }
-  nodes_with_exernal_ip = { for node in local.created_nodes : node.name => node if local.is_default_network || node.use_floating_ip }
-
+  nodes_with_exernal_ip = { for node in local.created_nodes : node.name => node if local.controller_host_has_floating_ip ? node.use_floating_ip : true }
 }
+
 resource "null_resource" "kubernetes_nodes_provisioner" {
   # Provisioner is only used to check for node readiness. Skip for any nodes that are not in the external network,
   # TODO: Filter this provisioner to only run on nodes that have a floating IP if the network is not default
@@ -159,7 +156,8 @@ data "openstack_compute_flavor_v2" "available_compute_flavors" {
 
 
 data "openstack_networking_network_v2" "network" {
-  name = var.network != null && var.network.name != null ? var.network.name : "external_4003"
+  count = var.network.network_id == null ? 1 : 0
+  name  = var.network.name
 }
 
 data "openstack_images_image_v2" "ubuntu" {

@@ -2,7 +2,7 @@
 locals {
   random_prefix = random_id.server.b64_url
   prefix        = var.prefix != null ? var.prefix : (var.generate_random_name_prefix ? local.random_prefix : "")
-  network_id    = var.network != null && var.network.network_id != null ? var.network.network_id : data.openstack_networking_network_v2.network.id
+  network_id    = var.network.network_id != null ? var.network.network_id : data.openstack_networking_network_v2.network[0].id
 }
 
 
