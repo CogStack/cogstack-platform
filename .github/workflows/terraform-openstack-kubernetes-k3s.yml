@@ -1,0 +1,46 @@
+# Mirror terraform-modules/openstack-kubernetes-k3s into the public
+# terraform-openstack-kubernetes-k3s repo (Terraform Registry source).
+# GitHub App (COGSTACK_CI_APP_*) must be installed on that repo with contents: write.
+name: Publish terraform-openstack-kubernetes-k3s
+
+on:
+  push:
+    tags:
+      - "terraform-modules/openstack-kubernetes-k3s-v*.*.*"
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    if: github.repository == 'CogStack/cogstack-platform'
+    steps:
+      - uses: actions/checkout@v7
+
+      - id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.COGSTACK_CI_APP_CLIENT_ID }}
+          private-key: ${{ secrets.COGSTACK_CI_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: terraform-openstack-kubernetes-k3s
+
+      - uses: actions/checkout@v7
+        with:
+          repository: ${{ github.repository_owner }}/terraform-openstack-kubernetes-k3s
+          token: ${{ steps.app-token.outputs.token }}
+          path: mirror
+
+      - run: |
+          VERSION="${GITHUB_REF_NAME##*-v}"
+          rsync -a --delete --exclude .git --exclude .terraform/ \
+            terraform-modules/openstack-kubernetes-k3s/ mirror/
+          cp LICENSE mirror/LICENSE
+          cd mirror
+          git config user.name github-actions[bot]
+          git config user.email github-actions[bot]@users.noreply.github.com
+          git add -A
+          git diff --cached --quiet || git commit -m "chore: sync v${VERSION}"
+          git tag "v${VERSION}"
+          git push origin HEAD:main "v${VERSION}"
