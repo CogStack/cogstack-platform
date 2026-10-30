@@ -28,7 +28,7 @@ floating_ip = (Optional) Floating IP configuration. Set use_floating_ip to true 
 EOT
   type = list(object({
     name          = string,
-    flavour       = optional(string, "2cpu4ram"),
+    flavour       = string,
     volume_size   = optional(number, 20),
     is_controller = optional(bool, false),
     image_uuid    = optional(string, null),
@@ -38,9 +38,6 @@ EOT
     }), null)
   }))
 
-  default = [
-    { name = "cogstack-devops", is_controller = true }
-  ]
   validation {
     condition     = length(var.host_instances) >= 1
     error_message = "Must have at least one host instance"
@@ -90,24 +87,24 @@ variable "prefix" {
 
 variable "network" {
   type = object({
-    name       = optional(string, "external_4003")
+    name       = optional(string)
     network_id = optional(string)
   })
-  default     = { name = "external_4003" }
-  description = "Network configuration. Either provide 'name' to lookup the network by name, or 'network_id' to use a network UUID directly. Defaults to name 'external_4003' if null"
+  description = "Network configuration. Either provide 'name' to lookup the network by name, or 'network_id' to use a network UUID directly."
   validation {
-    condition     = var.network == null || var.network.name != null || var.network.network_id != null
+    condition     = var.network.name != null || var.network.network_id != null
     error_message = "Either network.name or network.network_id must be provided"
   }
 }
 
-check "controller_floating_ip_required_for_non_default_network" {
+check "controller_floating_ip_required_when_using_floating_ips" {
   assert {
-    condition = (var.network == null
-      || (var.network.name == "external_4003" && var.network.network_id == null)
-    || (length([for host in var.host_instances : host if host.is_controller == true && host.floating_ip.use_floating_ip == true]) == 1))
+    condition = (
+      length([for host in var.host_instances : host if host.floating_ip != null && host.floating_ip.use_floating_ip == true]) == 0
+      || length([for host in var.host_instances : host if host.is_controller == true && host.floating_ip != null && host.floating_ip.use_floating_ip == true]) == 1
+    )
     error_message = <<-EOT
-When using a non-default network, the controller host should have a floating IP in order to be accessible by the terraform agent
+When using floating IPs, the controller host should have a floating IP in order to be accessible by the terraform agent
 EOT
   }
 }

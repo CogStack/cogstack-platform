@@ -18,16 +18,19 @@ Terraform Module for provisioning VMs on Openstack as a kubernetes cluster using
 module "openstack_kubernetes_cluster" {
   source = "../../modules/openstack-kubernetes-infra"
   host_instances = [
-    { name = "cogstack-k3s-server", is_controller = true },
+    { name = "cogstack-k3s-server", is_controller = true, flavour = "m1.small" },
     { 
       name          = "cogstack-k3s-node-2"
-      flavour       = "2cpu4ram"
+      flavour       = "m1.small"
       volume_size   = 20
       is_controller = false
     },
   ]
+  network = {
+    name = "public"
+  }
   allowed_ingress_ips_cidr = "0.0.0.0/24"
-  ubuntu_immage_name       = "Ubuntu_Jammy""
+  ubuntu_immage_name       = "ubuntu-22.04"
   ssh_key_pair = {
     private_key_file = "~/.ssh/id_rsa",
     public_key_file  = "~/.ssh/id_rsa.pub",
@@ -36,7 +39,7 @@ module "openstack_kubernetes_cluster" {
 ```
 
 ## Existing Network and Floating IPs
-You can use this module with a custom OpenStack network by specifying the `network` variable. By default, it will use the network named `"external_4003"`, but you can override this with your own network name or network ID. 
+You can use this module with a custom OpenStack network by specifying the `network` variable with your own network name or network ID. 
 
 Using a custom OpenStack network with your own subnet allows you to improve security by keeping most nodes private. This ensures worker nodes and other internal resources are not directly exposed, reducing security risks. Only the controller node needs a floating IP to be accessible in order to use the k8s api server (eg for kubectl to work from outside the network). Using floating ips will also have the advantage of being stable, so you can destroy/create VMs without having to update anywhere the IP address is referenced by reassigning the floating ip. 
 
@@ -49,6 +52,7 @@ host_instances = [
   {
     name = "controller"
     is_controller = true
+    flavour = "m1.small"
     floating_ip = {
       use_floating_ip = true
       address         = "203.0.113.10" # Address of an existing floating_ip in openstack
@@ -56,6 +60,7 @@ host_instances = [
   },
   {
     name = "worker"
+    flavour = "m1.small"
     # Optionally also assign a floating IP here, or leave blank to keep it internal to the network   
   }
   network = {
@@ -79,7 +84,7 @@ resource "openstack_networking_subnet_v2" "example_subnet"{
 resource "openstack_networking_router_v2" "example_router" {
   name                = "test-router"
   admin_state_up      = true
-  external_network_id = data.openstack_networking_network_v2.external_4003.id
+  external_network_id = data.openstack_networking_network_v2.public.id
 }
 ```
 
