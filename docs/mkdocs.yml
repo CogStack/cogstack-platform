@@ -83,7 +83,10 @@ nav:
           - Azure Kubernetes AKS: platform/deployment/examples/azure-kubernetes-aks.md
           - OpenStack Kubernetes K3s: platform/deployment/examples/openstack-kubernetes-k3s.md
           - OpenStack Docker: platform/deployment/examples/openstack-docker.md
-      - Docker Compose: platform/deployment/reference/docker-compose/_index.md
+      - Reference:
+          - Docker Compose: platform/deployment/reference/docker-compose/_index.md
+          - Terraform:
+              - OpenStack Kubernetes K3s: platform/deployment/reference/terraform/terraform-openstack-kubernetes-k3s.md
 
   - Observability:
       - Overview: platform/observability/index.md
