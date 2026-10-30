@@ -1,0 +1,61 @@
+formatter: markdown table
+
+output:
+  file: README.md
+  mode: inject
+
+sort:
+  enabled: true
+  by: required
+
+settings:
+  anchor: true
+  color: true
+  default: true
+  description: true
+  escape: true
+  hide-empty: true
+  html: true
+  indent: 2
+  lockfile: true
+  read-comments: true
+  required: true
+  sensitive: true
+  type: true
+
+content: |-
+  ## Example
+
+  This example deploys a two node kubernetes cluster in Openstack with K3s.
+
+  ```hcl
+  {{ include "examples/minimal/main.tf" }}
+  ```
+
+  {{ .Requirements }}
+
+  {{ .Providers }}
+
+  {{ .Modules }}
+
+  {{ .Resources }}
+
+  {{ .Inputs }}
+
+  {{ .Outputs }}
+
+  ## Existing Network and Floating IPs
+
+  You can use this module with a custom OpenStack network by specifying the `network` variable with your own network name or network ID.
+
+  Using a custom OpenStack network with your own subnet allows you to improve security by keeping most nodes private. This ensures worker nodes and other internal resources are not directly exposed, reducing security risks. Only the controller node needs a floating IP to be accessible in order to use the k8s api server (eg for kubectl to work from outside the network). Using floating ips will also have the advantage of being stable, so you can destroy/create VMs without having to update anywhere the IP address is referenced by reassigning the floating ip.
+
+  To use this configuration, you will probably need to assign a floating IP to the controller node so that it is accessible. You can configure floating IP assignment per node using the `floating_ip` block within each entry in the `host_instances` variable.
+
+  Please see this example for using this module with a custom network and floating IPs.
+
+  ```hcl
+  {{ include "examples/floating-ips/main.tf" }}
+  ```
+
+  When using a non-default network, ensure the controller host has a floating IP so Terraform can access it for provisioning.
