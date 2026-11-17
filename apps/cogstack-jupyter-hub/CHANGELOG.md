@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.3.9](https://github.com/CogStack/cogstack-platform/compare/cogstack-jupyter-hub-v2.3.8...cogstack-jupyter-hub-v2.3.9) (2026-11-17)
+
+
+### Dependencies
+
+* **jupyter:** bump pillow from 12.3.0 to 13.0.0 in /apps/cogstack-jupyter-hub ([#211](https://github.com/CogStack/cogstack-platform/issues/211)) ([87245f8](https://github.com/CogStack/cogstack-platform/commit/87245f8117bd19bdcff7f50c8968f445422558c5))
+* **jupyter:** bump pillow in /apps/cogstack-jupyter-hub ([87245f8](https://github.com/CogStack/cogstack-platform/commit/87245f8117bd19bdcff7f50c8968f445422558c5))
+
 ## [2.3.8](https://github.com/CogStack/cogstack-platform/compare/cogstack-jupyter-hub-v2.3.7...cogstack-jupyter-hub-v2.3.8) (2026-11-16)
 
 
