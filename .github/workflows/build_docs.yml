@@ -1,6 +1,6 @@
 # This is a simple action to check that the documentation is building.
 # Note the real documentation build is done by readthedocs externally, and none of the files created in this action are used.
-name: documentation-build
+name: build_docs
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
       - "docs-v*.*.*"
     paths:
       - "docs/**"
-      - ".github/workflows/doc-build**"
+      - ".github/workflows/build_docs.yml"
   release:
     types: [published]
 

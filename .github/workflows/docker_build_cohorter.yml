@@ -1,4 +1,4 @@
-name: ci-build-cohorter
+name: docker_build_cohorter
 
 on:
   push:
@@ -7,11 +7,11 @@ on:
       - "cohorter-v*.*.*" # e.g., cohorter-v1.2.3
     paths:
       - "apps/cogstack-cohorter/**"
-      - ".github/workflows/cogstack-cohorter-docker**"
+      - ".github/workflows/docker_build_cohorter.yml"
   pull_request:
     paths:
       - "apps/cogstack-cohorter/**"
-      - ".github/workflows/cogstack-cohorter-docker**"
+      - ".github/workflows/docker_build_cohorter.yml"
 
 jobs:
   docker-build-and-push:

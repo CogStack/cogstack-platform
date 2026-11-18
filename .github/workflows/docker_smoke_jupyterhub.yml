@@ -1,4 +1,4 @@
-name: docker-smoke-test
+name: docker_smoke_jupyterhub
 
 permissions:
   contents: read
@@ -9,11 +9,11 @@ on:
     tags: ['cogstack-jupyter-hub-v*.*.*']
     paths:
       - "apps/cogstack-jupyter-hub/**"
-      - ".github/workflows/docker-smoke-test.yml"
+      - ".github/workflows/docker_smoke_jupyterhub.yml"
   pull_request:
     paths:
       - "apps/cogstack-jupyter-hub/**"
-      - ".github/workflows/docker-smoke-test.yml"
+      - ".github/workflows/docker_smoke_jupyterhub.yml"
   workflow_dispatch:
 
 concurrency:

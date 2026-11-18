@@ -125,7 +125,7 @@ Copy an existing chart entry such as `deployment/charts/medcat-service-helm`. Ch
 }
 ```
 
-`.github/workflows/kubernetes-charts-build.yaml` already discovers every `deployment/charts/*/Chart.yaml` and publishes tags matching `helm-charts/*-v*.*.*`. Do not add a workflow or edit `release-please.yml` for a chart that fits this layout. Release-please writes `CHANGELOG.md` on the first release.
+`.github/workflows/build_helm_charts.yml` already discovers every `deployment/charts/*/Chart.yaml` and publishes tags matching `helm-charts/*-v*.*.*`. Do not add a workflow or edit `release_packages.yml` for a chart that fits this layout. Release-please writes `CHANGELOG.md` on the first release.
 
 ### 3. Update `.release-please-manifest.json`
 

@@ -1,4 +1,4 @@
-name: docker-multi-arch-template
+name: docker_template_ocr-service
 
 permissions:
   contents: read

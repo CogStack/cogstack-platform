@@ -1,4 +1,4 @@
-name: ci-build
+name: docker_build_observability
 
 on:
   push:
@@ -7,11 +7,11 @@ on:
       - "v*.*.*" # e.g., v0.1.1
     paths:
       - "observability/**"
-      - ".github/workflows/observability**"
+      - ".github/workflows/docker_build_observability.yml"
   pull_request:
     paths:
       - "observability/**"
-      - ".github/workflows/observability**"
+      - ".github/workflows/docker_build_observability.yml"
 
 jobs:
   docker:

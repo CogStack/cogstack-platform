@@ -1,4 +1,4 @@
-name: tests-ocr-service
+name: test_ocr-service
 
 permissions:
   contents: read
@@ -9,12 +9,16 @@ on:
     branches: [ "*" ]
     paths:
       - "apps/ocr-service/**"
-      - ".github/workflows/ocr-service-**"
+      - ".github/workflows/test_ocr-service.yml"
+      - ".github/workflows/docker_template_ocr-service.yml"
+      - ".github/workflows/docker_smoke_ocr-service.yml"
   pull_request:
     branches: [ "*" ]
     paths:
       - "apps/ocr-service/**"
-      - ".github/workflows/ocr-service-**"
+      - ".github/workflows/test_ocr-service.yml"
+      - ".github/workflows/docker_template_ocr-service.yml"
+      - ".github/workflows/docker_smoke_ocr-service.yml"
 
   release:
     types: [published]
@@ -71,7 +75,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: /var/cache/apt/archives
-          key: ${{ runner.os }}-apt-${{ hashFiles('.github/workflows/ocr-service-tests.yml') }}
+          key: ${{ runner.os }}-apt-${{ hashFiles('.github/workflows/test_ocr-service.yml') }}
           restore-keys: |
             ${{ runner.os }}-apt-
 

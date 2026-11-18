@@ -1,16 +1,20 @@
-name: docker-smoke-ocr-service
+name: docker_smoke_ocr-service
 
 on:
   push:
     branches: [ "*" ]
     paths:
       - "apps/ocr-service/**"
-      - ".github/workflows/ocr-service-**"
+      - ".github/workflows/test_ocr-service.yml"
+      - ".github/workflows/docker_template_ocr-service.yml"
+      - ".github/workflows/docker_smoke_ocr-service.yml"
   pull_request:
     branches: [ "*" ]
     paths:
       - "apps/ocr-service/**"
-      - ".github/workflows/ocr-service-**"
+      - ".github/workflows/test_ocr-service.yml"
+      - ".github/workflows/docker_template_ocr-service.yml"
+      - ".github/workflows/docker_smoke_ocr-service.yml"
   workflow_dispatch:
 
 permissions:

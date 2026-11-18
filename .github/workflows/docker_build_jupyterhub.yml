@@ -1,4 +1,4 @@
-name: docker-jupyter-hub-all
+name: docker_build_jupyterhub
 
 permissions:
   contents: read
@@ -9,11 +9,11 @@ on:
     tags: ['cogstack-jupyter-hub-v*.*.*']
     paths:
       - "apps/cogstack-jupyter-hub/**"
-      - ".github/workflows/docker-build.yml"
+      - ".github/workflows/docker_build_jupyterhub.yml"
   pull_request:
     paths:
       - "apps/cogstack-jupyter-hub/**"
-      - ".github/workflows/docker-build.yml"
+      - ".github/workflows/docker_build_jupyterhub.yml"
   workflow_dispatch:
 
 concurrency:

@@ -1,7 +1,7 @@
 # Mirror terraform-modules/openstack-kubernetes-k3s into the public
 # terraform-openstack-kubernetes-k3s repo (Terraform Registry source).
 # GitHub App (COGSTACK_CI_APP_*) must be installed on that repo with contents: write.
-name: Publish terraform-openstack-kubernetes-k3s
+name: publish_terraform_openstack_k3s
 
 on:
   push:
