@@ -1,4 +1,4 @@
-FROM traefik:v3.4
+FROM traefik:v3.7.19
 
 CMD [ \
     "--api.insecure=true", \
