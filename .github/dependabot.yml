@@ -9,7 +9,7 @@ updates:
   - package-ecosystem: "devcontainers"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     commit-message:
       prefix: "build"
     groups:
@@ -21,7 +21,7 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     commit-message:
       prefix: "build"
 
@@ -29,7 +29,7 @@ updates:
   - package-ecosystem: "docker"
     directory: "/apps/cogstack-jupyter-hub"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     registries:
       - dockerhub
     commit-message:
@@ -43,7 +43,7 @@ updates:
   - package-ecosystem: "uv"
     directory: "/apps/cogstack-jupyter-hub"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     commit-message:
       prefix: "build(jupyter)"
     groups:
