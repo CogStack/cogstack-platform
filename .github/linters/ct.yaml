@@ -2,7 +2,7 @@
 remote: origin
 target-branch: main
 chart-dirs:
-  - helm-charts
+  - deployment/charts
 helm-extra-args: --timeout 1000s
 chart-repos:
   - opensearch=https://opensearch-project.github.io/helm-charts

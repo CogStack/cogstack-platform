@@ -3,7 +3,7 @@ from __future__ import annotations
 """
 mkdocs-gen-files generator.
 
-This script copies each Helm chart's `helm-charts/<chart>/README.md` into the
+This script copies each Helm chart's `deployment/charts/<chart>/README.md` into the
 MkDocs documentation build output so it can be referenced from `mkdocs.yml`.
 
 Output filename format:
@@ -16,14 +16,14 @@ import mkdocs_gen_files  # type: ignore[import-not-found]
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-HELM_CHARTS_DIR = REPO_ROOT / "helm-charts"
+HELM_CHARTS_DIR = REPO_ROOT / "deployment" / "charts"
 
 # Output path is relative to MkDocs' `docs_dir` (configured in docs/mkdocs.yml).
 OUTPUT_DIR = Path("platform/deployment/helm/charts")
 
 
 def main() -> None:
-    """Generate MkDocs markdown pages for all Helm charts found in `helm-charts/`."""
+    """Generate MkDocs markdown pages for all Helm charts found in `deployment/charts/`."""
     for chart_dir in sorted(HELM_CHARTS_DIR.iterdir(), key=lambda p: p.name):
         if not chart_dir.is_dir():
             continue

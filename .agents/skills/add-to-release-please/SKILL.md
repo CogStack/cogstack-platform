@@ -30,9 +30,9 @@ The path is the package key in both config files (repo-relative directory). Conf
 | Kind | Path examples |
 |---|---|
 | App | `apps/cogstack-cohorter` |
-| Helm chart | `helm-charts/medcat-service-helm` |
+| Helm chart | `deployment/charts/medcat-service-helm` |
 
-Helm charts in this repo are top-level directories under `helm-charts/<chart>/` with a `Chart.yaml`. The package key is that directory. See [Helm charts](#helm-charts) before editing.
+Helm charts in this repo are directories under `deployment/charts/<chart>/` with a `Chart.yaml`. The package key is that directory. See [Helm charts](#helm-charts) before editing.
 
 ### 2. Update `release-please-config.json`
 
@@ -61,7 +61,7 @@ Add under `packages`. Match the file's 4-space indent.
 | `helm` | Chart dir with `Chart.yaml` | `version` |
 | `simple` | No single root version file, or nested API + frontend | CHANGELOG only; use `extra-files` for nested bumps |
 
-`component` is the git tag prefix: `{component}-v{version}` (e.g. `cohorter-v0.7.0`). For Helm charts in this repo, `component` is the package path (`helm-charts/<chart>`), so the tag is `helm-charts/<chart>-v<version>`.
+`component` is the git tag prefix: `{component}-v{version}` (e.g. `cohorter-v0.7.0`). Helm charts retain `helm-charts/<chart>` as their component, independently of their package path under `deployment/charts/`, so the tag remains `helm-charts/<chart>-v<version>`.
 
 **`extra-files`** (paths relative to the package directory) — e.g. python API + node frontend under `simple`:
 
@@ -102,12 +102,12 @@ This is sourced from [release-please#2561](https://github.com/googleapis/release
 
 ### Helm charts
 
-Copy an existing chart entry such as `helm-charts/medcat-service-helm`. Charts here always use `release-type` `helm`, `component` equal to the package key, and these changelog sections. Do not add `extra-files`.
+Copy an existing chart entry such as `deployment/charts/medcat-service-helm`. Charts here always use `release-type` `helm`, `component` `helm-charts/<chart>`, and these changelog sections. Do not add `extra-files`.
 
-`<chart>` is the directory name (for example `ocr-service-helm`). It must match `name` in `Chart.yaml`, and `Chart.yaml` must sit directly under `helm-charts/` (not nested).
+`<chart>` is the directory name (for example `ocr-service-helm`). It must match `name` in `Chart.yaml`, and the chart directory must sit directly under `deployment/charts/`.
 
 ```json
-"helm-charts/<chart>": {
+"deployment/charts/<chart>": {
     "release-type": "helm",
     "component": "helm-charts/<chart>",
     "changelog-path": "CHANGELOG.md",
@@ -125,7 +125,7 @@ Copy an existing chart entry such as `helm-charts/medcat-service-helm`. Charts h
 }
 ```
 
-`.github/workflows/kubernetes-charts-build.yaml` already discovers every `helm-charts/*/Chart.yaml` and publishes tags matching `helm-charts/*-v*.*.*`. Do not add a workflow or edit `release-please.yml` for a chart that fits this layout. Release-please writes `CHANGELOG.md` on the first release.
+`.github/workflows/kubernetes-charts-build.yaml` already discovers every `deployment/charts/*/Chart.yaml` and publishes tags matching `helm-charts/*-v*.*.*`. Do not add a workflow or edit `release-please.yml` for a chart that fits this layout. Release-please writes `CHANGELOG.md` on the first release.
 
 ### 3. Update `.release-please-manifest.json`
 
