@@ -169,6 +169,6 @@ When using a non-default network, ensure the controller host has a floating IP s
 
 ## Contributing
 
-The source for this module lives in [CogStack/cogstack-platform](https://github.com/CogStack/cogstack-platform) at [`terraform-modules/openstack-kubernetes-k3s`](https://github.com/CogStack/cogstack-platform/tree/main/terraform-modules/openstack-kubernetes-k3s). Contribute by opening pull requests or forks against that repository, with your changes in that directory.
+The source for this module lives in [CogStack/cogstack-platform](https://github.com/CogStack/cogstack-platform) at [`deployment/terraform/openstack-kubernetes-k3s`](https://github.com/CogStack/cogstack-platform/tree/main/deployment/terraform/openstack-kubernetes-k3s). Contribute by opening pull requests or forks against that repository, with your changes in that directory.
 
 [CogStack/terraform-openstack-kubernetes-k3s](https://github.com/CogStack/terraform-openstack-kubernetes-k3s) is a read-only mirror. When a tag is created in cogstack-platform as `terraform-modules/openstack-kubernetes-k3s-v*.*.*` all the files will be synced accross.

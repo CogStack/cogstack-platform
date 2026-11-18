@@ -17,7 +17,7 @@ EOT
 }
 resource "helm_release" "medcat-service" {
   name         = "medcat-service-terraform"
-  chart        = "${path.module}/../../deployment/charts/medcat-service-helm"
+  chart        = "${path.module}/../../charts/medcat-service-helm"
   timeout      = 600
   atomic       = true
   force_update = true
@@ -29,7 +29,7 @@ resource "helm_release" "medcat-service" {
 
 data "helm_template" "medcat-service" {
   name    = "medcat-service-terraform"
-  chart   = "${path.module}/../../deployment/charts/medcat-service-helm"
+  chart   = "${path.module}/../../charts/medcat-service-helm"
   timeout = 600
   atomic  = true
 
