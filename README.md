@@ -59,7 +59,7 @@ See the latest documentation on [Readthedocs](https://docs.cogstack.org/en/lates
       <sub>Cohort definition tooling with NL2DSL and web UI</sub>
     </td>
     <td align="center" valign="top" width="50%">
-      <a href="cogstack-dashboards-demo">
+      <a href="apps/cogstack-dashboards-demo">
         <img src="https://cdn.simpleicons.org/plotly/3F4F75" alt="CogStack Dashboards Demo" height="56"/>
         <br/><strong>CogStack Dashboards Demo</strong>
       </a>
