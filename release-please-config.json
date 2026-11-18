@@ -131,7 +131,7 @@
                 { "type": "revert", "section": "Reverts" }
             ]
         },
-        "terraform-modules/openstack-kubernetes-k3s": {
+        "deployment/terraform/openstack-kubernetes-k3s": {
             "release-type": "simple",
             "component": "terraform-modules/openstack-kubernetes-k3s",
             "initial-version": "0.1.0",

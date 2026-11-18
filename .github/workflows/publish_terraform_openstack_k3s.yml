@@ -1,4 +1,4 @@
-# Mirror terraform-modules/openstack-kubernetes-k3s into the public
+# Mirror deployment/terraform/openstack-kubernetes-k3s into the public
 # terraform-openstack-kubernetes-k3s repo (Terraform Registry source).
 # GitHub App (COGSTACK_CI_APP_*) must be installed on that repo with contents: write.
 name: publish_terraform_openstack_k3s
@@ -35,7 +35,7 @@ jobs:
       - run: |
           VERSION="${GITHUB_REF_NAME##*-v}"
           rsync -a --delete --exclude .git --exclude .terraform/ \
-            terraform-modules/openstack-kubernetes-k3s/ mirror/
+            deployment/terraform/openstack-kubernetes-k3s/ mirror/
           cp LICENSE mirror/LICENSE
           cd mirror
           git config user.name github-actions[bot]
