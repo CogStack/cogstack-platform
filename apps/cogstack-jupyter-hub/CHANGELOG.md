@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.3.10](https://github.com/CogStack/cogstack-platform/compare/cogstack-jupyter-hub-v2.3.9...cogstack-jupyter-hub-v2.3.10) (2026-11-18)
+
+
+### Dependencies
+
+* **jupyter:** bump the uv-deps group ([6e9a3cd](https://github.com/CogStack/cogstack-platform/commit/6e9a3cdc1fe9e3ab70ae023e7bfb8c70a4dc18fe))
+* **jupyter:** bump the uv-deps group in /apps/cogstack-jupyter-hub with 3 updates ([#214](https://github.com/CogStack/cogstack-platform/issues/214)) ([6e9a3cd](https://github.com/CogStack/cogstack-platform/commit/6e9a3cdc1fe9e3ab70ae023e7bfb8c70a4dc18fe))
+
 ## [2.3.9](https://github.com/CogStack/cogstack-platform/compare/cogstack-jupyter-hub-v2.3.8...cogstack-jupyter-hub-v2.3.9) (2026-11-17)
 
 
