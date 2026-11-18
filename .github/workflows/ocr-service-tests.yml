@@ -90,7 +90,6 @@ jobs:
           # add extra repos
           sudo apt-add-repository -y -n multiverse
           sudo apt-add-repository -y -n universe
-          sudo add-apt-repository -y -n ppa:graphics-drivers/ppa
           sudo apt update -yq
           sudo apt upgrade -y
 

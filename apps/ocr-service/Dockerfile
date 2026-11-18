@@ -45,7 +45,6 @@ RUN apt-get -o Acquire::Retries=5 update -yq && \
 # add extra repos
 RUN apt-add-repository -y -n multiverse && \
     apt-add-repository -y -n universe && \
-    add-apt-repository -y -n ppa:graphics-drivers/ppa && \
     apt-get -o Acquire::Retries=5 update -yq && \
     apt-get upgrade -y
 
