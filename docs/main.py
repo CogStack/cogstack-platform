@@ -31,13 +31,13 @@ def define_env(env):
         """
         Emit pymdownx **tabbed** blocks with **snippets** for every matching file under a directory.
 
-        ``folder`` is relative to the repo ``deployment-examples/`` directory. Snippet paths match
-        that layout; ensure ``pymdownx.snippets`` ``base_path`` includes ``../deployment-examples``.
+        ``folder`` is relative to the repo ``deployment/examples/`` directory. Snippet paths match
+        that layout; ensure ``pymdownx.snippets`` ``base_path`` includes ``../deployment/examples``.
 
         ``patterns`` is a comma-separated list of globs matched against the **basename**
         (e.g. ``*.tf`` or ``*`` for every file). Hidden files (names starting with ``.``) are skipped.
         """
-        root = repo_root / "deployment-examples" / folder
+        root = repo_root / "deployment" / "examples" / folder
         if not root.is_dir():
             raise FileNotFoundError(
                 f"embed_all_files_in_directory_as_snippets: not a directory: {root}"
@@ -60,7 +60,7 @@ def define_env(env):
             return "_No matching files found._"
 
         blocks: list[str] = []
-        deploy_root = repo_root / "deployment-examples"
+        deploy_root = repo_root / "deployment" / "examples"
         for path in paths:
             rel = path.relative_to(deploy_root).as_posix()
             title = path.relative_to(root).as_posix()

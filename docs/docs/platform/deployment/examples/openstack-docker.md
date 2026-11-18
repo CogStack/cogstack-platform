@@ -27,7 +27,7 @@ This example:
 
 ### 1. Get the configuration files
 
-Get the Terraform files for this example (the ZIP contains all `deployment-examples`; use the `openstack-docker` folder for this guide).
+Get the Terraform files for this example (the ZIP contains all `deployment/examples`; use the `openstack-docker` folder for this guide).
 
 [Download all deployment examples (ZIP)](../../../assets/downloads/deployment-examples.zip){ .md-button }
 

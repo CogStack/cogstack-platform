@@ -22,7 +22,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 ZIP_SPECS = [
     {
-        "sourceFolderPath": "deployment-examples",
+        "sourceFolderPath": "deployment/examples",
         "outputZipPath": "assets/downloads/deployment-examples.zip",
     },
 ]
@@ -38,7 +38,7 @@ def main() -> None:
         if not source_dir.is_dir():
             raise FileNotFoundError(f"Source directory not found: {source_dir}")
 
-        root_name = source_dir.name
+        root_name = Path(output_rel).stem
         buf = io.BytesIO()
         with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
             for path in sorted(source_dir.rglob("*"), key=lambda p: p.as_posix()):
