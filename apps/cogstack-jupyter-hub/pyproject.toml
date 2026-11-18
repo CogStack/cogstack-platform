@@ -27,7 +27,7 @@ dependencies = [
     "isort==9.0.2",
     "html2text==2025.4.15",
     "jsoncsv==2.2.5",
-    "simplejson==4.2.0",
+    "simplejson==4.3.0",
     "nltk==3.10.4",
     "bokeh==3.9.2",
     "seaborn==0.13.2",
@@ -39,7 +39,7 @@ dependencies = [
     "mysql-connector-python==26.10.0",
     "jsonpickle==4.1.4",
     "jsonext==0.4.2",
-    "psycopg[c,binary,pool]==3.3.8",
+    "psycopg[c,binary,pool]==3.3.9",
     "pyodbc==5.5.0",
     "openpyxl==3.1.5",
     "dvc==3.67.1",
@@ -52,7 +52,7 @@ dependencies = [
     "xnat==0.8.1",
     "keras==3.15.1",
     "opensearch-py>=2.8.0",
-    "ruff==0.17.4",
+    "ruff==0.17.5",
 ]
 
 [tool.uv]
