@@ -8,11 +8,11 @@ on:
     branches: [main]
     tags: ['cogstack-jupyter-hub-v*.*.*']
     paths:
-      - "apps/cogstack-jupyter-hub/**"
+      - "apps/jupyter-hub/**"
       - ".github/workflows/docker_smoke_jupyterhub.yml"
   pull_request:
     paths:
-      - "apps/cogstack-jupyter-hub/**"
+      - "apps/jupyter-hub/**"
       - ".github/workflows/docker_smoke_jupyterhub.yml"
   workflow_dispatch:
 
@@ -22,7 +22,7 @@ concurrency:
 
 defaults:
   run:
-    working-directory: apps/cogstack-jupyter-hub
+    working-directory: apps/jupyter-hub
 
 jobs:
   smoke:

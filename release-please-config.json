@@ -199,7 +199,7 @@
             "draft": false,
             "prerelease": false
         },
-        "apps/cogstack-jupyter-hub": {
+        "apps/jupyter-hub": {
             "release-type": "python",
             "component": "cogstack-jupyter-hub",
             "changelog-path": "CHANGELOG.md",

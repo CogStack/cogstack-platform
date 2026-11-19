@@ -41,7 +41,7 @@ See the latest documentation on [Readthedocs](https://docs.cogstack.org/en/lates
       <sub>Document and image text extraction built on Tesseract OCR</sub>
     </td>
     <td align="center" valign="top" width="50%">
-      <a href="apps/cogstack-jupyter-hub">
+      <a href="apps/jupyter-hub">
         <img src="https://raw.githubusercontent.com/jupyterhub/design/master/assets/jupyterhub/light-background-jupyterhub-logo-square-color.svg" alt="CogStack Jupyter Hub" height="56"/>
         <br/><strong>CogStack Jupyter Hub</strong>
       </a>
@@ -51,7 +51,7 @@ See the latest documentation on [Readthedocs](https://docs.cogstack.org/en/lates
   </tr>
   <tr>
     <td align="center" valign="top" width="50%">
-      <a href="apps/cogstack-cohorter">
+      <a href="apps/cohorter">
         <img src="docs/docs/assets/cogstack-logo.png" alt="CogStack Cohorter" height="56"/>
         <br/><strong>CogStack Cohorter</strong>
       </a>
@@ -59,7 +59,7 @@ See the latest documentation on [Readthedocs](https://docs.cogstack.org/en/lates
       <sub>Cohort definition tooling with NL2DSL and web UI</sub>
     </td>
     <td align="center" valign="top" width="50%">
-      <a href="apps/cogstack-dashboards-demo">
+      <a href="apps/dashboards-demo">
         <img src="https://cdn.simpleicons.org/plotly/3F4F75" alt="CogStack Dashboards Demo" height="56"/>
         <br/><strong>CogStack Dashboards Demo</strong>
       </a>

@@ -58,7 +58,7 @@ _cogstack_load_environment() {
 
   # Service-owned configuration remains optional and uses its own directories.
   local service_files=(
-    services/cogstack-platform/apps/cogstack-jupyter-hub/env/jupyter.env
+    ../jupyter-hub/env/jupyter.env
     services/cogstack-platform/apps/ocr-service/env/ocr_service.env
     services/cogstack-nlp/medcat-service/env/app.env
     services/cogstack-nlp/medcat-service/env/medcat.env
