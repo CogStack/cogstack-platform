@@ -153,15 +153,22 @@ jobs:
       - name: Discover charts
         id: charts
         run: |
-          if [[ "${{ steps.version.outputs.single_chart }}" == "true" ]]; then
-            echo "charts=${{ steps.version.outputs.chart }}" >> "$GITHUB_OUTPUT"
-          else
-            CHARTS=()
-            while IFS= read -r chartfile; do
-              CHARTS+=("$(basename "$(dirname "$chartfile")")")
-            done < <(find . -maxdepth 2 -mindepth 2 -type f -name Chart.yaml | sort)
-            echo "charts=${CHARTS[*]}" >> "$GITHUB_OUTPUT"
+          CHARTS=()
+          while IFS= read -r chartfile; do
+            CHART_DIR="$(dirname "$chartfile")"
+            if [[ "${{ steps.version.outputs.single_chart }}" == "true" ]]; then
+              CHART_NAME="$(helm show chart "$CHART_DIR" | awk '/^name:/ {print $2; exit}')"
+              if [[ "$CHART_NAME" != "${{ steps.version.outputs.chart }}" ]]; then
+                continue
+              fi
+            fi
+            CHARTS+=("$(basename "$CHART_DIR")")
+          done < <(find . -maxdepth 2 -mindepth 2 -type f -name Chart.yaml | sort)
+          if [[ "${{ steps.version.outputs.single_chart }}" == "true" && "${#CHARTS[@]}" != 1 ]]; then
+            echo "Expected exactly one chart named ${{ steps.version.outputs.chart }}; found ${#CHARTS[@]}." >&2
+            exit 1
           fi
+          echo "charts=${CHARTS[*]}" >> "$GITHUB_OUTPUT"
 
       - name: Recursive dependency update (all charts, including nested)
         # Waiting on helm recursive feature https://github.com/helm/helm/pull/30855
@@ -182,7 +189,8 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.chart_version }}"
           for CHART in ${{ steps.charts.outputs.charts }}; do
-            helm push "./$CHART-$VERSION.tgz" oci://registry-1.docker.io/cogstacksystems
+            CHART_NAME="$(helm show chart "./$CHART" | awk '/^name:/ {print $2; exit}')"
+            helm push "./$CHART_NAME-$VERSION.tgz" oci://registry-1.docker.io/cogstacksystems
           done
 
       - name: Attach chart to GitHub Release
@@ -190,4 +198,4 @@ jobs:
         if: github.ref_type == 'tag'
         with:
           tag_name: ${{ github.ref_name }}
-          files: deployment/charts/${{ steps.charts.outputs.chart }}-${{ steps.version.outputs.chart_version }}.tgz
+          files: deployment/charts/${{ steps.version.outputs.chart }}-${{ steps.version.outputs.chart_version }}.tgz

@@ -64,6 +64,11 @@ uses the application's `.venv`, resolves the `nifi` package from the parent
 
 ## Deployment helpers
 
+The Kubernetes charts live in
+[`deployment/charts/nifi`](../../deployment/charts/nifi/README.md)
+and [`deployment/charts/nginx`](../../deployment/charts/nginx/README.md). Their
+READMEs describe the required environment ConfigMaps, TLS Secrets and storage.
+
 The NiFi build context and resource mounts in `docker/docker-compose.dev.yml`
 point to this application directory. The Compose file, Makefile and environment
 loader were brought over from the wider CogStack deployment and still reference

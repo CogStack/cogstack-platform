@@ -70,6 +70,8 @@ nav:
           - Tutorial: platform/deployment/helm/tutorial.md
           - Charts:
               - Charts Overview: platform/deployment/helm/charts/index.md
+              - CogStack NiFi: platform/deployment/helm/charts/nifi.md
+              - NiFi NGINX: platform/deployment/helm/charts/nginx.md
               - Cogstack CE Helm: platform/deployment/helm/charts/cogstack-ce-helm.md
               - MedCAT Service Helm: platform/deployment/helm/charts/medcat-service-helm.md
               - MedCAT Trainer Helm: platform/deployment/helm/charts/medcat-trainer-helm.md
