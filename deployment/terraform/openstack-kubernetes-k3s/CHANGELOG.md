@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/CogStack/cogstack-platform/compare/terraform-modules/openstack-kubernetes-k3s-v0.1.1...terraform-modules/openstack-kubernetes-k3s-v0.1.2) (2026-11-19)
+
+
+### Miscellaneous Chores
+
+* Cleanup I ([#216](https://github.com/CogStack/cogstack-platform/issues/216)) ([ebe8f9e](https://github.com/CogStack/cogstack-platform/commit/ebe8f9e92eb44aadf1c9824bbd1738db8edf22f2))
+
 ## [0.1.1](https://github.com/CogStack/cogstack-platform/compare/terraform-modules/openstack-kubernetes-k3s-v0.1.0...terraform-modules/openstack-kubernetes-k3s-v0.1.1) (2026-10-30)
 
 
