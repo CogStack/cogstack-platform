@@ -2,6 +2,9 @@
 # ingress per app. Rendered with envsubst; ${DOMAIN} is pr-<number>.<base domain>.
 opensearch:
   replicas: 1
+  # GKE nodes ship vm.max_map_count=65530; OpenSearch refuses to start below 262144.
+  sysctlInit:
+    enabled: true
 
 opensearch-dashboards:
   ingress:
