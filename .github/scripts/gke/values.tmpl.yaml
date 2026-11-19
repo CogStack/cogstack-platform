@@ -1,0 +1,66 @@
+# Values for cogstack-ce-helm in a PR environment: the chart defaults plus an
+# ingress per app. Rendered with envsubst; ${DOMAIN} is pr-<number>.<base domain>.
+opensearch:
+  replicas: 1
+
+opensearch-dashboards:
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hosts:
+      - host: dashboards.${DOMAIN}
+        paths:
+          - path: /
+            backend:
+              serviceName: ""
+              servicePort: ""
+
+medcat-service:
+  ingress:
+    enabled: true
+    className: traefik
+    hosts:
+      - host: medcat.${DOMAIN}
+        paths:
+          - path: /
+            pathType: Prefix
+
+anoncat-service:
+  ingress:
+    enabled: true
+    className: traefik
+    hosts:
+      - host: anoncat.${DOMAIN}
+        paths:
+          - path: /
+            pathType: Prefix
+
+ocr-service:
+  ingress:
+    enabled: true
+    className: traefik
+    hosts:
+      - host: ocr.${DOMAIN}
+        paths:
+          - path: /
+            pathType: Prefix
+
+medcat-trainer:
+  env:
+    CSRF_TRUSTED_ORIGINS: "https://trainer.${DOMAIN}"
+  ingress:
+    enabled: true
+    className: traefik
+    hosts:
+      - host: trainer.${DOMAIN}
+        paths:
+          - path: /
+            pathType: Prefix
+
+cogstack-jupyterhub:
+  jupyterhub:
+    ingress:
+      enabled: true
+      ingressClassName: traefik
+      hosts:
+        - jupyter.${DOMAIN}

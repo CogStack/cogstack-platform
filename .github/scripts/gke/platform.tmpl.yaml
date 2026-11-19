@@ -1,0 +1,40 @@
+# Cluster plumbing for a PR environment: a wildcard certificate for the PR's
+# domain and basic auth in front of every route. Rendered with envsubst.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-account-key
+    solvers:
+      - dns01:
+          cloudDNS:
+            # No key: cert-manager authenticates with GKE Workload Identity.
+            project: ${GCP_PROJECT_ID}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard
+  namespace: traefik
+spec:
+  secretName: wildcard-tls
+  issuerRef:
+    kind: ClusterIssuer
+    name: letsencrypt
+  dnsNames:
+    - "*.${DOMAIN}"
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: basic-auth
+  namespace: traefik
+spec:
+  basicAuth:
+    secret: basic-auth-users
+    # Do not pass the browser's Basic credentials on to the apps.
+    removeHeader: true

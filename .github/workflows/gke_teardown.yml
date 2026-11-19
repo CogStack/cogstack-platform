@@ -1,0 +1,109 @@
+# Remove the GKE clusters created by gke_deploy_test.yml.
+#
+# - PR closed or merged: that PR's environment is removed.
+# - Manual run: give a PR number, or "all" to remove every environment.
+# - Hourly: remove environments whose PR is closed, or older than
+#   GKE_PR_MAX_AGE_HOURS (repository variable, default 24).
+name: gke_teardown
+
+on:
+  pull_request:
+    types: [closed]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: PR number to tear down, or "all"
+        required: true
+  schedule:
+    - cron: "17 * * * *"
+
+permissions: {}
+
+jobs:
+  teardown:
+    name: Tear down PR environment
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    if: >-
+      vars.GCP_WORKLOAD_IDENTITY_PROVIDER != '' && (
+        (github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository &&
+          github.event.pull_request.user.login != 'dependabot[bot]') ||
+        (github.event_name == 'workflow_dispatch' && inputs.pr != 'all')
+      )
+    # Shares the deploy workflow's group, so it waits for a running deploy.
+    concurrency:
+      group: gke-pr-${{ github.event.pull_request.number || inputs.pr }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v3
+        with:
+          install_components: gke-gcloud-auth-plugin,kubectl
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v5.1.0
+        with:
+          version: v3.17.0
+
+      - name: Tear down
+        run: .github/scripts/gke/teardown.sh "$PR_NUMBER"
+
+  reap:
+    name: Reap stale PR environments
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    if: >-
+      vars.GCP_WORKLOAD_IDENTITY_PROVIDER != '' && (
+        github.event_name == 'schedule' ||
+        (github.event_name == 'workflow_dispatch' && inputs.pr == 'all')
+      )
+    concurrency:
+      group: gke-reap
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: read
+    env:
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      MAX_AGE_HOURS: ${{ vars.GKE_PR_MAX_AGE_HOURS || '24' }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v3
+        with:
+          install_components: gke-gcloud-auth-plugin,kubectl
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v5.1.0
+        with:
+          version: v3.17.0
+
+      - name: Reap
+        run: .github/scripts/gke/reap.sh ${{ inputs.pr == 'all' && 'all' || '' }}

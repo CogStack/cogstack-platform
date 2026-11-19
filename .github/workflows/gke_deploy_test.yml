@@ -1,0 +1,127 @@
+# Deploy the PR's cogstack-ce-helm chart to its own GKE cluster and leave it
+# running at https://<app>.pr-<number>.platform.cogstack.dev for review.
+#
+# - The first run for a PR creates the cluster; later pushes upgrade the release.
+# - The cluster is removed by gke_teardown.yml (PR closed, manual, or too old).
+# - Authentication to Google Cloud is GitHub OIDC; there are no stored keys.
+# - Nothing here names a repository. The test runs wherever the three GCP_*
+#   repository variables are set; see .github/scripts/gke/README.md.
+#
+# This workflow deliberately has no `paths:` filter. A required check that never
+# starts stays pending forever, so the `changes` job decides instead and a
+# skipped deploy job counts as passing.
+name: gke_deploy_test
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions: {}
+
+# One deploy or teardown at a time per PR. Runs queue rather than cancel, so a
+# Helm upgrade is never killed half way.
+concurrency:
+  group: gke-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  changes:
+    name: Detect deployment changes
+    runs-on: ubuntu-latest
+    # Forks and Dependabot get no OIDC token, and an unconfigured repository has nowhere to deploy.
+    if: >-
+      vars.GCP_WORKLOAD_IDENTITY_PROVIDER != '' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.user.login != 'dependabot[bot]'
+    permissions:
+      pull-requests: read
+    outputs:
+      deploy: ${{ steps.filter.outputs.deploy }}
+    steps:
+      - name: Check changed files
+        id: filter
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          if gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files" --paginate --jq '.[].filename' |
+            grep -qE '^(deployment/charts/|\.github/scripts/|\.github/workflows/gke_)'; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  deploy:
+    name: GKE deployment test
+    needs: changes
+    if: needs.changes.outputs.deploy == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    env:
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      MAX_AGE_HOURS: ${{ vars.GKE_PR_MAX_AGE_HOURS || '24' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v3
+        with:
+          install_components: gke-gcloud-auth-plugin,kubectl
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v5.1.0
+        with:
+          version: v3.17.0
+
+      - name: Install Python deps for chart scripts
+        run: pip install pyyaml
+
+      - name: Create or reuse the cluster
+        run: .github/scripts/gke/cluster-up.sh "$PR_NUMBER"
+
+      - name: Deploy
+        run: .github/scripts/gke/deploy.sh "$PR_NUMBER"
+
+      - name: Smoke test over public HTTPS
+        run: .github/scripts/gke/smoke-test.sh "$PR_NUMBER"
+
+      - name: Publish links
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          source .github/scripts/gke/lib.sh
+          set_pr "$PR_NUMBER"
+          {
+            echo "### PR environment"
+            echo
+            echo "Deployed from ${GITHUB_SHA}. The cluster stays up until the PR is closed or it is ${MAX_AGE_HOURS} hours old."
+            echo
+            for app in $APPS; do
+              echo "- https://${app%%:*}.${DOMAIN}/"
+            done
+            echo
+            echo "User \`${BASIC_AUTH_USER}\`. Password:"
+            echo "\`gcloud secrets versions access latest --secret ${BASIC_AUTH_SECRET} --project ${GCP_PROJECT_ID}\`"
+          } > links.md
+          cat links.md >> "$GITHUB_STEP_SUMMARY"
+          gh pr comment "$PR_NUMBER" --edit-last --create-if-none --body-file links.md
+
+      - name: Diagnostics
+        if: failure()
+        run: |
+          kubectl get nodes -o wide || true
+          kubectl get pods -A -o wide || true
+          kubectl get ingress,certificate,challenge -A || true
+          kubectl get events -A --sort-by=.lastTimestamp | tail -n 80 || true
