@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cogstack-nginx
+
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: cogstack-nginx
+
+  template:
+    metadata:
+      labels:
+        app: cogstack-nginx
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+
+    spec:
+      containers:
+        - name: nginx
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+
+          ports:
+            - containerPort: {{ .Values.nginx.internalPort }}
+
+          envFrom:
+            - configMapRef:
+                name: nginx-env
+            - configMapRef:
+                name: nifi-env
+            - configMapRef:
+                name: cogstack-nginx-env
+
+          volumeMounts:
+            - name: tls
+              mountPath: /certificates
+              readOnly: true
+
+          readinessProbe:
+            exec:
+              command: ["/usr/local/bin/cogstack-nginx-healthcheck.sh", "ready"]
+            timeoutSeconds: 10
+
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+
+      volumes:
+        - name: tls
+          projected:
+            sources:
+              - secret:
+                  name: {{ .Values.tls.rootCASecret }}
+                  items:
+                    - key: ca.crt
+                      path: root/root-ca.pem
+              - secret:
+                  name: {{ .Values.tls.existingSecret }}
+                  items:
+                    - key: tls.crt
+                      path: nifi/nifi.pem
+                    - key: tls.key
+                      path: nifi/nifi.key

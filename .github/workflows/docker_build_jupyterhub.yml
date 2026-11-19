@@ -8,11 +8,11 @@ on:
     branches: [main]
     tags: ['cogstack-jupyter-hub-v*.*.*']
     paths:
-      - "apps/cogstack-jupyter-hub/**"
+      - "apps/jupyter-hub/**"
       - ".github/workflows/docker_build_jupyterhub.yml"
   pull_request:
     paths:
-      - "apps/cogstack-jupyter-hub/**"
+      - "apps/jupyter-hub/**"
       - ".github/workflows/docker_build_jupyterhub.yml"
   workflow_dispatch:
 
@@ -72,8 +72,8 @@ jobs:
         id: hub
         uses: docker/build-push-action@v7
         with:
-          context: apps/cogstack-jupyter-hub
-          file: apps/cogstack-jupyter-hub/Dockerfile_hub
+          context: apps/jupyter-hub
+          file: apps/jupyter-hub/Dockerfile_hub
           platforms: linux/amd64
           build-args: |
             CPU_ARCHITECTURE=amd64
@@ -90,8 +90,8 @@ jobs:
         id: su
         uses: docker/build-push-action@v7
         with:
-          context: apps/cogstack-jupyter-hub
-          file: apps/cogstack-jupyter-hub/Dockerfile_singleuser
+          context: apps/jupyter-hub
+          file: apps/jupyter-hub/Dockerfile_singleuser
           platforms: linux/amd64
           build-args: |
             CPU_ARCHITECTURE=amd64
@@ -156,8 +156,8 @@ jobs:
         id: hub
         uses: docker/build-push-action@v7
         with:
-          context: apps/cogstack-jupyter-hub
-          file: apps/cogstack-jupyter-hub/Dockerfile_hub
+          context: apps/jupyter-hub
+          file: apps/jupyter-hub/Dockerfile_hub
           platforms: linux/arm64
           build-args: |
             CPU_ARCHITECTURE=arm64
@@ -173,8 +173,8 @@ jobs:
         id: su
         uses: docker/build-push-action@v7
         with:
-          context: apps/cogstack-jupyter-hub
-          file: apps/cogstack-jupyter-hub/Dockerfile_singleuser
+          context: apps/jupyter-hub
+          file: apps/jupyter-hub/Dockerfile_singleuser
           platforms: linux/arm64
           build-args: |
             CPU_ARCHITECTURE=arm64
@@ -224,8 +224,8 @@ jobs:
       - name: Build & push singleuser GPU (amd64)
         uses: docker/build-push-action@v7
         with:
-          context: apps/cogstack-jupyter-hub
-          file: apps/cogstack-jupyter-hub/Dockerfile_singleuser
+          context: apps/jupyter-hub
+          file: apps/jupyter-hub/Dockerfile_singleuser
           platforms: linux/amd64
           build-args: |
             CPU_ARCHITECTURE=amd64

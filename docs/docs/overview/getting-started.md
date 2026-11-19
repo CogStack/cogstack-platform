@@ -32,7 +32,7 @@ Suggested order for reading the docs and getting the most out of CogStack.
 
 ## 4. Go deeper
 
-- **Helm charts** — [MedCAT Service](../platform/deployment/helm/charts/medcat-service-helm.md) and [MedCAT Trainer](../platform/deployment/helm/charts/medcat-trainer-helm.md).
+- **Helm charts** — [MedCAT Service](../platform/deployment/helm/charts/medcat-service.md) and [MedCAT Trainer](../platform/deployment/helm/charts/medcat-trainer.md).
 - **Examples** — [AWS](../platform/deployment/examples/aws-kubernetes-eks.md), [Azure](../platform/deployment/examples/azure-kubernetes-aks.md), [OpenStack](../platform/deployment/examples/openstack-kubernetes-k3s.md).
 - **Observability** — [Production setup](../platform/observability/setup/production-setup.md), [Telemetry](../platform/observability/setup/telemetry.md), [Alerting](../platform/observability/setup/alerting.md).
 

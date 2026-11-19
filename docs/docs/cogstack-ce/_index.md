@@ -42,7 +42,7 @@ For the full installation reference, deployment instructions, and customizations
 
 - [Quickstart](./tutorial/quickstart-installation.md) for the installation
 - [Deployment](../platform/deployment/index.md) for in depth deployment options including how to run on the cloud
-- [CogStack CE Helm chart (install + customization)](../platform/deployment/helm/charts/cogstack-ce-helm.md)
+- [CogStack CE Helm chart (install + customization)](../platform/deployment/helm/charts/ce.md)
 
 ## Models
 The default installation comes with basic models that are just for demo purposes. 

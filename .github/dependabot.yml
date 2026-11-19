@@ -27,7 +27,7 @@ updates:
 
   # Keep Dockerfile base images up to date
   - package-ecosystem: "docker"
-    directory: "/apps/cogstack-jupyter-hub"
+    directory: "/apps/jupyter-hub"
     schedule:
       interval: "monthly"
     registries:
@@ -41,7 +41,7 @@ updates:
 
   # Keep uv.lock Python dependencies up to date
   - package-ecosystem: "uv"
-    directory: "/apps/cogstack-jupyter-hub"
+    directory: "/apps/jupyter-hub"
     schedule:
       interval: "monthly"
     commit-message:
