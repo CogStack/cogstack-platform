@@ -1,9 +1,11 @@
 
 #!/bin/bash
 set -e
+OBSERVABILITY_BASE_URL="${OBSERVABILITY_BASE_URL:-https://raw.githubusercontent.com/CogStack/cogstack-platform/main/deployment/examples/observability}"
+
 download_to() {
   local path="$1"
-  local url="https://raw.githubusercontent.com/CogStack/cogstack-platform-toolkit/main/observability/examples/full/${path}"
+  local url="${OBSERVABILITY_BASE_URL}/full/${path}"
 
   echo "Downloading ${path} from ${url}"
   mkdir -p "$(dirname "$path")"

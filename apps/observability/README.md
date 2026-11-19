@@ -9,13 +9,15 @@ It provides the following features:
 - Blackbox Probing of services to find service level indicators of uptime and latency
 - A working inventory of what is running where
 
-See the docs in the docs root folder for the full documentation
+Image definitions and bundled configuration are in this directory. Deployment examples and quickstart smoke tests are in [deployment/examples/observability](../../deployment/examples/observability).
+
+See the [full documentation](../../docs/docs/platform/observability/index.md).
 
 ## Local Development
 
-Run the stack locally with
+From the repository root, run the stack locally with
 ```
-cd ./observability/examples/simple
+cd ./deployment/examples/observability/simple
 docker compose up -d
 ```
 

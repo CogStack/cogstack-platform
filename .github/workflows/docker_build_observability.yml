@@ -6,11 +6,13 @@ on:
     tags:
       - "v*.*.*" # e.g., v0.1.1
     paths:
-      - "observability/**"
+      - "apps/observability/**"
+      - "deployment/examples/observability/**"
       - ".github/workflows/docker_build_observability.yml"
   pull_request:
     paths:
-      - "observability/**"
+      - "apps/observability/**"
+      - "deployment/examples/observability/**"
       - ".github/workflows/docker_build_observability.yml"
 
 jobs:
@@ -21,24 +23,24 @@ jobs:
       matrix: # This should be replaced with Docker Bake instead
         include:
           - name: prometheus
-            context: observability/prometheus
-            dockerfile: observability/prometheus/Dockerfile.prometheus
+            context: apps/observability/prometheus
+            dockerfile: apps/observability/prometheus/Dockerfile.prometheus
             image: cogstacksystems/cogstack-observability-prometheus
           - name: blackbox
-            context: observability/prometheus
-            dockerfile: observability/prometheus/Dockerfile.blackbox
+            context: apps/observability/prometheus
+            dockerfile: apps/observability/prometheus/Dockerfile.blackbox
             image: cogstacksystems/cogstack-observability-blackbox-exporter
           - name: grafana
-            context: observability/grafana
-            dockerfile: observability/grafana/Dockerfile
+            context: apps/observability/grafana
+            dockerfile: apps/observability/grafana/Dockerfile
             image: cogstacksystems/cogstack-observability-grafana
           - name: traefik
-            context: observability/traefik
-            dockerfile: observability/traefik/Dockerfile
+            context: apps/observability/traefik
+            dockerfile: apps/observability/traefik/Dockerfile
             image: cogstacksystems/cogstack-observability-traefik
           - name: alloy
-            context: observability/grafana-alloy
-            dockerfile: observability/grafana-alloy/Dockerfile
+            context: apps/observability/grafana-alloy
+            dockerfile: apps/observability/grafana-alloy/Dockerfile
             image: cogstacksystems/cogstack-observability-alloy
     steps:
       - name: Checkout branch
@@ -95,14 +97,15 @@ jobs:
           cache: pip
 
       - name: Install Python dependencies
-        run: pip install -r observability/test/requirements.txt
+        run: pip install -r deployment/examples/observability/test/requirements.txt
 
       - name: Run Simple quickstart test
         run: |
           echo "🧪 Running Simple quickstart test..."
           IMAGE_TAG="sha-${GITHUB_SHA::7}"
           echo "Using images tagged ${IMAGE_TAG}"
-          export COMPOSE_FILE="${GITHUB_WORKSPACE}/observability/examples/simple/observability-simple/docker-compose.yml:${RUNNER_TEMP}/observability-images.yml"
+          export OBSERVABILITY_BASE_URL="file://${GITHUB_WORKSPACE}/deployment/examples/observability"
+          export COMPOSE_FILE="${GITHUB_WORKSPACE}/deployment/examples/observability/simple/observability-simple/docker-compose.yml:${RUNNER_TEMP}/observability-images.yml"
           {
             echo "services:"
             for service in alloy prometheus grafana traefik; do
@@ -110,7 +113,7 @@ jobs:
                 "$service" "$service" "$IMAGE_TAG"
             done
           } > "${RUNNER_TEMP}/observability-images.yml"
-          if ! bash observability/test/test-quickstart.sh; then
+          if ! bash deployment/examples/observability/test/test-quickstart.sh; then
             docker compose ps --all || true
             docker compose logs --no-color --tail=100 || true
             exit 1

@@ -16,7 +16,7 @@ After completing these steps, you will have a full observability stack running l
 
 Run this quickstart script to setup the project
 ```bash
-curl https://raw.githubusercontent.com/CogStack/cogstack-platform-toolkit/85029d135b5bacfb473b638d82e45021ee67781a/observability/examples/simple/quickstart.sh | bash
+curl https://raw.githubusercontent.com/CogStack/cogstack-platform/main/deployment/examples/observability/simple/quickstart.sh | bash
 ```
 Now go to "http://localhost/grafana" to see the dashboards
 

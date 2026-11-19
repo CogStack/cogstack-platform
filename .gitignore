@@ -1,6 +1,6 @@
 # Custom ignores
-observability/examples/simple/observability-simple
-observability/examples/full/cogstack-observability
+deployment/examples/observability/simple/observability-simple
+deployment/examples/observability/full/cogstack-observability
 _build
 **/.build/
 

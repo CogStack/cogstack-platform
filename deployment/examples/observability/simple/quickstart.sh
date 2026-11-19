@@ -1,16 +1,18 @@
 #!/bin/bash
 set -e
 
+OBSERVABILITY_BASE_URL="${OBSERVABILITY_BASE_URL:-https://raw.githubusercontent.com/CogStack/cogstack-platform/main/deployment/examples/observability}"
+
 mkdir -p observability-simple/alloy/probers
 cd observability-simple
 
 echo "Downloading docker-compose.yml..."
 curl -fsSL -o docker-compose.yml \
-  https://raw.githubusercontent.com/CogStack/cogstack-platform-toolkit/main/observability/examples/simple/docker-compose.yml
+  "${OBSERVABILITY_BASE_URL}/simple/docker-compose.yml"
 
 echo "Downloading probe-simple.yml into alloy/probers/..."
 curl -fsSL -o alloy/probers/probe-observability.yml \
-  https://raw.githubusercontent.com/CogStack/cogstack-platform-toolkit/main/observability/examples/simple/alloy/probers/probe-observability.yml
+  "${OBSERVABILITY_BASE_URL}/simple/alloy/probers/probe-observability.yml"
 
 echo "Setup complete in observability-simple/"
 

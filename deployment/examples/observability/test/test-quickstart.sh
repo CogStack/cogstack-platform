@@ -6,12 +6,12 @@ echo "🚀 Starting deployment test..."
 
 # Run the simple quickstart script
 echo "📦 Running quickstart..."
-cd ${SCRIPT_DIR}/../examples/simple/
+cd ${SCRIPT_DIR}/../simple/
 bash ./quickstart.sh
 
 # Run the health check
 echo "🔍 Running health check..."
-python -u ../../test/health-check.py
+python -u ../test/health-check.py
 
 # Check if health check was successful
 if [ $? -eq 0 ]; then
@@ -26,12 +26,12 @@ fi
 
 # Run the quickstart script
 echo "📦 Running full quickstart..."
-cd ${SCRIPT_DIR}/../examples/full/
+cd ${SCRIPT_DIR}/../full/
 bash ./full-quickstart.sh
 
 # Run the health check
 echo "🔍 Running health check..."
-python -u ../../test/health-check.py
+python -u ../test/health-check.py
 
 # Check if health check was successful
 if [ $? -eq 0 ]; then
