@@ -64,8 +64,9 @@ These features are not yet existing but to be added in future:
 | autoscaling.maxReplicas | int | `100` |  |
 | autoscaling.minReplicas | int | `1` |  |
 | autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
-| env | object | `{"CSRF_TRUSTED_ORIGINS":"http://localhost:8080","DB_ENGINE":"postgresql","DB_PORT":"5432","DEBUG":"1","EMAIL_HOST":"mail.cogstack.org","EMAIL_PASS":"to-be-changed","EMAIL_PORT":"465","EMAIL_USER":"example@cogstack.org","ENV":"non-prod","LOAD_NUM_DOC_PAGES":"10","MAX_DATASET_SIZE":"10000","MAX_MEDCAT_MODELS":"2","OPENBLAS_NUM_THREADS":"1","RESUBMIT_ALL_ON_STARTUP":"0","UNIQUE_DOC_NAMES_IN_DATASETS":"True","VITE_USE_OIDC":"0"}` | Add any environment variables here that should be set in the medcat-trainer container |
+| env | object | `{"CSRF_TRUSTED_ORIGINS":"http://localhost:8080","DB_ENGINE":"postgresql","DB_PORT":"5432","DEBUG":"1","EMAIL_HOST":"mail.cogstack.org","EMAIL_PASS":"to-be-changed","EMAIL_PORT":"465","EMAIL_USER":"example@cogstack.org","ENV":"non-prod","LOAD_NUM_DOC_PAGES":"10","MAX_DATASET_SIZE":"10000","MAX_MEDCAT_MODELS":"2","OPENBLAS_NUM_THREADS":"1","RESUBMIT_ALL_ON_STARTUP":"0","UNIQUE_DOC_NAMES_IN_DATASETS":"True","UWSGI_MAX_FD":"65536","VITE_USE_OIDC":"0"}` | Add any environment variables here that should be set in the medcat-trainer container |
 | env.CSRF_TRUSTED_ORIGINS | string | `"http://localhost:8080"` | This sets the CSRF trusted origins for the medcat-trainer container. Change to allow access from other domains |
+| env.UWSGI_MAX_FD | string | `"65536"` | Limit uWSGI file descriptors to avoid excessive HTTP router memory allocation. |
 | envValueFrom | object | `{"K8S_NODE_NAME":{"fieldRef":{"fieldPath":"spec.nodeName"}},"K8S_POD_NAME":{"fieldRef":{"fieldPath":"metadata.name"}},"K8S_POD_NAMESPACE":{"fieldRef":{"fieldPath":"metadata.namespace"}},"K8S_POD_UID":{"fieldRef":{"fieldPath":"metadata.uid"}}}` | Allow setting env values from field/configmap/secret references @default  -- Adds K8s downward API values for tracing |
 | fullnameOverride | string | `""` |  |
 | hostAliases | list | `[]` | Host aliases for the pod |

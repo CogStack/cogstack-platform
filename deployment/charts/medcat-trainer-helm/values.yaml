@@ -30,6 +30,8 @@ env:
   OPENBLAS_NUM_THREADS: "1"
   RESUBMIT_ALL_ON_STARTUP: "0"
   UNIQUE_DOC_NAMES_IN_DATASETS: "True"
+  # -- Limit uWSGI file descriptors to avoid excessive HTTP router memory allocation.
+  UWSGI_MAX_FD: "65536"
   VITE_USE_OIDC: "0"
 
   # TODO: Support custom DB overrides#
