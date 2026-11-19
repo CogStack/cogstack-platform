@@ -80,6 +80,7 @@ jobs:
           cache-to: type=registry,ref=${{ matrix.image}}:buildcache,mode=max
 
   test-observability-quickstart-scripts:
+    needs: docker
     runs-on: ubuntu-latest
     name: Test observability Quickstart scripts
 
@@ -99,7 +100,21 @@ jobs:
       - name: Run Simple quickstart test
         run: |
           echo "🧪 Running Simple quickstart test..."
-          bash observability/test/test-quickstart.sh
+          IMAGE_TAG="sha-${GITHUB_SHA::7}"
+          echo "Using images tagged ${IMAGE_TAG}"
+          export COMPOSE_FILE="${GITHUB_WORKSPACE}/observability/examples/simple/observability-simple/docker-compose.yml:${RUNNER_TEMP}/observability-images.yml"
+          {
+            echo "services:"
+            for service in alloy prometheus grafana traefik; do
+              printf '  %s:\n    image: cogstacksystems/cogstack-observability-%s:%s\n' \
+                "$service" "$service" "$IMAGE_TAG"
+            done
+          } > "${RUNNER_TEMP}/observability-images.yml"
+          if ! bash observability/test/test-quickstart.sh; then
+            docker compose ps --all || true
+            docker compose logs --no-color --tail=100 || true
+            exit 1
+          fi
 
       - name: Report test result
         if: always()
