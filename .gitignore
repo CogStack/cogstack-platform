@@ -49,6 +49,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Python type stubs
+*.pyi
+
 # C extensions
 *.so
 

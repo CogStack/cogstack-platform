@@ -1,0 +1,311 @@
+import json
+
+from nifiapi.flowfiletransform import FlowFileTransformResult
+from nifiapi.properties import (
+    ProcessContext,
+    PropertyDescriptor,
+    StandardValidators,
+)
+from nifiapi.relationship import Relationship
+from py4j.java_gateway import JavaObject, JVMView
+
+from nifi.user_scripts.utils.nifi.base_nifi_processor import BaseNiFiProcessor
+
+
+class CogStackParseCogStackServiceResult(BaseNiFiProcessor):
+    """ Normalises JSON responses from CogStack OCR or MedCAT services, reading each FlowFile,
+    coercing single objects to lists.
+    Exposes configurable properties for output text field name, service message type,
+    document ID/text fields, and MedCAT DEID behaviour so the same processor can be reused across services.
+    Original requests on failure routes are restored from their footer and text independently of service type.
+    Empty-text OCR and MedCAT DEID results retain all footer fields plus the text field.
+
+    """
+
+    class Java:
+        implements = ['org.apache.nifi.python.processor.FlowFileTransform']
+
+    class ProcessorDetails:
+        version = '0.0.6'
+
+    def __init__(self, jvm: JVMView):
+        super().__init__(jvm)
+
+        self.output_text_field_name: str = "text"
+        self.service_message_type: str = "ocr"
+        self.document_text_field_name:str = "text"
+        self.document_id_field_name: str = "_id"
+        self.medcat_output_mode: str = "not_set"
+        self.medcat_deid_keep_annotations: bool = True
+        self.medcat_empty_text_handling: str = "restore"
+        self.medcat_no_annotations_handling: str = "restore"
+
+        # this is directly mirrored to the UI
+        self._properties = [
+            PropertyDescriptor(name="output_text_field_name",
+                               description="field to store OCR output text, this can also be used"
+                               " in MedCAT output in DE_ID mode",
+                               default_value="text",
+                               required=True,
+                               validators=[StandardValidators.NON_EMPTY_VALIDATOR]),
+            PropertyDescriptor(name="service_message_type",
+                               description="the type of service message form this script processes," \
+                               " possible values: not_set | medcat | ocr",
+                               default_value="not_set",
+                               required=True,
+                               allowable_values=["ocr", "medcat", "not_set"]),
+            PropertyDescriptor(name="document_id_field_name",
+                               description="id field name of the document; this will usually be taken from the footer",
+                               default_value="_id",
+                               required=True,
+                               validators=[StandardValidators.NON_EMPTY_VALIDATOR]),
+            PropertyDescriptor(name="document_text_field_name",
+                               description="text field name of the document",
+                               validators=[StandardValidators.NON_EMPTY_VALIDATOR],
+                               required=True,
+                               default_value="text"),
+            PropertyDescriptor(name="medcat_output_mode",
+                               description="service_message_type is set to 'medcat' \
+                                  for this to work, only used for deid processing,"
+                               " if the output is for deid, then we can customise the" \
+                               " name of the text field, possible values: deid | not_set",
+                               default_value="not_set",
+                               required=True,
+                               allowable_values=["deid", "not_set"],
+                               ),
+            PropertyDescriptor(name="medcat_empty_text_handling",
+                               description="legacy setting retained for compatibility; empty-text DEID results "
+                               "always restore all footer fields plus the text field, even when set to drop",
+                               default_value="restore",
+                               required=True,
+                               allowable_values=["drop", "restore"],
+                               ),
+            PropertyDescriptor(name="medcat_no_annotations_handling",
+                               description="in DEID mode, how to handle successful MedCAT results with non-empty "
+                               "text but no annotations: drop omits the record; restore reconstructs the original "
+                               "document from the response footer",
+                               default_value="restore",
+                               required=True,
+                               allowable_values=["drop", "restore"],
+                               ),
+            PropertyDescriptor(name="medcat_deid_keep_annotations",
+                               description="if set to true, " \
+                               "then the annotations will be kept in the output with the text field",
+                               required=True,
+                               default_value="true",
+                               allowable_values=["true", "false"],
+                               validators=[StandardValidators.BOOLEAN_VALIDATOR],
+                               )
+        ]
+
+        self._relationships = [
+            Relationship(
+                name="success",
+                description="All FlowFiles processed successfully."
+            ),
+            Relationship(
+                name="failure",
+                description="FlowFiles that failed processing."
+            )
+        ]
+
+        self.descriptors: list[PropertyDescriptor] = self._properties
+        self.relationships: list[Relationship] = self._relationships
+
+    @staticmethod
+    def _is_blank_text(text: object) -> bool:
+        return text is None or (isinstance(text, str) and not text.strip())
+
+    @staticmethod
+    def _as_records(value: object, source: str) -> list[dict]:
+        if isinstance(value, dict):
+            return [value]
+        if isinstance(value, list) and all(isinstance(record, dict) for record in value):
+            return value
+        raise TypeError(f"Expected {source} to be a document or a list of documents")
+
+    @staticmethod
+    def _restore_record(service_record: dict, text_field_name: str) -> dict:
+        footer = service_record.get("footer")
+        if isinstance(footer, dict):
+            restored_record = dict(footer)
+        elif footer is None:
+            restored_record = {}
+        else:
+            restored_record = {"footer": footer}
+
+        if text_field_name in service_record:
+            restored_record[text_field_name] = service_record[text_field_name]
+        elif "text" in service_record:
+            restored_record[text_field_name] = service_record["text"]
+        else:
+            restored_record.setdefault(text_field_name, "")
+        return restored_record
+
+    def _restore_medcat_record(self, annotated_record: dict, status: str) -> dict:
+        restored_record = self._restore_record(annotated_record, self.document_text_field_name)
+        restored_record["medcat_status"] = status
+        return restored_record
+
+    def process(self, context: ProcessContext, flowFile: JavaObject) -> FlowFileTransformResult:
+        """
+        Processes the input FlowFile by parsing the service response and extracting relevant fields.
+
+        Args:
+            context (ProcessContext): The process context containing processor properties.
+            flowFile (JavaObject): The FlowFile object containing the input data.
+
+        Raises:
+            Exception: If any error occurs during processing.
+
+        Returns:
+            FlowFileTransformResult: The result containing the transformed contents and updated attributes.
+        """
+
+        output_contents: list = []
+
+        # read avro record
+        input_raw_bytes: bytes = flowFile.getContentsAsBytes()
+
+        records: dict | list[dict] = json.loads(input_raw_bytes.decode("utf-8"))
+
+        additional_attributes: dict = {}
+
+        records = self._as_records(records, "FlowFile JSON")
+
+        for record in records:
+            # InvokeHTTP failure routes retain the original request, with no service result.
+            is_original_request = record.get("result") is None and (
+                "content" in record or "footer" in record
+            )
+            if is_original_request:
+                original_records = self._as_records(record.get("content", record), "request content")
+                for original_record in original_records:
+                    restored_record = self._restore_record(original_record, self.document_text_field_name)
+                    if self.document_id_field_name in restored_record:
+                        additional_attributes[self.document_id_field_name] = str(
+                            restored_record[self.document_id_field_name]
+                        )
+                    output_contents.append(restored_record)
+                continue
+
+            if "result" not in record:
+                raise ValueError("Expected an original service request or a response containing 'result'")
+
+            if self.service_message_type == "ocr":
+                result = record.get("result", {})
+
+                if "text" in result and self._is_blank_text(result["text"]):
+                    _record = self._restore_record(result, self.output_text_field_name)
+                else:
+                    _record = {}
+                    _record["metadata"] = result.get("metadata", {})
+                    _record["success"] = result.get("success", False)
+                    _record["timestamp"] = result.get("timestamp", None)
+
+                    for k, v in (result.get("footer") or {}).items():
+                        _record[k] = v
+
+                    _record[self.output_text_field_name] = result.get("text", "")
+                
+                if self.document_id_field_name in _record:
+                    additional_attributes[self.document_id_field_name] = str(_record[self.document_id_field_name])
+
+                output_contents.append(_record)
+
+            elif self.service_message_type == "medcat" and "result" in record:
+                result = record.get("result", [])
+                medcat_info = record.get("medcat_info", {})
+
+                if isinstance(result, dict):
+                    result = [result]
+
+                for annotated_record in result:
+                    is_deid_mode = self.medcat_output_mode == "deid"
+                    has_text = "text" in annotated_record
+                    has_blank_text = has_text and self._is_blank_text(annotated_record.get("text"))
+
+                    if is_deid_mode and has_blank_text:
+                        restored_record = self._restore_record(annotated_record, self.output_text_field_name)
+                        if self.document_id_field_name in restored_record:
+                            additional_attributes[self.document_id_field_name] = str(
+                                restored_record[self.document_id_field_name]
+                            )
+                        output_contents.append(restored_record)
+                        continue
+
+                    annotations = annotated_record.get("annotations", [])
+                    annotations = annotations[0] if len(annotations) > 0 else annotations
+                    footer = annotated_record.get("footer", {})
+                    is_successful_result = annotated_record.get("success") is True
+
+                    if not annotations:
+                        if (
+                            is_deid_mode
+                            and is_successful_result
+                            and has_text
+                            and self.medcat_no_annotations_handling == "restore"
+                        ):
+                            restored_record = self._restore_medcat_record(
+                                annotated_record,
+                                "no_annotations",
+                            )
+
+                            if self.document_id_field_name in restored_record:
+                                additional_attributes[self.document_id_field_name] = str(
+                                    restored_record[self.document_id_field_name]
+                                )
+
+                            output_contents.append(restored_record)
+                        continue
+
+                    if is_deid_mode:
+                        _output_annotated_record = {}
+                        _output_annotated_record["service_model"] = medcat_info
+                        _output_annotated_record["timestamp"] = annotated_record.get("timestamp", None)
+                        _output_annotated_record[self.output_text_field_name] = annotated_record.get("text", "")
+
+                        if self.medcat_deid_keep_annotations is True:
+                            _output_annotated_record["annotations"] = annotations
+                        else:
+                            _output_annotated_record["annotations"] = {}
+
+                        for k, v in footer.items():
+                            _output_annotated_record[k] = v
+                        output_contents.append(_output_annotated_record)
+
+                    else:
+                        for annotation_id, annotation_data in annotations.items():
+                            _output_annotated_record = {}
+                            _output_annotated_record["service_model"] = medcat_info
+                            _output_annotated_record["timestamp"] = annotated_record.get("timestamp", None)
+
+                            for k, v in annotation_data.items():
+                                _output_annotated_record[k] = v
+
+                            for k, v in footer.items():
+                                _output_annotated_record[k] = v
+
+                            if self.document_id_field_name in footer:
+                                _output_annotated_record["annotation_id"] = (
+                                    str(footer[self.document_id_field_name]) + "_" + str(annotation_id)
+                                )
+
+                                additional_attributes["annotation_id"] = _output_annotated_record["annotation_id"]
+
+                            output_contents.append(_output_annotated_record)
+
+            else:
+                raise ValueError("Set service_message_type to 'ocr' or 'medcat' to parse service responses")
+
+        # add properties to flowfile attributes
+        attributes: dict = {k: str(v) for k, v in flowFile.getAttributes().items()}
+        attributes["output_text_field_name"] = str(self.output_text_field_name)
+        attributes["mime.type"] = "application/json"
+        attributes.update(additional_attributes)
+
+        return FlowFileTransformResult(
+            relationship=self.REL_SUCCESS.name,
+            attributes=attributes,
+            contents=json.dumps(output_contents).encode("utf-8"),
+        )

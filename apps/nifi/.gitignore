@@ -1,0 +1,15 @@
+# Mutable host configuration and processor state.
+conf/flow.json.gz
+conf/archive/
+user_scripts/db/*
+!user_scripts/db/.gitignore
+user_scripts/logs/*
+!user_scripts/logs/.keep
+!user_scripts/tmp/
+user_scripts/tmp/*
+!user_scripts/tmp/.gitignore
+**devel
+devel
+**flow
+**login
+user_scripts/extensions/*

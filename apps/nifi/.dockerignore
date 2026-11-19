@@ -1,0 +1,32 @@
+# Build from apps/nifi; include only metadata and image resources.
+**
+!Dockerfile
+!pyproject.toml
+!uv.lock
+!__init__.py
+!user_scripts/
+!user_scripts/**
+!user_python_extensions/
+!user_python_extensions/**
+!drivers/
+!drivers/**
+!user_schemas/
+!user_schemas/**
+!user_templates/
+!user_templates/**
+!docker/
+!docker/healthcheck.sh
+
+# Runtime state and local development artefacts never enter image layers.
+user_scripts/logs/
+user_scripts/db/
+user_scripts/tmp/
+user_scripts/extensions/
+**/.venv/
+**/__pycache__/
+**/*.py[cod]
+**/.DS_Store
+**/.pytest_cache/
+**/.ruff_cache/
+**/.mypy_cache/
+**/*.egg-info/
