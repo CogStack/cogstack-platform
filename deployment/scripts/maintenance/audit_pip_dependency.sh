@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Python dependency hygiene for in-repo components (excludes external service submodules).
-# Default: audit lightweight docs deps. Use --include-nifi to audit the root project lock (heavier).
+# Default: audit lightweight docs deps. Use --include-nifi to audit apps/nifi/uv.lock (heavier).
 
 set -euo pipefail
 
@@ -59,7 +59,7 @@ fi
 
 echo "Exporting locked NiFi runtime and development dependencies"
 uv export \
-  --project "$ROOT_DIR" \
+  --project "${ROOT_DIR}/apps/nifi" \
   --quiet \
   --frozen \
   --all-groups \
@@ -67,7 +67,7 @@ uv export \
   --format requirements.txt \
   --output-file "$NIFI_REQUIREMENTS"
 
-echo "Running pip-audit on uv.lock"
+echo "Running pip-audit on apps/nifi/uv.lock"
 pip-audit -r "$NIFI_REQUIREMENTS" --progress-spinner off
 
 echo "Dependency audit complete."

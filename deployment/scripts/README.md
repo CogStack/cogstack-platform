@@ -126,10 +126,12 @@ Show available options:
 bash deployment/scripts/maintenance/audit_pip_dependency.sh --help
 ```
 
-The script also exposes `--include-nifi`, which audits the documentation first
-and then exports all dependency groups from a repository-root Python project.
-This checkout has no root `pyproject.toml` or `uv.lock`, so that option requires
-updating the script to the intended NiFi project location before use.
+To audit the documentation followed by NiFi runtime and development dependencies
+from `apps/nifi/uv.lock`:
+
+```bash
+bash deployment/scripts/maintenance/audit_pip_dependency.sh --include-nifi
+```
 
 The script exits with a nonzero status when an export or audit fails, including
 when `pip-audit` reports vulnerabilities.

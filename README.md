@@ -69,6 +69,9 @@ See the latest documentation on [Readthedocs](https://docs.cogstack.org/en/lates
   </tr>
 </table>
 
+See [CogStack NiFi](apps/nifi/README.md) for the ingestion image, Python
+processors, JDBC drivers and flow templates.
+
 ### Tools
 - Source for the official cogstack documentation. This git repo stores the top level documetation that hosts on https://docs.cogstack.org
 - CogStack deployment instructions and examples
