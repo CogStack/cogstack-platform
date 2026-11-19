@@ -2,6 +2,7 @@
 
 Reusable deployment charts for CogStack. Each chart sits directly under this
 directory and declares its package name in `Chart.yaml`.
+Folder names use component names, such as `medcat-service` and `jupyterhub`.
 
 ## NiFi charts
 

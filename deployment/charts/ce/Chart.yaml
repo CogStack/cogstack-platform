@@ -34,17 +34,17 @@ dependencies:
     alias: medcat-service
     condition: medcat-service.enabled
     version: ">=0.0.1"
-    repository: "file://../medcat-service-helm"
+    repository: "file://../medcat-service"
   - name: medcat-service-helm
     alias: anoncat-service
     condition: anoncat-service.enabled
     version: ">=0.0.1"
-    repository: "file://../medcat-service-helm"
+    repository: "file://../medcat-service"
   - name: medcat-trainer-helm
     alias: medcat-trainer
     condition: medcat-trainer.enabled
     version: ">=0.0.1"
-    repository: "file://../medcat-trainer-helm"
+    repository: "file://../medcat-trainer"
   - name: opensearch
     condition: opensearch.enabled
     version: "3.5.0"
@@ -57,9 +57,9 @@ dependencies:
     alias: cogstack-jupyterhub
     condition: cogstack-jupyterhub.enabled
     version: ">=0.0.1"
-    repository: "file://../cogstack-jupyterhub-helm"
+    repository: "file://../jupyterhub"
   - name: ocr-service-helm
     alias: ocr-service
     condition: cogstack-jupyterhub.enabled
     version: ">=0.0.1"
-    repository: "file://../ocr-service-helm"
+    repository: "file://../ocr-service"

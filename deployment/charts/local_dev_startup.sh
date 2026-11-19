@@ -6,7 +6,7 @@ minikube addons enable metrics-server -p cogstack-platform
 
 minikube dashboard --url=true &
 
-helm upgrade medcat-service ./medcat-service-helm --install --wait --timeout 5m0s # Install if it doesnt already exist, else upgrade
+helm upgrade medcat-service ./medcat-service --install --wait --timeout 5m0s # Install if it doesnt already exist, else upgrade
 helm test medcat-service --logs
 
 # Run CT  Lint
@@ -22,7 +22,7 @@ helm test medcat-service --logs
 # Test medcat trainer
 # kubectl port-forward svc/nginx 8000:8000
 
-# helm upgrade medcat-trainer-helm ./medcat-trainer-helm --install  --wait --timeout 5m0s # Install if it doesnt already exist, else upgrade
+# helm upgrade medcat-trainer-helm ./medcat-trainer --install  --wait --timeout 5m0s # Install if it doesnt already exist, else upgrade
 # kubectl port-forward svc/medcat-trainer-solr 8983:8983
 
 ## helm install trainer-registry oci://registry-1.docker.io/cogstacksystems/medcat-trainer-helm --wait --timeout 5m0s
@@ -30,11 +30,11 @@ helm test medcat-service --logs
 # Run cogstack-ce-helm
 
 helm repo add opensearch https://opensearch-project.github.io/helm-charts/
-helm dependency update ./medcat-trainer-helm
-helm dependency update ./cogstack-jupyterhub-helm
-helm dependency update ./cogstack-ce-helm
+helm dependency update ./medcat-trainer
+helm dependency update ./jupyterhub
+helm dependency update ./ce
 
-helm upgrade cogstack ./cogstack-ce-helm --install --dependency-update --wait --timeout 30m0s
+helm upgrade cogstack ./ce --install --dependency-update --wait --timeout 30m0s
 
 # Stop any running port forwards
 # ps -ef | grep '[p]ort-forward' | awk '{print $2}' | xargs -r kill

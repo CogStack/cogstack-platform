@@ -38,7 +38,7 @@ These are some values that are likely to need customization for your deployment:
 | `anoncat-service.env.DEID_REDACT` | `false` | Redaction behaviour for de-identification. |
 | `medcat-trainer.env.CSRF_TRUSTED_ORIGINS` | `"http://localhost:8080"` | CSRF trusted origins for MedCAT Trainer frontend (set correct value for your deployment, this default works for port forwarding). |
 
-Subcharts (MedCAT service, AnonCAT service, MedCAT Trainer) support additional options; see their respective charts under `../medcat-service-helm` and `../medcat-trainer-helm`. Pass them under the same keys as in this chart’s `values.yaml` (e.g. `medcat-service.*`, `anoncat-service.*`, `medcat-trainer-helm.*`).
+Subcharts (MedCAT service, AnonCAT service, MedCAT Trainer) support additional options; see their respective charts under `../medcat-service` and `../medcat-trainer`. Pass them under the same keys as in this chart’s `values.yaml` (e.g. `medcat-service.*`, `anoncat-service.*`, `medcat-trainer-helm.*`).
 
 Example override file:
 
@@ -83,11 +83,11 @@ kubectl delete namespace cogstack
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../cogstack-jupyterhub-helm | cogstack-jupyterhub(cogstack-jupyterhub-helm) | >=0.0.1 |
-| file://../medcat-service-helm | medcat-service(medcat-service-helm) | >=0.0.1 |
-| file://../medcat-service-helm | anoncat-service(medcat-service-helm) | >=0.0.1 |
-| file://../medcat-trainer-helm | medcat-trainer(medcat-trainer-helm) | >=0.0.1 |
-| file://../ocr-service-helm | ocr-service(ocr-service-helm) | >=0.0.1 |
+| file://../jupyterhub | cogstack-jupyterhub(cogstack-jupyterhub-helm) | >=0.0.1 |
+| file://../medcat-service | medcat-service(medcat-service-helm) | >=0.0.1 |
+| file://../medcat-service | anoncat-service(medcat-service-helm) | >=0.0.1 |
+| file://../medcat-trainer | medcat-trainer(medcat-trainer-helm) | >=0.0.1 |
+| file://../ocr-service | ocr-service(ocr-service-helm) | >=0.0.1 |
 | https://opensearch-project.github.io/helm-charts/ | opensearch | 3.5.0 |
 | https://opensearch-project.github.io/helm-charts/ | opensearch-dashboards | 3.5.0 |
 

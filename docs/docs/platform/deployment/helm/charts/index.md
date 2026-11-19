@@ -5,10 +5,10 @@
 
 - [CogStack NiFi](nifi.md)
 - [NiFi NGINX](nginx.md)
-- [MedCAT Service Helm](medcat-service-helm.md)
-- [MedCAT Trainer Helm](medcat-trainer-helm.md)
-- [CogStack Community Edition Helm](cogstack-ce-helm.md)
-- [CogStack Observability Helm](cogstack-observability-helm.md)
+- [MedCAT Service Helm](medcat-service.md)
+- [MedCAT Trainer Helm](medcat-trainer.md)
+- [CogStack Community Edition Helm](ce.md)
+- [CogStack Observability Helm](observability.md)
 
 ## Chart Publishing
 

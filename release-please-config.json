@@ -18,7 +18,7 @@
     "bootstrap-sha": "07501a49fcf25b639443cd53b39d88c7a1f092e9",
     "separate-pull-requests": true,
     "packages": {
-        "deployment/charts/medcat-trainer-helm": {
+        "deployment/charts/medcat-trainer": {
             "release-type": "helm",
             "component": "helm-charts/medcat-trainer-helm",
             "changelog-path": "CHANGELOG.md",
@@ -34,7 +34,7 @@
                 { "type": "revert", "section": "Reverts" }
             ]
         },
-        "deployment/charts/medcat-service-helm": {
+        "deployment/charts/medcat-service": {
             "release-type": "helm",
             "component": "helm-charts/medcat-service-helm",
             "changelog-path": "CHANGELOG.md",
@@ -50,7 +50,7 @@
                 { "type": "revert", "section": "Reverts" }
             ]
         },
-        "deployment/charts/cogstack-ce-helm": {
+        "deployment/charts/ce": {
             "release-type": "helm",
             "component": "helm-charts/cogstack-ce-helm",
             "changelog-path": "CHANGELOG.md",
@@ -66,7 +66,7 @@
                 { "type": "revert", "section": "Reverts" }
             ]
         },
-        "deployment/charts/cogstack-cohorter-helm": {
+        "deployment/charts/cohorter": {
             "release-type": "helm",
             "component": "helm-charts/cogstack-cohorter-helm",
             "changelog-path": "CHANGELOG.md",
@@ -82,7 +82,7 @@
                 { "type": "revert", "section": "Reverts" }
             ]
         },
-        "deployment/charts/cogstack-observability-helm": {
+        "deployment/charts/observability": {
             "release-type": "helm",
             "component": "helm-charts/cogstack-observability-helm",
             "changelog-path": "CHANGELOG.md",
@@ -98,7 +98,7 @@
                 { "type": "revert", "section": "Reverts" }
             ]
         },
-        "deployment/charts/cogstack-jupyterhub-helm": {
+        "deployment/charts/jupyterhub": {
             "release-type": "helm",
             "component": "helm-charts/cogstack-jupyterhub-helm",
             "changelog-path": "CHANGELOG.md",
@@ -114,7 +114,7 @@
                 { "type": "revert", "section": "Reverts" }
             ]
         },
-        "deployment/charts/ocr-service-helm": {
+        "deployment/charts/ocr-service": {
             "release-type": "helm",
             "component": "helm-charts/ocr-service-helm",
             "initial-version": "0.1.0",
