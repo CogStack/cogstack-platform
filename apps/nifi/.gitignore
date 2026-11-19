@@ -1,3 +1,6 @@
+# NiFi and Py4J type stubs are maintained source files.
+!typings/**/*.pyi
+
 # Mutable host configuration and processor state.
 conf/flow.json.gz
 conf/archive/
