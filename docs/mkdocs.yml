@@ -156,8 +156,8 @@ markdown_extensions:
       check_paths: true
       base_path:
         - docs
-        - ../deployment-examples
-        - deployment-examples
+        - ../deployment/examples
+        - deployment/examples
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.emoji:

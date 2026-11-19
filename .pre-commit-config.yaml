@@ -3,7 +3,7 @@ repos:
     rev: v1.14.2
     hooks:
       - id: helm-docs-container
-        files: helm-charts/(.*)/values.yaml
+        files: deployment/charts/(.*)/values.yaml
         args:
           # Make the tool search for charts only under the `example-charts` directory
-          - --chart-search-root=helm-charts
+          - --chart-search-root=deployment/charts

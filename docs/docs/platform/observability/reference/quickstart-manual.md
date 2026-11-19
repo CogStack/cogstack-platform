@@ -11,8 +11,8 @@ mkdir -p observability-simple/alloy/probers
 
 Download these two files, and place in the right folder
 
-- [docker-compose.yml](https://raw.githubusercontent.com/CogStack/cogstack-platform-toolkit/85029d135b5bacfb473b638d82e45021ee67781a/observability/examples/simple/docker-compose.yml) in observability-simple/
-- [probe-observability.yml](https://raw.githubusercontent.com/CogStack/cogstack-platform-toolkit/85029d135b5bacfb473b638d82e45021ee67781a/observability/examples/simple/alloy/probers/probe-observability.yml) into observability-simple/alloy/probers
+- [docker-compose.yml](https://raw.githubusercontent.com/CogStack/cogstack-platform/main/deployment/examples/observability/simple/docker-compose.yml) in observability-simple/
+- [probe-observability.yml](https://raw.githubusercontent.com/CogStack/cogstack-platform/main/deployment/examples/observability/simple/alloy/probers/probe-observability.yml) into observability-simple/alloy/probers
 
 ### Step 2: Start the stack
 

@@ -22,7 +22,7 @@ Approach:
   3. Topologically sort so dependencies come before dependents.
   4. Run `helm dependency update` in that order.
 
-Usage (cwd should be helm-charts/):
+Usage (cwd should be deployment/charts/):
   helm-recursive-dependency-update.py
   helm-recursive-dependency-update.py CHART [CHART ...]
 """

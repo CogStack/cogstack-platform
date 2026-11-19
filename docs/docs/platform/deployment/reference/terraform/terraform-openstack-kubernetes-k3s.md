@@ -16,6 +16,6 @@ The module is published to the Terraform Registry:
 
 Source code lives in this repository:
 
-- [terraform-modules/openstack-kubernetes-k3s](https://github.com/CogStack/cogstack-platform/tree/main/terraform-modules/openstack-kubernetes-k3s)
+- [deployment/terraform/openstack-kubernetes-k3s](https://github.com/CogStack/cogstack-platform/tree/main/deployment/terraform/openstack-kubernetes-k3s)
 
 For a full CogStack platform deployment that uses this module, see the [OpenStack Kubernetes K3s example](../../examples/openstack-kubernetes-k3s.md).

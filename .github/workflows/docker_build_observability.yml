@@ -1,0 +1,130 @@
+name: docker_build_observability
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - "v*.*.*" # e.g., v0.1.1
+    paths:
+      - "apps/observability/**"
+      - "deployment/examples/observability/**"
+      - ".github/workflows/docker_build_observability.yml"
+  pull_request:
+    paths:
+      - "apps/observability/**"
+      - "deployment/examples/observability/**"
+      - ".github/workflows/docker_build_observability.yml"
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.user.login != 'dependabot[bot]' && github.repository == 'CogStack/cogstack-platform'
+    strategy:
+      matrix: # This should be replaced with Docker Bake instead
+        include:
+          - name: prometheus
+            context: apps/observability/prometheus
+            dockerfile: apps/observability/prometheus/Dockerfile.prometheus
+            image: cogstacksystems/cogstack-observability-prometheus
+          - name: blackbox
+            context: apps/observability/prometheus
+            dockerfile: apps/observability/prometheus/Dockerfile.blackbox
+            image: cogstacksystems/cogstack-observability-blackbox-exporter
+          - name: grafana
+            context: apps/observability/grafana
+            dockerfile: apps/observability/grafana/Dockerfile
+            image: cogstacksystems/cogstack-observability-grafana
+          - name: traefik
+            context: apps/observability/traefik
+            dockerfile: apps/observability/traefik/Dockerfile
+            image: cogstacksystems/cogstack-observability-traefik
+          - name: alloy
+            context: apps/observability/grafana-alloy
+            dockerfile: apps/observability/grafana-alloy/Dockerfile
+            image: cogstacksystems/cogstack-observability-alloy
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v7
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ matrix.image }}
+          tags: |
+            # set latest tag for default branch
+            type=raw,value=latest,enable={{is_default_branch}}
+            # Include all default tags
+            type=schedule
+            type=ref,event=branch
+            type=ref,event=tag
+            type=ref,event=pr
+            type=sha
+      - name: Build and push Docker image
+        id: push
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ matrix.image}}:buildcache
+          cache-to: type=registry,ref=${{ matrix.image}}:buildcache,mode=max
+
+  test-observability-quickstart-scripts:
+    needs: docker
+    runs-on: ubuntu-latest
+    name: Test observability Quickstart scripts
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install Python dependencies
+        run: pip install -r deployment/examples/observability/test/requirements.txt
+
+      - name: Run Simple quickstart test
+        run: |
+          echo "🧪 Running Simple quickstart test..."
+          IMAGE_TAG="sha-${GITHUB_SHA::7}"
+          echo "Using images tagged ${IMAGE_TAG}"
+          export OBSERVABILITY_BASE_URL="file://${GITHUB_WORKSPACE}/deployment/examples/observability"
+          export COMPOSE_FILE="${GITHUB_WORKSPACE}/deployment/examples/observability/simple/observability-simple/docker-compose.yml:${RUNNER_TEMP}/observability-images.yml"
+          {
+            echo "services:"
+            for service in alloy prometheus grafana traefik; do
+              printf '  %s:\n    image: cogstacksystems/cogstack-observability-%s:%s\n' \
+                "$service" "$service" "$IMAGE_TAG"
+            done
+          } > "${RUNNER_TEMP}/observability-images.yml"
+          if ! bash deployment/examples/observability/test/test-quickstart.sh; then
+            docker compose ps --all || true
+            docker compose logs --no-color --tail=100 || true
+            exit 1
+          fi
+
+      - name: Report test result
+        if: always()
+        run: |
+          if [ $? -eq 0 ]; then
+            echo "✅ quickstart test PASSED"
+          else
+            echo "❌ quickstart test FAILED"
+            exit 1
+          fi

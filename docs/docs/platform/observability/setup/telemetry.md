@@ -16,7 +16,7 @@ We have to run Grafana Alloy on every single VM to get telemetry.
 
 Alloy is setup to push metrics to a central prometheus instance.
 
-- Copy this docker compose file: [exporters.docker-compose.yml](https://raw.githubusercontent.com/CogStack/cogstack-platform-toolkit/85029d135b5bacfb473b638d82e45021ee67781a/observability/examples/full/exporters.docker-compose.yml)
+- Copy this docker compose file: [exporters.docker-compose.yml](https://raw.githubusercontent.com/CogStack/cogstack-platform/main/deployment/examples/observability/full/exporters.docker-compose.yml)
 - Edit the environment variables to point to your prometheus URL:
 
 ```yaml
@@ -34,8 +34,8 @@ Now you have the setup, you will have to run this on every VM you want metrics f
 ### Elastic Search Metrics
 To get elasticsearch metrics we have to mount an alloy config file into the image.
 
-- Copy this docker compose file: [exporters.elastic.docker-compose.yml](https://raw.githubusercontent.com/CogStack/cogstack-platform-toolkit/85029d135b5bacfb473b638d82e45021ee67781a/observability/examples/full/exporters.elastic.docker-compose.yml)
-- Copy this configuration file [elasticsearch.alloy](https://raw.githubusercontent.com/CogStack/cogstack-platform-toolkit/85029d135b5bacfb473b638d82e45021ee67781a/observability/examples/full/alloy/elasticsearch.alloy) into `alloy/elasticsearch.alloy`
+- Copy this docker compose file: [exporters.elastic.docker-compose.yml](https://raw.githubusercontent.com/CogStack/cogstack-platform/main/deployment/examples/observability/full/exporters.elastic.docker-compose.yml)
+- Copy this configuration file [elasticsearch.alloy](https://raw.githubusercontent.com/CogStack/cogstack-platform/main/deployment/examples/observability/full/alloy/elasticsearch.alloy) into `alloy/elasticsearch.alloy`
 
 In the docker compose file, we can see there are two changes to the usual exporter:
 

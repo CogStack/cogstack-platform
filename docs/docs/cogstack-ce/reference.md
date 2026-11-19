@@ -67,7 +67,7 @@ On install, the CogStack CE provisioner:
 - Loads example documents
 - Imports premade dashboards
 
-The dashboards and data used here were first defined in [cogstack-dashboards-demo](https://github.com/CogStack/cogstack-platform/tree/main/cogstack-dashboards-demo). 
+The dashboards and data used here were first defined in [cogstack-dashboards-demo](https://github.com/CogStack/cogstack-platform/tree/main/apps/cogstack-dashboards-demo). 
 
 
 ## Architecture Details

@@ -23,7 +23,7 @@ Deployment through terraform is carried out through two terraform commands, to h
 
 ### 1. Get the configuration files
 
-All you need to do is get the Terraform files that have been preconfigured for this example (the ZIP contains every `deployment-examples` tree; use the `aws-kubernetes` folder for this guide).
+All you need to do is get the Terraform files that have been preconfigured for this example (the ZIP contains every `deployment/examples` tree; use the `aws-kubernetes` folder for this guide).
 
 [Download all deployment examples (ZIP)](../../../assets/downloads/deployment-examples.zip){ .md-button }
 

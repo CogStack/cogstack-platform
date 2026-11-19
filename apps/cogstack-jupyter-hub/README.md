@@ -1,6 +1,6 @@
 # Cogstack-Jupyter-Hub
 
-[![docker-jupyter-hub-all](https://github.com/CogStack/cogstack-platform/actions/workflows/jupyter-docker-build.yml/badge.svg?branch=main)](https://github.com/CogStack/cogstack-platform/actions/workflows/jupyter-docker-build.yml)
+[![docker_build_jupyterhub](https://github.com/CogStack/cogstack-platform/actions/workflows/docker_build_jupyterhub.yml/badge.svg?branch=main)](https://github.com/CogStack/cogstack-platform/actions/workflows/docker_build_jupyterhub.yml)
 
 ## Introduction
 

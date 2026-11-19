@@ -1,0 +1,193 @@
+# Lint, test, and publish Helm charts under deployment/charts/.
+#
+# Triggers:
+#   - Pull requests touching deployment/charts/ or this workflow: lint and install-test
+#     changed charts only; does not publish.
+#   - Push to main (deployment/charts/ paths): lint/test all charts, then package and
+#     push every top-level chart to Docker Hub OCI at version 0.0.1.
+#   - Per-chart release tags (e.g. helm-charts/medcat-trainer-helm-v0.1.2):
+#     lint/test all charts, then package and push only the tagged chart at the
+#     version from the tag; attaches the chart archive to the GitHub release
+#     created by release-please.
+#
+# Charts are discovered automatically from top-level Chart.yaml files. Release
+# versions for tagged releases are managed by release-please.
+name: build_helm_charts
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - "helm-charts/*-v*.*.*" # e.g., helm-charts/medcat-trainer-helm-v0.1.2
+    paths:
+      - "deployment/charts/**"
+      - ".github/workflows/build_helm_charts.yml"
+  pull_request:
+    paths:
+      - "deployment/charts/**"
+      - ".github/workflows/build_helm_charts.yml"
+
+defaults:
+  run:
+    working-directory: ./deployment/charts
+
+jobs:
+  helm-lint-test:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.user.login != 'dependabot[bot]' && github.repository == 'CogStack/cogstack-platform'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: 🧹 Free up disk space
+        run: |
+          df -h # Optional: Check space before build
+          # Remove large, unnecessary packages/tools
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /usr/share/swift
+          sudo rm -rf /usr/share/rust
+          sudo rm -rf /usr/share/powershell
+          # Remove cached tools and files
+          sudo apt-get clean
+          df -h # Optional: Check space before build
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v5.1.0
+        with:
+          version: v3.17.0
+
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.x"
+          check-latest: true
+
+      - name: Install Python deps for chart scripts
+        run: pip install pyyaml
+        working-directory: .
+
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@v2.9.0
+
+      - name: Run chart-testing (list-changed)
+        id: list-changed
+        working-directory: .
+        run: |
+          changed=$(ct list-changed --config .github/linters/ct.yaml)
+          if [[ -n "$changed" ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Recursive dependency update (all charts, including nested)
+        run: ../../.github/scripts/helm-recursive-dependency-update.py
+
+      - name: Run chart-testing (lint)
+        if: steps.list-changed.outputs.changed == 'true'
+        working-directory: .
+        env:
+          CT_CHECK_VERSION_INCREMENT: "false"
+        run: ct lint --config .github/linters/ct.yaml
+
+      - name: Create kind cluster
+        if: steps.list-changed.outputs.changed == 'true'
+        uses: helm/kind-action@v1.15.2
+
+      - name: Run chart-testing (install)
+        if: steps.list-changed.outputs.changed == 'true'
+        working-directory: .
+        run: ct install --config .github/linters/ct.yaml
+
+  helm-publish:
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' && github.repository == 'CogStack/cogstack-platform'
+    needs: helm-lint-test
+    permissions:
+      contents: write
+    env:
+      DEFAULT_CHART_VERSION: 0.0.1
+    steps:
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v5.1.0
+        with:
+          version: v3.17.0
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.x"
+          check-latest: true
+
+      - name: Install Python deps for chart scripts
+        run: pip install pyyaml
+        working-directory: .
+
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Determine version
+        id: version
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            TAG="${GITHUB_REF_NAME}"
+            CHART="${TAG#helm-charts/}"
+            CHART="${CHART%-v*}"
+            CHART_VERSION="${TAG##*-v}"
+            echo "chart=$CHART" >> "$GITHUB_OUTPUT"
+            echo "single_chart=true" >> "$GITHUB_OUTPUT"
+          else
+            CHART_VERSION="$DEFAULT_CHART_VERSION"
+            echo "single_chart=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "chart_version=$CHART_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Discover charts
+        id: charts
+        run: |
+          if [[ "${{ steps.version.outputs.single_chart }}" == "true" ]]; then
+            echo "charts=${{ steps.version.outputs.chart }}" >> "$GITHUB_OUTPUT"
+          else
+            CHARTS=()
+            while IFS= read -r chartfile; do
+              CHARTS+=("$(basename "$(dirname "$chartfile")")")
+            done < <(find . -maxdepth 2 -mindepth 2 -type f -name Chart.yaml | sort)
+            echo "charts=${CHARTS[*]}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Recursive dependency update (all charts, including nested)
+        # Waiting on helm recursive feature https://github.com/helm/helm/pull/30855
+        # Could alternatively switch to helm "cascade" plugin
+        run: ../../.github/scripts/helm-recursive-dependency-update.py ${{ steps.charts.outputs.charts }}
+
+      - name: Package Helm Charts
+        run: |
+          VERSION="${{ steps.version.outputs.chart_version }}"
+          for CHART in ${{ steps.charts.outputs.charts }}; do
+            helm package "./$CHART" --version "$VERSION"
+          done
+
+      - name: Helm OCI login to Docker Hub
+        run: helm registry login registry-1.docker.io -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Push Helm Charts to Docker Hub OCI
+        run: |
+          VERSION="${{ steps.version.outputs.chart_version }}"
+          for CHART in ${{ steps.charts.outputs.charts }}; do
+            helm push "./$CHART-$VERSION.tgz" oci://registry-1.docker.io/cogstacksystems
+          done
+
+      - name: Attach chart to GitHub Release
+        uses: softprops/action-gh-release@v3
+        if: github.ref_type == 'tag'
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: deployment/charts/${{ steps.charts.outputs.chart }}-${{ steps.version.outputs.chart_version }}.tgz

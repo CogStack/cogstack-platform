@@ -18,7 +18,7 @@
     "bootstrap-sha": "07501a49fcf25b639443cd53b39d88c7a1f092e9",
     "separate-pull-requests": true,
     "packages": {
-        "helm-charts/medcat-trainer-helm": {
+        "deployment/charts/medcat-trainer-helm": {
             "release-type": "helm",
             "component": "helm-charts/medcat-trainer-helm",
             "changelog-path": "CHANGELOG.md",
@@ -34,7 +34,7 @@
                 { "type": "revert", "section": "Reverts" }
             ]
         },
-        "helm-charts/medcat-service-helm": {
+        "deployment/charts/medcat-service-helm": {
             "release-type": "helm",
             "component": "helm-charts/medcat-service-helm",
             "changelog-path": "CHANGELOG.md",
@@ -50,7 +50,7 @@
                 { "type": "revert", "section": "Reverts" }
             ]
         },
-        "helm-charts/cogstack-ce-helm": {
+        "deployment/charts/cogstack-ce-helm": {
             "release-type": "helm",
             "component": "helm-charts/cogstack-ce-helm",
             "changelog-path": "CHANGELOG.md",
@@ -66,7 +66,7 @@
                 { "type": "revert", "section": "Reverts" }
             ]
         },
-        "helm-charts/cogstack-cohorter-helm": {
+        "deployment/charts/cogstack-cohorter-helm": {
             "release-type": "helm",
             "component": "helm-charts/cogstack-cohorter-helm",
             "changelog-path": "CHANGELOG.md",
@@ -82,7 +82,7 @@
                 { "type": "revert", "section": "Reverts" }
             ]
         },
-        "helm-charts/cogstack-observability-helm": {
+        "deployment/charts/cogstack-observability-helm": {
             "release-type": "helm",
             "component": "helm-charts/cogstack-observability-helm",
             "changelog-path": "CHANGELOG.md",
@@ -98,7 +98,7 @@
                 { "type": "revert", "section": "Reverts" }
             ]
         },
-        "helm-charts/cogstack-jupyterhub-helm": {
+        "deployment/charts/cogstack-jupyterhub-helm": {
             "release-type": "helm",
             "component": "helm-charts/cogstack-jupyterhub-helm",
             "changelog-path": "CHANGELOG.md",
@@ -114,7 +114,7 @@
                 { "type": "revert", "section": "Reverts" }
             ]
         },
-        "helm-charts/ocr-service-helm": {
+        "deployment/charts/ocr-service-helm": {
             "release-type": "helm",
             "component": "helm-charts/ocr-service-helm",
             "initial-version": "0.1.0",
@@ -131,7 +131,7 @@
                 { "type": "revert", "section": "Reverts" }
             ]
         },
-        "terraform-modules/openstack-kubernetes-k3s": {
+        "deployment/terraform/openstack-kubernetes-k3s": {
             "release-type": "simple",
             "component": "terraform-modules/openstack-kubernetes-k3s",
             "initial-version": "0.1.0",
