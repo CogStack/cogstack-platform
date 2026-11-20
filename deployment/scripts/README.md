@@ -31,7 +31,7 @@ Review the script before running it on an existing host.
 [`install_os_tools_and_software.sh`](installation_utils/install_os_tools_and_software.sh)
 installs Docker Engine, Buildx, Compose, Azure CLI, Python utilities, filesystem
 tools, monitoring tools and build dependencies. By default it also installs
-Kubernetes tools, Helm and K3s.
+K3s and Helm. K3s supplies kubelet, containerd and kubectl.
 
 It runs the following component scripts, which can also be invoked individually
 with `bash`. On a new host, run `install_host_utils.sh` first to install their
@@ -41,18 +41,17 @@ prerequisites.
 | --- | --- |
 | [`install_host_utils.sh`](installation_utils/install_host_utils.sh) | General packages, filesystem and monitoring tools, Azure CLI and Python utilities. |
 | [`install_docker.sh`](installation_utils/install_docker.sh) | Docker Engine, Buildx, Compose, service setup, group membership and system settings. |
-| [`install_kubernetes.sh`](installation_utils/install_kubernetes.sh) | Kubernetes tools and Helm. |
+| [`install_helm.sh`](installation_utils/install_helm.sh) | Helm for chart deployment. |
 | [`install_k3s.sh`](installation_utils/install_k3s.sh) | K3s without enabling or starting its service. |
 
 ```bash
 bash deployment/scripts/installation_utils/install_os_tools_and_software.sh
 ```
 
-To install Docker and the general utilities while skipping Kubernetes, Helm and
-K3s:
+To install Docker and the general utilities while skipping K3s and Helm:
 
 ```bash
-INSTALL_KUBERNETES=false INSTALL_K3S=false \
+INSTALL_K3S=false \
   bash deployment/scripts/installation_utils/install_os_tools_and_software.sh
 ```
 
@@ -61,35 +60,24 @@ variables also apply when running the corresponding component script directly.
 
 | Variable | Default | Effect |
 | --- | --- | --- |
-| `INSTALL_KUBERNETES` | `true` | Install `kubeadm`, `kubelet`, `kubectl` and Helm. Accepts `true` or `false`. |
-| `INSTALL_K3S` | Value of `INSTALL_KUBERNETES` | Install K3s independently of the Kubernetes tools. Accepts `true` or `false`. |
-| `KUBERNETES_MINOR_VERSION` | `v1.37` | Kubernetes package repository minor release. |
+| `INSTALL_K3S` | `true` | Install K3s and Helm. Accepts `true` or `false`. |
 | `HELM_VERSION` | `v4.3.1` | Helm release; the installer accepts Helm 4 versions. |
 | `K3S_VERSION` | `v1.37.2+k3s1` | K3s release. |
-
-To install the Kubernetes tools and Helm while skipping K3s:
-
-```bash
-INSTALL_K3S=false \
-  bash deployment/scripts/installation_utils/install_os_tools_and_software.sh
-```
 
 The installer enables and starts Docker, adds root and the invoking user to the
 Docker group, and sets `vm.max_map_count=262144` immediately and in
 `/etc/sysctl.conf`. Start a new login session to pick up Docker group membership.
 
-Kubernetes packages are installed for later cluster setup; the installer does
-not initialise or join a cluster. It enables the kubelet service and holds the
-Kubernetes packages on Debian/Ubuntu. K3s installation skips enabling and starting
-its service, and preserves the standalone `kubectl` command.
+K3s is installed for later cluster setup; the installer does not initialise or
+join a cluster. Its service is not enabled or started. K3s creates a `kubectl`
+command if one is not already installed.
 
 ### Cluster setup and kubectl access
 
 After installing the prerequisites, run
 [`setup_kubernetes_cluster.sh`](installation_utils/setup_kubernetes_cluster.sh)
-as the user who will run `kubectl`; it invokes `sudo` internally. Choose one
-cluster implementation per host. The script forwards remaining arguments to
-the native setup command.
+as the user who will run `kubectl`; it invokes `sudo` internally. The script
+forwards remaining arguments to the K3s setup command.
 
 Create a K3s server, or join a worker on another host with K3s already installed:
 
@@ -101,19 +89,12 @@ bash deployment/scripts/installation_utils/setup_kubernetes_cluster.sh k3s agent
 
 The K3s server token is stored at `/var/lib/rancher/k3s/server/node-token`.
 
-For kubeadm, prepare the container runtime, swap and networking first, then use
-`setup_kubernetes_cluster.sh kubeadm init [options]` on the first control-plane
-node, or `setup_kubernetes_cluster.sh kubeadm join [join arguments]` on additional
-nodes. Install your chosen Pod network after initialization. See the
-[kubeadm setup guide](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/).
-
 Control-plane setup copies the admin kubeconfig to `~/.kube/config` with mode
 `0600` if that path does not already exist. To configure access to an existing
 cluster without running setup again:
 
 ```bash
 bash deployment/scripts/installation_utils/setup_kubernetes_cluster.sh kubeconfig /etc/rancher/k3s/k3s.yaml
-# For kubeadm, use /etc/kubernetes/admin.conf on a control-plane node instead.
 ```
 
 An existing `~/.kube/config` is retained and an explicit access command is printed.

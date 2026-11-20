@@ -3,9 +3,9 @@
 set -euo pipefail
 
 case "${1:-}:${2:-}" in
-    k3s:server|k3s:agent|kubeadm:init|kubeadm:join|kubeconfig:?*) ;;
+    k3s:server|k3s:agent|kubeconfig:?*) ;;
     *)
-        echo "Usage: $0 k3s server|agent [options] | kubeadm init|join [options] | kubeconfig FILE" >&2
+        echo "Usage: $0 k3s server|agent [options] | kubeconfig FILE" >&2
         exit 1
         ;;
 esac
@@ -20,21 +20,13 @@ case "$backend" in
         installer="$(mktemp)"
         trap 'rm -f "$installer"' EXIT
         curl -fsSL https://get.k3s.io -o "$installer"
-        sudo env INSTALL_K3S_SKIP_DOWNLOAD=true INSTALL_K3S_SYMLINK=skip \
+        sudo env INSTALL_K3S_SKIP_DOWNLOAD=true \
             INSTALL_K3S_SKIP_ENABLE=false INSTALL_K3S_SKIP_START=false INSTALL_K3S_FORCE_RESTART=true \
             sh "$installer" "$role" "$@"
         if [ "$role" = "agent" ]; then
             exit 0
         fi
         kubeconfig="/etc/rancher/k3s/k3s.yaml"
-        ;;
-    kubeadm)
-        sudo kubeadm "$role" "$@"
-        kubeconfig="/etc/kubernetes/admin.conf"
-        if ! sudo test -f "$kubeconfig"; then
-            echo "Worker joined. Use a control-plane kubeconfig to administer the cluster."
-            exit 0
-        fi
         ;;
     kubeconfig)
         if [ "$#" -ne 0 ]; then
