@@ -35,8 +35,8 @@ Verification checks Docker and K3s without sudo. Expect the node to become `Read
 From your workstation, run once with the first server followed by the other servers:
 
 ```bash
-bash deployment/scripts/installation_utils/setup_k3s_cluster.sh \
-  admin@10.0.0.11 admin@10.0.0.12 admin@10.0.0.13
+make -C deployment setup-k3s-cluster-remote \
+  NODES="admin@10.0.0.11 admin@10.0.0.12 admin@10.0.0.13"
 ```
 
 Requires SSH access (key or password), passwordless sudo, Bash and tar on each
