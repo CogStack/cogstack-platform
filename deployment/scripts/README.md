@@ -20,20 +20,32 @@ Package and repository availability depends on the distribution release. They
 require Bash, `sudo`, internet access to package repositories and a host using
 systemd. They invoke `sudo` internally, including when run as root.
 
-Both installers update and upgrade system packages. The Docker installer also
-changes package repositories, Docker group membership and system settings; its
-Red Hat/CentOS branch removes existing Docker packages, Podman and Buildah.
+The full installer and database installer update and upgrade system packages.
+The Docker installer also changes package repositories, Docker group membership
+and system settings; its Red Hat/CentOS branch removes existing Docker packages,
+Podman and Buildah.
 Review the script before running it on an existing host.
 
 ### Docker and platform tools
 
-[`install_docker_and_utils.sh`](installation_utils/install_docker_and_utils.sh)
+[`install_os_tools_and_software.sh`](installation_utils/install_os_tools_and_software.sh)
 installs Docker Engine, Buildx, Compose, Azure CLI, Python utilities, filesystem
 tools, monitoring tools and build dependencies. By default it also installs
 Kubernetes tools, Helm and K3s.
 
+It runs the following component scripts, which can also be invoked individually
+with `bash`. On a new host, run `install_host_utils.sh` first to install their
+prerequisites.
+
+| Script | Purpose |
+| --- | --- |
+| [`install_host_utils.sh`](installation_utils/install_host_utils.sh) | General packages, filesystem and monitoring tools, Azure CLI and Python utilities. |
+| [`install_docker.sh`](installation_utils/install_docker.sh) | Docker Engine, Buildx, Compose, service setup, group membership and system settings. |
+| [`install_kubernetes.sh`](installation_utils/install_kubernetes.sh) | Kubernetes tools and Helm. |
+| [`install_k3s.sh`](installation_utils/install_k3s.sh) | K3s without enabling or starting its service. |
+
 ```bash
-bash deployment/scripts/installation_utils/install_docker_and_utils.sh
+bash deployment/scripts/installation_utils/install_os_tools_and_software.sh
 ```
 
 To install Docker and the general utilities while skipping Kubernetes, Helm and
@@ -41,11 +53,11 @@ K3s:
 
 ```bash
 INSTALL_KUBERNETES=false INSTALL_K3S=false \
-  bash deployment/scripts/installation_utils/install_docker_and_utils.sh
+  bash deployment/scripts/installation_utils/install_os_tools_and_software.sh
 ```
 
-The following environment variables control the optional components. Versions
-shown are the defaults configured in the script.
+The following environment variables control the optional components. Version
+variables also apply when running the corresponding component script directly.
 
 | Variable | Default | Effect |
 | --- | --- | --- |
@@ -59,7 +71,7 @@ To install the Kubernetes tools and Helm while skipping K3s:
 
 ```bash
 INSTALL_K3S=false \
-  bash deployment/scripts/installation_utils/install_docker_and_utils.sh
+  bash deployment/scripts/installation_utils/install_os_tools_and_software.sh
 ```
 
 The installer enables and starts Docker, adds root and the invoking user to the
@@ -85,7 +97,7 @@ It uses `postgresql-client` on Debian/Ubuntu and the PostgreSQL 12 module and
 
 ### OS detection and Docker settings
 
-Both installers use [`detect_os.sh`](installation_utils/detect_os.sh), which
+The installers use [`detect_os.sh`](installation_utils/detect_os.sh), which
 reads `/etc/os-release` and rejects unsupported distributions. To check the
 detected distribution without installing anything:
 
