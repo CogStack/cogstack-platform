@@ -1,7 +1,7 @@
 # Deployment scripts
 
-Run commands from the repository root. Requires Bash, `sudo`, systemd and network
-access. Scripts invoke `sudo` internally; run cluster setup as the user who will
+Run commands from the repository root. Requires Make, Bash, `sudo`, systemd and network
+access. Installation and cluster setup invoke `sudo` internally; run setup as the user who will
 use `kubectl`.
 
 ## Install, initialize and verify
@@ -9,7 +9,7 @@ use `kubectl`.
 Install on every machine before creating or joining a cluster:
 
 ```bash
-bash deployment/scripts/installation_utils/install_os_tools_and_software.sh
+make -C deployment setup-install-pre-requisites
 ```
 
 By default, this installs host utilities, Docker, K3s and Helm. **K3s remains stopped until
@@ -20,13 +20,12 @@ Start a new login session to use Docker without sudo.
 On the first machine, initialize the cluster and check it:
 
 ```bash
-bash deployment/scripts/installation_utils/setup_kubernetes_cluster.sh k3s server --cluster-init
-sudo kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml get nodes
-sudo k3s secrets-encrypt status
+make -C deployment setup-k3s-cluster-init
+make -C deployment setup-verify
 ```
 
 Setup enables/restarts K3s and defaults to Secrets encryption at rest on servers.
-Expect the node to become `Ready` and encryption status to show `Enabled`.
+Verification checks Docker and K3s without sudo. Expect the node to become `Ready`.
 
 ## Expand to three servers
 
