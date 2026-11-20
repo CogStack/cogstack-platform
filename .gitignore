@@ -1,4 +1,5 @@
 # Custom ignores
+.vscode/
 deployment/examples/observability/simple/observability-simple
 deployment/examples/observability/full/cogstack-observability
 _build
