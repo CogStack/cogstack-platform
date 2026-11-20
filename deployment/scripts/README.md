@@ -12,8 +12,11 @@ Install on every machine before creating or joining a cluster:
 make -C deployment setup-install-pre-requisites
 ```
 
-By default, this installs host utilities, Docker, K3s and Helm. **K3s remains stopped until
-cluster setup.** Installation upgrades packages and may remove conflicting
+By default, this installs host utilities, Docker, K3s and Helm. **New K3s installations
+remain stopped until cluster setup.** Installers skip existing system and Python
+packages, Azure CLI, K3s and Helm, and reuse existing Docker and Azure apt sources
+(`.list` or `.sources`, including custom filenames). They do not run system upgrades
+or autoremove. Installing missing Docker packages on RHEL may remove conflicting
 container packages; review the scripts before running on an existing host.
 Start a new login session to use Docker without sudo.
 

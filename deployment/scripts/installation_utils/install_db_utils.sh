@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=installation_helpers.sh
+source "${script_dir}/installation_helpers.sh"
 
 if [ "$(id -u)" -eq 0 ]; then
     echo "Running with root privileges."
@@ -14,15 +16,10 @@ echo "Found distribution: $os_distribution "
 
 if [ "$os_distribution" == "debian" ] || [ "$os_distribution" == "ubuntu" ];
 then
-    sudo apt-get update -y && sudo apt-get upgrade -y
-    sudo apt-get install -y postgresql-client
+    install_missing_packages "$os_distribution" postgresql-client
 elif  [ "$os_distribution" == "redhat" ];
 then
-    sudo yum -y update && sudo yum -y upgrade
-    
-    sudo dnf -y install postgresql
-
-    sudo yum -y autoremove
+    install_missing_packages "$os_distribution" postgresql
 else
     echo "No instructions given for distribution: $os_distribution" 
     exit 1

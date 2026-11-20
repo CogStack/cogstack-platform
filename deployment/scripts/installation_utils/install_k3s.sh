@@ -4,6 +4,12 @@ set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 bash "${script_dir}/detect_os.sh" > /dev/null
+
+if command -v k3s >/dev/null 2>&1; then
+    echo "K3s is already installed."
+    exit 0
+fi
+
 installer_temp_dir="$(mktemp -d)"
 trap 'rm -rf "$installer_temp_dir"' EXIT
 
