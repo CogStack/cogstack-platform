@@ -20,8 +20,6 @@ elif  [ "$os_distribution" == "redhat" ];
 then
     sudo yum -y update && sudo yum -y upgrade
     
-    # install postgresql client
-    sudo dnf -y module enable postgresql:12
     sudo dnf -y install postgresql
 
     sudo yum -y autoremove

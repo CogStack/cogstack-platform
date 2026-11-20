@@ -40,7 +40,7 @@ echo "Installing required Python packages..."
 
 # Keep the distribution's pip; newer releases require an explicit override when
 # installing utilities into an externally managed system Python environment.
-pip_options=(install html2text jsoncsv detect)
+pip_options=(install --upgrade html2text jsoncsv detect)
 if pip3 install --help | grep -- '--break-system-packages' > /dev/null; then
     pip_options+=(--break-system-packages)
 fi

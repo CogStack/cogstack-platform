@@ -12,7 +12,7 @@ Install on every machine before creating or joining a cluster:
 bash deployment/scripts/installation_utils/install_os_tools_and_software.sh
 ```
 
-This installs host utilities, Docker, K3s and Helm. **K3s remains stopped until
+By default, this installs host utilities, Docker, K3s and Helm. **K3s remains stopped until
 cluster setup.** Installation upgrades packages and may remove conflicting
 container packages; review the scripts before running on an existing host.
 Start a new login session to use Docker without sudo.
@@ -66,15 +66,6 @@ bash deployment/scripts/installation_utils/setup_kubernetes_cluster.sh kubeconfi
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `INSTALL_K3S` | `true` | Install K3s and Helm; `false` skips both. |
-| `K3S_VERSION` | `v1.37.2+k3s1` | K3s version. |
-| `HELM_VERSION` | `v4.3.1` | Helm 4 version. |
-
-For Docker and host utilities only:
-
-```bash
-INSTALL_K3S=false \
-  bash deployment/scripts/installation_utils/install_os_tools_and_software.sh
-```
 
 Individual installers can also be run with `bash`:
 [host utilities](installation_utils/install_host_utils.sh),

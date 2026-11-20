@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-# Read one canonical ID instead of matching every release file, which can emit
-# duplicate distribution names and filename prefixes on the same machine.
 if [ ! -r /etc/os-release ]; then
     echo "Distribution version could not be found. Stopping script..." >&2
     exit 1
