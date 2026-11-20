@@ -1,0 +1,24 @@
+# Traefik is the ingress controller for PR environments.
+ingressClass:
+  enabled: true
+  isDefaultClass: true
+
+ports:
+  web:
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+  websecure:
+    http:
+      # Applied to every route, so no app can be exposed without it.
+      middlewares:
+        - traefik-basic-auth@kubernetescrd
+
+# Serve the PR's wildcard certificate for every host.
+tlsStore:
+  default:
+    defaultCertificate:
+      secretName: wildcard-tls
