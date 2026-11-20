@@ -3,7 +3,8 @@
 # - PR closed or merged: that PR's environment is removed.
 # - Manual run: give a PR number, or "all" to remove every environment.
 # - Hourly: remove environments whose PR is closed, or older than
-#   GKE_PR_MAX_AGE_HOURS (repository variable, default 24).
+#   GKE_PR_MAX_AGE_HOURS (repository variable, default 24). Environments that
+#   are kept get their status dots on the PR refreshed.
 name: gke_teardown
 
 on:
@@ -38,9 +39,11 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      pull-requests: write
     env:
       GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
       PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr }}
+      GH_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -79,7 +82,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-      pull-requests: read
+      pull-requests: write
     env:
       GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
       MAX_AGE_HOURS: ${{ vars.GKE_PR_MAX_AGE_HOURS || '24' }}

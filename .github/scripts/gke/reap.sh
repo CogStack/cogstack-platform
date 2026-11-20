@@ -29,7 +29,8 @@ while read -r pr created; do
     log "Reaping PR $pr: $reason"
     ./teardown.sh "$pr" || failed=1
   else
-    log "Keeping PR $pr (state $state, ${age_hours}h old)"
+    log "Keeping PR $pr (state $state, ${age_hours}h old); refreshing its status"
+    ./pr-status.sh "$pr" live || true
   fi
 done < <(gc container clusters list --filter="resourceLabels.${CLUSTER_LABEL}" \
   --format='value(resourceLabels.pr,createTime)')

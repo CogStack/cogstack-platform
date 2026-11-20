@@ -44,4 +44,9 @@ gc compute disks list --format='value(name,zone.basename())' \
     gc compute disks delete "$name" --zone "$zone" || true
   done
 
+# Tell anyone looking at the PR that its links no longer work.
+if [[ -n "${GH_TOKEN:-}" ]]; then
+  ./pr-status.sh "$PR_NUMBER" removed || true
+fi
+
 log "Teardown of PR ${PR_NUMBER} complete"

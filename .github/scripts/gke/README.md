@@ -20,7 +20,10 @@ every script derives what it needs from the PR number.
    at the load balancer, obtains a wildcard certificate, then installs or upgrades
    `cogstack-ce-helm` from the PR and runs `helm test`.
 3. `smoke-test.sh` requests every app over public HTTPS.
-4. The check goes green and the cluster stays up.
+4. `pr-status.sh` writes a panel at the top of the PR description: a link and a
+   green or red dot per app. It shows "deploying", "failed" and "removed" too,
+   and the hourly job re-checks the dots for environments that are still up.
+5. The check goes green and the cluster stays up.
 
 Every route sits behind basic auth, because the charts ship demo passwords and
 the URLs are public.

@@ -1,5 +1,6 @@
 # Deploy the PR's cogstack-ce-helm chart to its own GKE cluster and leave it
-# running at https://<app>.pr-<number>.platform.cogstack.dev for review.
+# running at https://<app>.pr-<number>.platform.cogstack.dev for review. The
+# links and a status dot per app are kept at the top of the PR description.
 #
 # - The first run for a PR creates the cluster; later pushes upgrade the release.
 # - The cluster is removed by gke_teardown.yml (PR closed, manual, or too old).
@@ -65,9 +66,13 @@ jobs:
       GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
       PR_NUMBER: ${{ github.event.pull_request.number }}
       MAX_AGE_HOURS: ${{ vars.GKE_PR_MAX_AGE_HOURS || '24' }}
+      GH_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+
+      - name: Show "deploying" on the PR
+        run: .github/scripts/gke/pr-status.sh "$PR_NUMBER" deploying
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
@@ -97,30 +102,13 @@ jobs:
       - name: Smoke test over public HTTPS
         run: .github/scripts/gke/smoke-test.sh "$PR_NUMBER"
 
-      - name: Publish links
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          source .github/scripts/gke/lib.sh
-          set_pr "$PR_NUMBER"
-          {
-            echo "### PR environment"
-            echo
-            echo "Deployed from ${GITHUB_SHA}. The cluster stays up until the PR is closed or it is ${MAX_AGE_HOURS} hours old."
-            echo
-            for app in $APPS; do
-              echo "- https://${app%%:*}.${DOMAIN}/"
-            done
-            echo
-            echo "User \`${BASIC_AUTH_USER}\`. Password:"
-            echo "\`gcloud secrets versions access latest --secret ${BASIC_AUTH_SECRET} --project ${GCP_PROJECT_ID}\`"
-          } > links.md
-          cat links.md >> "$GITHUB_STEP_SUMMARY"
-          gh pr comment "$PR_NUMBER" --edit-last --create-if-none --body-file links.md
+      - name: Show links and app status on the PR
+        run: .github/scripts/gke/pr-status.sh "$PR_NUMBER" live
 
       - name: Diagnostics
         if: failure()
         run: |
+          .github/scripts/gke/pr-status.sh "$PR_NUMBER" failed || true
           kubectl get nodes -o wide || true
           kubectl get pods -A -o wide || true
           kubectl get ingress,certificate,challenge -A || true
