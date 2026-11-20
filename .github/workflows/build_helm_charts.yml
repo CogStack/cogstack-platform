@@ -34,6 +34,8 @@ defaults:
 jobs:
   helm-lint-test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     if: github.event.pull_request.user.login != 'dependabot[bot]' && github.repository == 'CogStack/cogstack-platform'
     steps:
       - name: Checkout
