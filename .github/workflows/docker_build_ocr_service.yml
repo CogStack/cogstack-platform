@@ -1,4 +1,4 @@
-name: docker_build_ocr-service
+name: docker_build_ocr_service
 
 on:
   push:
@@ -6,17 +6,17 @@ on:
     tags: ['ocr-service-v*.*.*']
     paths:
       - "apps/ocr-service/**"
-      - ".github/workflows/docker_build_ocr-service.yml"
-      - ".github/workflows/test_ocr-service.yml"
-      - ".github/workflows/docker_template_ocr-service.yml"
-      - ".github/workflows/docker_smoke_ocr-service.yml"
+      - ".github/workflows/docker_build_ocr_service.yml"
+      - ".github/workflows/test_ocr_service.yml"
+      - ".github/workflows/docker_template_ocr_service.yml"
+      - ".github/workflows/docker_smoke_ocr_service.yml"
   pull_request:
     paths:
       - "apps/ocr-service/**"
-      - ".github/workflows/docker_build_ocr-service.yml"
-      - ".github/workflows/test_ocr-service.yml"
-      - ".github/workflows/docker_template_ocr-service.yml"
-      - ".github/workflows/docker_smoke_ocr-service.yml"
+      - ".github/workflows/docker_build_ocr_service.yml"
+      - ".github/workflows/test_ocr_service.yml"
+      - ".github/workflows/docker_template_ocr_service.yml"
+      - ".github/workflows/docker_smoke_ocr_service.yml"
   release:
     types: [published]
   workflow_dispatch:
@@ -27,7 +27,7 @@ permissions:
 jobs:
   build:
     if: github.event_name != 'release' || startsWith(github.event.release.tag_name, 'ocr-service-v')
-    uses: ./.github/workflows/docker_template_ocr-service.yml
+    uses: ./.github/workflows/docker_template_ocr_service.yml
     with:
       image: cogstacksystems/cogstack-ocr-service
       context: apps/ocr-service
