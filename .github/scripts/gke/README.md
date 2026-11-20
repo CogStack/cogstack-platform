@@ -18,7 +18,7 @@ every script derives what it needs from the PR number.
 1. `cluster-up.sh` creates the cluster, or reuses it if a previous push already did.
 2. `deploy.sh` installs Traefik and cert-manager, points `*.pr-<n>.platform.cogstack.dev`
    at the load balancer, obtains a wildcard certificate, then installs or upgrades
-   `cogstack-ce-helm` from the PR and runs `helm test`.
+   `cogstack-ce-helm` (`deployment/charts/ce`) from the PR and runs `helm test`.
 3. `smoke-test.sh` requests every app over public HTTPS.
 4. `pr-status.sh` writes a panel at the top of the PR description: a link and a
    green or red dot per app. It shows "deploying", "failed" and "removed" too,

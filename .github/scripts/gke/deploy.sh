@@ -63,7 +63,7 @@ if [[ -n "$release_status" && "$release_status" != "deployed" ]]; then
   helm uninstall "$RELEASE_NAME" -n "$RELEASE_NAMESPACE" --wait --timeout 10m
 fi
 
-helm upgrade --install "$RELEASE_NAME" "$REPO_ROOT/deployment/charts/cogstack-ce-helm" \
+helm upgrade --install "$RELEASE_NAME" "$REPO_ROOT/deployment/charts/ce" \
   --namespace "$RELEASE_NAMESPACE" --create-namespace \
   -f "$WORK/values.yaml" \
   --wait --timeout 30m
