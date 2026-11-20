@@ -23,7 +23,7 @@ case "$backend" in
         installer="$(mktemp)"
         trap 'rm -f "$installer"' EXIT
         curl -fsSL https://get.k3s.io -o "$installer"
-        sudo env INSTALL_K3S_SKIP_DOWNLOAD=true \
+        sudo --preserve-env=K3S_TOKEN env INSTALL_K3S_SKIP_DOWNLOAD=true \
             INSTALL_K3S_SKIP_ENABLE=false INSTALL_K3S_SKIP_START=false INSTALL_K3S_FORCE_RESTART=true \
             sh "$installer" "$role" "$@"
         if [ "$role" = "agent" ]; then

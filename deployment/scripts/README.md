@@ -30,7 +30,24 @@ make -C deployment setup-verify
 Setup enables/restarts K3s and defaults to Secrets encryption at rest on servers.
 Verification checks Docker and K3s without sudo. Expect the node to become `Ready`.
 
-## Expand to three servers
+## Set up a cluster over SSH
+
+From your workstation, run once with the first server followed by the other servers:
+
+```bash
+bash deployment/scripts/installation_utils/setup_k3s_cluster.sh \
+  admin@10.0.0.11 admin@10.0.0.12 admin@10.0.0.13
+```
+
+Requires SSH access (key or password), passwordless sudo, Bash and tar on each
+machine. Password authentication requires a terminal and may prompt on each
+connection. Use unique
+hostnames and addresses reachable between nodes. The script installs prerequisites,
+initializes the first server, joins the others and verifies Docker and K3s as the
+SSH user. Existing members are retained; nodes from another cluster are rejected.
+Use one server initially, or three or more servers (an odd total) for HA.
+
+## Join servers manually
 
 On the first machine, read the join token:
 
