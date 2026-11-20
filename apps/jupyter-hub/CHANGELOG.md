@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.11](https://github.com/CogStack/cogstack-platform/compare/cogstack-jupyter-hub-v2.3.10...cogstack-jupyter-hub-v2.3.11) (2026-11-20)
+
+
+### Dependencies
+
+* **jupyter:** bump brotli from 1.2.0 to 1.2.1 in /apps/jupyter-hub ([#223](https://github.com/CogStack/cogstack-platform/issues/223)) ([54321c0](https://github.com/CogStack/cogstack-platform/commit/54321c0866edb4853d954568befe9bf0686fa338))
+
 ## [2.3.10](https://github.com/CogStack/cogstack-platform/compare/cogstack-jupyter-hub-v2.3.9...cogstack-jupyter-hub-v2.3.10) (2026-11-18)
 
 
