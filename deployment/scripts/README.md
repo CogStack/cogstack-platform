@@ -72,6 +72,9 @@ K3s is installed for later cluster setup; the installer does not initialise or
 join a cluster. Its service is not enabled or started. K3s creates a `kubectl`
 command if one is not already installed.
 
+K3s server installation and setup enable Secrets encryption at rest by default,
+including when joining additional servers.
+
 ### Cluster setup and kubectl access
 
 After installing the prerequisites, run

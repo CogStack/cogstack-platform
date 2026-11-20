@@ -20,6 +20,6 @@ curl -fsSL https://get.k3s.io -o "$k3s_installer"
 # Install the binary and service without starting a cluster. K3s provides kubectl.
 sudo env INSTALL_K3S_VERSION="$k3s_version" \
     INSTALL_K3S_SKIP_ENABLE=true INSTALL_K3S_SKIP_START=true \
-    sh "$k3s_installer" server
+    sh "$k3s_installer" server --secrets-encryption
 k3s --version
 echo "K3s installed. Its service is not automatically enabled or started."

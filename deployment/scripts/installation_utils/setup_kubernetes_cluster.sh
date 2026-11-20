@@ -16,6 +16,9 @@ shift 2
 
 case "$backend" in
     k3s)
+        if [ "$role" = "server" ]; then
+            set -- --secrets-encryption "$@"
+        fi
         k3s --version
         installer="$(mktemp)"
         trap 'rm -f "$installer"' EXIT
