@@ -83,7 +83,7 @@ kubectl delete namespace cogstack
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../jupyterhub | cogstack-jupyterhub(cogstack-jupyterhub-helm) | >=0.0.1 |
+| file://../jupyter-hub | cogstack-jupyterhub(cogstack-jupyterhub-helm) | >=0.0.1 |
 | file://../medcat-service | medcat-service(medcat-service-helm) | >=0.0.1 |
 | file://../medcat-service | anoncat-service(medcat-service-helm) | >=0.0.1 |
 | file://../medcat-trainer | medcat-trainer(medcat-trainer-helm) | >=0.0.1 |

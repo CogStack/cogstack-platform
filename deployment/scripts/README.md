@@ -1,137 +1,112 @@
 # Deployment scripts
 
-Shared utilities for preparing deployment hosts and maintaining this repository.
-Run the examples below from the repository root.
+Run commands from the repository root. Requires Make, Bash, `sudo`, systemd and network
+access. Installation and cluster setup invoke `sudo` internally; run setup as the user who will
+use `kubectl`.
 
-| Directory | Purpose |
-| --- | --- |
-| [`installation_utils/`](installation_utils/) | Install host prerequisites and provide Docker configuration examples. |
-| [`maintenance/`](maintenance/) | Audit repository Python dependencies. |
+## Install, initialize and verify
 
-Keep application-specific startup and runtime scripts alongside their applications
-under `apps/`.
-
-## Installation utilities
-
-### Prerequisites
-
-The installers recognise Debian, Ubuntu, Red Hat Enterprise Linux and CentOS.
-Package and repository availability depends on the distribution release. They
-require Bash, `sudo`, internet access to package repositories and a host using
-systemd. They invoke `sudo` internally, including when run as root.
-
-Both installers update and upgrade system packages. The Docker installer also
-changes package repositories, Docker group membership and system settings; its
-Red Hat/CentOS branch removes existing Docker packages, Podman and Buildah.
-Review the script before running it on an existing host.
-
-### Docker and platform tools
-
-[`install_docker_and_utils.sh`](installation_utils/install_docker_and_utils.sh)
-installs Docker Engine, Buildx, Compose, Azure CLI, Python utilities, filesystem
-tools, monitoring tools and build dependencies. By default it also installs
-Kubernetes tools, Helm and K3s.
+Install on every machine before creating or joining a cluster:
 
 ```bash
-bash deployment/scripts/installation_utils/install_docker_and_utils.sh
+make -C deployment setup-install-pre-requisites
 ```
 
-To install Docker and the general utilities while skipping Kubernetes, Helm and
-K3s:
+By default, this installs host utilities, Docker, K3s and Helm. **New K3s installations
+remain stopped until cluster setup.** Installers skip existing system and Python
+packages, Azure CLI, K3s and Helm, and reuse existing Docker and Azure apt sources
+(`.list` or `.sources`, including custom filenames). They do not run system upgrades
+or autoremove. Installing missing Docker packages on RHEL may remove conflicting
+container packages; review the scripts before running on an existing host.
+Start a new login session to use Docker without sudo.
+
+On the first machine, initialize the cluster and check it:
 
 ```bash
-INSTALL_KUBERNETES=false INSTALL_K3S=false \
-  bash deployment/scripts/installation_utils/install_docker_and_utils.sh
+make -C deployment setup-k3s-cluster-init
+make -C deployment setup-verify
 ```
 
-The following environment variables control the optional components. Versions
-shown are the defaults configured in the script.
+Setup enables/restarts K3s and defaults to Secrets encryption at rest on servers.
+Verification checks Docker and K3s without sudo. Expect the node to become `Ready`.
 
-| Variable | Default | Effect |
+## Set up a cluster over SSH
+
+From your workstation, run once with the first server followed by the other servers:
+
+```bash
+make -C deployment setup-k3s-cluster-remote \
+  NODES="admin@10.0.0.11 admin@10.0.0.12 admin@10.0.0.13"
+```
+
+Requires SSH access (key or password), passwordless sudo, Bash and tar on each
+machine. Password authentication requires a terminal and may prompt on each
+connection. Use unique
+hostnames and addresses reachable between nodes. The script installs prerequisites,
+initializes the first server, joins the others and verifies Docker and K3s as the
+SSH user. Existing members are retained; nodes from another cluster are rejected.
+Use one server initially, or three or more servers (an odd total) for HA.
+
+## Join servers manually
+
+On the first machine, read the join token:
+
+```bash
+sudo cat /var/lib/rancher/k3s/server/token
+```
+
+After installation on machines 2 and 3, run this on each, replacing
+`FIRST_SERVER_IP` and `SERVER_TOKEN`:
+
+```bash
+bash deployment/scripts/installation_utils/setup_kubernetes_cluster.sh k3s server \
+  --server https://FIRST_SERVER_IP:6443 --token 'SERVER_TOKEN'
+```
+
+Run the verification commands above again after joining both servers. For
+worker-only nodes, use `agent` instead of `server`. See the
+[K3s HA guide](https://docs.k3s.io/datastore/ha-embedded) for availability and
+networking requirements.
+
+## kubectl access
+
+Server setup creates `~/.kube/config` with mode `0600` if absent and preserves an
+existing file. K3s's bundled kubectl defaults to `/etc/rancher/k3s/k3s.yaml`; use
+the printed `--kubeconfig` command to select the intended configuration.
+
+To configure access to an existing cluster without restarting K3s:
+
+```bash
+bash deployment/scripts/installation_utils/setup_kubernetes_cluster.sh kubeconfig /etc/rancher/k3s/k3s.yaml
+```
+
+## Options and individual utilities
+
+| Variable | Default | Purpose |
 | --- | --- | --- |
-| `INSTALL_KUBERNETES` | `true` | Install `kubeadm`, `kubelet`, `kubectl` and Helm. Accepts `true` or `false`. |
-| `INSTALL_K3S` | Value of `INSTALL_KUBERNETES` | Install K3s independently of the Kubernetes tools. Accepts `true` or `false`. |
-| `KUBERNETES_MINOR_VERSION` | `v1.37` | Kubernetes package repository minor release. |
-| `HELM_VERSION` | `v4.3.1` | Helm release; the installer accepts Helm 4 versions. |
-| `K3S_VERSION` | `v1.37.2+k3s1` | K3s release. |
+| `INSTALL_K3S` | `true` | Install K3s and Helm; `false` skips both. |
 
-To install the Kubernetes tools and Helm while skipping K3s:
+Individual installers can also be run with `bash`:
+[host utilities](installation_utils/install_host_utils.sh),
+[Docker](installation_utils/install_docker.sh),
+[K3s](installation_utils/install_k3s.sh),
+[Helm](installation_utils/install_helm.sh) and
+[PostgreSQL clients](installation_utils/install_db_utils.sh).
+On a new host, install host utilities first.
+[Docker configuration examples](installation_utils/docker_installation_settings/README.md)
+are optional and are not applied automatically.
 
-```bash
-INSTALL_K3S=false \
-  bash deployment/scripts/installation_utils/install_docker_and_utils.sh
-```
+## Dependency audits
 
-The installer enables and starts Docker, adds root and the invoking user to the
-Docker group, and sets `vm.max_map_count=262144` immediately and in
-`/etc/sysctl.conf`. Start a new login session to pick up Docker group membership.
-
-Kubernetes packages are installed for later cluster setup; the installer does
-not initialise or join a cluster. It enables the kubelet service and holds the
-Kubernetes packages on Debian/Ubuntu. K3s installation skips enabling and starting
-its service, and preserves the standalone `kubectl` command.
-
-### Database clients
-
-[`install_db_utils.sh`](installation_utils/install_db_utils.sh) installs the
-PostgreSQL client tools:
+Requires `uv`, `pip-audit` and network access. Audits locked dependencies without
+changing lockfiles; failures return a nonzero exit status.
 
 ```bash
-bash deployment/scripts/installation_utils/install_db_utils.sh
-```
-
-It uses `postgresql-client` on Debian/Ubuntu and the PostgreSQL 12 module and
-`postgresql` package on Red Hat/CentOS.
-
-### OS detection and Docker settings
-
-Both installers use [`detect_os.sh`](installation_utils/detect_os.sh), which
-reads `/etc/os-release` and rejects unsupported distributions. To check the
-detected distribution without installing anything:
-
-```bash
-bash deployment/scripts/installation_utils/detect_os.sh
-```
-
-[`docker_installation_settings/`](installation_utils/docker_installation_settings/)
-contains optional Docker proxy and DNS configuration examples. See its
-[README](installation_utils/docker_installation_settings/README.md) for details.
-Adapt these settings to the host; the installers do not apply them automatically.
-
-## Maintenance
-
-[`audit_pip_dependency.sh`](maintenance/audit_pip_dependency.sh) exports locked
-Python dependencies with `uv` and checks them with `pip-audit`.
-
-### Prerequisites
-
-- Bash, `uv` and `pip-audit` available on `PATH`.
-- The checked-in `docs/pyproject.toml` and `docs/uv.lock` files.
-- Network access for dependency resolution and vulnerability lookups.
-
-No sudo privileges are required. The script uses temporary requirements files,
-removes them on exit and leaves the project lockfiles unchanged.
-
-### Usage
-
-Audit documentation dependencies:
-
-```bash
+# Documentation dependencies
 bash deployment/scripts/maintenance/audit_pip_dependency.sh
-```
 
-Show available options:
-
-```bash
-bash deployment/scripts/maintenance/audit_pip_dependency.sh --help
-```
-
-To audit the documentation followed by NiFi runtime and development dependencies
-from `apps/nifi/uv.lock`:
-
-```bash
+# Include NiFi runtime and development dependencies
 bash deployment/scripts/maintenance/audit_pip_dependency.sh --include-nifi
 ```
 
-The script exits with a nonzero status when an export or audit fails, including
-when `pip-audit` reports vulnerabilities.
+Use `--help` for available options.

@@ -98,7 +98,7 @@
                 { "type": "revert", "section": "Reverts" }
             ]
         },
-        "deployment/charts/jupyterhub": {
+        "deployment/charts/jupyter-hub": {
             "release-type": "helm",
             "component": "helm-charts/cogstack-jupyterhub-helm",
             "changelog-path": "CHANGELOG.md",
