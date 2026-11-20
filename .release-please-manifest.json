@@ -10,5 +10,5 @@
     "deployment/charts/nginx": "0.0.0",
     "deployment/terraform/openstack-kubernetes-k3s": "0.1.2",
     "apps/ocr-service": "1.1.4",
-    "apps/jupyter-hub": "2.3.10"
+    "apps/jupyter-hub": "2.3.11"
 }
