@@ -23,7 +23,7 @@ then
     sudo apt -y upgrade
     sudo apt -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-elif  [ "$os_distribution" == "redhat" ] || [ "$os_distribution" == "red hat" ];
+elif  [ "$os_distribution" == "redhat" ];
 then
     sudo yum remove -y docker \
                     docker-client \
@@ -52,8 +52,7 @@ if [ -n "$target_user" ] && [ "$target_user" != "root" ] && id "$target_user" >/
     sudo usermod -aG docker "$target_user"
 fi
 
-sudo systemctl enable docker.service
-sudo systemctl start docker
+sudo systemctl enable --now docker.service
 
 if [ "$os_distribution" == "debian" ] || [ "$os_distribution" == "ubuntu" ]; then
     sudo apt-get -y autoremove
