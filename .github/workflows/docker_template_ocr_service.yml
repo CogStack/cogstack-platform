@@ -1,4 +1,4 @@
-name: docker_template_ocr-service
+name: docker_template_ocr_service
 
 permissions:
   contents: read
