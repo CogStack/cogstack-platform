@@ -23,20 +23,7 @@ then
     sudo apt -y upgrade
     sudo apt -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-    # create docker group and add the root user to it, as root will be used to run the docker
-    sudo groupadd -f docker
-    sudo usermod -aG docker root
-    if [ -n "$target_user" ] && [ "$target_user" != "root" ] && id "$target_user" >/dev/null 2>&1; then
-        sudo usermod -aG docker "$target_user"
-    fi
-
-    # start the service
-    sudo systemctl enable docker.service
-    sudo systemctl start docker
-
-    sudo apt-get -y autoremove
-
-elif  [ "$os_distribution" == "redhat" ] || [ "$os_distribution" == "red hat" ] || [ "$os_distribution" == "centos" ];
+elif  [ "$os_distribution" == "redhat" ] || [ "$os_distribution" == "red hat" ];
 then
     sudo yum remove -y docker \
                     docker-client \
@@ -54,21 +41,24 @@ then
     sudo yum-config-manager --enable docker-ce-stable-source
     sudo yum install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-    # create docker group and add the root user to it, as root will be used to run the docker process
-    sudo groupadd -f docker
-    sudo usermod -aG docker root
-    if [ -n "$target_user" ] && [ "$target_user" != "root" ] && id "$target_user" >/dev/null 2>&1; then
-        sudo usermod -aG docker "$target_user"
-    fi
-
-    # start the service
-    sudo systemctl enable docker.service
-    sudo systemctl start docker
-
-    sudo yum -y autoremove
 else
     echo "No instructions given for distribution: $os_distribution" >&2
     exit 1
+fi
+
+sudo groupadd -f docker
+sudo usermod -aG docker root
+if [ -n "$target_user" ] && [ "$target_user" != "root" ] && id "$target_user" >/dev/null 2>&1; then
+    sudo usermod -aG docker "$target_user"
+fi
+
+sudo systemctl enable docker.service
+sudo systemctl start docker
+
+if [ "$os_distribution" == "debian" ] || [ "$os_distribution" == "ubuntu" ]; then
+    sudo apt-get -y autoremove
+else
+    sudo yum -y autoremove
 fi
 
 sudo sysctl -w vm.max_map_count=262144

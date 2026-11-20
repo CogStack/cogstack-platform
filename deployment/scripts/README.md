@@ -15,14 +15,14 @@ under `apps/`.
 
 ### Prerequisites
 
-The installers recognise Debian, Ubuntu, Red Hat Enterprise Linux and CentOS.
+The installers recognise Debian, Ubuntu and Red Hat Enterprise Linux.
 Package and repository availability depends on the distribution release. They
 require Bash, `sudo`, internet access to package repositories and a host using
 systemd. They invoke `sudo` internally, including when run as root.
 
 The full installer and database installer update and upgrade system packages.
 The Docker installer also changes package repositories, Docker group membership
-and system settings; its Red Hat/CentOS branch removes existing Docker packages,
+and system settings; its Red Hat branch removes existing Docker packages,
 Podman and Buildah.
 Review the script before running it on an existing host.
 
@@ -83,6 +83,44 @@ not initialise or join a cluster. It enables the kubelet service and holds the
 Kubernetes packages on Debian/Ubuntu. K3s installation skips enabling and starting
 its service, and preserves the standalone `kubectl` command.
 
+### Cluster setup and kubectl access
+
+After installing the prerequisites, run
+[`setup_kubernetes_cluster.sh`](installation_utils/setup_kubernetes_cluster.sh)
+as the user who will run `kubectl`; it invokes `sudo` internally. Choose one
+cluster implementation per host. The script forwards remaining arguments to
+the native setup command.
+
+Create a K3s server, or join a worker on another host with K3s already installed:
+
+```bash
+bash deployment/scripts/installation_utils/setup_kubernetes_cluster.sh k3s server
+bash deployment/scripts/installation_utils/setup_kubernetes_cluster.sh k3s agent \
+  --server https://SERVER:6443 --token SERVER_TOKEN
+```
+
+The K3s server token is stored at `/var/lib/rancher/k3s/server/node-token`.
+
+For kubeadm, prepare the container runtime, swap and networking first, then use
+`setup_kubernetes_cluster.sh kubeadm init [options]` on the first control-plane
+node, or `setup_kubernetes_cluster.sh kubeadm join [join arguments]` on additional
+nodes. Install your chosen Pod network after initialization. See the
+[kubeadm setup guide](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/).
+
+Control-plane setup copies the admin kubeconfig to `~/.kube/config` with mode
+`0600` if that path does not already exist. To configure access to an existing
+cluster without running setup again:
+
+```bash
+bash deployment/scripts/installation_utils/setup_kubernetes_cluster.sh kubeconfig /etc/rancher/k3s/k3s.yaml
+# For kubeadm, use /etc/kubernetes/admin.conf on a control-plane node instead.
+```
+
+An existing `~/.kube/config` is retained and an explicit access command is printed.
+If `KUBECONFIG` is already set, it takes precedence over `~/.kube/config`; use the
+printed `--kubeconfig` command to select the new configuration. Without a running
+cluster and a valid kubeconfig, `kubectl` may try `localhost:8080`.
+
 ### Database clients
 
 [`install_db_utils.sh`](installation_utils/install_db_utils.sh) installs the
@@ -93,7 +131,7 @@ bash deployment/scripts/installation_utils/install_db_utils.sh
 ```
 
 It uses `postgresql-client` on Debian/Ubuntu and the PostgreSQL 12 module and
-`postgresql` package on Red Hat/CentOS.
+`postgresql` package on Red Hat.
 
 ### OS detection and Docker settings
 

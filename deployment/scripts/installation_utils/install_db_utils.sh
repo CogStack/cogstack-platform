@@ -16,7 +16,7 @@ if [ "$os_distribution" == "debian" ] || [ "$os_distribution" == "ubuntu" ];
 then
     sudo apt-get update -y && sudo apt-get upgrade -y
     sudo apt-get install -y postgresql-client
-elif  [ "$os_distribution" == "redhat" ] || [ "$os_distribution" == "red hat" ] || [ "$os_distribution" == "centos" ]; 
+elif  [ "$os_distribution" == "redhat" ] || [ "$os_distribution" == "red hat" ];
 then
     sudo yum -y update && sudo yum -y upgrade
     

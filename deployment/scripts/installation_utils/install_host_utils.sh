@@ -21,7 +21,7 @@ then
     echo "Installing Azure CLI..."
     curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
-elif  [ "$os_distribution" == "redhat" ] || [ "$os_distribution" == "red hat" ] || [ "$os_distribution" == "centos" ];
+elif  [ "$os_distribution" == "redhat" ] || [ "$os_distribution" == "red hat" ];
 then
     sudo yum -y update
     sudo yum -y upgrade

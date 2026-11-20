@@ -11,7 +11,7 @@ fi
 . /etc/os-release
 
 case "${ID:-}" in
-    debian|ubuntu|centos) echo "$ID" ;;
+    debian|ubuntu) echo "$ID" ;;
     rhel) echo "redhat" ;;
     *) echo "Unsupported distribution: ${ID:-unknown}" >&2; exit 1 ;;
 esac
