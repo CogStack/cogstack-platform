@@ -78,7 +78,7 @@ nav:
               - OCR Service Helm: platform/deployment/helm/charts/ocr-service.md
               - Cogstack Cohorter Helm: platform/deployment/helm/charts/cohorter.md
               - Cogstack Observability Helm: platform/deployment/helm/charts/observability.md
-              - Cogstack JupyterHub Helm: platform/deployment/helm/charts/jupyterhub.md
+              - Cogstack JupyterHub Helm: platform/deployment/helm/charts/jupyter-hub.md
       - Examples:
           - Examples: platform/deployment/examples/index.md
           - AWS Kubernetes EKS: platform/deployment/examples/aws-kubernetes-eks.md
