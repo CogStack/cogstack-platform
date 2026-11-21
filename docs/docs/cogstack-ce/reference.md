@@ -87,7 +87,7 @@ Everything in CogStack CE is deployed as Helm subcharts of the [CogStack CE Helm
 - [MedCAT Service Helm](../platform/deployment/helm/charts/medcat-service.md) (used for both MedCAT and AnonCAT)
 - [OCR Service Helm](../platform/deployment/helm/charts/ocr-service.md)
 - [MedCAT Trainer Helm](../platform/deployment/helm/charts/medcat-trainer.md)
-- [CogStack JupyterHub Helm](../platform/deployment/helm/charts/jupyterhub.md)
+- [CogStack JupyterHub Helm](../platform/deployment/helm/charts/jupyter-hub.md)
 
 JupyterHub is based on the [official JupyterHub Helm chart](https://hub.jupyter.org/helm-chart/). OpenSearch and OpenSearch Dashboards also come from the [official OpenSearch Helm charts](https://opensearch-project.github.io/helm-charts/). The CogStack wrappers add defaults, images, and example notebooks on top of those upstream charts.
 

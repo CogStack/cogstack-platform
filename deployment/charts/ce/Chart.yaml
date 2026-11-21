@@ -57,7 +57,7 @@ dependencies:
     alias: cogstack-jupyterhub
     condition: cogstack-jupyterhub.enabled
     version: ">=0.0.1"
-    repository: "file://../jupyterhub"
+    repository: "file://../jupyter-hub"
   - name: ocr-service-helm
     alias: ocr-service
     condition: cogstack-jupyterhub.enabled

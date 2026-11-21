@@ -15,10 +15,10 @@ dependencies:
   repository: https://opensearch-project.github.io/helm-charts/
   version: 3.5.0
 - name: cogstack-jupyterhub-helm
-  repository: file://../jupyterhub
+  repository: file://../jupyter-hub
   version: 0.5.0
 - name: ocr-service-helm
   repository: file://../ocr-service
   version: 0.1.0
-digest: sha256:dd9c57fa23a97923003067e81ac40fbbf683d61f43b98b42f592d90e1309e74c
+digest: sha256:0d274dec4f435fb9841b12f76f43191cd20799751614f179e964c15117ea64ca
 generated: "2026-11-19T18:15:18.209696Z"

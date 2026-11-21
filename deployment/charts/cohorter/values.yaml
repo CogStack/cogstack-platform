@@ -107,7 +107,7 @@ webapp:
   replicaCount: 1
 
   image:
-    repository: cogstacksystems/cogstack-cohorter-webapp
+    repository: cogstacksystems/cohorter-webapp
     tag: latest
     pullPolicy: Always
 
@@ -180,7 +180,7 @@ nl2dsl:
   replicaCount: 1
 
   image:
-    repository: cogstacksystems/cogstack-cohorter-nl2dsl
+    repository: cogstacksystems/cohorter-nl2dsl
     tag: latest
     pullPolicy: Always
 

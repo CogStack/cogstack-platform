@@ -12,10 +12,6 @@ scrape_configs:
         labels:
           name: grafana # collect grafana metrics like dashboard usage
           __metrics_path__: /metrics
-      - targets:
-          - cogstack-observability-traefik-1:8080  # Collect Traefik metrics like number of success calls
-        labels:
-          name: traefik 
     relabel_configs:
         - target_label: env
           replacement: observability-stack

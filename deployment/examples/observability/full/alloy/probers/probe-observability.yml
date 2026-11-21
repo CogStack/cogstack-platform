@@ -1,11 +1,11 @@
 - targets:
-    - cogstack-observability-traefik-1/grafana/api/health
+    - http://nginx:8001/grafana/api/health
   labels:
     name: grafana
     job: probe-observability-stack
     host: localhost
 - targets:
-    - cogstack-observability-traefik-1/prometheus/-/healthy
+    - http://nginx:8001/prometheus/-/healthy
   labels:
     name: prometheus
     job: probe-observability-stack

@@ -38,6 +38,8 @@ def main():
         (f"http://{localhost_url}/grafana", "Grafana"),
         (f"http://{localhost_url}/prometheus", "Prometheus"),
         (f"http://{localhost_url}/alloy", "Alloy"),
+        (f"http://{localhost_url}/grafana/api/health", "Grafana API"),
+        (f"http://{localhost_url}/prometheus/-/ready", "Prometheus readiness"),
     ]
     
     all_healthy = True

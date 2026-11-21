@@ -31,7 +31,7 @@ helm test medcat-service --logs
 
 helm repo add opensearch https://opensearch-project.github.io/helm-charts/
 helm dependency update ./medcat-trainer
-helm dependency update ./jupyterhub
+helm dependency update ./jupyter-hub
 helm dependency update ./ce
 
 helm upgrade cogstack ./ce --install --dependency-update --wait --timeout 30m0s

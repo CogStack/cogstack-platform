@@ -1,10 +1,5 @@
 FROM grafana/grafana-enterprise
 
-LABEL traefik.enable="true" \
-    traefik.http.routers.grafana-path-router.rule="PathPrefix(`/grafana`)" \
-    traefik.http.middlewares.grafana-stripprefix.stripprefix.prefixes="/grafana" \
-    traefik.http.routers.grafana-path-router.middlewares="grafana-stripprefix@docker"
-
 RUN mkdir -p /etc/grafana/provisioning/dashboards/site
 
 COPY ./provisioning /etc/grafana/provisioning

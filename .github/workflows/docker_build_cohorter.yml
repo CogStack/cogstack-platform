@@ -26,12 +26,12 @@ jobs:
           - name: nl2dsl
             context: apps/cohorter/NL2DSL
             dockerfile: apps/cohorter/NL2DSL/Dockerfile
-            image: cogstacksystems/cogstack-cohorter-nl2dsl
+            image: cogstacksystems/cohorter-nl2dsl
 
           - name: webapp
             context: apps/cohorter/WebAPP
             dockerfile: apps/cohorter/WebAPP/Dockerfile
-            image: cogstacksystems/cogstack-cohorter-webapp
+            image: cogstacksystems/cohorter-webapp
 
     steps:
       - name: Checkout branch
@@ -42,6 +42,9 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -67,6 +70,7 @@ jobs:
         with:
           context: ${{ matrix.context }}
           file: ${{ matrix.dockerfile }}
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
