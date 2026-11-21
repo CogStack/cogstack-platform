@@ -12,7 +12,7 @@ then
     install_missing_packages "$os_distribution" \
         samba cifs-utils nfs-common nfs-kernel-server archivemount \
         htop iotop sysstat \
-        jq wget curl gnupg gnupg-agent git ca-certificates apt-transport-https python3 python3-pip python3-full openssl libssl-dev zip unzip tar nano gcc make python3-dev build-essential software-properties-common
+        jq gettext-base wget curl gnupg gnupg-agent git ca-certificates apt-transport-https python3 python3-pip python3-full openssl libssl-dev zip unzip tar nano gcc make python3-dev build-essential software-properties-common
 
     if command -v az >/dev/null 2>&1 || package_is_installed "$os_distribution" azure-cli; then
         echo "Azure CLI is already installed."
@@ -28,7 +28,7 @@ then
     install_missing_packages "$os_distribution" \
         samba samba-client cifs-utils nfs-utils rpcbind archivemount \
         htop iotop sysstat \
-        jq yum-utils wget curl git device-mapper-persistent-data lvm2 python3 python3-pip libffi-devel openssl openssl-devel zip unzip tar nano gcc gcc-c++ make python3-devel libevent-devel
+        jq gettext yum-utils wget curl git device-mapper-persistent-data lvm2 python3 python3-pip libffi-devel openssl openssl-devel zip unzip tar nano gcc gcc-c++ make python3-devel libevent-devel
 
     if command -v az >/dev/null 2>&1 || package_is_installed "$os_distribution" azure-cli; then
         echo "Azure CLI is already installed."
