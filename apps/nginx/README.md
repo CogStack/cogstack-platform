@@ -39,7 +39,12 @@ For MedCAT-trainer, mount static/media directories at `/home/api/static` and
 backend service names. Defaults use ports 8000 and 8983, with NGINX listening
 on 8001. In a trainer Pod, the backend host can remain `127.0.0.1`. The
 configuration preserves Solr path rewriting, gzip, the `4000m` upload limit
-and `3000s` timeouts. TLS terminates at the deployment's external gateway.
+and `3000s` read/send timeouts for model loading and transfers. Connections
+use NGINX's default `60s` timeout; idle client keepalive uses `65s`.
+TLS terminates at the deployment's external gateway.
+
+Access logs include request time (`rt`), upstream response time (`urt`) and
+upstream status (`us`).
 
 The image runs as UID/GID `1000:1000`; build arguments `NGINX_UID` and
 `NGINX_GID` can change them. Mount readable certificates and files. A read-only
