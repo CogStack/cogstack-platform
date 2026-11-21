@@ -1,8 +1,5 @@
 FROM prom/prometheus
 
-LABEL traefik.enable="true" \
-    traefik.http.routers.prometheus-path-router.rule="PathPrefix(`/prometheus`)" 
-
 RUN mkdir -p /etc/prometheus/cogstack/site/scrape-configs/probers
 RUN mkdir -p /etc/prometheus/cogstack/site/scrape-configs/exporters
 

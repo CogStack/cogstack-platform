@@ -1,10 +1,5 @@
 FROM quay.io/prometheus/blackbox-exporter:latest
 
-LABEL traefik.enable="true" \
-    traefik.http.routers.blackbox-exporter-path-router.rule="PathPrefix(`/blackbox-exporter`)" \
-    traefik.http.middlewares.blackbox-exporter-stripprefix.stripprefix.prefixes="/blackbox-exporter" \
-    traefik.http.routers.blackbox-exporter-path-router.middlewares="blackbox-exporter-stripprefix@docker"
-
 COPY ./blackbox-exporter /config
 
 CMD [ \

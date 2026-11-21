@@ -1,0 +1,48 @@
+resolver ${NGINX_LOCAL_RESOLVERS} valid=10s;
+resolver_timeout 3s;
+upstream grafana { zone grafana 64k; server grafana:3000 resolve; }
+upstream prometheus { zone prometheus 64k; server prometheus:9090 resolve; }
+upstream alloy { zone alloy 64k; server alloy:12345 resolve; }
+
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    '' close;
+}
+
+server {
+    listen 127.0.0.1:${NGINX_HEALTH_PORT};
+    access_log off;
+    location = /healthz/live { return 200 'ok\n'; }
+    location = /healthz/ready {
+        proxy_connect_timeout 3s;
+        proxy_read_timeout 3s;
+        proxy_pass http://grafana/api/health;
+    }
+}
+
+server {
+    listen 8001;
+    absolute_redirect off;
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+
+    location = /grafana { return 308 /grafana/$is_args$args; }
+    location /grafana/ { proxy_pass http://grafana/; }
+    location = /prometheus { return 308 /prometheus/$is_args$args; }
+    location /prometheus/ { proxy_pass http://prometheus; }
+    location = /alloy { return 308 /alloy/$is_args$args; }
+    location /alloy/ { proxy_pass http://alloy; }
+    location = /blackbox-exporter { return 308 /blackbox-exporter/$is_args$args; }
+    location /blackbox-exporter/ {
+        # Resolve the optional exporter only when requested.
+        set $blackbox blackbox-exporter:9115;
+        rewrite ^/blackbox-exporter/(.*)$ /$1 break;
+        proxy_pass http://$blackbox;
+    }
+    location / { return 404; }
+}

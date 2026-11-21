@@ -17,6 +17,6 @@ curl -fsSL -o alloy/probers/probe-observability.yml \
 echo "Setup complete in observability-simple/"
 
 echo "Starting the observability stack"
-docker compose up -d
+docker compose up -d --remove-orphans
 
  echo "Please open http://localhost/grafana in your browser"

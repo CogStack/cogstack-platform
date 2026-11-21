@@ -1,6 +1,6 @@
 # CogStack NGINX
 
-One image with NiFi and MedCAT-trainer configurations, selected per container.
+One image with NiFi, MedCAT-trainer and observability configurations, selected per container.
 It uses the upstream image's entrypoint, environment substitution and DNS
 resolver discovery. There is no custom entrypoint or configuration framework.
 
@@ -16,12 +16,15 @@ Build from the repository root:
 docker build -t cogstacksystems/cogstack-nginx:local apps/nginx
 ```
 
+The image is published independently by [docker_build_nginx.yml](../../.github/workflows/docker_build_nginx.yml).
+
 Select the configuration with the upstream image's variable:
 
 | Application | `NGINX_ENVSUBST_TEMPLATE_DIR` |
 | --- | --- |
 | NiFi (default) | `/etc/nginx/templates/nifi` |
 | MedCAT-trainer | `/etc/nginx/templates/medcat-trainer` |
+| Observability | `/etc/nginx/templates/observability` |
 
 All environment defaults are declared in `Dockerfile`. Treat template values
 as trusted deployment configuration. The substitution filter preserves NGINX
@@ -42,6 +45,11 @@ configuration preserves Solr path rewriting, gzip, the `4000m` upload limit
 and `3000s` read/send timeouts for model loading and transfers. Connections
 use NGINX's default `60s` timeout; idle client keepalive uses `65s`.
 TLS terminates at the deployment's external gateway.
+
+For observability, NGINX listens on 8001 and routes `/grafana/`, `/prometheus/`
+and `/alloy/` to their Compose services. `/blackbox-exporter/` is available when
+a standalone `blackbox-exporter` service is deployed. Grafana and blackbox
+prefixes are stripped; Prometheus and Alloy prefixes are preserved.
 
 Access logs include request time (`rt`), upstream response time (`urt`) and
 upstream status (`us`).

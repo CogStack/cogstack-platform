@@ -13,4 +13,4 @@ scrape_configs:
       - source_labels: [__param_target]
         target_label: instance
       - target_label: __address__
-        replacement: cogstack-observability-traefik-1 # The blackbox exporter's real host:port.
+        replacement: nginx:8001 # Gateway to the standalone blackbox exporter.

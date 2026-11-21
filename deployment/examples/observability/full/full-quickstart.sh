@@ -1,4 +1,3 @@
-
 #!/bin/bash
 set -e
 OBSERVABILITY_BASE_URL="${OBSERVABILITY_BASE_URL:-https://raw.githubusercontent.com/CogStack/cogstack-platform/main/deployment/examples/observability}"
@@ -31,6 +30,6 @@ echo "Setup complete in cogstack-observability/"
 
 echo "Starting the observability stack"
 
-docker compose up -d
+docker compose up -d --remove-orphans
 
 echo "Please open http://localhost/grafana in your browser"

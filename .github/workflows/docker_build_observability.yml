@@ -7,11 +7,13 @@ on:
       - "v*.*.*" # e.g., v0.1.1
     paths:
       - "apps/observability/**"
+      - "apps/nginx/**"
       - "deployment/examples/observability/**"
       - ".github/workflows/docker_build_observability.yml"
   pull_request:
     paths:
       - "apps/observability/**"
+      - "apps/nginx/**"
       - "deployment/examples/observability/**"
       - ".github/workflows/docker_build_observability.yml"
 
@@ -37,10 +39,6 @@ jobs:
             context: apps/observability/grafana
             dockerfile: apps/observability/grafana/Dockerfile
             image: cogstacksystems/cogstack-observability-grafana
-          - name: traefik
-            context: apps/observability/traefik
-            dockerfile: apps/observability/traefik/Dockerfile
-            image: cogstacksystems/cogstack-observability-traefik
           - name: alloy
             context: apps/observability/grafana-alloy
             dockerfile: apps/observability/grafana-alloy/Dockerfile
@@ -93,6 +91,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
+      - name: Build NGINX for integration tests
+        run: docker build -t cogstacksystems/cogstack-nginx:test apps/nginx
+
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
@@ -102,32 +103,19 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r deployment/examples/observability/test/requirements.txt
 
-      - name: Run Simple quickstart test
+      - name: Run quickstart tests
         run: |
-          echo "🧪 Running Simple quickstart test..."
+          echo "🧪 Running quickstart tests..."
           IMAGE_TAG="sha-${GITHUB_SHA::7}"
           echo "Using images tagged ${IMAGE_TAG}"
           export OBSERVABILITY_BASE_URL="file://${GITHUB_WORKSPACE}/deployment/examples/observability"
-          export COMPOSE_FILE="${GITHUB_WORKSPACE}/deployment/examples/observability/simple/observability-simple/docker-compose.yml:${RUNNER_TEMP}/observability-images.yml"
+          export COMPOSE_FILE="docker-compose.yml:${RUNNER_TEMP}/observability-images.yml"
           {
             echo "services:"
-            for service in alloy prometheus grafana traefik; do
+            for service in alloy prometheus grafana; do
               printf '  %s:\n    image: cogstacksystems/cogstack-observability-%s:%s\n' \
                 "$service" "$service" "$IMAGE_TAG"
             done
+            printf '  nginx:\n    image: cogstacksystems/cogstack-nginx:test\n'
           } > "${RUNNER_TEMP}/observability-images.yml"
-          if ! bash deployment/examples/observability/test/test-quickstart.sh; then
-            docker compose ps --all || true
-            docker compose logs --no-color --tail=100 || true
-            exit 1
-          fi
-
-      - name: Report test result
-        if: always()
-        run: |
-          if [ $? -eq 0 ]; then
-            echo "✅ quickstart test PASSED"
-          else
-            echo "❌ quickstart test FAILED"
-            exit 1
-          fi
+          bash deployment/examples/observability/test/test-quickstart.sh

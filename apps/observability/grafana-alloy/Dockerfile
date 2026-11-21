@@ -1,8 +1,5 @@
 FROM grafana/alloy:latest
 
-LABEL traefik.enable="true" \
-    traefik.http.routers.alloy.rule="PathPrefix(`/alloy`)" 
-
 EXPOSE 12345
 
 RUN mkdir -p /etc/alloy/probers

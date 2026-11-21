@@ -26,15 +26,15 @@ services:
     environment:
       - GF_AUTH_ANONYMOUS_ENABLED=true # Allows use of grafana without sign in 
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
-  traefik:
-    image: cogstacksystems/cogstack-observability-traefik:latest
+  nginx:
+    image: cogstacksystems/cogstack-nginx:latest
+    environment:
+      - NGINX_ENVSUBST_TEMPLATE_DIR=/etc/nginx/templates/observability
     networks:
      - observability
     restart: unless-stopped
     ports:
-      - "80:80"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro       # So that Traefik can listen to the Docker events
+      - "80:8001"
 
 networks:
   observability:
