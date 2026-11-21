@@ -66,4 +66,6 @@ To move the test to another repository:
 ## Limits
 
 - Pull requests from forks and from Dependabot are skipped: they cannot obtain an OIDC token.
+- Pull requests that change nothing under `deployment/charts/`, `.github/scripts/` or
+  `.github/workflows/gke_*` are not deployed; the check is skipped and counts as passing.
 - The charts deploy published images, so this tests the charts, not unreleased application code.
