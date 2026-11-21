@@ -30,19 +30,19 @@ jobs:
           - name: prometheus
             context: apps/observability/prometheus
             dockerfile: apps/observability/prometheus/Dockerfile.prometheus
-            image: cogstacksystems/cogstack-observability-prometheus
+            image: cogstacksystems/observability-prometheus
           - name: blackbox
             context: apps/observability/prometheus
             dockerfile: apps/observability/prometheus/Dockerfile.blackbox
-            image: cogstacksystems/cogstack-observability-blackbox-exporter
+            image: cogstacksystems/observability-blackbox-exporter
           - name: grafana
             context: apps/observability/grafana
             dockerfile: apps/observability/grafana/Dockerfile
-            image: cogstacksystems/cogstack-observability-grafana
+            image: cogstacksystems/observability-grafana
           - name: alloy
             context: apps/observability/grafana-alloy
             dockerfile: apps/observability/grafana-alloy/Dockerfile
-            image: cogstacksystems/cogstack-observability-alloy
+            image: cogstacksystems/observability-alloy
     steps:
       - name: Checkout branch
         uses: actions/checkout@v7
@@ -113,7 +113,7 @@ jobs:
           {
             echo "services:"
             for service in alloy prometheus grafana; do
-              printf '  %s:\n    image: cogstacksystems/cogstack-observability-%s:%s\n' \
+              printf '  %s:\n    image: cogstacksystems/observability-%s:%s\n' \
                 "$service" "$service" "$IMAGE_TAG"
             done
             printf '  nginx:\n    image: cogstacksystems/nginx:test\n'
