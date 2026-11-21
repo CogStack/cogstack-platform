@@ -27,7 +27,7 @@ services:
       - GF_AUTH_ANONYMOUS_ENABLED=true # Allows use of grafana without sign in 
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
   nginx:
-    image: cogstacksystems/cogstack-nginx:latest
+    image: cogstacksystems/nginx:latest
     environment:
       - NGINX_ENVSUBST_TEMPLATE_DIR=/etc/nginx/templates/observability
     networks:

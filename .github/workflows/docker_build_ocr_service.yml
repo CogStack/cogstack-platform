@@ -29,7 +29,7 @@ jobs:
     if: github.event_name != 'release' || startsWith(github.event.release.tag_name, 'ocr-service-v')
     uses: ./.github/workflows/docker_template_ocr_service.yml
     with:
-      image: cogstacksystems/cogstack-ocr-service
+      image: cogstacksystems/ocr-service
       context: apps/ocr-service
       dockerfile: apps/ocr-service/Dockerfile
       cache_scope: cogstack-ocr-service

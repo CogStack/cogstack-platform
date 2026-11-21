@@ -13,10 +13,11 @@ modified copies; see `LICENSE`.
 Build from the repository root:
 
 ```bash
-docker build -t cogstacksystems/cogstack-nginx:local apps/nginx
+docker build -t cogstacksystems/nginx:local apps/nginx
 ```
 
-The image is published independently by [docker_build_nginx.yml](../../.github/workflows/docker_build_nginx.yml).
+The image is published independently by [docker_build_nginx.yml](../../.github/workflows/docker_build_nginx.yml)
+as `cogstacksystems/nginx` for `linux/amd64` and `linux/arm64`.
 
 Select the configuration with the upstream image's variable:
 

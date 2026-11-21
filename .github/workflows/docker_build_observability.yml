@@ -92,7 +92,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Build NGINX for integration tests
-        run: docker build -t cogstacksystems/cogstack-nginx:test apps/nginx
+        run: docker build -t cogstacksystems/nginx:test apps/nginx
 
       - name: Set up Python
         uses: actions/setup-python@v7
@@ -116,6 +116,6 @@ jobs:
               printf '  %s:\n    image: cogstacksystems/cogstack-observability-%s:%s\n' \
                 "$service" "$service" "$IMAGE_TAG"
             done
-            printf '  nginx:\n    image: cogstacksystems/cogstack-nginx:test\n'
+            printf '  nginx:\n    image: cogstacksystems/nginx:test\n'
           } > "${RUNNER_TEMP}/observability-images.yml"
           bash deployment/examples/observability/test/test-quickstart.sh

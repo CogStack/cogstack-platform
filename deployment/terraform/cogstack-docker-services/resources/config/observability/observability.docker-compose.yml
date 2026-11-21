@@ -22,7 +22,7 @@ services:
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
       - CONFIG_HASH=${CONFIG_HASH}
   nginx:
-    image: cogstacksystems/cogstack-nginx:latest
+    image: cogstacksystems/nginx:latest
     environment:
       - NGINX_ENVSUBST_TEMPLATE_DIR=/etc/nginx/templates/observability
     networks:

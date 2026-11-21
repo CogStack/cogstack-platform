@@ -6,8 +6,8 @@ CogStack Cohorter — cohort identification powered by Ollama and MedCAT
 
 | Component | Image | Description |
 |-----------|-------|-------------|
-| **WebApp** | `cogstacksystems/cogstack-cohorter-webapp` | React + Node.js frontend and API |
-| **NL2DSL** | `cogstacksystems/cogstack-cohorter-nl2dsl` | Natural language → cohort DSL compiler |
+| **WebApp** | `cogstacksystems/cohorter-webapp` | React + Node.js frontend and API |
+| **NL2DSL** | `cogstacksystems/cohorter-nl2dsl` | Natural language → cohort DSL compiler |
 | **MedCAT** | `cogstacksystems/medcat-service` | Clinical NER and concept normalisation (subchart) |
 | **Ollama** | `ollama/ollama` | LLM serving backend (subchart) |
 
@@ -147,7 +147,7 @@ For issues and questions, please visit the [CogStack GitHub repository](https://
 | medcat | object | `{"enabled":true,"env":{"APP_ENABLE_METRICS":"true","APP_MEDCAT_MODEL_PACK":"/cat/models/examples/example-medcat-v2-model-pack.zip"},"image":{"tag":"latest"},"resources":{},"service":{"port":5000}}` | ------------------------------------------------------------------------- |
 | medcat.enabled | bool | `true` | Enable the MedCAT subchart. |
 | nameOverride | string | `"cogstack-cohorter"` | ------------------------------------------------------------------------- |
-| nl2dsl | object | `{"affinity":{},"enabled":true,"env":{"ALLOW_ORIGINS":"*","OLLAMA_MODEL":"llama3.2:3b"},"image":{"pullPolicy":"Always","repository":"cogstacksystems/cogstack-cohorter-nl2dsl","tag":"latest"},"livenessProbe":{"httpGet":{"path":"/","port":"http"},"initialDelaySeconds":30,"periodSeconds":10},"nodeSelector":{},"readinessProbe":{"httpGet":{"path":"/","port":"http"},"initialDelaySeconds":10,"periodSeconds":5},"replicaCount":1,"resources":{},"service":{"port":3002,"type":"ClusterIP"},"tolerations":[]}` | ------------------------------------------------------------------------- |
+| nl2dsl | object | `{"affinity":{},"enabled":true,"env":{"ALLOW_ORIGINS":"*","OLLAMA_MODEL":"llama3.2:3b"},"image":{"pullPolicy":"Always","repository":"cogstacksystems/cohorter-nl2dsl","tag":"latest"},"livenessProbe":{"httpGet":{"path":"/","port":"http"},"initialDelaySeconds":30,"periodSeconds":10},"nodeSelector":{},"readinessProbe":{"httpGet":{"path":"/","port":"http"},"initialDelaySeconds":10,"periodSeconds":5},"replicaCount":1,"resources":{},"service":{"port":3002,"type":"ClusterIP"},"tolerations":[]}` | ------------------------------------------------------------------------- |
 | nl2dsl.enabled | bool | `true` | Enable the NL2DSL deployment and service. |
 | ollama | object | `{"enabled":true,"ollama":{"models":{"pull":["llama3.2:3b"]}},"persistentVolume":{"enabled":true,"size":"10Gi","storageClass":""},"resources":{},"service":{"port":11434,"type":"ClusterIP"}}` | ------------------------------------------------------------------------- |
 | ollama.enabled | bool | `true` | Enable the Ollama subchart. |
@@ -156,7 +156,7 @@ For issues and questions, please visit the [CogStack GitHub repository](https://
 | podSecurityContext | object | `{}` |  |
 | securityContext | object | `{}` |  |
 | serviceAccount | object | `{"annotations":{},"automount":true,"create":true,"name":""}` | ------------------------------------------------------------------------- |
-| webapp | object | `{"affinity":{},"data":{"downloadUrl":""},"enabled":true,"env":{"RANDOM_DATA":"true"},"image":{"pullPolicy":"Always","repository":"cogstacksystems/cogstack-cohorter-webapp","tag":"latest"},"initContainers":[],"livenessProbe":{"httpGet":{"path":"/","port":"http"},"initialDelaySeconds":60,"periodSeconds":15},"nodeSelector":{},"persistence":{"accessMode":"ReadWriteOnce","enabled":true,"existingClaim":"","size":"5Gi","storageClass":""},"readinessProbe":{"httpGet":{"path":"/","port":"http"},"initialDelaySeconds":30,"periodSeconds":10},"replicaCount":1,"resources":{},"service":{"port":3000,"type":"ClusterIP"},"tolerations":[]}` | ------------------------------------------------------------------------- |
+| webapp | object | `{"affinity":{},"data":{"downloadUrl":""},"enabled":true,"env":{"RANDOM_DATA":"true"},"image":{"pullPolicy":"Always","repository":"cogstacksystems/cohorter-webapp","tag":"latest"},"initContainers":[],"livenessProbe":{"httpGet":{"path":"/","port":"http"},"initialDelaySeconds":60,"periodSeconds":15},"nodeSelector":{},"persistence":{"accessMode":"ReadWriteOnce","enabled":true,"existingClaim":"","size":"5Gi","storageClass":""},"readinessProbe":{"httpGet":{"path":"/","port":"http"},"initialDelaySeconds":30,"periodSeconds":10},"replicaCount":1,"resources":{},"service":{"port":3000,"type":"ClusterIP"},"tolerations":[]}` | ------------------------------------------------------------------------- |
 | webapp.enabled | bool | `true` | Enable the WebApp deployment and service. |
 
 ----------------------------------------------

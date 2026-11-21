@@ -27,7 +27,7 @@ Access Grafana on `http://localhost/grafana`
 
 The stack uses the [shared NGINX image](../nginx) with its observability profile.
 For local rebuilds, build the proxy separately from the repository root with
-`docker build -t cogstacksystems/cogstack-nginx:latest apps/nginx`.
+`docker build -t cogstacksystems/nginx:latest apps/nginx`.
 Host port 80 maps to NGINX port 8001; the existing Grafana, Prometheus and Alloy
 URLs are retained. Availability probes run through NGINX. The former Traefik
 metrics scrape and dashboard are removed; proxy timings are in NGINX access logs.
