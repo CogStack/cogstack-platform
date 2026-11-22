@@ -15,6 +15,9 @@ See the [full documentation](../../docs/docs/platform/observability/index.md).
 
 ## Local Development
 
+Build the three observability images with `sh apps/observability/build-docker.sh`
+from the repository root. Alloy provides availability probing.
+
 From the repository root, run the stack locally with
 ```
 cd ./deployment/examples/observability/simple

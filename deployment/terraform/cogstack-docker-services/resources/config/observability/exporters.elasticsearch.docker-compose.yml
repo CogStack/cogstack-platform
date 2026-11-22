@@ -2,7 +2,7 @@
 name: "cogstack-observability-exporters"
 services:
   alloy:
-    image: cogstacksystems/cogstack-observability-alloy:latest
+    image: cogstacksystems/observability-alloy:latest
     volumes:
       - ${BASE_DIR-.}/observability/alloy/elasticsearch.alloy:/etc/alloy/elasticsearch.alloy # Enable Elastic Exporter
       # CAdvisor

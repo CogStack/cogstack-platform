@@ -68,7 +68,7 @@ You lastly need to mount the new config file and refer to it in docker compose
 
 ```yaml
  alloy:
-    image: cogstacksystems/cogstack-observability-alloy:latest
+    image: cogstacksystems/observability-alloy:latest
 ...
     volumes:
       - ${BASE_DIR-.}/alloy/blackbox-exporter.yml:/etc/alloy/blackbox-exporter.yml

@@ -60,9 +60,9 @@ To configure the service, create a values.yaml file and install with helm.
 | fullnameOverride | string | `""` |  |
 | hostAliases | list | `[]` | Host aliases for the pod |
 | httpRoute | object | `{"annotations":{},"enabled":false,"hostnames":["chart-example.local"],"parentRefs":[{"name":"gateway","sectionName":"http"}],"rules":[{"matches":[{"path":{"type":"PathPrefix","value":"/headers"}}]}]}` | Expose the service via gateway-api HTTPRoute Requires Gateway API resources and suitable controller installed within the cluster (see: https://gateway-api.sigs.k8s.io/guides/) |
-| image | object | `{"pullPolicy":"IfNotPresent","repository":"cogstacksystems/cogstack-ocr-service"}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
+| image | object | `{"pullPolicy":"IfNotPresent","repository":"cogstacksystems/ocr-service"}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
-| image.repository | string | `"cogstacksystems/cogstack-ocr-service"` | Image repository for the MedCAT service container |
+| image.repository | string | `"cogstacksystems/ocr-service"` | Image repository for the MedCAT service container |
 | imagePullSecrets | list | `[]` | This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
 | ingress.annotations | object | `{}` |  |
 | ingress.className | string | `""` |  |

@@ -10,14 +10,14 @@ on:
     paths:
       - "apps/ocr-service/**"
       - ".github/workflows/test_ocr_service.yml"
-      - ".github/workflows/docker_template_ocr_service.yml"
+      - ".github/workflows/docker_build_ocr_service.yml"
       - ".github/workflows/docker_smoke_ocr_service.yml"
   pull_request:
     branches: [ "*" ]
     paths:
       - "apps/ocr-service/**"
       - ".github/workflows/test_ocr_service.yml"
-      - ".github/workflows/docker_template_ocr_service.yml"
+      - ".github/workflows/docker_build_ocr_service.yml"
       - ".github/workflows/docker_smoke_ocr_service.yml"
 
   release:

@@ -8,7 +8,7 @@ RUN --mount=type=secret,id=npm_token,required=true \
       echo "@cogstack:registry=https://npm.pkg.github.com/" > ~/.npmrc && \
       echo "//npm.pkg.github.com/:_authToken=$TOKEN" >> ~/.npmrc && \
       npm whoami --registry=https://npm.pkg.github.com && \
-      npm ci \
+      npm ci && rm -f ~/.npmrc \
     '
 COPY client-react/ ./
 RUN npm ls vite

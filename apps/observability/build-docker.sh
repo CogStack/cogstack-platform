@@ -1,10 +1,9 @@
 #!/bin/sh
 set -e
+cd "$(dirname "$0")"
 
-docker build -t cogstacksystems/cogstack-observability-prometheus:latest -f prometheus/Dockerfile.prometheus ./prometheus
+docker build -t cogstacksystems/observability-prometheus:latest -f prometheus/Dockerfile.prometheus ./prometheus
 
-docker build -t cogstacksystems/cogstack-observability-blackbox-exporter:latest -f prometheus/Dockerfile.blackbox ./prometheus
+docker build -t cogstacksystems/observability-grafana:latest -f grafana/Dockerfile ./grafana
 
-docker build -t cogstacksystems/cogstack-observability-grafana:latest -f grafana/Dockerfile ./grafana
-
-docker build -t cogstacksystems/cogstack-observability-alloy:latest -f grafana-alloy/Dockerfile ./grafana-alloy
+docker build -t cogstacksystems/observability-alloy:latest -f grafana-alloy/Dockerfile ./grafana-alloy
