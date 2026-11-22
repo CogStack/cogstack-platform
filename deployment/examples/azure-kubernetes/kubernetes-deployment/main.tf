@@ -1,7 +1,7 @@
 
 resource "helm_release" "cogstack-ce" {
   name         = "cogstack"
-  chart        = "oci://registry-1.docker.io/cogstacksystems/cogstack-ce-helm"
+  chart        = "oci://registry-1.docker.io/cogstacksystems/ce-helm"
   version      = "0.6.0"
   timeout      = 600
   atomic       = true
