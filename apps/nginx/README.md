@@ -48,9 +48,8 @@ use NGINX's default `60s` timeout; idle client keepalive uses `65s`.
 TLS terminates at the deployment's external gateway.
 
 For observability, NGINX listens on 8001 and routes `/grafana/`, `/prometheus/`
-and `/alloy/` to their Compose services. `/blackbox-exporter/` is available when
-a standalone `blackbox-exporter` service is deployed. Grafana and blackbox
-prefixes are stripped; Prometheus and Alloy prefixes are preserved.
+and `/alloy/` to their Compose services. Grafana's prefix is stripped;
+Prometheus and Alloy prefixes are preserved.
 
 Access logs include request time (`rt`), upstream response time (`urt`) and
 upstream status (`us`).

@@ -1,5 +1,5 @@
 apiVersion: v2
-name: cogstack-ce-helm
+name: ce-helm
 description: CogStack Community Edition Helm Chart
 
 # A chart can be either an 'application' or a 'library' chart.
@@ -53,7 +53,7 @@ dependencies:
     condition: opensearch-dashboards.enabled
     version: "3.5.0"
     repository: "https://opensearch-project.github.io/helm-charts/"
-  - name: cogstack-jupyterhub-helm
+  - name: jupyterhub-helm
     alias: cogstack-jupyterhub
     condition: cogstack-jupyterhub.enabled
     version: ">=0.0.1"

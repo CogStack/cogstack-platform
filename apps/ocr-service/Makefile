@@ -2,8 +2,8 @@ SHELL := /usr/bin/env bash
 .SHELLFLAGS := -o pipefail -c
 
 HELM_RELEASE ?= ocr-service
-HELM_CHART ?= ./charts/ocr-service
-HELM_TEXT_ONLY_VALUES ?= ./charts/ocr-service/values-text-only.yaml
+HELM_CHART ?= ../../deployment/charts/ocr-service
+HELM_TEXT_ONLY_VALUES ?= $(HELM_CHART)/values-text-only.yaml
 HELM_ARGS ?=
 
 .PHONY: helm-install helm-install-text-only helm-template helm-lint helm-uninstall

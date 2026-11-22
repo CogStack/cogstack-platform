@@ -1,7 +1,0 @@
-FROM quay.io/prometheus/blackbox-exporter:latest
-
-COPY ./blackbox-exporter /config
-
-CMD [ \
-        "--config.file=/config/blackbox.yml" \
-    ]

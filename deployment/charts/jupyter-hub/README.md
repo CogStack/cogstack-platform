@@ -14,7 +14,7 @@ This chart deploys the upstream [`jupyterhub`](https://hub.jupyter.org/helm-char
 Install from a local checkout:
 
 ```bash
-helm install jupyterhub oci://registry-1.docker.io/cogstacksystems/cogstack-jupyterhub-helm
+helm install jupyterhub oci://registry-1.docker.io/cogstacksystems/jupyterhub-helm
 ```
 
 ## Configuration

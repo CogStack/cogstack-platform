@@ -26,10 +26,10 @@ This chart is intended to be installed alongside a CogStack deployment that expo
 ## Installation
 
 ```sh
-helm install observability oci://registry-1.docker.io/cogstacksystems/cogstack-observability-helm
+helm install observability oci://registry-1.docker.io/cogstacksystems/observability-helm
 ```
 
-If you are deploying this alongside `cogstack-ce-helm`, you can enable the required monitors in the CE chart with the example override file at `../ce/values-observability.yaml`.
+If you are deploying this alongside `ce-helm`, you can enable the required monitors in the CE chart with the example override file at `../ce/values-observability.yaml`.
 
 ## Configuration
 These are some values that are likely to need customization for your deployment:

@@ -1,5 +1,5 @@
 apiVersion: v2
-name: cogstack-observability-helm
+name: observability-helm
 description: This chart provides observability for a CogStack deployment. It is a basic wrapper around Grafana and Kube Prometheus Stack.
 
 # A chart can be either an 'application' or a 'library' chart.

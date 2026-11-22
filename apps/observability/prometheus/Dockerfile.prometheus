@@ -1,6 +1,5 @@
 FROM prom/prometheus
 
-RUN mkdir -p /etc/prometheus/cogstack/site/scrape-configs/probers
 RUN mkdir -p /etc/prometheus/cogstack/site/scrape-configs/exporters
 
 COPY ./defaults /etc/prometheus/cogstack/defaults

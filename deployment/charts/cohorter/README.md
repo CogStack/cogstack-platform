@@ -27,7 +27,7 @@ MedCAT and Ollama are deployed as **subcharts**:
 From Docker Hub OCI (published chart):
 
 ```bash
-helm install cogstack-cohorter oci://registry-1.docker.io/cogstacksystems/cogstack-cohorter-helm
+helm install cogstack-cohorter oci://registry-1.docker.io/cogstacksystems/cohorter-helm
 ```
 
 ## Configuration

@@ -14,11 +14,11 @@ dependencies:
 - name: opensearch-dashboards
   repository: https://opensearch-project.github.io/helm-charts/
   version: 3.5.0
-- name: cogstack-jupyterhub-helm
+- name: jupyterhub-helm
   repository: file://../jupyter-hub
   version: 0.5.0
 - name: ocr-service-helm
   repository: file://../ocr-service
   version: 0.1.0
-digest: sha256:0d274dec4f435fb9841b12f76f43191cd20799751614f179e964c15117ea64ca
+digest: sha256:8356dbd46efd46c16430f68f72292072d380b54a7ccbceb58a754cd0623c342f
 generated: "2026-11-19T18:15:18.209696Z"

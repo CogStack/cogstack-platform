@@ -12,4 +12,4 @@ ENV GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/provisioning/dashboar
     ALERTING_PAUSE_BURN_RATE=true \
     ALERTING_DEFAULT_CONTACT=Slack \
     SLACK_WEBHOOK_URL=http://localhost:3000/missing-SLACK_WEBHOOK_URL-env-var \
-    PROMETHEUS_URL=http://cogstack-observability-prometheus-1:9090/prometheus
+    PROMETHEUS_URL=http://prometheus:9090/prometheus

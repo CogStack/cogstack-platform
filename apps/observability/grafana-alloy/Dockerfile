@@ -14,5 +14,5 @@ CMD [ \
     "/etc/alloy" \
     ] 
 
-ENV PROMETHEUS_URL=http://cogstack-observability-prometheus-1:9090/prometheus
+ENV PROMETHEUS_URL=http://prometheus:9090/prometheus
 
