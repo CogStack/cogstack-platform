@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.3.12](https://github.com/CogStack/cogstack-platform/compare/cogstack-jupyter-hub-v2.3.11...cogstack-jupyter-hub-v2.3.12) (2026-11-22)
+
+
+### Dependencies
+
+* **jupyter:** bump fsspec from 2026.4.0 to 2026.6.0 in /apps/jupyter-hub ([#232](https://github.com/CogStack/cogstack-platform/issues/232)) ([03f2a6e](https://github.com/CogStack/cogstack-platform/commit/03f2a6e0fdfe487788bc8fc69161fd0463977bb4))
+* **jupyter:** bump fsspec in /apps/jupyter-hub ([03f2a6e](https://github.com/CogStack/cogstack-platform/commit/03f2a6e0fdfe487788bc8fc69161fd0463977bb4))
+
 ## [2.3.11](https://github.com/CogStack/cogstack-platform/compare/cogstack-jupyter-hub-v2.3.10...cogstack-jupyter-hub-v2.3.11) (2026-11-20)
 
 
