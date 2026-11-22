@@ -124,7 +124,7 @@ Available targets:
 The following docker images are available
 
 ```text
-  cogstacksystems/cogstack-ocr-service:latest
+  cogstacksystems/ocr-service:latest
 ```
 
 ## Available models

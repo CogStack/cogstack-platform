@@ -37,7 +37,7 @@ helm upgrade --install cogstack-nifi ./deployment/charts/nifi \
 ```
 
 Pass deployment overrides with `-f /path/to/nifi-values.yaml`. The default image
-is `cogstacksystems/cogstack-nifi:latest`; set `image.tag` to the image release
+is `cogstacksystems/nifi:latest`; set `image.tag` to the image release
 required by the deployment.
 
 For local access:

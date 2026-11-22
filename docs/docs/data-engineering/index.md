@@ -44,7 +44,7 @@ For a detailed description of Apache NiFi, it's functionality and broad set of f
 - GitHub: [https://github.com/CogStack/CogStack-NiFi](https://github.com/CogStack/CogStack-NiFi)
 - Documentation with deployment examples: [https://github.com/CogStack/CogStack-NiFi/tree/devel/deploy](https://github.com/CogStack/CogStack-NiFi/tree/devel/deploy)
 - Documentation on available services: [https://github.com/CogStack/CogStack-NiFi/tree/devel/services](https://github.com/CogStack/CogStack-NiFi/tree/devel/services)
-- DockerHub: [https://cloud.docker.com/repository/docker/cogstacksystems/cogstack-nifi](https://cloud.docker.com/repository/docker/cogstacksystems/cogstack-nifi)
+- DockerHub: [https://cloud.docker.com/repository/docker/cogstacksystems/nifi](https://cloud.docker.com/repository/docker/cogstacksystems/nifi)
 
 **Apache NiFi resources**
 

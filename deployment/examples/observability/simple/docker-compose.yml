@@ -3,21 +3,21 @@
 name: "cogstack-observability"
 services:
   alloy:
-    image: cogstacksystems/cogstack-observability-alloy:latest
+    image: cogstacksystems/observability-alloy:latest
     restart: unless-stopped
     volumes:
       - ${BASE_DIR-.}/alloy/probers:/etc/alloy/probers
     networks:
       - observability
   prometheus:
-    image: cogstacksystems/cogstack-observability-prometheus:latest
+    image: cogstacksystems/observability-prometheus:latest
     restart: unless-stopped
     volumes:
       - prometheus-data:/prometheus
     networks:
       - observability
   grafana:
-    image: cogstacksystems/cogstack-observability-grafana:latest
+    image: cogstacksystems/observability-grafana:latest
     restart: unless-stopped
     volumes:
       - grafana-data:/var/lib/grafana

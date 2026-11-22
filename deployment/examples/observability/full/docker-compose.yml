@@ -3,7 +3,7 @@
 name: "cogstack-observability"
 services:
   alloy:
-    image: cogstacksystems/cogstack-observability-alloy:latest
+    image: cogstacksystems/observability-alloy:latest
     ports:
       - "12345:12345"
     networks:
@@ -20,7 +20,7 @@ services:
       - ALLOY_HOSTNAME=${ALLOY_HOSTNAME-localhost} # Used to add a label to metrics
       - ALLOY_IP_ADDRESS=${ALLOY_IP_ADDRESS-localhost} # Used to add a label to metrics
   prometheus:
-    image: cogstacksystems/cogstack-observability-prometheus:latest
+    image: cogstacksystems/observability-prometheus:latest
     restart: unless-stopped
     volumes:
       - ./prometheus:/etc/prometheus/cogstack/site/
@@ -28,7 +28,7 @@ services:
     networks:
       - observability
   grafana:
-    image: cogstacksystems/cogstack-observability-grafana:latest
+    image: cogstacksystems/observability-grafana:latest
     restart: unless-stopped
     volumes:
       - grafana-data:/var/lib/grafana
