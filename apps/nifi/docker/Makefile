@@ -61,12 +61,9 @@ build-nifi-image: ## Build the local NiFi image without starting services
 		--build-arg NIFI_BASE_IMAGE="$${NIFI_BASE_IMAGE}" \
 		--build-arg NIFI_UID="$${COGSTACK_LOCAL_UID:-1000}" \
 		--build-arg NIFI_GID="$${COGSTACK_LOCAL_GID:-1000}" \
-		--tag "$${NIFI_LOCAL_DOCKER_IMAGE:-cogstack/cogstack-nifi:local}" \
+		--tag "$${NIFI_LOCAL_DOCKER_IMAGE:-cogstacksystems/nifi:local}" \
 		--file ../Dockerfile \
 		..
-
-start-jupyter:
-	$(WITH_ENV) docker compose -f ../../jupyter-hub/docker/docker-compose.base.yml -f ../../jupyter-hub/docker/docker-compose.prod.yml $(DC_START_CMD) cogstack-jupyter-hub
 
 stop-nifi-dev: ## Stop NiFi and NiFi nginx (docker-compose.dev.yml)
 	$(WITH_ENV) docker compose -f docker-compose.dev.yml $(DC_STOP_CMD) nifi nifi-nginx
@@ -82,12 +79,4 @@ delete-nifi-dev-images: ## Delete NiFi images referenced in docker-compose.dev.y
 		echo "No NiFi images found in docker-compose.dev.yml"; \
 	fi
 
-delete-jupyter: ## Remove Jupyter container
-	$(WITH_ENV) docker compose -f ../../jupyter-hub/docker/docker-compose.base.yml -f ../../jupyter-hub/docker/docker-compose.prod.yml rm -f -s cogstack-jupyter-hub
-
-make-delete-jupyter: delete-jupyter ## Alias for delete-jupyter
-
-stop-jupyter:
-	$(WITH_ENV) docker compose -f ../../jupyter-hub/docker/docker-compose.base.yml -f ../../jupyter-hub/docker/docker-compose.yml $(DC_STOP_CMD) cogstack-jupyter-hub
-
-.PHONY: help load-env show-env check-config start-nifi-dev start-nifi-dev-build build-nifi-image start-jupyter stop-nifi-dev delete-nifi-dev-containers delete-nifi-dev-images delete-jupyter make-delete-jupyter stop-jupyter
+.PHONY: help load-env show-env check-config start-nifi-dev start-nifi-dev-build build-nifi-image stop-nifi-dev delete-nifi-dev-containers delete-nifi-dev-images

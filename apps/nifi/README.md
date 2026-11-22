@@ -25,7 +25,7 @@ alongside the application.
 Run from the platform repository root:
 
 ```bash
-docker build --tag cogstack/cogstack-nifi:local apps/nifi
+docker build --tag cogstacksystems/nifi:local apps/nifi
 ```
 
 `apps/nifi` is the build context. The Dockerfile uses the checked-in dependency
@@ -71,14 +71,17 @@ READMEs describe the required environment ConfigMaps, TLS Secrets and storage.
 
 `docker/docker-compose.dev.yml` runs NiFi and the shared NGINX application from
 `apps/nginx`. The environment loader uses the app's `env/general.env`,
-`env/nifi.env`, `env/network_settings.env` and `env/nginx.env` files. Supply those
-local files, NiFi credentials and TLS certificates before using the Compose
-helpers. The image build above works independently of them.
+`env/nifi.env` and `env/network_settings.env` files. NGINX uses its image defaults
+and the resource limits in Compose. Supply the local files, NiFi credentials and
+TLS certificates before using the Compose helpers. The image build above works
+independently of them.
 
 Certificates live in the shared `deployment/security/certificates/` directory
 at the repository root. Put the CA in `root/root-ca.pem` and the NiFi files
 (`nifi.pem`, `nifi.key`, `nifi-keystore.jks`, `nifi-truststore.jks`) in `nifi/`.
 Both containers mount these files read-only. Certificate contents are ignored by Git.
+Supply any ingestion-specific certificate mounts or host overrides in the deployment
+that needs them.
 
 Mutable configuration, data repositories, processor logs and databases belong
 in deployment-owned storage. The image health check expects the configured TLS

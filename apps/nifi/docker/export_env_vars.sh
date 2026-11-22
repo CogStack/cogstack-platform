@@ -15,7 +15,6 @@ _cogstack_load_environment() {
     ../env/general.env
     ../env/nifi.env
     ../env/network_settings.env
-    ../env/nginx.env
   )
   local relative_file selected_file variable_name file_name
   local restore_allexport=1
@@ -39,21 +38,6 @@ _cogstack_load_environment() {
     }
   done
 
-  # Service-owned configuration remains optional and uses its own directories.
-  local service_files=(
-    ../../jupyter-hub/env/jupyter.env
-  )
-  for relative_file in "${service_files[@]}"; do
-    selected_file="$deploy_path/$relative_file"
-    if [[ -f "$selected_file" ]]; then
-      # shellcheck disable=SC1090
-      source "$selected_file" || {
-        echo "ERROR: Failed to load service configuration: $selected_file" >&2
-        if [[ "$restore_allexport" == 1 ]]; then set +a; fi
-        return 1
-      }
-    fi
-  done
   # Local image builds match bind-mounted configuration/certificate ownership.
   # Published images retain their Dockerfile's default non-root UID/GID.
   export COGSTACK_LOCAL_UID="${COGSTACK_LOCAL_UID:-$(id -u)}"

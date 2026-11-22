@@ -14,9 +14,6 @@ x-env-files:
     - "${COGSTACK_NIFI_ENV_FILE:-../env/nifi.env}"
     - "${COGSTACK_NETWORK_SETTINGS_ENV_FILE:-../env/network_settings.env}"
 
-  nifi-nginx: &nifi-nginx-env-files
-    - "${COGSTACK_NGINX_ENV_FILE:-../env/nginx.env}"
-
 x-env:
   nifi: &nifi-env
     # Apache's native startup settings; existing deployment env names remain supported.
@@ -58,10 +55,6 @@ x-mounts:
 
     # Security certificates
     - ../../../deployment/security/certificates/nifi:/security/certificates/nifi:ro
-    - ../../../deployment/security/certificates/elastic/opensearch/elasticsearch:/security/certificates/elastic/opensearch/elasticsearch:ro
-    - ../../../deployment/security/certificates/elastic/opensearch/elastic-stack-ca.crt.pem:/security/certificates/elastic/opensearch/elastic-stack-ca.crt.pem:ro
-    - ../../../deployment/security/certificates/elastic/opensearch/es_kibana_client.pem:/security/certificates/elastic/opensearch/es_kibana_client.pem:ro
-    - ../../../deployment/security/certificates/elastic/opensearch/es_kibana_client.key:/security/certificates/elastic/opensearch/es_kibana_client.key:ro
     - ../../../deployment/security/certificates/root/root-ca.pem:/security/certificates/root/root-ca.pem:ro
     # Apache startup configures image defaults in this persistent, writable directory.
     - nifi-vol-conf:/opt/nifi/nifi-current/conf
@@ -91,13 +84,6 @@ x-networks:
   cognet: &cognet
     - cognet
 
-x-common-hosts: &common-hosts
-  - ${ELASTICSEARCH_1_HOST_NAME:-test-1:0.0.0.0}
-  - ${ELASTICSEARCH_2_HOST_NAME:-test-2:0.0.0.0}
-  - ${ELASTICSEARCH_3_HOST_NAME:-test-3:0.0.0.0}
-  - ${KIBANA_HOST_NAME:-test-4:0.0.0.0}
-  - ${NIFI_HOST_NAME:-test-5:0.0.0.0}
-
 x-common-ulimits: &common-ulimits
   ulimits:
     nofile:
@@ -112,7 +98,6 @@ x-nifi-common: &nifi-common
   <<: *common-ulimits
   restart: unless-stopped
   env_file: *all-env
-  extra_hosts: *common-hosts
   networks: *cognet
 #---------------------------------------------------------------------------#
 # Used services                                                             #
@@ -124,7 +109,7 @@ services:
 #---------------------------------------------------------------------------#
   nifi:
     <<: *nifi-common
-    image: ${NIFI_LOCAL_DOCKER_IMAGE:-cogstack/cogstack-nifi:local}
+    image: ${NIFI_LOCAL_DOCKER_IMAGE:-cogstacksystems/nifi:local}
     pull_policy: build
     build:
        context: ..
@@ -136,7 +121,7 @@ services:
          NIFI_GID: ${COGSTACK_LOCAL_GID:-1000}
     container_name: cogstack-nifi
     hostname: nifi
-    shm_size: ${NIFI_DOCKER_SHM_SIZE:-"1g"}
+    shm_size: ${NIFI_DOCKER_SHM_SIZE:-1g}
     environment: *nifi-env
     deploy:
       resources:
@@ -165,7 +150,6 @@ services:
     container_name: cogstack-nifi-nginx
     restart: always
     shm_size: ${NGINX_SHM_SIZE:-512mb}
-    env_file: *nifi-nginx-env-files
     environment: *nifi-nginx-env
     stop_grace_period: 90s
     read_only: true
@@ -173,16 +157,15 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "${NGINX_DOCKER_CPU_MAX}"
-          memory: "${NGINX_DOCKER_RAM}"
+          cpus: "${NGINX_DOCKER_CPU_MAX:-1}"
+          memory: "${NGINX_DOCKER_RAM:-1g}"
         reservations:
-          cpus: "${NGINX_DOCKER_CPU_MIN}"
-          memory: "${NGINX_DOCKER_RAM}"
+          cpus: "${NGINX_DOCKER_CPU_MIN:-1}"
+          memory: "${NGINX_DOCKER_RAM:-1g}"
     volumes: *nifi-nginx-volumes
     ports:
       - "${NIFI_EXTERNAL_PORT_NGINX:-8443}:${NIFI_INTERNAL_PORT_NGINX:-8443}"
     networks: *cognet
-    extra_hosts: *common-hosts
     logging: *nifi-logging-common
 
 #---------------------------------------------------------------------------#
