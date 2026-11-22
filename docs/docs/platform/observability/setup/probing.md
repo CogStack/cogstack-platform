@@ -42,7 +42,7 @@ See [Prober Customization](../customization/blackbox-exporter-config.md) to do a
 * Changes will take effect on the next Prometheus reload or container restart.
 * Jobs with the same `job` label are grouped in dashboards to simplify analysis.
 * Job labels need to line up with defined SLOs to enable Alerting
-* Probers can be used for both external URLs, and direct to local docker containers. For example, we probe grafana on "cogstack-observability-grafana-1:3000/". If you want to probe local docker containers, note that the network has to line up
+* Probers can be used for both external URLs, and direct to local docker containers. For example, we probe grafana on "grafana:3000/". If you want to probe local docker containers, note that the network has to line up
 
 
 ## External links

@@ -31,10 +31,6 @@ jobs:
             context: apps/observability/prometheus
             dockerfile: apps/observability/prometheus/Dockerfile.prometheus
             image: cogstacksystems/observability-prometheus
-          - name: blackbox
-            context: apps/observability/prometheus
-            dockerfile: apps/observability/prometheus/Dockerfile.blackbox
-            image: cogstacksystems/observability-blackbox-exporter
           - name: grafana
             context: apps/observability/grafana
             dockerfile: apps/observability/grafana/Dockerfile

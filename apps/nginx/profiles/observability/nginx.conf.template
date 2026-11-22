@@ -37,12 +37,5 @@ server {
     location /prometheus/ { proxy_pass http://prometheus; }
     location = /alloy { return 308 /alloy/$is_args$args; }
     location /alloy/ { proxy_pass http://alloy; }
-    location = /blackbox-exporter { return 308 /blackbox-exporter/$is_args$args; }
-    location /blackbox-exporter/ {
-        # Resolve the optional exporter only when requested.
-        set $blackbox blackbox-exporter:9115;
-        rewrite ^/blackbox-exporter/(.*)$ /$1 break;
-        proxy_pass http://$blackbox;
-    }
     location / { return 404; }
 }

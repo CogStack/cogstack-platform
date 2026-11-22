@@ -8,7 +8,7 @@ scrape_configs:
           name: prometheus # collect prometheus's own metrics of itself
           __metrics_path__: /prometheus/metrics
       - targets:
-          - cogstack-observability-grafana-1:3000
+          - grafana:3000
         labels:
           name: grafana # collect grafana metrics like dashboard usage
           __metrics_path__: /metrics

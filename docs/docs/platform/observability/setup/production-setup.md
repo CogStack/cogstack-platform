@@ -50,7 +50,7 @@ observability.docker-compose.yml
 exporters.docker-compose.yml
 alloy/
     probers/           # HTTP endpoints to check availability
-        blackbox-exporter/     # (Optional) Custom Probe configurations like auth details
+    blackbox-exporter.yml # (Optional) Custom probe settings such as authentication
 prometheus/
     scrape-configs/
         exporters/         # Targets that expose metrics (e.g. Elasticsearch, Docker, VMs)
