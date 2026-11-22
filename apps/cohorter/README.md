@@ -18,6 +18,8 @@ A lightweight cohort discovery application that combines:
 - `WebAPP/`  
   Full application (frontend + backend) providing the UI and orchestration of the workflow.
 
+- `docker/`: Docker Compose configuration for the full stack.
+
 ---
 
 ## Quick start (Docker Compose)
@@ -27,16 +29,18 @@ A lightweight cohort discovery application that combines:
 - (Optional) GPU setup if you want Ollama GPU acceleration (depends on your host OS)
 
 ### 1) Build and start all services
-From this directory:
+From `apps/cohorter/`, configure [`env/cohorter.env`](env/cohorter.env), then run
+Compose from `docker/`:
 
 ```bash
-docker compose up --build
+cd docker
+docker compose --env-file ../env/cohorter.env up --build
 ```
 
 Or run in background:
 
 ```bash
-docker compose up --build -d
+docker compose --env-file ../env/cohorter.env up --build -d
 ```
 
 ### 2) Access the app
@@ -49,7 +53,7 @@ docker compose up --build -d
 
 ## Configuration
 
-### NL2DSL environment variables (via docker-compose.yml)
+### NL2DSL environment variables (via docker/docker-compose.yml)
 
 NL2DSL uses:
 - `OLLAMA_URL` (default in compose: `http://ollama:11434/api/generate`)
@@ -62,13 +66,13 @@ WebAPP uses:
 - `NL2DSL_URL` (default: `http://cohorter-nl2dsl:3002`)
 
 ### WebAPP random data generation (optional)
-The `WebAPP/Dockerfile` supports a build arg `random` to generate random data:
+Set the runtime `RANDOM_DATA` variable to generate random data:
 
 ```bash
-WEBAPP_RANDOM=true docker compose up --build
+RANDOM_DATA=true docker compose --env-file ../env/cohorter.env up --build
 ```
 
-(If you don’t need random data generation, keep it `false`.)
+Set `RANDOM_DATA=false` in `env/cohorter.env` to disable random data generation.
 
 ---
 
@@ -86,7 +90,7 @@ Each folder contains its own `Dockerfile` and scripts.
 ## Notes on models and licensing
 
 - MedCAT model packs and any potentially sensitive data **must not** be committed to the repository.
-- Ollama models are stored in a Docker named volume by default (`ollama:` in `docker-compose.yml`) so they persist across restarts.
+- Ollama models are stored in a Docker named volume by default (`ollama:` in `docker/docker-compose.yml`) so they persist across restarts.
 
 ---
 
@@ -94,20 +98,20 @@ Each folder contains its own `Dockerfile` and scripts.
 
 ### Rebuild everything cleanly
 ```bash
-docker compose down
-docker compose up --build
+docker compose --env-file ../env/cohorter.env down
+docker compose --env-file ../env/cohorter.env up --build
 ```
 
 ### Remove Ollama downloaded models (if needed)
 This deletes the named volume that stores Ollama models:
 
 ```bash
-docker compose down -v
+docker compose --env-file ../env/cohorter.env down -v
 ```
 
 ### Check logs
 ```bash
-docker compose logs -f
+docker compose --env-file ../env/cohorter.env logs -f
 ```
 
 ---

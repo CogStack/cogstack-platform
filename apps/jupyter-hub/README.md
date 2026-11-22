@@ -166,7 +166,7 @@ Run local smoke checks for Helm/Kubernetes manifests:
 bash scripts/helm_k8s_smoke_test.sh
 ```
 
-CI also runs this via [`.github/workflows/helm-smoke-test.yml`](./.github/workflows/helm-smoke-test.yml) for changes affecting chart/env/config/security files.
+CI chart validation lives in the shared [Helm workflow](../../.github/workflows/build_helm_charts.yml).
 
 ## Access and account control
 
