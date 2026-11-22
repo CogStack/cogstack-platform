@@ -57,12 +57,12 @@ x-mounts:
     - ../user_python_extensions:/opt/nifi/nifi-current/python_extensions:rw
 
     # Security certificates
-    - ../security/certificates/nifi:/security/certificates/nifi:ro
-    - ../security/certificates/elastic/opensearch/elasticsearch:/security/certificates/elastic/opensearch/elasticsearch:ro
-    - ../security/certificates/elastic/opensearch/elastic-stack-ca.crt.pem:/security/certificates/elastic/opensearch/elastic-stack-ca.crt.pem:ro
-    - ../security/certificates/elastic/opensearch/es_kibana_client.pem:/security/certificates/elastic/opensearch/es_kibana_client.pem:ro
-    - ../security/certificates/elastic/opensearch/es_kibana_client.key:/security/certificates/elastic/opensearch/es_kibana_client.key:ro
-    - ../security/certificates/root/root-ca.pem:/security/certificates/root/root-ca.pem:ro
+    - ../../../deployment/security/certificates/nifi:/security/certificates/nifi:ro
+    - ../../../deployment/security/certificates/elastic/opensearch/elasticsearch:/security/certificates/elastic/opensearch/elasticsearch:ro
+    - ../../../deployment/security/certificates/elastic/opensearch/elastic-stack-ca.crt.pem:/security/certificates/elastic/opensearch/elastic-stack-ca.crt.pem:ro
+    - ../../../deployment/security/certificates/elastic/opensearch/es_kibana_client.pem:/security/certificates/elastic/opensearch/es_kibana_client.pem:ro
+    - ../../../deployment/security/certificates/elastic/opensearch/es_kibana_client.key:/security/certificates/elastic/opensearch/es_kibana_client.key:ro
+    - ../../../deployment/security/certificates/root/root-ca.pem:/security/certificates/root/root-ca.pem:ro
     # Apache startup configures image defaults in this persistent, writable directory.
     - nifi-vol-conf:/opt/nifi/nifi-current/conf
 
@@ -84,8 +84,8 @@ x-mounts:
     - /tmp:mode=1777
 
   nifi-nginx: &nifi-nginx-volumes
-    - ../security/certificates/nifi:/certificates/nifi:ro
-    - ../security/certificates/root/root-ca.pem:/certificates/root/root-ca.pem:ro
+    - ../../../deployment/security/certificates/nifi:/certificates/nifi:ro
+    - ../../../deployment/security/certificates/root/root-ca.pem:/certificates/root/root-ca.pem:ro
 
 x-networks:
   cognet: &cognet

@@ -75,6 +75,11 @@ READMEs describe the required environment ConfigMaps, TLS Secrets and storage.
 local files, NiFi credentials and TLS certificates before using the Compose
 helpers. The image build above works independently of them.
 
+Certificates live in the shared `deployment/security/certificates/` directory
+at the repository root. Put the CA in `root/root-ca.pem` and the NiFi files
+(`nifi.pem`, `nifi.key`, `nifi-keystore.jks`, `nifi-truststore.jks`) in `nifi/`.
+Both containers mount these files read-only. Certificate contents are ignored by Git.
+
 Mutable configuration, data repositories, processor logs and databases belong
 in deployment-owned storage. The image health check expects the configured TLS
 CA certificate at runtime.
