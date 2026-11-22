@@ -25,7 +25,7 @@ This chart is an umbrella chart that deploys:
 ## Installation
 
 ```sh
-helm install cogstack oci://registry-1.docker.io/cogstacksystems/cogstack-ce-helm
+helm install cogstack oci://registry-1.docker.io/cogstacksystems/ce-helm
 ```
 
 ## Configuration
@@ -65,7 +65,7 @@ The chart uses local subcharts via relative paths:
 
 - `medcat-service-helm` (as `medcat-service` and `anoncat-service`)
 - `medcat-trainer-helm`
-- `cogstack-jupyterhub-helm` (as `cogstack-jupyterhub`)
+- `jupyterhub-helm` (as `cogstack-jupyterhub`)
 
 ## Uninstall
 
@@ -83,7 +83,7 @@ kubectl delete namespace cogstack
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../jupyter-hub | cogstack-jupyterhub(cogstack-jupyterhub-helm) | >=0.0.1 |
+| file://../jupyter-hub | cogstack-jupyterhub(jupyterhub-helm) | >=0.0.1 |
 | file://../medcat-service | medcat-service(medcat-service-helm) | >=0.0.1 |
 | file://../medcat-service | anoncat-service(medcat-service-helm) | >=0.0.1 |
 | file://../medcat-trainer | medcat-trainer(medcat-trainer-helm) | >=0.0.1 |

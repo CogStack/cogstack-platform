@@ -8,8 +8,8 @@ For example:
 medcat-trainer-helm depends on postgresql. 
 When we publish this into dockerhub, it means that inside medcat-trainer-helm.tgz, there's a charts/postgresql.tgz file.
 
-cogstack-ce-helm depends on medcat-trainer-helm
-When we publish this into dockerhub, inside cogstack-ce-helm.tgz, we want to have a charts/medcat-trainer-helm.tgz file, and inside that file we should have charts/solr.tgz.
+ce-helm depends on medcat-trainer-helm
+When we publish this into dockerhub, inside ce-helm.tgz, we want to have a charts/medcat-trainer-helm.tgz file, and inside that file we should have charts/solr.tgz.
 
 The complex part is that we are using the file:// path to depend on the subchart. This means we need to run `helm dependency update` in that folder specifically before we can reference it in the parent chart.
 If we weren't using file:// but referencing the tar in dockerhub, there wouldnt be any issue.

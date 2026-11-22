@@ -20,7 +20,7 @@ Helm can be installed by following https://helm.sh/docs/intro/install/ . To dire
 Run:
 
 ```sh
-helm install cogstack oci://registry-1.docker.io/cogstacksystems/cogstack-ce-helm --timeout 15m
+helm install cogstack oci://registry-1.docker.io/cogstacksystems/ce-helm --timeout 15m
 ```
 
 This command will install Cogstack community edition with all the default values.

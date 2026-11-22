@@ -52,7 +52,7 @@
         },
         "deployment/charts/ce": {
             "release-type": "helm",
-            "component": "helm-charts/cogstack-ce-helm",
+            "component": "helm-charts/ce-helm",
             "changelog-path": "CHANGELOG.md",
             "bump-minor-pre-major": false,
             "bump-patch-for-minor-pre-major": false,
@@ -68,7 +68,7 @@
         },
         "deployment/charts/cohorter": {
             "release-type": "helm",
-            "component": "helm-charts/cogstack-cohorter-helm",
+            "component": "helm-charts/cohorter-helm",
             "changelog-path": "CHANGELOG.md",
             "bump-minor-pre-major": false,
             "bump-patch-for-minor-pre-major": false,
@@ -84,7 +84,7 @@
         },
         "deployment/charts/observability": {
             "release-type": "helm",
-            "component": "helm-charts/cogstack-observability-helm",
+            "component": "helm-charts/observability-helm",
             "changelog-path": "CHANGELOG.md",
             "bump-minor-pre-major": false,
             "bump-patch-for-minor-pre-major": false,
@@ -100,7 +100,7 @@
         },
         "deployment/charts/jupyter-hub": {
             "release-type": "helm",
-            "component": "helm-charts/cogstack-jupyterhub-helm",
+            "component": "helm-charts/jupyterhub-helm",
             "changelog-path": "CHANGELOG.md",
             "bump-minor-pre-major": false,
             "bump-patch-for-minor-pre-major": false,
@@ -133,7 +133,7 @@
         },
         "deployment/charts/nifi": {
             "release-type": "helm",
-            "component": "helm-charts/cogstack-nifi",
+            "component": "helm-charts/nifi",
             "initial-version": "0.1.0",
             "changelog-path": "CHANGELOG.md",
             "bump-minor-pre-major": false,
