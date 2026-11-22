@@ -11,42 +11,25 @@ _cogstack_load_environment() {
   fi
   local deploy_path
   deploy_path="$(cd "$(dirname "$loader_path")" && pwd)" || return 1
-  # shellcheck disable=SC1091
-  source "$deploy_path/config_files.sh" || return 1
-  cogstack_config_init "$(cd "$deploy_path/.." && pwd)" || return 1
-
   local relative_files=(
-    security/env/certificates_nifi.env
-    security/env/certificates_general.env
-    security/env/certificates_elasticsearch.env
-    security/env/users_elasticsearch.env
-    security/env/users_database.env
-    security/env/users_nifi.env
-    security/env/users_nginx.env
-    deploy/general.env
-    deploy/nifi.env
-    deploy/elasticsearch.env
-    deploy/ollama.env
-    deploy/sglang.env
-    deploy/openwebui.env
-    deploy/database.env
-    deploy/network_settings.env
-    deploy/project.env
-    deploy/gitea.env
-    deploy/nginx.env
-    deploy/telemetry.env
+    ../env/general.env
+    ../env/nifi.env
+    ../env/network_settings.env
+    ../env/nginx.env
   )
   local relative_file selected_file variable_name file_name
   local restore_allexport=1
   case "$-" in *a*) restore_allexport=0 ;; esac
   set -a
   for relative_file in "${relative_files[@]}"; do
-    selected_file="$(cogstack_env_file "$relative_file")" || {
-      if [[ "$restore_allexport" == 1 ]]; then set +a; fi
-      return 1
-    }
     file_name="${relative_file##*/}"
     variable_name="COGSTACK_$(printf '%s' "${file_name%.env}" | tr '[:lower:]' '[:upper:]')_ENV_FILE"
+    if [[ -n "${ZSH_VERSION:-}" ]]; then
+      eval 'selected_file=${(P)variable_name:-}'
+    else
+      selected_file="${!variable_name:-}"
+    fi
+    selected_file="${selected_file:-$deploy_path/$relative_file}"
     export "$variable_name=$selected_file"
     # shellcheck disable=SC1090
     source "$selected_file" || {
@@ -58,14 +41,10 @@ _cogstack_load_environment() {
 
   # Service-owned configuration remains optional and uses its own directories.
   local service_files=(
-    ../jupyter-hub/env/jupyter.env
-    services/cogstack-platform/apps/ocr-service/env/ocr_service.env
-    services/cogstack-nlp/medcat-service/env/app.env
-    services/cogstack-nlp/medcat-service/env/medcat.env
-    services/cogstack-nlp/medcat-trainer/envs/env-prod
+    ../../jupyter-hub/env/jupyter.env
   )
   for relative_file in "${service_files[@]}"; do
-    selected_file="$COGSTACK_REPO_ROOT/$relative_file"
+    selected_file="$deploy_path/$relative_file"
     if [[ -f "$selected_file" ]]; then
       # shellcheck disable=SC1090
       source "$selected_file" || {
@@ -83,7 +62,7 @@ _cogstack_load_environment() {
   if [[ "$COGSTACK_LOCAL_GID" == 0 ]]; then export COGSTACK_LOCAL_GID=1000; fi
   export DOLLAR='$'
   if [[ "$restore_allexport" == 1 ]]; then set +a; fi
-  echo "Configuration loaded from ${COGSTACK_CONFIG_DIR:-repository defaults}."
+  echo "Configuration loaded."
 }
 
 if _cogstack_load_environment; then

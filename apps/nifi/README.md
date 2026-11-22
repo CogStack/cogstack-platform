@@ -69,12 +69,11 @@ The Kubernetes charts live in
 and [`deployment/charts/nginx`](../../deployment/charts/nginx/README.md). Their
 READMEs describe the required environment ConfigMaps, TLS Secrets and storage.
 
-The NiFi build context and resource mounts in `docker/docker-compose.dev.yml`
-point to this application directory. The Compose file, Makefile and environment
-loader were brought over from the wider CogStack deployment and still reference
-supporting configuration, security certificates, services and helper scripts.
-Those dependencies need to be migrated or supplied before using the full
-deployment helpers. The image build above works independently of them.
+`docker/docker-compose.dev.yml` runs NiFi and the shared NGINX application from
+`apps/nginx`. The environment loader uses the app's `env/general.env`,
+`env/nifi.env`, `env/network_settings.env` and `env/nginx.env` files. Supply those
+local files, NiFi credentials and TLS certificates before using the Compose
+helpers. The image build above works independently of them.
 
 Mutable configuration, data repositories, processor logs and databases belong
 in deployment-owned storage. The image health check expects the configured TLS

@@ -3,24 +3,10 @@ SHELL := /usr/bin/env bash
 
 DC_START_CMD := up -d
 DC_STOP_CMD := stop
-DC_DOWN_CMD := down
-REMOTE_COMPOSE_FILE ?= services.yml
-REMOTE_SSH_KEY ?=
-REMOTE_SSH_OPTS ?=
-REMOTE_SSH_KEY_ARG = $(if $(strip $(REMOTE_SSH_KEY)),-i $(REMOTE_SSH_KEY),)
-SECURITY_DIR ?= ../security
-SECURITY_SCRIPTS_DIR ?= $(SECURITY_DIR)/scripts
-SECURITY_CERTIFICATES_DIR ?= $(SECURITY_DIR)/certificates
-SECURITY_ENV_DIR ?= $(SECURITY_DIR)/env
-OPENSEARCH_CERT_NAMES ?=
-COGSTACK_CONFIG_DIR ?=
-export COGSTACK_CONFIG_DIR
-
 define WITH_ENV
 source ./export_env_vars.sh || exit $$?;
 endef
 
-# list all make targets in this file
 help: ## List available targets with descriptions
 	@echo "Available targets:"
 	@awk '\
@@ -28,11 +14,8 @@ help: ## List available targets with descriptions
 		if (target ~ /^start-/) return "Start a service or service group"; \
 		if (target ~ /^stop-/) return "Stop a service or service group"; \
 		if (target ~ /^delete-/) return "Delete related containers/images/volumes"; \
-		if (target ~ /^git-/) return "Run a git helper script"; \
 		if (target == "load-env") return "Load variables from export_env_vars.sh"; \
 		if (target == "show-env") return "Print current environment variables"; \
-		if (target == "down-all") return "Stop all services from services.yml"; \
-		if (target == "cleanup") return "Stop all services and remove volumes"; \
 		return "(no description)"; \
 	} \
 	/^[a-zA-Z0-9][a-zA-Z0-9_-]*:/ { \
@@ -57,218 +40,19 @@ help: ## List available targets with descriptions
 	} \
 	' $(MAKEFILE_LIST) | sort | awk -F '\t' '{printf "  %-28s %s\n", $$1, $$2}'
 
-.PHONY: help
-
-# utility commands
-
-git-freeze-security: ## Apply restricted git settings for safer shell operations
-	@../scripts/git_freeze_security.sh
-
-git-unfreeze-security: ## Revert restricted git settings
-	@../scripts/git_unfreeze_security.sh
-
-git-init-submodules: ## Initialize submodules at the commits recorded by this checkout
-	@../scripts/git_init_submodules_in_repo.sh
-
-git-update-submodules: ## Explicitly upgrade direct submodules for review (never stages or commits)
-	@../scripts/git_update_submodules_in_repo.sh
-
-.PHONY: git-init-submodules git-update-submodules
-
 load-env: ## Load variables from export_env_vars.sh in a subshell
 	$(WITH_ENV) echo "Environment variables loaded."
 
 show-env: ## Print sorted environment variables after loading export_env_vars.sh
 	${WITH_ENV} >/dev/null 2>&1; printenv | sort
 
-init-security-root-ca: ## Generate the shared root CA only when no CA material exists
-	@set -euo pipefail; \
-	$(WITH_ENV) \
-	source "$${COGSTACK_CERTIFICATES_GENERAL_ENV_FILE}"; \
-	root_dir="$(SECURITY_CERTIFICATES_DIR)/root"; \
-	if [[ -f "$$root_dir/$${ROOT_CERTIFICATE_NAME}.key" \
-	   && -f "$$root_dir/$${ROOT_CERTIFICATE_NAME}.pem" \
-	   && -f "$$root_dir/$${ROOT_CERTIFICATE_NAME}.p12" \
-	   && -f "$$root_dir/$${ROOT_CERTIFICATE_NAME}-keystore.jks" \
-	   && -f "$$root_dir/$${ROOT_CERTIFICATE_NAME}-truststore.jks" ]]; then \
-		echo "Root CA certificates already exist; leaving them unchanged."; \
-	elif [[ -d "$$root_dir" && -n "$$(find "$$root_dir" -mindepth 1 -maxdepth 1 -print -quit)" ]]; then \
-		echo "ERROR: $$root_dir contains an incomplete root CA set." >&2; \
-		echo "Preserve and repair or explicitly replace that CA before rerunning this target." >&2; \
-		exit 1; \
-	else \
-		echo "Generating the shared root CA certificates..."; \
-		(cd "$(SECURITY_SCRIPTS_DIR)" && ./create_root_ca_cert.sh); \
-	fi
+check-config: ## Validate the NiFi dev Compose file
+	@$(WITH_ENV) docker compose -f docker-compose.dev.yml config --quiet
 
-init-security-nifi: init-security-opensearch init-security-postgresql ## Prepare NiFi certificates and its search/database certificate inputs
-	@set -euo pipefail; \
-	nifi_dir="$(SECURITY_CERTIFICATES_DIR)/nifi"; \
-	if [[ -f "$$nifi_dir/nifi.key" \
-	   && -f "$$nifi_dir/nifi.pem" \
-	   && -f "$$nifi_dir/nifi.p12" \
-	   && -f "$$nifi_dir/nifi-keystore.jks" \
-	   && -f "$$nifi_dir/nifi-truststore.jks" ]]; then \
-		echo "NiFi certificates already exist; leaving them unchanged."; \
-	else \
-		echo "Generating NiFi certificates..."; \
-		(cd "$(SECURITY_SCRIPTS_DIR)" && ./create_nifi_certs.sh); \
-	fi
-
-init-security-gitea: init-security-root-ca ## Generate a dedicated Gitea leaf certificate when it is missing
-	@set -euo pipefail; \
-	gitea_dir="$(SECURITY_CERTIFICATES_DIR)/gitea"; \
-	if [[ -f "$$gitea_dir/gitea.key" \
-	   && -f "$$gitea_dir/gitea.pem" \
-	   && -f "$$gitea_dir/gitea.crt" ]]; then \
-		echo "Gitea leaf certificate already exists; leaving it unchanged."; \
-	else \
-		echo "Generating Gitea leaf certificate..."; \
-		(cd "$(SECURITY_SCRIPTS_DIR)" && bash ./create_gitea_certs.sh); \
-	fi
-
-init-security-opensearch: init-security-root-ca ## Generate OpenSearch node, client, and admin certificates when missing
-	@set -euo pipefail; \
-	$(WITH_ENV) \
-	source "$${COGSTACK_CERTIFICATES_ELASTICSEARCH_ENV_FILE}"; \
-	if [[ -n "$(strip $(OPENSEARCH_CERT_NAMES))" ]]; then \
-		read -r -a node_names <<< "$(strip $(OPENSEARCH_CERT_NAMES))"; \
-	else \
-		node_names=("$$ES_INSTANCE_NAME_1" "$$ES_INSTANCE_NAME_2" "$$ES_INSTANCE_NAME_3"); \
-	fi; \
-	opensearch_dir="$(SECURITY_CERTIFICATES_DIR)/elastic/opensearch"; \
-	node_certificates_missing=0; \
-	for node_name in "$${node_names[@]}"; do \
-		node_dir="$$opensearch_dir/elasticsearch/$$node_name"; \
-		for suffix in .crt .key .p12 -keystore.jks -truststore.key; do \
-			if [[ ! -f "$$node_dir/$$node_name$$suffix" ]]; then \
-				node_certificates_missing=1; \
-				break 2; \
-			fi; \
-		done; \
-	done; \
-	if [[ ! -f "$$opensearch_dir/elastic-stack-ca.crt.pem" ]]; then \
-		node_certificates_missing=1; \
-	fi; \
-	if (( node_certificates_missing )); then \
-		echo "Generating OpenSearch node certificates for: $${node_names[*]}"; \
-		(cd "$(SECURITY_SCRIPTS_DIR)" && ./create_opensearch_node_cert.sh "$${node_names[@]}"); \
-	else \
-		echo "OpenSearch node certificates already exist; leaving them unchanged."; \
-	fi; \
-	if [[ -f "$$opensearch_dir/admin.crt" \
-	   && -f "$$opensearch_dir/admin.key.pem" \
-	   && -f "$$opensearch_dir/$${ES_CLIENT_CERT_NAME}.pem" \
-	   && -f "$$opensearch_dir/$${ES_CLIENT_CERT_NAME}.key" ]]; then \
-		echo "OpenSearch client and admin certificates already exist; leaving them unchanged."; \
-	else \
-		echo "Generating OpenSearch client and admin certificates..."; \
-		(cd "$(SECURITY_SCRIPTS_DIR)" && ./create_opensearch_client_admin_certs.sh); \
-	fi
-
-init-security-elasticsearch: ## Generate native Elasticsearch certificates when the output directory is absent
-	@set -euo pipefail; \
-	$(WITH_ENV) \
-	source "$${COGSTACK_CERTIFICATES_ELASTICSEARCH_ENV_FILE}"; \
-	elasticsearch_dir="$(SECURITY_CERTIFICATES_DIR)/elastic/elasticsearch"; \
-	certificate_set_complete=1; \
-	for required_file in \
-		"elastic-stack-ca.crt.pem" \
-		"elastic-stack-ca.p12" \
-		"elasticsearch/$${ES_INSTANCE_NAME_1}/$${ES_INSTANCE_NAME_1}.crt" \
-		"elasticsearch/$${ES_INSTANCE_NAME_1}/$${ES_INSTANCE_NAME_1}.key" \
-		"elasticsearch/$${ES_INSTANCE_NAME_2}/$${ES_INSTANCE_NAME_2}.crt" \
-		"elasticsearch/$${ES_INSTANCE_NAME_2}/$${ES_INSTANCE_NAME_2}.key" \
-		"elasticsearch/$${ES_INSTANCE_NAME_3}/$${ES_INSTANCE_NAME_3}.crt" \
-		"elasticsearch/$${ES_INSTANCE_NAME_3}/$${ES_INSTANCE_NAME_3}.key"; do \
-		if [[ ! -f "$$elasticsearch_dir/$$required_file" ]]; then \
-			certificate_set_complete=0; \
-			break; \
-		fi; \
-	done; \
-	if (( certificate_set_complete )); then \
-		echo "Native Elasticsearch certificates already exist; leaving them unchanged."; \
-	elif [[ -e "$$elasticsearch_dir" ]]; then \
-		echo "ERROR: $$elasticsearch_dir exists but contains an incomplete certificate set." >&2; \
-		echo "Move or remove that directory after preserving anything needed, then rerun this target." >&2; \
-		exit 1; \
-	else \
-		echo "Generating native Elasticsearch certificates with Docker..."; \
-		(cd "$(SECURITY_SCRIPTS_DIR)" && ./create_es_native_certs.sh); \
-	fi
-
-init-security-search: ## Generate certificates for ELASTICSEARCH_VERSION from elasticsearch.env
-	@set -euo pipefail; \
-	$(WITH_ENV) \
-	source "$${COGSTACK_ELASTICSEARCH_ENV_FILE}"; \
-	case "$${ELASTICSEARCH_VERSION}" in \
-		opensearch|elasticsearch) \
-			$(MAKE) --no-print-directory "init-security-$${ELASTICSEARCH_VERSION}" \
-			;; \
-		*) \
-			echo "ERROR: unsupported ELASTICSEARCH_VERSION '$${ELASTICSEARCH_VERSION}'." >&2; \
-			exit 1 \
-			;; \
-	esac
-
-init-security-postgresql: init-security-root-ca ## Generate missing PostgreSQL TLS bundles, preserving supplied certificates
-	@$(WITH_ENV) SECURITY_CERTIFICATES_DIR="$(SECURITY_CERTIFICATES_DIR)" bash "$(SECURITY_SCRIPTS_DIR)/create_postgres_certs.sh"
-
-init-security: ## Generate missing NiFi, PostgreSQL, Gitea, and selected search-backend certificates
-	@$(MAKE) --no-print-directory init-security-nifi
-	@$(MAKE) --no-print-directory init-security-gitea
-	@$(MAKE) --no-print-directory init-security-search
-
-.PHONY: init-security init-security-root-ca init-security-nifi init-security-postgresql init-security-gitea init-security-opensearch init-security-elasticsearch init-security-search
-
-remote-deploy-service: ## Deploy one or more services to a remote machine via SSH + docker compose
-remote-deploy-service: _check-remote-params
-	@ssh $(REMOTE_SSH_KEY_ARG) $(REMOTE_SSH_OPTS) "$(REMOTE_HOST)" 'cd "$(REMOTE_REPO_DIR)/deploy" && set -a && source ./export_env_vars.sh && docker compose -f "$(REMOTE_COMPOSE_FILE)" up -d $(REMOTE_SERVICES)'
-
-remote-stop-service: ## Stop one or more services on a remote machine via SSH + docker compose
-remote-stop-service: _check-remote-params
-	@ssh $(REMOTE_SSH_KEY_ARG) $(REMOTE_SSH_OPTS) "$(REMOTE_HOST)" 'cd "$(REMOTE_REPO_DIR)/deploy" && set -a && source ./export_env_vars.sh && docker compose -f "$(REMOTE_COMPOSE_FILE)" stop $(REMOTE_SERVICES)'
-
-remote-delete-service: ## Delete one or more remote service containers via SSH + docker compose rm
-remote-delete-service: _check-remote-params
-	@ssh $(REMOTE_SSH_KEY_ARG) $(REMOTE_SSH_OPTS) "$(REMOTE_HOST)" 'cd "$(REMOTE_REPO_DIR)/deploy" && set -a && source ./export_env_vars.sh && docker compose -f "$(REMOTE_COMPOSE_FILE)" rm -f -s $(REMOTE_SERVICES)'
-
-_check-remote-params:
-	@if [ -z "$(REMOTE_HOST)" ]; then \
-		echo "REMOTE_HOST is required (example: REMOTE_HOST=user@machine)"; \
-		exit 1; \
-	fi
-	@if [ -z "$(REMOTE_REPO_DIR)" ]; then \
-		echo "REMOTE_REPO_DIR is required (example: REMOTE_REPO_DIR=/opt/cogstack_nifi)"; \
-		exit 1; \
-	fi
-	@if [ -z "$(REMOTE_SERVICES)" ]; then \
-		echo "REMOTE_SERVICES is required (example: REMOTE_SERVICES='nifi nifi-nginx')"; \
-		exit 1; \
-	fi
-
-.PHONY: remote-deploy-service remote-stop-service remote-delete-service _check-remote-params
-	
-check-nifi-resources: ## Validate NiFi heap sizes against the container memory limit
-	@$(WITH_ENV) python3 ../scripts/tests/check_nifi_resources.py
-
-check-opensearch-settings: ## Validate search credentials, encryption keys, and image versions
-	@$(WITH_ENV) python3 ../scripts/tests/check_opensearch_settings.py
-
-check-config: check-nifi-resources check-opensearch-settings ## Validate resolved settings and both core Compose files
-	@$(WITH_ENV) docker compose --profile "*" -f services.yml config --quiet && docker compose --profile "*" -f docker-compose.dev.yml config --quiet
-
-.PHONY: check-nifi-resources check-opensearch-settings check-config
-
-# start services
-
-start-nifi: check-nifi-resources ## Start NiFi and NiFi nginx (services.yml)
-	$(WITH_ENV) docker compose -f services.yml $(DC_START_CMD) nifi nifi-nginx 
-
-start-nifi-dev: check-nifi-resources ## Start NiFi and NiFi nginx (docker-compose.dev.yml)
+start-nifi-dev: ## Start NiFi and NiFi nginx (docker-compose.dev.yml)
 	$(WITH_ENV) docker compose -f docker-compose.dev.yml $(DC_START_CMD) nifi nifi-nginx
 
-start-nifi-dev-build: check-nifi-resources ## Build and start NiFi dev services
+start-nifi-dev-build: ## Build and start NiFi dev services
 	$(WITH_ENV) docker compose -f docker-compose.dev.yml up -d --build nifi nifi-nginx
 
 build-nifi-image: ## Build the local NiFi image without starting services
@@ -281,145 +65,14 @@ build-nifi-image: ## Build the local NiFi image without starting services
 		--file ../Dockerfile \
 		..
 
-start-elastic: check-opensearch-settings ## Start elasticsearch-1, elasticsearch-2 and kibana
-	$(WITH_ENV) docker compose -f services.yml $(DC_START_CMD) elasticsearch-1 elasticsearch-2 kibana
-
-start-elastic-cluster: check-opensearch-settings ## Start full 3-node Elasticsearch cluster
-	$(WITH_ENV) docker compose -f services.yml $(DC_START_CMD) elasticsearch-1 elasticsearch-2 elasticsearch-3
-
-start-elastic-1: check-opensearch-settings
-	$(WITH_ENV) docker compose -f services.yml $(DC_START_CMD) elasticsearch-1
-
-start-elastic-2: check-opensearch-settings
-	$(WITH_ENV) docker compose -f services.yml $(DC_START_CMD) elasticsearch-2
-
-start-elastic-3: check-opensearch-settings
-	$(WITH_ENV) docker compose -f services.yml $(DC_START_CMD) elasticsearch-3
-
-start-metricbeat-1:
-	$(WITH_ENV) docker compose -f services.yml $(DC_START_CMD) metricbeat-1
-
-start-metricbeat-2:
-	$(WITH_ENV) docker compose -f services.yml $(DC_START_CMD) metricbeat-2
-
-start-metricbeat-3:
-	$(WITH_ENV) docker compose -f services.yml $(DC_START_CMD) metricbeat-3
-
-start-filebeat-1:
-	$(WITH_ENV) docker compose -f services.yml $(DC_START_CMD) filebeat-1
-
-start-filebeat-2:
-	$(WITH_ENV) docker compose -f services.yml $(DC_START_CMD) filebeat-2
-
-start-filebeat-3:
-	$(WITH_ENV) docker compose -f services.yml $(DC_START_CMD) filebeat-3
-
-start-kibana: check-opensearch-settings ## Start Kibana or OpenSearch Dashboards
-	$(WITH_ENV) docker compose -f services.yml $(DC_START_CMD) kibana
-
-start-ollama: ## Start the Ollama inference service
-	$(WITH_ENV) docker compose -f services.yml $(DC_START_CMD) ollama
-
-start-ollama-openai-proxy: ## Build and start the OpenSearch-to-Ollama compatibility proxy
-	$(WITH_ENV) docker compose -f services.yml $(DC_START_CMD) --build ollama-openai-proxy
-
-pull-ollama-model: start-ollama ## Pull the model configured by OLLAMA_MODEL
-	$(WITH_ENV) docker compose -f services.yml exec -T ollama ollama pull "$${OLLAMA_MODEL}"
-
-setup-ollama: pull-ollama-model ## Start Ollama and pull its configured model
-
-opensearch-ai-init: ## Create or update OpenSearch AI connectors and agents using OPENSEARCH_AI_PROVIDER
-	$(WITH_ENV) \
-	case "$${OPENSEARCH_AI_PROVIDER:-ollama}" in \
-	  ollama) docker compose -f services.yml $(DC_START_CMD) --build ollama-openai-proxy ;; \
-	  sglang) ;; \
-	  *) echo "Unsupported OPENSEARCH_AI_PROVIDER: $${OPENSEARCH_AI_PROVIDER}" >&2; exit 1 ;; \
-	esac && ../scripts/opensearch-ai-init.sh
-
-opensearch-ai-init-sglang: ## Connect all OpenSearch AI features to the locally hosted SGLang server
-	$(WITH_ENV) OPENSEARCH_AI_PROVIDER=sglang ../scripts/opensearch-ai-init.sh
-
-start-openwebui: ## Start Open WebUI and its Ollama dependency
-	$(WITH_ENV) docker compose -f services.yml $(DC_START_CMD) open-webui
-
-restart-openwebui: ## Restart the Open WebUI container
-	$(WITH_ENV) docker compose -f services.yml restart open-webui
-
-status-openwebui: ## Show Open WebUI and Ollama container status
-	$(WITH_ENV) docker compose -f services.yml ps open-webui ollama
-
-logs-openwebui: ## Follow the Open WebUI logs
-	$(WITH_ENV) docker compose -f services.yml logs --tail=100 -f open-webui
-
-start-samples: ## Start the sample database service
-	$(WITH_ENV) docker compose -f services.yml $(DC_START_CMD) samples-db && \
-		docker compose -f services.yml exec -T -e PGHOST=samples-db samples-db /docker-entrypoint-initdb.d/access/configure.sh
-
-start-clickhouse: ## Start the ClickHouse ingestion database
-	$(WITH_ENV) docker compose -f services.yml $(DC_START_CMD) clickhouse
-
-status-clickhouse: ## Show ClickHouse container status
-	$(WITH_ENV) docker compose -f services.yml ps clickhouse
-
-logs-clickhouse: ## Follow ClickHouse logs
-	$(WITH_ENV) docker compose -f services.yml logs --tail=100 -f clickhouse
-
 start-jupyter:
 	$(WITH_ENV) docker compose -f ../../jupyter-hub/docker/docker-compose.base.yml -f ../../jupyter-hub/docker/docker-compose.prod.yml $(DC_START_CMD) cogstack-jupyter-hub
-
-start-medcat-service:
-	$(WITH_ENV) docker compose -f ../services/cogstack-nlp/medcat-service/docker/docker-compose.yml $(DC_START_CMD) nlp-medcat-service-production
-
-start-medcat-service-deid:
-	$(WITH_ENV) docker compose -f ../services/cogstack-nlp/medcat-service/docker/docker-compose.yml $(DC_START_CMD) nlp-medcat-service-production-deid
-
-start-medcat-trainer:
-	$(WITH_ENV) docker compose -f ../services/cogstack-nlp/medcat-trainer/docker-compose-prod.yml $(DC_START_CMD) medcattrainer nginx solr
-
-start-production-db:
-	$(WITH_ENV) docker compose -f services.yml ${DC_START_CMD} cogstack-databank-db && \
-		docker compose -f services.yml exec -T -e PGHOST=cogstack-databank-db cogstack-databank-db /docker-entrypoint-initdb.d/access/configure.sh
-
-start-production-db-mssql: ## Start SQL Server and wait for its schema initialization job
-	$(WITH_ENV) docker compose -f services.yml $(DC_START_CMD) cogstack-databank-db-mssql && \
-		docker compose -f services.yml run --rm --no-deps cogstack-databank-db-mssql-init
-
-start-ocr-services:
-	$(WITH_ENV) docker compose -f ../services/cogstack-platform/apps/ocr-service/docker/docker-compose.base.yml -f ../services/cogstack-platform/apps/ocr-service/docker/docker-compose.prod.yml $(DC_START_CMD) ocr-service ocr-service-text-only
-
-start-git-ea:
-	$(WITH_ENV) docker compose -f services.yml ${DC_START_CMD} gitea
-
-start-data-infra: start-nifi start-elastic start-samples ## Start core data infrastructure
-
-start-all: start-data-infra start-medcat-service start-ocr-services ## Start all major services
-
-.PHONY: start-kibana start-all start-data-infra start-nifi start-nifi-dev start-nifi-dev-build build-nifi-image start-elastic start-ollama start-ollama-openai-proxy pull-ollama-model setup-ollama opensearch-ai-init opensearch-ai-init-sglang start-openwebui restart-openwebui status-openwebui logs-openwebui start-samples start-clickhouse status-clickhouse logs-clickhouse start-jupyter
-
-
-# stop services
-#
-stop-nifi: ## Stop NiFi and NiFi nginx (services.yml)
-	$(WITH_ENV) docker compose -f services.yml $(DC_STOP_CMD) nifi nifi-nginx 
 
 stop-nifi-dev: ## Stop NiFi and NiFi nginx (docker-compose.dev.yml)
 	$(WITH_ENV) docker compose -f docker-compose.dev.yml $(DC_STOP_CMD) nifi nifi-nginx
 
-delete-nifi: delete-nifi-containers ## Delete NiFi containers only
-
-delete-nifi-containers: ## Remove NiFi containers from services.yml
-	$(WITH_ENV) docker compose -f services.yml rm -f -s nifi nifi-nginx 
-
 delete-nifi-dev-containers: ## Remove NiFi containers from docker-compose.dev.yml
 	$(WITH_ENV) docker compose -f docker-compose.dev.yml rm -f -s nifi nifi-nginx
-
-delete-nifi-images: ## Delete NiFi images referenced in services.yml
-	$(WITH_ENV) images="$$(docker compose -f services.yml config --images nifi nifi-nginx  | sort -u)"; \
-	if [ -n "$$images" ]; then \
-		docker image rm -f $$images; \
-	else \
-		echo "No NiFi images found in services.yml"; \
-	fi
 
 delete-nifi-dev-images: ## Delete NiFi images referenced in docker-compose.dev.yml
 	$(WITH_ENV) images="$$(docker compose -f docker-compose.dev.yml config --images nifi nifi-nginx  | sort -u)"; \
@@ -429,155 +82,12 @@ delete-nifi-dev-images: ## Delete NiFi images referenced in docker-compose.dev.y
 		echo "No NiFi images found in docker-compose.dev.yml"; \
 	fi
 
-delete-nifi-volumes: ## Delete NiFi volumes
-	$(WITH_ENV) docker compose -f services.yml $(DC_DOWN_CMD) -v nifi nifi-nginx
-
-delete-elastic: ## Remove Elasticsearch and Kibana containers
-	$(WITH_ENV) docker compose -f services.yml rm -f -s elasticsearch-1 elasticsearch-2 elasticsearch-3 kibana
-
-delete-elastic-volumes: ## Delete Elasticsearch and Kibana volumes
-	$(WITH_ENV) docker compose -f services.yml $(DC_DOWN_CMD) -v elasticsearch-1 elasticsearch-2 elasticsearch-3 kibana
-
-delete-ollama: ## Remove the Ollama container but preserve downloaded models
-	$(WITH_ENV) docker compose -f services.yml rm -f -s ollama
-
-delete-ollama-openai-proxy: ## Remove the OpenSearch-to-Ollama compatibility proxy container
-	$(WITH_ENV) docker compose -f services.yml rm -f -s ollama-openai-proxy
-
-delete-ollama-proxy: delete-ollama-openai-proxy ## Alias for delete-ollama-openai-proxy
-
-delete-openwebui: ## Remove the Open WebUI container but preserve its data
-	$(WITH_ENV) docker compose -f services.yml rm -f -s open-webui
-
-delete-databank:
-	$(WITH_ENV) docker compose -f services.yml rm -f -s cogstack-databank-db cogstack-databank-db-mssql-init cogstack-databank-db-mssql
-
-delete-databank-volumes:
-	$(WITH_ENV) docker compose -f services.yml $(DC_DOWN_CMD) -v cogstack-databank-db cogstack-databank-db-mssql
-
-delete-samples-db:
-	$(WITH_ENV) docker compose -f services.yml rm -f -s samples-db
-
-delete-samples-db-volumes:
-	$(WITH_ENV) docker compose -f services.yml $(DC_DOWN_CMD) -v samples-db
-
-delete-clickhouse: ## Remove the ClickHouse container but preserve its data
-	$(WITH_ENV) docker compose -f services.yml rm -f -s clickhouse
-
-delete-medcat-trainer: ## Remove MedCAT Trainer containers
-	$(WITH_ENV) docker compose -f ../services/cogstack-nlp/medcat-trainer/docker-compose-prod.yml rm -f -s medcattrainer nginx solr
-
-delete-medcat-trainer-volumes: ## Delete MedCAT Trainer volumes
-	$(WITH_ENV) docker compose -f ../services/cogstack-nlp/medcat-trainer/docker-compose-prod.yml $(DC_DOWN_CMD) -v medcattrainer nginx solr
-
 delete-jupyter: ## Remove Jupyter container
 	$(WITH_ENV) docker compose -f ../../jupyter-hub/docker/docker-compose.base.yml -f ../../jupyter-hub/docker/docker-compose.prod.yml rm -f -s cogstack-jupyter-hub
 
-delete-medcat-service: ## Remove MedCAT service container
-	$(WITH_ENV) docker compose -f ../services/cogstack-nlp/medcat-service/docker/docker-compose.yml rm -f -s nlp-medcat-service-production
-
-delete-medcat-service-deid: ## Remove MedCAT service (deid) container
-	$(WITH_ENV) docker compose -f ../services/cogstack-nlp/medcat-service/docker/docker-compose.yml rm -f -s nlp-medcat-service-production-deid
-
-delete-ocr-services: ## Remove OCR service containers
-	$(WITH_ENV) docker compose -f ../services/cogstack-platform/apps/ocr-service/docker/docker-compose.base.yml -f ../services/cogstack-platform/apps/ocr-service/docker/docker-compose.prod.yml rm -f -s ocr-service ocr-service-text-only
-
 make-delete-jupyter: delete-jupyter ## Alias for delete-jupyter
-
-make-delete-medcat-service: delete-medcat-service ## Alias for delete-medcat-service
-
-make-delete-medcat-service-deid: delete-medcat-service-deid ## Alias for delete-medcat-service-deid
-
-make-delete-ocr-services: delete-ocr-services ## Alias for delete-ocr-services
-
-stop-elastic: ## Stop elasticsearch-1, elasticsearch-2 and kibana
-	$(WITH_ENV) docker compose -f services.yml $(DC_STOP_CMD) elasticsearch-1 elasticsearch-2 kibana
-
-stop-elastic-cluster:
-	$(WITH_ENV) docker compose -f services.yml $(DC_STOP_CMD) elasticsearch-1 elasticsearch-2
-
-stop-elastic-1:
-	$(WITH_ENV) docker compose -f services.yml $(DC_STOP_CMD) elasticsearch-1
-	
-stop-elastic-2:
-	$(WITH_ENV) docker compose -f services.yml $(DC_STOP_CMD) elasticsearch-2
-
-stop-elastic-3:
-	$(WITH_ENV) docker compose -f services.yml $(DC_STOP_CMD) elasticsearch-3
-
-stop-metricbeat-1:
-	$(WITH_ENV) docker compose -f services.yml $(DC_STOP_CMD) metricbeat-1
-
-stop-metricbeat-2:
-	$(WITH_ENV) docker compose -f services.yml $(DC_STOP_CMD) metricbeat-2
-
-stop-filebeat-1:
-	$(WITH_ENV) docker compose -f services.yml $(DC_STOP_CMD) filebeat-1
-
-stop-filebeat-2:
-	$(WITH_ENV) docker compose -f services.yml $(DC_STOP_CMD) filebeat-2
-
-stop-filebeat-3:
-	$(WITH_ENV) docker compose -f services.yml $(DC_STOP_CMD) filebeat-3
-
-stop-kibana:
-	$(WITH_ENV) docker compose -f services.yml $(DC_STOP_CMD) kibana
-
-stop-ollama: ## Stop the Ollama inference service
-	$(WITH_ENV) docker compose -f services.yml $(DC_STOP_CMD) ollama
-
-stop-openwebui: ## Stop the Open WebUI service
-	$(WITH_ENV) docker compose -f services.yml $(DC_STOP_CMD) open-webui
-
-stop-samples: ## Stop the sample database service
-	$(WITH_ENV) docker compose -f services.yml $(DC_STOP_CMD) samples-db
-
-stop-clickhouse: ## Stop the ClickHouse ingestion database
-	$(WITH_ENV) docker compose -f services.yml $(DC_STOP_CMD) clickhouse
 
 stop-jupyter:
 	$(WITH_ENV) docker compose -f ../../jupyter-hub/docker/docker-compose.base.yml -f ../../jupyter-hub/docker/docker-compose.yml $(DC_STOP_CMD) cogstack-jupyter-hub
 
-stop-medcat-trainer:
-	$(WITH_ENV) docker compose -f ../services/cogstack-nlp/medcat-trainer/docker-compose-prod.yml $(DC_STOP_CMD) medcattrainer nginx solr
-
-stop-medcat-service:
-	$(WITH_ENV) docker compose -f ../services/cogstack-nlp/medcat-service/docker/docker-compose.yml $(DC_STOP_CMD) nlp-medcat-service-production
-
-stop-medcat-service-deid:
-	$(WITH_ENV) docker compose -f ../services/cogstack-nlp/medcat-service/docker/docker-compose.yml $(DC_STOP_CMD) nlp-medcat-service-production-deid
-
-stop-git-ea:
-	$(WITH_ENV) docker compose -f services.yml ${DC_STOP_CMD} gitea
-
-stop-ocr-services:
-	$(WITH_ENV) docker compose -f ../services/cogstack-platform/apps/ocr-service/docker/docker-compose.base.yml -f ../services/cogstack-platform/apps/ocr-service/docker/docker-compose.prod.yml $(DC_STOP_CMD) ocr-service ocr-service-text-only
-
-stop-production-db:
-	$(WITH_ENV) docker compose -f services.yml $(DC_STOP_CMD) cogstack-databank-db
-
-stop-production-db-mssql: ## Stop the SQL Server initializer and server without removing data
-	$(WITH_ENV) docker compose -f services.yml $(DC_STOP_CMD) cogstack-databank-db-mssql-init cogstack-databank-db-mssql
-
-.PHONY: start-production-db-mssql stop-production-db-mssql
-
-stop-data-infra: stop-nifi stop-elastic stop-samples ## Stop core data infrastructure
-
-stop-all: stop-data-infra stop-jupyter stop-medcat-service stop-ocr-services ## Stop all major services
-
-.PHONY: stop-data-infra stop-nifi stop-nifi-dev delete-nifi delete-nifi-containers delete-nifi-dev-containers delete-nifi-images delete-nifi-dev-images delete-nifi-volumes delete-elastic delete-elastic-volumes delete-ollama delete-ollama-openai-proxy delete-ollama-proxy delete-openwebui delete-databank delete-databank-volumes delete-samples-db delete-samples-db-volumes delete-clickhouse delete-medcat-trainer delete-medcat-trainer-volumes delete-jupyter delete-medcat-service delete-medcat-service-deid delete-ocr-services make-delete-jupyter make-delete-medcat-service make-delete-medcat-service-deid make-delete-ocr-services stop-elastic stop-ollama stop-openwebui stop-samples stop-clickhouse stop-jupyter
-
-
-# cleanup
-#
-down-all: ## Run docker compose down for services.yml
-	$(WITH_ENV) docker compose -f services.yml $(DC_DOWN_CMD)
-
-# deletes volumes associated with containers
-cleanup: ## Run docker compose down -v for services.yml
-	$(WITH_ENV) docker compose -f services.yml $(DC_DOWN_CMD) -v
-
-.PHONY: down-all cleanup
-
-# Expose Kubernetes commands when their deployment helpers are present.
--include kubernetes/Makefile
+.PHONY: help load-env show-env check-config start-nifi-dev start-nifi-dev-build build-nifi-image start-jupyter stop-nifi-dev delete-nifi-dev-containers delete-nifi-dev-images delete-jupyter make-delete-jupyter stop-jupyter
