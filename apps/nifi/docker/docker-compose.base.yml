@@ -46,7 +46,12 @@ x-mounts:
   nifi: &nifi-volumes
     # Security certificates
     - ../../../deployment/security/certificates/nifi:/security/certificates/nifi:ro
-    - ../../../deployment/security/certificates/root:/security/certificates/root:ro
+    - type: bind
+      source: ../../../deployment/security/certificates/root/root-ca.pem
+      target: /security/certificates/root/root-ca.pem
+      read_only: true
+      bind:
+        create_host_path: false
     # Apache startup configures image defaults in this persistent, writable directory.
     - nifi-vol-conf:/opt/nifi/nifi-current/conf
 
@@ -63,7 +68,12 @@ x-mounts:
 
   nifi-nginx: &nifi-nginx-volumes
     - ../../../deployment/security/certificates/nginx:/certificates/nginx:ro
-    - ../../../deployment/security/certificates/root:/certificates/root:ro
+    - type: bind
+      source: ../../../deployment/security/certificates/root/root-ca.pem
+      target: /certificates/root/root-ca.pem
+      read_only: true
+      bind:
+        create_host_path: false
 
 x-networks:
   cognet: &cognet

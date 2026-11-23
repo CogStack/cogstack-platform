@@ -54,11 +54,12 @@ Place the following under `deployment/security/certificates/`:
 | `nginx/tls.crt`, `nginx/tls.key` | NGINX server identity for the hostname users open in their browser. The browser must trust its issuer. |
 | `root/root-ca.pem` | Public CA used by NGINX and the NiFi health check to verify NiFi's server certificate. |
 
-Compose mounts the directories read-only. Keep `root/` for public CA material
-and make the mounted files readable by their container users. The start targets
-run `make check-tls`, which checks for readable, nonempty regular files. If
-`root-ca.pem` is a directory from an earlier bind mount, replace it with the
-actual PEM file. Certificate validation occurs when the services connect over TLS.
+Compose mounts the service certificate directories and `root/root-ca.pem` read-only.
+The CA signing key and private bundles stay on the host. Make the mounted files
+readable by their container users. The start targets run `make check-tls`, which
+checks for readable, nonempty regular files. If `root-ca.pem` is a directory from an
+earlier bind mount, replace it with the actual PEM file. Certificate validation
+occurs when the services connect over TLS.
 
 ### Start and verify
 
