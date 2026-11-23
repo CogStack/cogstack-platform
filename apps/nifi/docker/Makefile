@@ -73,6 +73,11 @@ delete-nifi: delete-nifi-dev-containers ## Stop and remove the NiFi and NGINX co
 delete-nifi-dev-containers: ## Remove NiFi containers from docker-compose.dev.yml
 	$(WITH_ENV) docker compose -f docker-compose.dev.yml rm -f -s nifi nifi-nginx
 
+delete-nifi-dev-volumes: delete-nifi-dev-containers ## Remove the NiFi and NGINX containers and delete NiFi dev volume data
+	@$(WITH_ENV) volumes="$$(docker compose -f docker-compose.dev.yml config --format json | \
+		jq -r '.volumes[]? | select(.external != true) | .name')" || exit $$?; \
+	if [ -n "$$volumes" ]; then docker volume rm -f $$volumes; fi
+
 delete-nifi-dev-images: ## Delete NiFi images referenced in docker-compose.dev.yml
 	$(WITH_ENV) images="$$(docker compose -f docker-compose.dev.yml config --images nifi nifi-nginx  | sort -u)"; \
 	if [ -n "$$images" ]; then \
@@ -81,4 +86,4 @@ delete-nifi-dev-images: ## Delete NiFi images referenced in docker-compose.dev.y
 		echo "No NiFi images found in docker-compose.dev.yml"; \
 	fi
 
-.PHONY: help load-env show-env check-config start-nifi-dev start-nifi-dev-build build-nifi-image stop-nifi-dev delete-nifi delete-nifi-dev-containers delete-nifi-dev-images
+.PHONY: help load-env show-env check-config start-nifi-dev start-nifi-dev-build build-nifi-image stop-nifi-dev delete-nifi delete-nifi-dev-containers delete-nifi-dev-volumes delete-nifi-dev-images
