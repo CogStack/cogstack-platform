@@ -14,7 +14,6 @@ _cogstack_load_environment() {
   local relative_files=(
     ../env/general.env
     ../env/nifi.env
-    ../env/network_settings.env
   )
   local relative_file selected_file variable_name file_name
   local restore_allexport=1

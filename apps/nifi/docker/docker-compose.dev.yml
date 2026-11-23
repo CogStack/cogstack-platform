@@ -12,7 +12,6 @@ x-env-files:
   all: &all-env
     - "${COGSTACK_GENERAL_ENV_FILE:-../env/general.env}"
     - "${COGSTACK_NIFI_ENV_FILE:-../env/nifi.env}"
-    - "${COGSTACK_NETWORK_SETTINGS_ENV_FILE:-../env/network_settings.env}"
 
 x-env:
   nifi: &nifi-env

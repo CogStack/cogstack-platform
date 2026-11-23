@@ -68,6 +68,8 @@ build-nifi-image: ## Build the local NiFi image without starting services
 stop-nifi-dev: ## Stop NiFi and NiFi nginx (docker-compose.dev.yml)
 	$(WITH_ENV) docker compose -f docker-compose.dev.yml $(DC_STOP_CMD) nifi nifi-nginx
 
+delete-nifi: delete-nifi-dev-containers ## Stop and remove the NiFi and NGINX containers
+
 delete-nifi-dev-containers: ## Remove NiFi containers from docker-compose.dev.yml
 	$(WITH_ENV) docker compose -f docker-compose.dev.yml rm -f -s nifi nifi-nginx
 
@@ -79,4 +81,4 @@ delete-nifi-dev-images: ## Delete NiFi images referenced in docker-compose.dev.y
 		echo "No NiFi images found in docker-compose.dev.yml"; \
 	fi
 
-.PHONY: help load-env show-env check-config start-nifi-dev start-nifi-dev-build build-nifi-image stop-nifi-dev delete-nifi-dev-containers delete-nifi-dev-images
+.PHONY: help load-env show-env check-config start-nifi-dev start-nifi-dev-build build-nifi-image stop-nifi-dev delete-nifi delete-nifi-dev-containers delete-nifi-dev-images

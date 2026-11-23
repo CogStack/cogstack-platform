@@ -70,8 +70,8 @@ and [`deployment/charts/nginx`](../../deployment/charts/nginx/README.md). Their
 READMEs describe the required environment ConfigMaps, TLS Secrets and storage.
 
 `docker/docker-compose.dev.yml` runs NiFi and the shared NGINX application from
-`apps/nginx`. The environment loader uses the app's `env/general.env`,
-`env/nifi.env` and `env/network_settings.env` files. NGINX uses its image defaults
+`apps/nginx`. The environment loader uses the app's `env/general.env` and
+`env/nifi.env` files. NGINX uses its image defaults
 and the resource limits in Compose. Supply the local files, NiFi credentials and
 TLS certificates before using the Compose helpers. The image build above works
 independently of them.
