@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-"""
-    Lightweight env file validator used by deploy/export_env_vars.sh.
-"""
+"""Check env files for common formatting and value errors."""
 
 from __future__ import annotations
 
