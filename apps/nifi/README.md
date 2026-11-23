@@ -76,7 +76,7 @@ NiFi and NGINX share service settings, TLS mounts and volumes in
 | --- | --- |
 | `make check-config` | Validate default, dev and prod without starting containers. |
 | `make start-nifi-dev-build` | Apply `docker-compose.dev.yml` over the base. Build both images locally, mount NiFi source and dev data, and use `nifi-dev-net`. |
-| `source ./export_env_vars.sh && docker compose up -d` | Use `docker-compose.yml` to run published images on a Compose-managed `cogstack-net`. |
+| `make start-nifi` | Use `docker-compose.yml` to run published images on a Compose-managed `cogstack-net`. |
 | `make start-nifi-prod` | Apply `docker-compose.prod.yml` over the base. Run published images on an existing `cogstack-net`. |
 
 Set `NIFI_IMAGE` and `NIFI_NGINX_IMAGE` to pin image references for default or
@@ -95,7 +95,8 @@ Place these files under `deployment/security/certificates/`:
 - `nginx/tls.crt` and `nginx/tls.key` for the NGINX public hostname.
 - `root/root-ca.pem` for both containers to verify NiFi. Keep `root/` limited to public CA material.
 
-Compose mounts the directories read-only. Git ignores the certificate contents.
+The start targets run `make check-tls` to check that these files are readable
+and nonempty. Compose mounts the directories read-only. Git ignores their contents.
 Supply any ingestion-specific certificate mounts or host overrides in the deployment
 that needs them.
 

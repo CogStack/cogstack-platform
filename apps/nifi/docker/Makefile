@@ -53,19 +53,30 @@ check-config: ## Validate the default, dev and prod Compose configurations
 	@$(WITH_ENV) docker compose config --quiet && \
 		$(COMPOSE_DEV) config --quiet && $(COMPOSE_PROD) config --quiet
 
-start-nifi-dev: ## Start NiFi and NGINX with local builds
+check-tls: ## Check the TLS files required by NiFi and NGINX
+	@for cert in root/root-ca.pem nifi/nifi-keystore.jks nifi/nifi-truststore.jks nginx/tls.crt nginx/tls.key; do \
+		file="../../../deployment/security/certificates/$$cert"; \
+		if [ ! -f "$$file" ] || [ ! -r "$$file" ] || [ ! -s "$$file" ]; then \
+			printf 'TLS file missing, empty, or unreadable: %s\n' "$$file" >&2; exit 1; \
+		fi; \
+	done
+
+start-nifi: check-tls ## Start the default NiFi and NGINX stack
+	$(WITH_ENV) docker compose $(DC_START_CMD)
+
+start-nifi-dev: check-tls ## Start NiFi and NGINX with local builds
 	$(WITH_ENV) $(COMPOSE_DEV) $(DC_START_CMD) nifi nifi-nginx
 
-start-nifi-dev-build: ## Build and start NiFi dev services
+start-nifi-dev-build: check-tls ## Build and start NiFi dev services
 	$(WITH_ENV) $(COMPOSE_DEV) up -d --build nifi nifi-nginx
 
-start-nifi-prod: ## Start the published NiFi and NGINX images on cogstack-net
+start-nifi-prod: check-tls ## Start the published NiFi and NGINX images on cogstack-net
 	$(WITH_ENV) $(COMPOSE_PROD) $(DC_START_CMD)
 
 build-nifi-image: ## Build the local NiFi image without starting services
 	$(WITH_ENV) docker build \
 		--build-arg NIFI_VERSION="$${NIFI_VERSION:-2.12.0}" \
-		--build-arg NIFI_BASE_IMAGE="$${NIFI_BASE_IMAGE}" \
+		--build-arg NIFI_BASE_IMAGE \
 		--build-arg NIFI_UID="$${COGSTACK_LOCAL_UID:-1000}" \
 		--build-arg NIFI_GID="$${COGSTACK_LOCAL_GID:-1000}" \
 		--tag "$${NIFI_LOCAL_DOCKER_IMAGE:-cogstacksystems/nifi:local}" \
@@ -96,4 +107,4 @@ delete-nifi-dev-images: ## Delete the NiFi dev images
 		echo "No NiFi dev images found."; \
 	fi
 
-.PHONY: help load-env show-env check-config start-nifi-dev start-nifi-dev-build start-nifi-prod build-nifi-image stop-nifi-dev stop-nifi-prod delete-nifi delete-nifi-dev-containers delete-nifi-dev-volumes delete-nifi-dev-images
+.PHONY: help load-env show-env check-config check-tls start-nifi start-nifi-dev start-nifi-dev-build start-nifi-prod build-nifi-image stop-nifi-dev stop-nifi-prod delete-nifi delete-nifi-dev-containers delete-nifi-dev-volumes delete-nifi-dev-images
