@@ -89,10 +89,13 @@ before starting the stack. For a published-image deployment, make the mounted
 files readable by the image users and set `NIFI_WEB_PROXY_HOST` for the public
 host and port. The image build above works independently of these files.
 
-Certificates live in the shared `deployment/security/certificates/` directory
-at the repository root. Put the CA in `root/root-ca.pem` and the NiFi files
-(`nifi.pem`, `nifi.key`, `nifi-keystore.jks`, `nifi-truststore.jks`) in `nifi/`.
-Both containers mount these files read-only. Certificate contents are ignored by Git.
+Place these files under `deployment/security/certificates/`:
+
+- `nifi/nifi-keystore.jks` and `nifi/nifi-truststore.jks` for NiFi.
+- `nginx/tls.crt` and `nginx/tls.key` for the NGINX public hostname.
+- `root/root-ca.pem` for both containers to verify NiFi. Keep `root/` limited to public CA material.
+
+Compose mounts the directories read-only. Git ignores the certificate contents.
 Supply any ingestion-specific certificate mounts or host overrides in the deployment
 that needs them.
 

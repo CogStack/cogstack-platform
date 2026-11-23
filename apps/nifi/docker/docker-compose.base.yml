@@ -39,12 +39,14 @@ x-env:
     NIFI_UPSTREAM_HOST: ${NIFI_UPSTREAM_HOST:-nifi}
     NIFI_UPSTREAM_PORT: ${NIFI_UPSTREAM_PORT:-${NIFI_INTERNAL_PORT:-8443}}
     NIFI_UPSTREAM_TLS_NAME: ${NIFI_UPSTREAM_TLS_NAME:-nifi}
+    NGINX_TLS_CERTIFICATE: /certificates/nginx/tls.crt
+    NGINX_TLS_CERTIFICATE_KEY: /certificates/nginx/tls.key
 
 x-mounts:
   nifi: &nifi-volumes
     # Security certificates
     - ../../../deployment/security/certificates/nifi:/security/certificates/nifi:ro
-    - ../../../deployment/security/certificates/root/root-ca.pem:/security/certificates/root/root-ca.pem:ro
+    - ../../../deployment/security/certificates/root:/security/certificates/root:ro
     # Apache startup configures image defaults in this persistent, writable directory.
     - nifi-vol-conf:/opt/nifi/nifi-current/conf
 
@@ -66,8 +68,8 @@ x-mounts:
     - /tmp:mode=1777
 
   nifi-nginx: &nifi-nginx-volumes
-    - ../../../deployment/security/certificates/nifi:/certificates/nifi:ro
-    - ../../../deployment/security/certificates/root/root-ca.pem:/certificates/root/root-ca.pem:ro
+    - ../../../deployment/security/certificates/nginx:/certificates/nginx:ro
+    - ../../../deployment/security/certificates/root:/certificates/root:ro
 
 x-networks:
   cognet: &cognet
