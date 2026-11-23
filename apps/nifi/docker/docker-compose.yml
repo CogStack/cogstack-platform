@@ -1,0 +1,4 @@
+name: nifi
+
+include:
+  - docker-compose.base.yml

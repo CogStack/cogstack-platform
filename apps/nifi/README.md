@@ -69,12 +69,25 @@ The Kubernetes charts live in
 and [`deployment/charts/nginx`](../../deployment/charts/nginx/README.md). Their
 READMEs describe the required environment ConfigMaps, TLS Secrets and storage.
 
-`docker/docker-compose.dev.yml` runs NiFi and the shared NGINX application from
-`apps/nginx`. The environment loader uses the app's `env/general.env` and
-`env/nifi.env` files. NGINX uses its image defaults
-and the resource limits in Compose. Supply the local files, NiFi credentials and
-TLS certificates before using the Compose helpers. The image build above works
-independently of them.
+NiFi and NGINX share service settings, TLS mounts and volumes in
+`docker/docker-compose.base.yml`. Run these commands from `apps/nifi/docker`:
+
+| Command | Configuration |
+| --- | --- |
+| `make check-config` | Validate default, dev and prod without starting containers. |
+| `make start-nifi-dev-build` | Apply `docker-compose.dev.yml` over the base. Build both images locally, mount local NiFi source, and use `nifi-dev-net`. |
+| `source ./export_env_vars.sh && docker compose up -d` | Use `docker-compose.yml` to run published images on a Compose-managed `cogstack-net`. |
+| `make start-nifi-prod` | Apply `docker-compose.prod.yml` over the base. Run published images on an existing `cogstack-net`. |
+
+Set `NIFI_IMAGE` and `NIFI_NGINX_IMAGE` to pin image references for default or
+prod. Both publish NiFi through NGINX, and dev also exposes NiFi directly.
+Compose uses `docker-compose.override.yml` with the default entry point if you
+add one. Append an explicit `-f` for any additional dev or prod overrides.
+
+Provide `env/general.env`, `env/nifi.env`, NiFi credentials and TLS certificates
+before starting the stack. For a published-image deployment, make the mounted
+files readable by the image users and set `NIFI_WEB_PROXY_HOST` for the public
+host and port. The image build above works independently of these files.
 
 Certificates live in the shared `deployment/security/certificates/` directory
 at the repository root. Put the CA in `root/root-ca.pem` and the NiFi files

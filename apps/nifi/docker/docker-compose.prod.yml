@@ -1,0 +1,5 @@
+name: nifi
+
+networks:
+  cognet:
+    external: true

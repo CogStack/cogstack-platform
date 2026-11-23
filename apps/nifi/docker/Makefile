@@ -3,6 +3,9 @@ SHELL := /usr/bin/env bash
 
 DC_START_CMD := up -d
 DC_STOP_CMD := stop
+COMPOSE_DEV := docker compose -f docker-compose.base.yml -f docker-compose.dev.yml
+COMPOSE_PROD := docker compose -f docker-compose.base.yml -f docker-compose.prod.yml
+
 define WITH_ENV
 source ./export_env_vars.sh || exit $$?;
 endef
@@ -46,14 +49,18 @@ load-env: ## Load variables from export_env_vars.sh in a subshell
 show-env: ## Print sorted environment variables after loading export_env_vars.sh
 	${WITH_ENV} >/dev/null 2>&1; printenv | sort
 
-check-config: ## Validate the NiFi dev Compose file
-	@$(WITH_ENV) docker compose -f docker-compose.dev.yml config --quiet
+check-config: ## Validate the default, dev and prod Compose configurations
+	@$(WITH_ENV) docker compose config --quiet && \
+		$(COMPOSE_DEV) config --quiet && $(COMPOSE_PROD) config --quiet
 
-start-nifi-dev: ## Start NiFi and NiFi nginx (docker-compose.dev.yml)
-	$(WITH_ENV) docker compose -f docker-compose.dev.yml $(DC_START_CMD) nifi nifi-nginx
+start-nifi-dev: ## Start NiFi and NGINX with local builds
+	$(WITH_ENV) $(COMPOSE_DEV) $(DC_START_CMD) nifi nifi-nginx
 
 start-nifi-dev-build: ## Build and start NiFi dev services
-	$(WITH_ENV) docker compose -f docker-compose.dev.yml up -d --build nifi nifi-nginx
+	$(WITH_ENV) $(COMPOSE_DEV) up -d --build nifi nifi-nginx
+
+start-nifi-prod: ## Start the published NiFi and NGINX images on cogstack-net
+	$(WITH_ENV) $(COMPOSE_PROD) $(DC_START_CMD)
 
 build-nifi-image: ## Build the local NiFi image without starting services
 	$(WITH_ENV) docker build \
@@ -65,25 +72,28 @@ build-nifi-image: ## Build the local NiFi image without starting services
 		--file ../Dockerfile \
 		..
 
-stop-nifi-dev: ## Stop NiFi and NiFi nginx (docker-compose.dev.yml)
-	$(WITH_ENV) docker compose -f docker-compose.dev.yml $(DC_STOP_CMD) nifi nifi-nginx
+stop-nifi-dev: ## Stop the NiFi dev services
+	$(WITH_ENV) $(COMPOSE_DEV) $(DC_STOP_CMD) nifi nifi-nginx
+
+stop-nifi-prod: ## Stop the NiFi prod services
+	$(WITH_ENV) $(COMPOSE_PROD) $(DC_STOP_CMD)
 
 delete-nifi: delete-nifi-dev-containers ## Stop and remove the NiFi and NGINX containers
 
-delete-nifi-dev-containers: ## Remove NiFi containers from docker-compose.dev.yml
-	$(WITH_ENV) docker compose -f docker-compose.dev.yml rm -f -s nifi nifi-nginx
+delete-nifi-dev-containers: ## Remove the NiFi dev containers
+	$(WITH_ENV) $(COMPOSE_DEV) rm -f -s nifi nifi-nginx
 
 delete-nifi-dev-volumes: delete-nifi-dev-containers ## Remove the NiFi and NGINX containers and delete NiFi dev volume data
-	@$(WITH_ENV) volumes="$$(docker compose -f docker-compose.dev.yml config --format json | \
+	@$(WITH_ENV) volumes="$$($(COMPOSE_DEV) config --format json | \
 		jq -r '.volumes[]? | select(.external != true) | .name')" || exit $$?; \
 	if [ -n "$$volumes" ]; then docker volume rm -f $$volumes; fi
 
-delete-nifi-dev-images: ## Delete NiFi images referenced in docker-compose.dev.yml
-	$(WITH_ENV) images="$$(docker compose -f docker-compose.dev.yml config --images nifi nifi-nginx  | sort -u)"; \
+delete-nifi-dev-images: ## Delete the NiFi dev images
+	$(WITH_ENV) images="$$($(COMPOSE_DEV) config --images nifi nifi-nginx | sort -u)" || exit $$?; \
 	if [ -n "$$images" ]; then \
 		docker image rm -f $$images; \
 	else \
-		echo "No NiFi images found in docker-compose.dev.yml"; \
+		echo "No NiFi dev images found."; \
 	fi
 
-.PHONY: help load-env show-env check-config start-nifi-dev start-nifi-dev-build build-nifi-image stop-nifi-dev delete-nifi delete-nifi-dev-containers delete-nifi-dev-volumes delete-nifi-dev-images
+.PHONY: help load-env show-env check-config start-nifi-dev start-nifi-dev-build start-nifi-prod build-nifi-image stop-nifi-dev stop-nifi-prod delete-nifi delete-nifi-dev-containers delete-nifi-dev-volumes delete-nifi-dev-images
