@@ -50,9 +50,6 @@ x-mounts:
     # Apache startup configures image defaults in this persistent, writable directory.
     - nifi-vol-conf:/opt/nifi/nifi-current/conf
 
-    # Ingest data directory
-    - ${NIFI_DATA_PATH:-../data/}:/data/:rw
-
     # NiFi repositories/state
     - nifi-vol-logs:/opt/nifi/nifi-current/logs
     - nifi-vol-provenance:/opt/nifi/nifi-current/provenance_repository
@@ -60,9 +57,6 @@ x-mounts:
     - nifi-vol-flowfiles:/opt/nifi/nifi-current/flowfile_repository
     - nifi-vol-content:/opt/nifi/nifi-current/content_repository
     - nifi-vol-state:/opt/nifi/nifi-current/state
-
-    # Flowfile error output
-    - nifi-vol-errors:/opt/nifi/pipeline/flowfile-errors
 
   nifi-nginx-tmpfs: &nifi-nginx-tmpfs
     - /tmp:mode=1777
@@ -161,9 +155,6 @@ volumes:
     driver: local
 
   nifi-vol-state:
-    driver: local
-
-  nifi-vol-errors:
     driver: local
 
 #---------------------------------------------------------------------------#

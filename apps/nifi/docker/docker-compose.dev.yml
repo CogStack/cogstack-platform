@@ -12,6 +12,7 @@ services:
         NIFI_UID: ${COGSTACK_LOCAL_UID:-1000}
         NIFI_GID: ${COGSTACK_LOCAL_GID:-1000}
     volumes:
+      - ${NIFI_DATA_PATH:-../data/}:/data/:rw
       - ../drivers:/opt/nifi/drivers:ro
       - ../user_scripts:/opt/nifi/user_scripts:rw
       - ../user_schemas:/opt/nifi/user_schemas:ro

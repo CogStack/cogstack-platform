@@ -75,7 +75,7 @@ NiFi and NGINX share service settings, TLS mounts and volumes in
 | Command | Configuration |
 | --- | --- |
 | `make check-config` | Validate default, dev and prod without starting containers. |
-| `make start-nifi-dev-build` | Apply `docker-compose.dev.yml` over the base. Build both images locally, mount local NiFi source, and use `nifi-dev-net`. |
+| `make start-nifi-dev-build` | Apply `docker-compose.dev.yml` over the base. Build both images locally, mount NiFi source and dev data, and use `nifi-dev-net`. |
 | `source ./export_env_vars.sh && docker compose up -d` | Use `docker-compose.yml` to run published images on a Compose-managed `cogstack-net`. |
 | `make start-nifi-prod` | Apply `docker-compose.prod.yml` over the base. Run published images on an existing `cogstack-net`. |
 
