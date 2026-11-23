@@ -6,19 +6,23 @@ as the user who will use `kubectl`.
 
 ## Certificates
 
-These scripts use OpenSSL and Java's `keytool`. If you need a root CA, export
-`ROOT_CERTIFICATE_KEYSTORE_PASSWORD` and run this from the repository root.
-All four generators accept `--days DAYS`. The default validity is 1,460 days
-for the root CA and OpenSearch certificates and 397 days for NiFi.
+All five generators use OpenSSL and accept `--days DAYS`. The default validity
+is 1,460 days for the root CA and OpenSearch certificates and 397 days for
+NiFi and NGINX. The root CA, NiFi and OpenSearch node generators also use
+Java's `keytool`. `SECURITY_DIR` defaults to `deployment/security/`.
+
+If you need a root CA, export `ROOT_CERTIFICATE_KEYSTORE_PASSWORD` and run this
+from the repository root.
 
 ```bash
 ./deployment/scripts/security/create_root_ca_cert.sh
 ```
 
+### NiFi
+
 Export the `KEYSTORE_PASSWORD` and `TRUSTSTORE_PASSWORD` that NiFi will use.
 The legacy `NIFI_KEYSTORE_PASSWORD` and `NIFI_TRUSTSTORE_PASSWORD` names are
-also accepted. Both scripts accept `SECURITY_DIR`, which defaults to
-`deployment/security/`.
+also accepted.
 
 Choose the command for your deployment. The default NiFi certificate covers
 `nifi`, `localhost`, `cogstack-nifi`, `cogstack-nifi-web`, and `127.0.0.1`.
@@ -45,6 +49,21 @@ KUBE_NAMESPACE=cogstack ./deployment/scripts/security/create_nifi_certs.sh
 Each invocation writes `nifi.key`, `nifi.csr`, `nifi.pem`, `nifi.crt` (DER),
 `nifi.p12`, `nifi-keystore.jks`, and `nifi-truststore.jks` under
 `$SECURITY_DIR/certificates/nifi/`.
+
+### NGINX
+
+Use the existing root CA to issue the browser-facing certificate. Set
+`NGINX_TLS_NAMES` to a comma-separated list of DNS names or IP addresses,
+including wildcard DNS names. The supplied list replaces the defaults of
+`localhost` and `127.0.0.1`.
+
+```bash
+NGINX_TLS_NAMES='*.cogstack.internal,192.0.2.10' ./deployment/scripts/security/create_nginx_certs.sh
+```
+
+The generator writes `tls.crt` and `tls.key` under
+`$SECURITY_DIR/certificates/nginx/` and keeps the key at mode `0600`.
+It runs without a store password or `keytool`.
 
 ### OpenSearch
 
