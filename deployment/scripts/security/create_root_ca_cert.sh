@@ -4,7 +4,8 @@
 # 🔐 Create Root CA certificate, private key, and keystore/truststore bundle
 #
 # Usage:
-#     ./create_root_ca_cert.sh
+#     ./create_root_ca_cert.sh [--days DAYS]
+#     DAYS is a positive integer. The default validity is 1,460 days.
 #     Set SECURITY_DIR to place the whole bundle under a different directory.
 #
 # Requires:
@@ -25,6 +26,15 @@
 
 set -euo pipefail
 umask 077
+
+days=1460
+if (( $# > 0 )); then
+    if [[ $# -ne 2 || "$1" != --days || ! "$2" =~ ^[1-9][0-9]*$ ]]; then
+        printf 'Usage: %s [--days DAYS] (DAYS must be a positive integer)\n' "$0" >&2
+        exit 2
+    fi
+    days=$2
+fi
 
 # === Resolve the profile and output paths
 # SECURITY_DIR controls the bundle location. Resolve the checked-in OpenSSL profile
@@ -79,12 +89,12 @@ publish() {
 
 # === Generate the RSA signing key and self-signed CA certificate
 # The v3_ca profile authorizes the 4096-bit key to sign certificates and revocation
-# lists. Issue the PEM certificate for 1,460 days, then derive the binary DER copy.
+# lists. Issue the PEM certificate, then derive the binary DER copy.
 openssl req -x509 \
     -newkey rsa:4096 -nodes \
     -keyout "$scratch_dir/ca.key" \
     -sha256 \
-    -days 1460 \
+    -days "$days" \
     -out "$scratch_dir/ca.pem" \
     -extensions v3_ca \
     -config "$EXT_FILE"
