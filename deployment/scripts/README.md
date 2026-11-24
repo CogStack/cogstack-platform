@@ -11,6 +11,15 @@ is 1,460 days for the root CA and OpenSearch certificates and 397 days for
 NiFi and NGINX. The root CA, NiFi and OpenSearch node generators also use
 Java's `keytool`. `SECURITY_DIR` defaults to `deployment/security/`.
 
+For local development, load the [sample store passwords](../env/certificates_dev.env)
+before running the root CA and NiFi generators.
+
+```bash
+set -a
+source deployment/env/certificates_dev.env
+set +a
+```
+
 If you need a root CA, export `ROOT_CERTIFICATE_KEYSTORE_PASSWORD` and run this
 from the repository root.
 

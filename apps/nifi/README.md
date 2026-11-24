@@ -24,11 +24,21 @@ NIFI_WEB_PROXY_HOST=localhost:8443
 NIFI_HEALTHCHECK_HOST=nifi
 ```
 
-Use at least 12 characters for the single-user password. Preserve
-`NIFI_SENSITIVE_PROPS_KEY` with the flow configuration so NiFi can decrypt
-saved sensitive properties. For a non-local deployment, set `NIFI_WEB_PROXY_HOST`
-to the browser-facing host and port. If you change `NIFI_EXTERNAL_PORT_NGINX`,
-update that allowlist entry as well. See [Apache's startup script](https://github.com/apache/nifi/blob/rel/nifi-2.12.0/nifi-docker/dockerhub/sh/start.sh)
+Set `KEYSTORE_PASSWORD` and `TRUSTSTORE_PASSWORD` to match the mounted stores.
+Set `SINGLE_USER_CREDENTIALS_USERNAME` and `SINGLE_USER_CREDENTIALS_PASSWORD`
+for the NiFi login. Use at least 12 characters for the single-user password.
+Use `COGSTACK_NIFI_ENV_FILE` to select another deployment's `nifi.env`.
+
+The dev Make targets take their sample store passwords and login from
+[`certificates_dev.env`](../../deployment/env/certificates_dev.env) and
+[`authentication_dev.env`](../../deployment/env/authentication_dev.env).
+Set your own values in `nifi.env` to override the samples.
+
+Preserve `NIFI_SENSITIVE_PROPS_KEY` with the flow configuration so NiFi can
+decrypt saved sensitive properties. For a non-local deployment, set
+`NIFI_WEB_PROXY_HOST` to the browser-facing host and port. If you change
+`NIFI_EXTERNAL_PORT_NGINX`, update that allowlist entry as well. See
+[Apache's startup script](https://github.com/apache/nifi/blob/rel/nifi-2.12.0/nifi-docker/dockerhub/sh/start.sh)
 and [Docker setup guide](https://github.com/apache/nifi/blob/rel/nifi-2.12.0/nifi-docker/dockerhub/README.md)
 for additional settings.
 
@@ -50,28 +60,6 @@ readable by their container users. The start targets check for readable,
 nonempty files before launching. Certificate validation occurs when the services
 connect over TLS.
 
-### OpenBao
-
-Dev and prod use the same lookup. Set `NIFI_OPENBAO_ADDR` in `nifi.env` to
-that deployment’s OpenBao HTTPS endpoint. Set `BAO_CACERT` if its listener
-uses a private CA. In KV v2 mounted at `secret`, create the `nifi` entry with
-`SINGLE_USER_CREDENTIALS_USERNAME`, `SINGLE_USER_CREDENTIALS_PASSWORD`,
-`KEYSTORE_PASSWORD`, and `TRUSTSTORE_PASSWORD`. Use the passwords that open
-those stores. Export a `BAO_TOKEN` scoped to read `secret/data/nifi` and run
-Make. `curl` and `jq` load the values before Compose starts. When the address
-is unset, Make uses the credentials already supplied to Compose. Set
-`COGSTACK_NIFI_ENV_FILE` to select a deployment's settings on a shared host.
-
-For a local persistent server, set `OPENBAO_TLS_DIR` to the absolute path
-containing its `tls.crt` and `tls.key`. Run this from `apps/openbao/docker`,
-then initialize and unseal via the OpenBao UI or CLI. Set `OPENBAO_HOST_PORT`
-if port 8200 is occupied.
-
-```bash
-docker compose --env-file ../env/openbao.env \
-  -f docker-compose.base.yml -f docker-compose.server.yml up -d
-```
-
 ### Start and verify
 
 Run these commands from `apps/nifi/docker/`:
@@ -80,6 +68,7 @@ Run these commands from `apps/nifi/docker/`:
 | --- | --- |
 | `make check-config` | Resolve and validate all three Compose configurations using the env files. |
 | `make start-nifi` | Use `docker-compose.yml` to start published images with a Compose-managed `cogstack-net`. |
+| `make start-nifi-dev` | Start NiFi and NGINX with the dev settings. |
 | `make start-nifi-dev-build` | Apply `docker-compose.dev.yml` over the base, build both images locally, mount editable NiFi resources and dev data, and use `nifi-dev-net`. |
 | `make start-nifi-prod` | Apply `docker-compose.prod.yml` over the base and start published images on an existing `cogstack-net`. |
 

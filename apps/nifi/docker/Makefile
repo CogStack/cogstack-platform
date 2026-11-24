@@ -3,7 +3,10 @@ SHELL := /usr/bin/env bash
 
 DC_START_CMD := up -d
 DC_STOP_CMD := stop
-COMPOSE_DEV := docker compose -f docker-compose.base.yml -f docker-compose.dev.yml
+COMPOSE_DEV := docker compose --env-file ../../../deployment/env/certificates_dev.env \
+	--env-file ../../../deployment/env/authentication_dev.env \
+	$(if $(wildcard .env),--env-file .env) \
+	-f docker-compose.base.yml -f docker-compose.dev.yml
 COMPOSE_PROD := docker compose -f docker-compose.base.yml -f docker-compose.prod.yml
 
 define WITH_ENV
@@ -19,13 +22,7 @@ for cert in root/root-ca.pem nifi/nifi-{keystore,truststore}.jks nginx/tls.{crt,
 done;
 endef
 
-define WITH_START
-$(WITH_ENV) $(CHECK_TLS_FILES) \
-if [[ -n "$${NIFI_OPENBAO_ADDR:-}" ]]; then \
-	source ./openbao_env.sh && nifi_openbao_env || exit $$?; \
-	unset BAO_TOKEN; \
-fi;
-endef
+WITH_START = $(WITH_ENV) $(CHECK_TLS_FILES)
 
 help: ## List available targets with descriptions
 	@echo "Available targets:"

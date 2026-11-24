@@ -2,6 +2,8 @@
 !/env/
 /env/*
 !/env/certificates.env
+!/env/certificates_dev.env
+!/env/authentication_dev.env
 !/env/cohorter.env
 !/env/jupyter.env
 !/env/ocr_service.env
