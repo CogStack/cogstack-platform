@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/CogStack/cogstack-platform/compare/terraform-modules/openstack-kubernetes-k3s-v0.1.3...terraform-modules/openstack-kubernetes-k3s-v0.1.4) (2026-11-24)
+
+
+### Miscellaneous Chores
+
+* **main:** release cogstack-jupyter-hub 2.3.12 ([#235](https://github.com/CogStack/cogstack-platform/issues/235)) ([4a83dd8](https://github.com/CogStack/cogstack-platform/commit/4a83dd8efe238158fa8d0be95b095fb5441bd7d4))
+
 ## [0.1.3](https://github.com/CogStack/cogstack-platform/compare/terraform-modules/openstack-kubernetes-k3s-v0.1.2...terraform-modules/openstack-kubernetes-k3s-v0.1.3) (2026-11-21)
 
 
