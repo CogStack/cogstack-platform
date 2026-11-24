@@ -6,5 +6,7 @@
 !/env/authentication_dev.env
 !/env/cohorter.env
 !/env/jupyter.env
+!/env/opensearch.env
+!/env/opensearch-dashboards.env
 !/env/ocr_service.env
 !/env/ocr_service_text_only.env
