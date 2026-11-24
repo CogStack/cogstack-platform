@@ -46,7 +46,23 @@ for additional settings.
 
 ### TLS certificates
 
-Place the following under `deployment/security/certificates/`:
+For local development, keep TLS and demo login settings in
+`deployment/env/cert_auth_settings_dev.env`. Set an absolute `SECURITY_DIR`,
+`ROOT_CERTIFICATE_KEYSTORE_PASSWORD`, `KEYSTORE_PASSWORD`, `TRUSTSTORE_PASSWORD`,
+`SINGLE_USER_CREDENTIALS_USERNAME`, and `SINGLE_USER_CREDENTIALS_PASSWORD`.
+Prepare or reuse the TLS bundle from the repository root.
+
+```bash
+make -C apps/nifi/docker setup-nifi-dev-tls
+```
+
+Keep this Git-ignored file at mode `0600`. It can also hold store paths, types,
+and TLS names. `start-nifi-dev` and `start-nifi-dev-build` load it automatically
+when present and mount the bundle's runtime TLS files. The CA signing key and
+its store password stay on the host.
+
+To supply certificates manually, place the following under
+`deployment/security/certificates/`.
 
 | Files | Purpose |
 | --- | --- |
