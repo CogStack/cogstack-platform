@@ -8,7 +8,7 @@
     "deployment/charts/ocr-service": "0.1.0",
     "deployment/charts/nifi": "0.0.0",
     "deployment/charts/nginx": "0.0.0",
-    "deployment/terraform/openstack-kubernetes-k3s": "0.1.3",
+    "deployment/terraform/openstack-kubernetes-k3s": "0.1.4",
     "apps/ocr-service": "1.1.4",
     "apps/jupyter-hub": "2.3.12"
 }
