@@ -1,0 +1,2 @@
+opensearch-dashboards:
+  opensearchHosts: https://opensearch-cluster-master:9200

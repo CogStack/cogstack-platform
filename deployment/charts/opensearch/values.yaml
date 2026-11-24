@@ -1,0 +1,11 @@
+opensearch:
+  # Each StatefulSet pod gets its own claim from the cluster's default StorageClass.
+  persistence:
+    enabled: true
+    size: 8Gi
+  extraEnvs:
+    - name: OPENSEARCH_INITIAL_ADMIN_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: opensearch-admin
+          key: password
