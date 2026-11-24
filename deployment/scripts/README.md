@@ -1,8 +1,87 @@
 # Deployment scripts
 
-Run commands from the repository root. Requires Make, Bash, `sudo`, systemd and network
-access. Installation and cluster setup invoke `sudo` internally; run setup as the user who will
-use `kubectl`.
+Run commands from the repository root. Installation and cluster setup require Make,
+Bash, `sudo`, systemd and network access. They invoke `sudo` internally. Run setup
+as the user who will use `kubectl`.
+
+## Certificates
+
+All five generators use OpenSSL and accept `--days DAYS`. The default validity
+is 1,460 days for the root CA and OpenSearch certificates and 397 days for
+NiFi and NGINX. The root CA, NiFi and OpenSearch node generators also use
+Java's `keytool`. `SECURITY_DIR` defaults to `deployment/security/`.
+
+If you need a root CA, export `ROOT_CERTIFICATE_KEYSTORE_PASSWORD` and run this
+from the repository root.
+
+```bash
+./deployment/scripts/security/create_root_ca_cert.sh
+```
+
+### NiFi
+
+Export the `KEYSTORE_PASSWORD` and `TRUSTSTORE_PASSWORD` that NiFi will use.
+The legacy `NIFI_KEYSTORE_PASSWORD` and `NIFI_TRUSTSTORE_PASSWORD` names are
+also accepted.
+
+Choose the command for your deployment. The default NiFi certificate covers
+`nifi`, `localhost`, `cogstack-nifi`, `cogstack-nifi-web`, and `127.0.0.1`.
+
+```bash
+./deployment/scripts/security/create_nifi_certs.sh
+```
+
+When NGINX and NiFi run on separate Docker hosts, add the DNS name NGINX will
+verify. `NIFI_HEALTHCHECK_HOST` also adds a name when supplied.
+
+```bash
+NIFI_UPSTREAM_TLS_NAME=nifi.internal.example ./deployment/scripts/security/create_nifi_certs.sh
+```
+
+For Kubernetes, set `KUBE_NAMESPACE` to include the web Service's full name.
+For example, `cogstack` adds `cogstack-nifi-web.cogstack.svc.cluster.local`.
+Set `CLUSTER_DOMAIN` if your cluster uses a domain other than `cluster.local`.
+
+```bash
+KUBE_NAMESPACE=cogstack ./deployment/scripts/security/create_nifi_certs.sh
+```
+
+Each invocation writes `nifi.key`, `nifi.csr`, `nifi.pem`, `nifi.crt` (DER),
+`nifi.p12`, `nifi-keystore.jks`, and `nifi-truststore.jks` under
+`$SECURITY_DIR/certificates/nifi/`.
+
+### NGINX
+
+Use the existing root CA to issue the browser-facing certificate. Set
+`NGINX_TLS_NAMES` to a comma-separated list of DNS names or IP addresses,
+including wildcard DNS names. The supplied list replaces the defaults of
+`localhost` and `127.0.0.1`.
+
+```bash
+NGINX_TLS_NAMES='*.cogstack.internal,192.0.2.10' ./deployment/scripts/security/create_nginx_certs.sh
+```
+
+The generator writes `tls.crt` and `tls.key` under
+`$SECURITY_DIR/certificates/nginx/` and keeps the key at mode `0600`.
+It runs without a store password or `keytool`.
+
+### OpenSearch
+
+Export `ES_CERTIFICATE_PASSWORD` for the Java and PKCS#12 stores. Pass the node
+hostnames when generating the node certificates. Generate the Dashboards and
+admin certificates with the second command.
+
+```bash
+./deployment/scripts/security/create_opensearch_node_cert.sh --days 365 opensearch-1 opensearch-2
+./deployment/scripts/security/create_opensearch_client_admin_certs.sh --days 365
+```
+
+Add comma-separated DNS aliases using `OPENSEARCH_NODE_DNS_NAMES` or
+`OPENSEARCH_DASHBOARDS_DNS_NAMES` when clients verify other names, such as
+a Kubernetes Service FQDN. Outputs are under
+`$SECURITY_DIR/certificates/opensearch/`, with each node's hostname as its file
+prefix. Use the issued node and admin subjects in the corresponding OpenSearch
+DN settings.
 
 ## Install, initialize and verify
 

@@ -8,7 +8,7 @@ This webapp is a cohort app for users to obtain the number of patients satifying
 
 Other runtime dependencies include [ECharts](https://echarts.apache.org/en/index.html) for charts and [popper.js](https://popper.js.org/) for tooltips.
 
-A GitHub Packages token with `read:packages` scope is required to install `@cogstack/frontend-common-react`. Set it in a `.env` file at the `apps/cohorter/` root (see `.env.example`) or export it in your shell:
+A GitHub Packages token with `read:packages` scope is required to install `@cogstack/frontend-common-react`. Set it in [`env/cohorter.env`](../env/cohorter.env) for Compose or export it in your shell:
 
 ```bash
 export NPM_TOKEN=ghp_your_token_here
@@ -44,7 +44,7 @@ There is a script `gen_random_data.js` in `server/data/` folder to generate the 
 
 Please make sure to have the six data files ready in the `server/data/` folder before starting the server. To start the server, in the app folder run `cd server && npm install && npm run start`. 
 
-The recommended way to run the full stack (webapp + NL2DSL + MedCAT + Ollama) is via `docker-compose` from the `apps/cohorter/` root — see the root-level README and `.env.example` for details. The `NPM_TOKEN` is passed as a BuildKit secret; set it in the `.env` file before building.
+The recommended way to run the full stack (webapp + NL2DSL + MedCAT + Ollama) uses [`docker/docker-compose.yml`](../docker/docker-compose.yml) from `apps/cohorter/docker/` — see the app-root README and [`env/cohorter.env`](../env/cohorter.env) for details. The `NPM_TOKEN` is passed as a BuildKit secret.
 
 ### Environment variables
 
@@ -92,10 +92,10 @@ In Kubernetes these are set as env vars on the webapp container (via helm `cogst
 
 ### Run using Docker with random data
 
-Set `RANDOM_DATA=true` in your `.env` file (or leave it unset — it defaults to `true`), then from the `apps/cohorter/` root:
+Set `RANDOM_DATA=true` in `env/cohorter.env` (or leave it unset — it defaults to `true`), then from `apps/cohorter/docker/`:
 
 ```bash
-docker compose up --build
+docker compose --env-file ../env/cohorter.env up --build
 ```
 
 The webapp will be available at `http://localhost:3000`.

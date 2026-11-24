@@ -14,18 +14,14 @@ It keeps the existing Alpine-style template/data model behaviour, while using Re
 
 ## Requirements
 
-- Node.js 18+
+- Node.js 20.12+
 - npm
 - A GitHub Packages token with `read:packages` scope (to install `@cogstack/frontend-common-react`)
 - Cohorter backend server running at `http://localhost:3000` (proxied automatically in dev)
 
 ## Environment variables
 
-A single `.env` file at the **`apps/cohorter/` root** (one level up from `WebAPP/`) is shared between Vite and `docker-compose`. Copy `.env.example` there and fill in values:
-
-```bash
-cp ../../.env.example ../../.env
-```
+Configure [`apps/cohorter/env/cohorter.env`](../../env/cohorter.env), shared by Vite and Docker Compose.
 
 | Variable | Required | Description |
 |---|---|---|

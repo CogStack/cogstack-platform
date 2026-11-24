@@ -1,3 +1,5 @@
+name: cohorter
+
 services:
   ollama:
     image: ollama/ollama:latest
@@ -38,7 +40,7 @@ services:
 
   nl2dsl:
     build:
-      context: ./NL2DSL
+      context: ../NL2DSL
     container_name: cohorter-nl2dsl
     ports:
       - "3002:3002"
@@ -54,7 +56,7 @@ services:
 
   webapp:
     build:
-      context: ./WebAPP
+      context: ../WebAPP
       secrets:
         - npm_token
       args:
@@ -84,7 +86,7 @@ services:
       # Mount your data directory here. It should contain either:
       #   - snomed_terms_data.tar.gz (will be auto-extracted on startup), or
       #   - pre-extracted files: snomed_terms.json (SNOMED term lookup by Concept Unique Identifier) and cui_pt2ch.json (SNOMED CT ontology hierachy map).
-      - ./WebAPP/server/data:/usr/src/app/server/data
+      - ../WebAPP/server/data:/usr/src/app/server/data
     depends_on:
       - medcat
       - nl2dsl

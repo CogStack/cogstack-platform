@@ -4,7 +4,7 @@ This folder contains the **NL2DSL** service for the Cohorter application.
 
 NL2DSL accepts a **natural-language cohort request** and uses an LLM (via **Ollama**) to translate it into a **JSON cohort DSL**. It can optionally call the **MedCAT** service for clinical concept annotation / normalization (depending on your server implementation).
 
-This service is designed to run as part of the full stack (recommended) using the repo-root `docker-compose.yml`.
+This service is designed to run as part of the full stack (recommended) using [`docker/docker-compose.yml`](../docker/docker-compose.yml).
 
 ---
 
@@ -19,10 +19,10 @@ This service is designed to run as part of the full stack (recommended) using th
 
 ## Run with Docker Compose (recommended)
 
-From the **repo root**:
+From `apps/cohorter/docker/`, using `env/cohorter.env`:
 
 ```bash
-docker compose up --build nl2dsl
+docker compose --env-file ../env/cohorter.env up --build nl2dsl
 ```
 
 NL2DSL API will be available at:
@@ -110,7 +110,7 @@ node server.js
 ### Ollama not reachable
 - If using Docker Compose with included Ollama: confirm `ollama` container is up
   ```bash
-  docker compose ps
+  docker compose --env-file ../env/cohorter.env ps
   ```
 - Check Ollama is responding:
   ```bash

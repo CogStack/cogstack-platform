@@ -1,17 +1,18 @@
+import { existsSync } from 'node:fs';
+import { loadEnvFile } from 'node:process';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 // Express server port (same origin in production; proxied in dev)
 const API_ORIGIN = 'http://localhost:3000';
 
-// Point Vite at the apps/cohorter/ root so that it reads the same .env
-// as docker-compose, eliminating the need for a separate client-react/.env.
-// Both `npm run dev` (Vite) and `docker-compose build` resolve vars from one file.
-const ENV_DIR = '../../';
+// Share the named environment file with Compose; image builds can omit it.
+const ENV_FILE = new URL('../../env/cohorter.env', import.meta.url);
+if (existsSync(ENV_FILE)) loadEnvFile(ENV_FILE);
 
 export default defineConfig({
   plugins: [react()],
-  envDir: ENV_DIR,
+  envDir: false,
 
   build: {
     outDir: 'dist',

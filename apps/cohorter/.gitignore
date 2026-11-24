@@ -3,7 +3,9 @@
 # =========================
 .env
 .env.*
-!.env.example
+!/env/
+/env/*
+!/env/cohorter.env
 *.key
 *.pem
 *.p12
@@ -50,7 +52,6 @@ __pycache__/
 *$py.class
 .venv/
 venv/
-env/
 pip-wheel-metadata/
 .pytest_cache/
 .mypy_cache/

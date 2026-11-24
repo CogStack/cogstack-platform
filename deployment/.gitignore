@@ -1,0 +1,8 @@
+# Deployment env files and app env links included in the repository.
+!/env/
+/env/*
+!/env/certificates.env
+!/env/cohorter.env
+!/env/jupyter.env
+!/env/ocr_service.env
+!/env/ocr_service_text_only.env

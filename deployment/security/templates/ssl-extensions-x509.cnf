@@ -1,0 +1,43 @@
+# =========================================================================================
+# 📜 OpenSSL X.509 v3 Extensions Configuration
+# For: Root CA and Node/Client Certificates
+# =========================================================================================
+
+[v3_ca]
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always,issuer
+basicConstraints = critical, CA:TRUE
+keyUsage = critical, keyCertSign, cRLSign
+
+[v3_leaf]
+basicConstraints = critical, CA:FALSE
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth, clientAuth
+subjectAltName = @alt_names
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid,issuer
+
+# NiFi defaults for Compose, local access and Kubernetes Service short names.
+# Add deployment-specific DNS entries starting at DNS.100 when signing.
+[alt_names]
+DNS.1 = nifi
+DNS.2 = localhost
+DNS.3 = cogstack-nifi
+DNS.4 = cogstack-nifi-web
+IP.1 = 127.0.0.1
+
+[req]
+default_bits       = 4096
+string_mask        = utf8only
+prompt = no
+distinguished_name = req_distinguished_name
+default_md         = sha256
+
+[req_distinguished_name]
+CN = cogstack
+C  = UK
+ST = London
+L  = UK
+O  = cogstack
+OU = cogstack
+CN = cogstack
