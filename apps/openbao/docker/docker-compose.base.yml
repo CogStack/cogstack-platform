@@ -1,0 +1,3 @@
+services:
+  openbao:
+    image: ${OPENBAO_DOCKER_IMAGE:?Set OPENBAO_DOCKER_IMAGE}

@@ -77,6 +77,35 @@ checks for readable, nonempty regular files. If `root-ca.pem` is a directory fro
 earlier bind mount, replace it with the actual PEM file. Certificate validation
 occurs when the services connect over TLS.
 
+### OpenBao for local dev
+
+With [OpenBao](../openbao/docker/docker-compose.yml) running, set
+`NIFI_DEV_OPENBAO_ADDR` to its host URL and export `BAO_TOKEN` in your shell.
+Use the dev root token to seed KV from `cert_auth_settings_dev.env`.
+
+```bash
+export NIFI_DEV_OPENBAO_ADDR=http://127.0.0.1:8200
+make -C apps/nifi/docker seed-nifi-dev-openbao
+```
+
+Use the bundled CLI to grant read access to that entry and start with a short-lived token.
+
+```bash
+bao_dev() {
+  docker compose -f apps/openbao/docker/docker-compose.yml exec -T \
+    -e BAO_TOKEN -e BAO_ADDR=http://127.0.0.1:8200 openbao bao "$@"
+}
+printf '%s\n' 'path "secret/data/nifi/dev" { capabilities = ["read"] }' |
+  bao_dev policy write nifi-dev-read -
+BAO_TOKEN="$(bao_dev token create -policy=nifi-dev-read -no-default-policy \
+  -ttl=10m -renewable=false -field=token)" make -C apps/nifi/docker start-nifi-dev
+```
+
+Both dev start targets fetch the demo login and Java store passwords with
+`curl` and `jq`. Keep the dev settings file for reseeding after an OpenBao
+dev restart and retain the sensitive properties key for saved flows. With
+`NIFI_DEV_OPENBAO_ADDR` unset, the dev targets use the local settings file.
+
 ### Start and verify
 
 Run these commands from `apps/nifi/docker/`:

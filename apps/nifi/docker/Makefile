@@ -18,7 +18,6 @@ dev_certs=(); \
 if [[ -f "$(DEV_CERT_ENV)" ]]; then \
 	set -a; source "$(DEV_CERT_ENV)" || exit $$?; set +a; \
 	: "$${SECURITY_DIR:?Set SECURITY_DIR in the dev settings file}"; \
-	: "$${KEYSTORE_PASSWORD:?Set KEYSTORE_PASSWORD in the dev settings file}" "$${TRUSTSTORE_PASSWORD:?Set TRUSTSTORE_PASSWORD in the dev settings file}"; \
 	cert_dir="$$SECURITY_DIR/certificates"; \
 	dev_certs=(-f docker-compose.dev-tls.yml); \
 fi;
@@ -31,6 +30,18 @@ for cert in root/root-ca.pem nifi/nifi-keystore.jks nifi/nifi-truststore.jks ngi
 		printf 'TLS file missing, empty, or unreadable: %s\n' "$$file" >&2; exit 1; \
 	fi; \
 done;
+endef
+
+define WITH_DEV_START
+$(WITH_DEV_CERTS) \
+if [[ -n "$${NIFI_DEV_OPENBAO_ADDR:-}" ]]; then \
+	source ./openbao_dev.sh && nifi_openbao_dev load || exit $$?; \
+	unset BAO_TOKEN; \
+fi; \
+if (( $${#dev_certs[@]} )); then \
+	: "$${KEYSTORE_PASSWORD:?Set KEYSTORE_PASSWORD}" "$${TRUSTSTORE_PASSWORD:?Set TRUSTSTORE_PASSWORD}"; \
+fi; \
+$(CHECK_TLS_FILES)
 endef
 
 help: ## List available targets with descriptions
@@ -85,11 +96,14 @@ start-nifi: check-tls ## Start the default NiFi and NGINX stack
 setup-nifi-dev-tls: ## Generate or validate the local dev certificates using cert_auth_settings_dev.env
 	@./setup_dev_tls.sh "$(DEV_CERT_ENV)"
 
+seed-nifi-dev-openbao: ## Store the current demo credentials in a fresh OpenBao dev instance
+	@source ./openbao_dev.sh && nifi_openbao_dev seed "$(DEV_CERT_ENV)"
+
 start-nifi-dev: ## Start NiFi and NGINX with local builds
-	$(WITH_DEV_CERTS) $(CHECK_TLS_FILES) $(COMPOSE_DEV) "$${dev_certs[@]}" $(DC_START_CMD) nifi nifi-nginx
+	$(WITH_DEV_START) $(COMPOSE_DEV) "$${dev_certs[@]}" $(DC_START_CMD) nifi nifi-nginx
 
 start-nifi-dev-build: ## Build and start NiFi dev services
-	$(WITH_DEV_CERTS) $(CHECK_TLS_FILES) $(COMPOSE_DEV) "$${dev_certs[@]}" up -d --build nifi nifi-nginx
+	$(WITH_DEV_START) $(COMPOSE_DEV) "$${dev_certs[@]}" up -d --build nifi nifi-nginx
 
 start-nifi-prod: check-tls ## Start the published NiFi and NGINX images on cogstack-net
 	$(WITH_ENV) $(COMPOSE_PROD) $(DC_START_CMD)
@@ -128,4 +142,4 @@ delete-nifi-dev-images: ## Delete the NiFi dev images
 		echo "No NiFi dev images found."; \
 	fi
 
-.PHONY: help load-env show-env check-config check-tls start-nifi setup-nifi-dev-tls start-nifi-dev start-nifi-dev-build start-nifi-prod build-nifi-image stop-nifi-dev stop-nifi-prod delete-nifi delete-nifi-dev-containers delete-nifi-dev-volumes delete-nifi-dev-images
+.PHONY: help load-env show-env check-config check-tls start-nifi setup-nifi-dev-tls seed-nifi-dev-openbao start-nifi-dev start-nifi-dev-build start-nifi-prod build-nifi-image stop-nifi-dev stop-nifi-prod delete-nifi delete-nifi-dev-containers delete-nifi-dev-volumes delete-nifi-dev-images
