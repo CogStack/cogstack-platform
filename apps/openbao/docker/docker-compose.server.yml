@@ -1,0 +1,21 @@
+name: openbao-server
+
+services:
+  openbao:
+    command: [server]
+    environment:
+      BAO_API_ADDR: ${OPENBAO_API_ADDR:-https://127.0.0.1:${OPENBAO_HOST_PORT}}
+    ports:
+      - "127.0.0.1:${OPENBAO_HOST_PORT}:8200"
+    volumes:
+      - openbao-data:/openbao/file
+      - ./openbao.hcl:/openbao/config/openbao.hcl:ro
+      - type: bind
+        source: ${OPENBAO_TLS_DIR:?Set OPENBAO_TLS_DIR}
+        target: /openbao/tls
+        read_only: true
+        bind:
+          create_host_path: false
+
+volumes:
+  openbao-data:

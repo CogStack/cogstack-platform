@@ -5,43 +5,26 @@ DC_START_CMD := up -d
 DC_STOP_CMD := stop
 COMPOSE_DEV := docker compose -f docker-compose.base.yml -f docker-compose.dev.yml
 COMPOSE_PROD := docker compose -f docker-compose.base.yml -f docker-compose.prod.yml
-DEV_CERT_ENV := $(abspath ../../../deployment/env/cert_auth_settings_dev.env)
 
 define WITH_ENV
 source ./export_env_vars.sh || exit $$?;
 endef
 
-define WITH_DEV_CERTS
-$(WITH_ENV) \
-cert_dir=../../../deployment/security/certificates; \
-dev_certs=(); \
-if [[ -f "$(DEV_CERT_ENV)" ]]; then \
-	set -a; source "$(DEV_CERT_ENV)" || exit $$?; set +a; \
-	: "$${SECURITY_DIR:?Set SECURITY_DIR in the dev settings file}"; \
-	cert_dir="$$SECURITY_DIR/certificates"; \
-	dev_certs=(-f docker-compose.dev-tls.yml); \
-fi;
-endef
-
 define CHECK_TLS_FILES
-for cert in root/root-ca.pem nifi/nifi-keystore.jks nifi/nifi-truststore.jks nginx/tls.crt nginx/tls.key; do \
-	file="$$cert_dir/$$cert"; \
+for cert in root/root-ca.pem nifi/nifi-{keystore,truststore}.jks nginx/tls.{crt,key}; do \
+	file="$${SECURITY_DIR:-../../../deployment/security}/certificates/$$cert"; \
 	if [ ! -f "$$file" ] || [ ! -r "$$file" ] || [ ! -s "$$file" ]; then \
 		printf 'TLS file missing, empty, or unreadable: %s\n' "$$file" >&2; exit 1; \
 	fi; \
 done;
 endef
 
-define WITH_DEV_START
-$(WITH_DEV_CERTS) \
-if [[ -n "$${NIFI_DEV_OPENBAO_ADDR:-}" ]]; then \
-	source ./openbao_dev.sh && nifi_openbao_dev load || exit $$?; \
+define WITH_START
+$(WITH_ENV) $(CHECK_TLS_FILES) \
+if [[ -n "$${NIFI_OPENBAO_ADDR:-}" ]]; then \
+	source ./openbao_env.sh && nifi_openbao_env || exit $$?; \
 	unset BAO_TOKEN; \
-fi; \
-if (( $${#dev_certs[@]} )); then \
-	: "$${KEYSTORE_PASSWORD:?Set KEYSTORE_PASSWORD}" "$${TRUSTSTORE_PASSWORD:?Set TRUSTSTORE_PASSWORD}"; \
-fi; \
-$(CHECK_TLS_FILES)
+fi;
 endef
 
 help: ## List available targets with descriptions
@@ -84,29 +67,22 @@ show-env: ## Print sorted environment variables after loading export_env_vars.sh
 	${WITH_ENV} >/dev/null 2>&1; printenv | sort
 
 check-config: ## Validate the default, dev and prod Compose configurations
-	@$(WITH_ENV) docker compose config --quiet && $(COMPOSE_PROD) config --quiet
-	@$(WITH_DEV_CERTS) $(COMPOSE_DEV) "$${dev_certs[@]}" config --quiet
+	@$(WITH_ENV) docker compose config --quiet && $(COMPOSE_DEV) config --quiet && $(COMPOSE_PROD) config --quiet
 
 check-tls: ## Check the TLS files required by NiFi and NGINX
-	@cert_dir=../../../deployment/security/certificates; $(CHECK_TLS_FILES)
+	@$(WITH_ENV) $(CHECK_TLS_FILES)
 
-start-nifi: check-tls ## Start the default NiFi and NGINX stack
-	$(WITH_ENV) docker compose $(DC_START_CMD)
-
-setup-nifi-dev-tls: ## Generate or validate the local dev certificates using cert_auth_settings_dev.env
-	@./setup_dev_tls.sh "$(DEV_CERT_ENV)"
-
-seed-nifi-dev-openbao: ## Store the current demo credentials in a fresh OpenBao dev instance
-	@source ./openbao_dev.sh && nifi_openbao_dev seed "$(DEV_CERT_ENV)"
+start-nifi: ## Start the default NiFi and NGINX stack
+	$(WITH_START) docker compose $(DC_START_CMD)
 
 start-nifi-dev: ## Start NiFi and NGINX with local builds
-	$(WITH_DEV_START) $(COMPOSE_DEV) "$${dev_certs[@]}" $(DC_START_CMD) nifi nifi-nginx
+	$(WITH_START) $(COMPOSE_DEV) $(DC_START_CMD) nifi nifi-nginx
 
 start-nifi-dev-build: ## Build and start NiFi dev services
-	$(WITH_DEV_START) $(COMPOSE_DEV) "$${dev_certs[@]}" up -d --build nifi nifi-nginx
+	$(WITH_START) $(COMPOSE_DEV) up -d --build nifi nifi-nginx
 
-start-nifi-prod: check-tls ## Start the published NiFi and NGINX images on cogstack-net
-	$(WITH_ENV) $(COMPOSE_PROD) $(DC_START_CMD)
+start-nifi-prod: ## Start the published NiFi and NGINX images on cogstack-net
+	$(WITH_START) $(COMPOSE_PROD) $(DC_START_CMD)
 
 build-nifi-image: ## Build the local NiFi image without starting services
 	$(WITH_ENV) docker build \
@@ -142,4 +118,4 @@ delete-nifi-dev-images: ## Delete the NiFi dev images
 		echo "No NiFi dev images found."; \
 	fi
 
-.PHONY: help load-env show-env check-config check-tls start-nifi setup-nifi-dev-tls seed-nifi-dev-openbao start-nifi-dev start-nifi-dev-build start-nifi-prod build-nifi-image stop-nifi-dev stop-nifi-prod delete-nifi delete-nifi-dev-containers delete-nifi-dev-volumes delete-nifi-dev-images
+.PHONY: help load-env show-env check-config check-tls start-nifi start-nifi-dev start-nifi-dev-build start-nifi-prod build-nifi-image stop-nifi-dev stop-nifi-prod delete-nifi delete-nifi-dev-containers delete-nifi-dev-volumes delete-nifi-dev-images

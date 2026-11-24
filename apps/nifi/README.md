@@ -13,24 +13,12 @@ production configurations use `cogstacksystems/nifi` and `cogstacksystems/nginx`
 
 From the repository root, create `apps/nifi/env/` and add `general.env` and
 `nifi.env`. Both files are Git-ignored. `general.env` can be empty if you have
-no shared settings. Use the following as a starting point for `nifi.env` and
-replace the example credentials and passwords before starting NiFi.
+no shared settings. Use the following as a starting point for `nifi.env`.
 
 ```dotenv
 NIFI_DOCKER_CPU_MIN=1
 NIFI_DOCKER_CPU_MAX=2
 NIFI_DOCKER_RAM=4g
-
-SINGLE_USER_CREDENTIALS_USERNAME=admin
-SINGLE_USER_CREDENTIALS_PASSWORD='replace-with-a-unique-password'
-NIFI_SENSITIVE_PROPS_KEY='replace-with-a-stable-encryption-key'
-
-KEYSTORE_PATH=/security/certificates/nifi/nifi-keystore.jks
-KEYSTORE_TYPE=JKS
-KEYSTORE_PASSWORD='replace-with-the-keystore-password'
-TRUSTSTORE_PATH=/security/certificates/nifi/nifi-truststore.jks
-TRUSTSTORE_TYPE=JKS
-TRUSTSTORE_PASSWORD='replace-with-the-truststore-password'
 
 NIFI_WEB_PROXY_HOST=localhost:8443
 NIFI_HEALTHCHECK_HOST=nifi
@@ -46,23 +34,9 @@ for additional settings.
 
 ### TLS certificates
 
-For local development, keep TLS and demo login settings in
-`deployment/env/cert_auth_settings_dev.env`. Set an absolute `SECURITY_DIR`,
-`ROOT_CERTIFICATE_KEYSTORE_PASSWORD`, `KEYSTORE_PASSWORD`, `TRUSTSTORE_PASSWORD`,
-`SINGLE_USER_CREDENTIALS_USERNAME`, and `SINGLE_USER_CREDENTIALS_PASSWORD`.
-Prepare or reuse the TLS bundle from the repository root.
-
-```bash
-make -C apps/nifi/docker setup-nifi-dev-tls
-```
-
-Keep this Git-ignored file at mode `0600`. It can also hold store paths, types,
-and TLS names. `start-nifi-dev` and `start-nifi-dev-build` load it automatically
-when present and mount the bundle's runtime TLS files. The CA signing key and
-its store password stay on the host.
-
-To supply certificates manually, place the following under
-`deployment/security/certificates/`.
+Use the existing certificate generators or supply a TLS bundle. Place the files
+under `deployment/security/certificates/`, or set `SECURITY_DIR` in `nifi.env`
+to the parent of your deployment’s `certificates/` directory.
 
 | Files | Purpose |
 | --- | --- |
@@ -72,39 +46,31 @@ To supply certificates manually, place the following under
 
 Compose mounts the service certificate directories and `root/root-ca.pem` read-only.
 The CA signing key and private bundles stay on the host. Make the mounted files
-readable by their container users. The start targets run `make check-tls`, which
-checks for readable, nonempty regular files. If `root-ca.pem` is a directory from an
-earlier bind mount, replace it with the actual PEM file. Certificate validation
-occurs when the services connect over TLS.
+readable by their container users. The start targets check for readable,
+nonempty files before launching. Certificate validation occurs when the services
+connect over TLS.
 
-### OpenBao for local dev
+### OpenBao
 
-With [OpenBao](../openbao/docker/docker-compose.yml) running, set
-`NIFI_DEV_OPENBAO_ADDR` to its host URL and export `BAO_TOKEN` in your shell.
-Use the dev root token to seed KV from `cert_auth_settings_dev.env`.
+Dev and prod use the same lookup. Set `NIFI_OPENBAO_ADDR` in `nifi.env` to
+that deployment’s OpenBao HTTPS endpoint. Set `BAO_CACERT` if its listener
+uses a private CA. In KV v2 mounted at `secret`, create the `nifi` entry with
+`SINGLE_USER_CREDENTIALS_USERNAME`, `SINGLE_USER_CREDENTIALS_PASSWORD`,
+`KEYSTORE_PASSWORD`, and `TRUSTSTORE_PASSWORD`. Use the passwords that open
+those stores. Export a `BAO_TOKEN` scoped to read `secret/data/nifi` and run
+Make. `curl` and `jq` load the values before Compose starts. When the address
+is unset, Make uses the credentials already supplied to Compose. Set
+`COGSTACK_NIFI_ENV_FILE` to select a deployment's settings on a shared host.
+
+For a local persistent server, set `OPENBAO_TLS_DIR` to the absolute path
+containing its `tls.crt` and `tls.key`. Run this from `apps/openbao/docker`,
+then initialize and unseal via the OpenBao UI or CLI. Set `OPENBAO_HOST_PORT`
+if port 8200 is occupied.
 
 ```bash
-export NIFI_DEV_OPENBAO_ADDR=http://127.0.0.1:8200
-make -C apps/nifi/docker seed-nifi-dev-openbao
+docker compose --env-file ../env/openbao.env \
+  -f docker-compose.base.yml -f docker-compose.server.yml up -d
 ```
-
-Use the bundled CLI to grant read access to that entry and start with a short-lived token.
-
-```bash
-bao_dev() {
-  docker compose -f apps/openbao/docker/docker-compose.yml exec -T \
-    -e BAO_TOKEN -e BAO_ADDR=http://127.0.0.1:8200 openbao bao "$@"
-}
-printf '%s\n' 'path "secret/data/nifi/dev" { capabilities = ["read"] }' |
-  bao_dev policy write nifi-dev-read -
-BAO_TOKEN="$(bao_dev token create -policy=nifi-dev-read -no-default-policy \
-  -ttl=10m -renewable=false -field=token)" make -C apps/nifi/docker start-nifi-dev
-```
-
-Both dev start targets fetch the demo login and Java store passwords with
-`curl` and `jq`. Keep the dev settings file for reseeding after an OpenBao
-dev restart and retain the sensitive properties key for saved flows. With
-`NIFI_DEV_OPENBAO_ADDR` unset, the dev targets use the local settings file.
 
 ### Start and verify
 

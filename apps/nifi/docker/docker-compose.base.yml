@@ -19,14 +19,14 @@ x-env:
     AUTH: ${AUTH:-tls}
     NIFI_SECURITY_USER_AUTHORIZER: ${NIFI_SECURITY_USER_AUTHORIZER:-single-user-authorizer}
     NIFI_SECURITY_USER_LOGIN_IDENTITY_PROVIDER: ${NIFI_SECURITY_USER_LOGIN_IDENTITY_PROVIDER:-single-user-provider}
-    SINGLE_USER_CREDENTIALS_USERNAME: ${SINGLE_USER_CREDENTIALS_USERNAME:-${NIFI_SINGLE_USER_CREDENTIALS_USERNAME}}
-    SINGLE_USER_CREDENTIALS_PASSWORD: ${SINGLE_USER_CREDENTIALS_PASSWORD:-${NIFI_SINGLE_USER_CREDENTIALS_PASSWORD}}
-    KEYSTORE_PATH: ${KEYSTORE_PATH:-${NIFI_KEYSTORE_PATH}}
-    KEYSTORE_TYPE: ${KEYSTORE_TYPE:-${NIFI_KEYSTORE_TYPE}}
-    KEYSTORE_PASSWORD: ${KEYSTORE_PASSWORD:-${NIFI_KEYSTORE_PASSWORD}}
-    TRUSTSTORE_PATH: ${TRUSTSTORE_PATH:-${NIFI_TRUSTSTORE_PATH}}
-    TRUSTSTORE_TYPE: ${TRUSTSTORE_TYPE:-${NIFI_TRUSTSTORE_TYPE}}
-    TRUSTSTORE_PASSWORD: ${TRUSTSTORE_PASSWORD:-${NIFI_TRUSTSTORE_PASSWORD}}
+    SINGLE_USER_CREDENTIALS_USERNAME: ${SINGLE_USER_CREDENTIALS_USERNAME:-${NIFI_SINGLE_USER_CREDENTIALS_USERNAME:-}}
+    SINGLE_USER_CREDENTIALS_PASSWORD: ${SINGLE_USER_CREDENTIALS_PASSWORD:-${NIFI_SINGLE_USER_CREDENTIALS_PASSWORD:-}}
+    KEYSTORE_PATH: ${KEYSTORE_PATH:-${NIFI_KEYSTORE_PATH:-/security/certificates/nifi/nifi-keystore.jks}}
+    KEYSTORE_TYPE: ${KEYSTORE_TYPE:-${NIFI_KEYSTORE_TYPE:-JKS}}
+    KEYSTORE_PASSWORD: ${KEYSTORE_PASSWORD:-${NIFI_KEYSTORE_PASSWORD:-}}
+    TRUSTSTORE_PATH: ${TRUSTSTORE_PATH:-${NIFI_TRUSTSTORE_PATH:-/security/certificates/nifi/nifi-truststore.jks}}
+    TRUSTSTORE_TYPE: ${TRUSTSTORE_TYPE:-${NIFI_TRUSTSTORE_TYPE:-JKS}}
+    TRUSTSTORE_PASSWORD: ${TRUSTSTORE_PASSWORD:-${NIFI_TRUSTSTORE_PASSWORD:-}}
     NIFI_WEB_HTTPS_PORT: ${NIFI_WEB_HTTPS_PORT:-${NIFI_INTERNAL_PORT:-8443}}
     NIFI_REMOTE_INPUT_SOCKET_PORT: ${NIFI_REMOTE_INPUT_SOCKET_PORT:-${NIFI_INPUT_SOCKET_PORT:-10000}}
     PYTHONPATH: ${NIFI_PYTHONPATH:-/opt/nifi/nifi-current/python/framework}
@@ -45,9 +45,9 @@ x-env:
 x-mounts:
   nifi: &nifi-volumes
     # Security certificates
-    - ../../../deployment/security/certificates/nifi:/security/certificates/nifi:ro
+    - ${SECURITY_DIR:-../../../deployment/security}/certificates/nifi:/security/certificates/nifi:ro
     - type: bind
-      source: ../../../deployment/security/certificates/root/root-ca.pem
+      source: ${SECURITY_DIR:-../../../deployment/security}/certificates/root/root-ca.pem
       target: /security/certificates/root/root-ca.pem
       read_only: true
       bind:
@@ -67,9 +67,9 @@ x-mounts:
     - /tmp:mode=1777
 
   nifi-nginx: &nifi-nginx-volumes
-    - ../../../deployment/security/certificates/nginx:/certificates/nginx:ro
+    - ${SECURITY_DIR:-../../../deployment/security}/certificates/nginx:/certificates/nginx:ro
     - type: bind
-      source: ../../../deployment/security/certificates/root/root-ca.pem
+      source: ${SECURITY_DIR:-../../../deployment/security}/certificates/root/root-ca.pem
       target: /certificates/root/root-ca.pem
       read_only: true
       bind:
