@@ -42,8 +42,8 @@ or `cluster.local`.
 Export `KIBANA_PASSWORD` for `kibanaserver`. Set `OS_NIFI_PASSWORD`,
 `OS_PIPELINE_PASSWORD`, or `OS_ANALYST_PASSWORD` to create `nifi`,
 `cogstack_pipeline`, or `cogstack_user`, respectively. Export the absolute
-`SECURITY_DIR` for a packaged chart or custom certificate location. Once the
-OpenSearch pod is running, initialize Security before starting Dashboards.
+`SECURITY_DIR` for a packaged chart or custom certificate location. After the
+OpenSearch cluster forms, initialize Security once before starting Dashboards.
 
 ```bash
 bash "$chart/security/bootstrap.sh" kubectl -n search exec -i opensearch-cluster-master-0 --
@@ -51,6 +51,24 @@ bash "$chart/security/bootstrap.sh" kubectl -n search exec -i opensearch-cluster
 
 From inside the cluster, clients can use
 `https://opensearch-cluster-master.search.svc:9200`.
+
+## Replicas
+
+Set `OPENSEARCH_K3S_REPLICA_COUNT` in `deployment/env/opensearch.env`
+and run `make -C deployment helm-values-opensearch` before installing or
+scaling up with Helm. The default is one replica. Required pod anti-affinity
+places each replica on a separate Kubernetes node, so two replicas require
+two schedulable nodes.
+
+To exclude nodes, set `OPENSEARCH_K3S_BLACKLIST` in the same env file to
+comma-separated names from `kubectl get nodes`, such as `worker-1,worker-2`.
+An empty list allows all otherwise eligible nodes. Rerender the values and
+upgrade the release after editing the list. A replica with a PVC tied to an
+excluded node can stay Pending.
+
+Both members of a two-node cluster are needed for quorum. Use three replicas
+on three nodes to tolerate one node failure.
+[OpenSearch quorum rules](https://docs.opensearch.org/3.9/tuning-your-cluster/discovery-cluster-formation/voting-quorums/)
 
 ## Storage
 

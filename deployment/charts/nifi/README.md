@@ -79,10 +79,10 @@ with the projected public CA.
 
 ## Environment-based values
 
-`values.yaml` contains reusable defaults. `values.env.yaml` is an optional
-`envsubst` input for deployment-specific UID/GID, ports and resource limits.
-Populate all referenced variables and render it to a separate values file before
-passing it to Helm; Helm does not expand `${VARIABLE}` placeholders.
+Run `make -C deployment helm-values-nifi` to render `values.env.yaml` using
+`deployment/env/nifi.env`. Set `NIFI_K3S_WHITELIST` to comma-separated names
+from `kubectl get nodes` to populate `allowedNodes`. An empty list allows any
+otherwise eligible node.
 
 ## Resource names
 

@@ -20,6 +20,18 @@ spec:
       annotations:
         checksum/tls-config: {{ include (print $.Template.BasePath "/tls-configmap.yaml") . | sha256sum }}
     spec:
+      {{- with .Values.allowedNodes }}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              {{- range . }}
+              - matchFields:
+                  - key: metadata.name
+                    operator: In
+                    values: [{{ . | quote }}]
+              {{- end }}
+      {{- end }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}

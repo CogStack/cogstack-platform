@@ -1,2 +1,9 @@
 opensearch-dashboards:
   opensearchHosts: https://opensearch-cluster-master:9200
+  resources:
+    requests:
+      cpu: "1"
+      memory: "1Gi"
+    limits:
+      cpu: "1"
+      memory: "1Gi"

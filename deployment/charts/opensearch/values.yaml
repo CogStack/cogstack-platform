@@ -1,4 +1,7 @@
 opensearch:
+  replicas: 1
+  antiAffinity: hard
+  nodeAffinity: {}
   # Each StatefulSet pod gets its own claim from the cluster's default StorageClass.
   persistence:
     enabled: true

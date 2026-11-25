@@ -2,6 +2,7 @@ nameOverride: ""
 fullnameOverride: ""
 
 replicaCount: 1
+allowedNodes: []
 
 image:
   repository: cogstacksystems/nifi

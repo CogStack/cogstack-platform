@@ -120,6 +120,31 @@ helm-values-nifi helm-values-nginx helm-values-opensearch helm-values-opensearch
 	fi; \
 	. "$$env_file"; \
 	set +a; \
+	case "$$service" in \
+		nifi) node_setting=NIFI_K3S_WHITELIST; export NIFI_K3S_ALLOWED_NODES='[]';; \
+		opensearch) node_setting=OPENSEARCH_K3S_BLACKLIST; export OPENSEARCH_K3S_NODE_AFFINITY='{}';; \
+		*) node_setting=;; \
+	esac; \
+	if [ -n "$$node_setting" ]; then \
+		node_list="$${!node_setting}"; \
+		IFS=$$' ,\t' read -r -a nodes <<< "$${node_list//$$'\n'/ }"; \
+		if (( $${#nodes[@]} )); then \
+			node_label='[a-z0-9]([a-z0-9-]*[a-z0-9])?'; \
+			for node in "$${nodes[@]}"; do \
+				if [[ $${#node} -gt 253 || ! "$$node" =~ ^$$node_label([.]$$node_label)*$$ ]]; then \
+					printf 'Invalid Kubernetes node name in %s: %s\n' "$$node_setting" "$$node" >&2; \
+					exit 1; \
+				fi; \
+			done; \
+			if [ "$$service" = nifi ]; then \
+				printf -v names '"%s",' "$${nodes[@]}"; \
+				NIFI_K3S_ALLOWED_NODES="[$${names%,}]"; \
+			else \
+				printf -v fields '{key: metadata.name, operator: NotIn, values: ["%s"]},' "$${nodes[@]}"; \
+				OPENSEARCH_K3S_NODE_AFFINITY="{requiredDuringSchedulingIgnoredDuringExecution: {nodeSelectorTerms: [{matchFields: [$${fields%,}]}]}}"; \
+			fi; \
+		fi; \
+	fi; \
 	chart="charts/$$service"; \
 	template="$$chart/values.env.yaml"; \
 	variables=$$(envsubst --variables "$$(cat "$$template")"); \
