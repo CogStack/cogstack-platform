@@ -1,0 +1,19 @@
+_meta:
+  type: rolesmapping
+  config_version: 2
+
+cogstack_ingest:
+  backend_roles: [cogstack_ingest]
+  users: [nifi, cogstack_pipeline]
+
+cogstack_access:
+  backend_roles: [cogstack_access]
+  users: [cogstack_user]
+
+kibana_user:
+  backend_roles: [cogstack_access]
+  users: [cogstack_user]
+
+kibana_server:
+  reserved: true
+  users: [kibanaserver]

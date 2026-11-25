@@ -1,0 +1,18 @@
+_meta:
+  type: roles
+  config_version: 2
+
+cogstack_ingest:
+  cluster_permissions: ['indices:data/write/bulk']
+  index_permissions:
+    - index_patterns: ['nifi_*', 'cogstack_*']
+      allowed_actions: [create_index, index]
+
+cogstack_access:
+  cluster_permissions: [cluster_composite_ops_ro]
+  index_permissions:
+    - index_patterns: ['nifi_*', 'cogstack_*']
+      allowed_actions: [read]
+  tenant_permissions:
+    - tenant_patterns: [cogstack_tenant]
+      allowed_actions: [kibana_all_read]

@@ -21,8 +21,8 @@ certs="${SECURITY_DIR:-deployment/security}/certificates/opensearch"
 ```
 
 For a packaged chart, set `chart=./opensearch` after extracting it and point
-`certs` at your certificate directory. The archive contains the chart dependency
-and the shared OpenSearch config.
+`certs` at your certificate directory. The archive contains the chart dependency,
+the shared OpenSearch config, and the Security policy.
 
 ```bash
 kubectl create namespace search
@@ -37,9 +37,17 @@ helm upgrade --install opensearch "$chart" -n search \
 Helm loads the bundled [`opensearch.yml`](config/opensearch.yml) through `--set-file`.
 Transport TLS checks the CA and shared node DN. Set `KUBE_NAMESPACE` or
 `CLUSTER_DOMAIN` when issuing the certificate if either differs from `search`
-or `cluster.local`. For a fresh cluster, initialize the Security index with
-your Security plugin configuration and the local `admin.crt` and `admin.key.pem`.
-[`securityadmin.sh` instructions](https://docs.opensearch.org/latest/security/configuration/security-admin/)
+or `cluster.local`.
+
+Export `KIBANA_PASSWORD` for `kibanaserver`. Set `OS_NIFI_PASSWORD`,
+`OS_PIPELINE_PASSWORD`, or `OS_ANALYST_PASSWORD` to create `nifi`,
+`cogstack_pipeline`, or `cogstack_user`, respectively. Export the absolute
+`SECURITY_DIR` for a packaged chart or custom certificate location. Once the
+OpenSearch pod is running, initialize Security before starting Dashboards.
+
+```bash
+bash "$chart/security/bootstrap.sh" kubectl -n search exec -i opensearch-cluster-master-0 --
+```
 
 From inside the cluster, clients can use
 `https://opensearch-cluster-master.search.svc:9200`.
