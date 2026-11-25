@@ -22,7 +22,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
-      SMOKE_PROJECT: opensearch-smoke-${{ github.run_id }}
+      SECURITY_DIR: ${{ github.workspace }}/deployment/security
+      KIBANA_PASSWORD: kibanaserver
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-java@v6
@@ -30,66 +31,40 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: Smoke test OpenSearch and Dashboards
+      - name: Start the default stack and log in
+        shell: bash
         run: |
-          set -euo pipefail
-          source apps/opensearch/env/opensearch.env
-          source apps/opensearch-dashboards/env/opensearch-dashboards.env
-          SECURITY_DIR=$(mktemp -d "$RUNNER_TEMP/opensearch-smoke.XXXXXX")
           password=$(openssl rand -hex 16)
-          export SECURITY_DIR ROOT_CERTIFICATE_KEYSTORE_PASSWORD="$password" OS_CERTIFICATE_PASSWORD="$password"
-          make -C deployment certs-root
-          make -C deployment certs-opensearch-nodes NODES=opensearch-shared OPENSEARCH_NODE_DNS_NAMES=localhost
-          OPENSEARCH_DASHBOARDS_DNS_NAMES=localhost ./deployment/scripts/security/create_opensearch_client_admin_certs.sh
-
+          export ROOT_CERTIFICATE_KEYSTORE_PASSWORD="$password" OS_CERTIFICATE_PASSWORD="$password"
+          make -C deployment certs-root certs-opensearch
+          OPENSEARCH_DASHBOARDS_DNS_NAMES=localhost ./deployment/scripts/security/create_opensearch_client_admin_certs.sh --dashboards-only
           certs="$SECURITY_DIR/certificates/opensearch"
-          ca="$certs/elastic-stack-ca.crt.pem"
-          mkdir "$SECURITY_DIR"/{node,dashboards}
-          install -m 644 "$certs/opensearch-shared.crt" "$SECURITY_DIR/node/node.crt"
-          install -m 644 "$certs/opensearch-shared.key" "$SECURITY_DIR/node/node.key"
-          install -m 644 "$ca" "$SECURITY_DIR/node/ca.crt"
-          install -m 644 "$certs"/es_kibana_client.{pem,key} "$ca" "$SECURITY_DIR/dashboards/"
+          sudo chown 1000:1000 "$certs"/{opensearch-shared.key,es_kibana_client.key}
+          request=(curl -fsS --cacert "$SECURITY_DIR/certificates/root/root-ca.pem" \
+            --retry 30 --retry-all-errors --retry-delay 3 --max-time 10)
 
-          docker network create "$SMOKE_PROJECT"
-          docker run -d --name "$SMOKE_PROJECT" --network "$SMOKE_PROJECT" --network-alias opensearch \
-            -p 127.0.0.1::9200 -e discovery.type=single-node -e "OPENSEARCH_JAVA_OPTS=$OPENSEARCH_JAVA_OPTS" \
-            -e DISABLE_INSTALL_DEMO_CONFIG=true -e OPENSEARCH_ALLOW_DEFAULT_INIT_SECURITYINDEX=true \
-            -v "$PWD/apps/opensearch/config/opensearch.yml:/usr/share/opensearch/config/opensearch.yml:ro" \
-            -v "$SECURITY_DIR/node:/usr/share/opensearch/config/tls:ro" "$OPENSEARCH_DOCKER_IMAGE"
+          search() { docker compose -f apps/opensearch/docker/docker-compose.yml "$@"; }
+          search up -d
+          "${request[@]}" --cert "$certs/admin.crt" --key "$certs/admin.key.pem" \
+            -o /dev/null https://localhost:9200/_cluster/health
+          tar -C "$certs" -cf - admin.crt admin.key.pem | search exec -T opensearch tar -xf - -C /tmp
+          search exec -T opensearch plugins/opensearch-security/tools/securityadmin.sh \
+            -icl -cd config/opensearch-security -cacert config/tls/ca.crt \
+            -cert /tmp/admin.crt -key /tmp/admin.key.pem
 
-          request=(curl -fsS --noproxy '*' --cacert "$ca" --connect-timeout 3 --max-time 20)
-          port=$(docker port "$SMOKE_PROJECT" 9200/tcp)
-          "${request[@]}" --retry 30 --retry-all-errors --retry-delay 3 --retry-max-time 180 \
-            --cert "$certs/admin.crt" --key "$certs/admin.key.pem" \
-            "https://localhost:${port##*:}/_cluster/health?wait_for_status=yellow&timeout=10s" |
-            jq -e '.timed_out == false and (.status == "green" or .status == "yellow")'
-
-          docker run -d --name "$SMOKE_PROJECT-dashboards" --network "$SMOKE_PROJECT" -p 127.0.0.1::5601 \
-            -e "OPENSEARCH_DASHBOARDS_SERVER_NAME=$OPENSEARCH_DASHBOARDS_SERVER_NAME" \
-            -e 'OPENSEARCH_HOSTS=["https://opensearch:9200"]' -e KIBANA_USER=kibanaserver -e KIBANA_PASSWORD=kibanaserver \
-            -v "$PWD/apps/opensearch-dashboards/config/opensearch.yml:/usr/share/opensearch-dashboards/config/opensearch_dashboards.yml:ro" \
-            -v "$SECURITY_DIR/dashboards:/certificates/elastic/opensearch:ro" \
-            "$OPENSEARCH_DASHBOARDS_DOCKER_IMAGE" --status.allowAnonymous=true
-
-          port=$(docker port "$SMOKE_PROJECT-dashboards" 5601/tcp)
-          for _ in {1..40}; do
-            if "${request[@]}" "https://localhost:${port##*:}/api/status?v8format=true" 2>/dev/null |
-              jq -e '.status.core | .opensearch.level == "available" and .savedObjects.level == "available"'; then
-              exit 0
-            fi
-            sleep 3
-          done
-          echo 'Dashboards did not connect to OpenSearch' >&2
-          exit 1
-
-      - name: Logs on failure
-        if: failure()
-        run: |
-          docker logs "$SMOKE_PROJECT" || true
-          docker logs "$SMOKE_PROJECT-dashboards" || true
+          docker compose -f apps/opensearch-dashboards/docker/docker-compose.yml up -d
+          "${request[@]}" -H 'osd-xsrf: smoke' --json '{"username":"kibanaro","password":"kibanaro"}' \
+            https://localhost:5601/auth/login | jq -e '.username == "kibanaro"'
 
       - name: Cleanup
         if: always()
+        env:
+          SMOKE_JOB_STATUS: ${{ job.status }}
         run: |
-          docker rm -fv "$SMOKE_PROJECT" "$SMOKE_PROJECT-dashboards" || true
-          docker network rm "$SMOKE_PROJECT" || true
+          for app in opensearch-dashboards opensearch; do
+            compose=(docker compose -f "apps/$app/docker/docker-compose.yml")
+            if [[ "$SMOKE_JOB_STATUS" == failure ]]; then
+              "${compose[@]}" logs --tail 50 || true
+            fi
+            "${compose[@]}" down -v
+          done
