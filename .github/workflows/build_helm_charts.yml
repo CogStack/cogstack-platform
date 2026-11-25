@@ -21,10 +21,12 @@ on:
       - "helm-charts/*-v*.*.*" # e.g., helm-charts/medcat-trainer-helm-v0.1.2
     paths:
       - "deployment/charts/**"
+      - "apps/opensearch/config/opensearch.yml"
       - ".github/workflows/build_helm_charts.yml"
   pull_request:
     paths:
       - "deployment/charts/**"
+      - "apps/opensearch/config/opensearch.yml"
       - ".github/workflows/build_helm_charts.yml"
 
 defaults:

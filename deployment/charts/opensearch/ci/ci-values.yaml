@@ -1,5 +1,6 @@
 opensearch:
   replicas: 1
+  secretMounts: []
   extraEnvs:
     - name: OPENSEARCH_INITIAL_ADMIN_PASSWORD
       value: "CogStack-Chart-Test9!"
