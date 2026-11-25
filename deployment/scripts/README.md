@@ -36,7 +36,7 @@ The legacy `NIFI_KEYSTORE_PASSWORD` and `NIFI_TRUSTSTORE_PASSWORD` names are
 also accepted.
 
 Choose the command for your deployment. The default NiFi certificate covers
-`nifi`, `localhost`, `cogstack-nifi`, `cogstack-nifi-web`, and `127.0.0.1`.
+`nifi`, `localhost`, `cogstack-nifi`, `cogstack-nifi-headless`, and `127.0.0.1`.
 
 ```bash
 ./deployment/scripts/security/create_nifi_certs.sh
@@ -50,7 +50,7 @@ NIFI_UPSTREAM_TLS_NAME=nifi.internal.example ./deployment/scripts/security/creat
 ```
 
 For Kubernetes, set `KUBE_NAMESPACE` to include the web Service's full name.
-For example, `cogstack` adds `cogstack-nifi-web.cogstack.svc.cluster.local`.
+For example, `cogstack` adds `cogstack-nifi.cogstack.svc.cluster.local`.
 Set `CLUSTER_DOMAIN` if your cluster uses a domain other than `cluster.local`.
 
 ```bash

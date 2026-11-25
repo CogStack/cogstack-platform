@@ -9,7 +9,7 @@ nginx:
   internalPort: 8443
 
 nifi:
-  # Empty uses cogstack-nifi-web.<namespace>.svc.cluster.local; override with a full DNS name.
+  # Empty uses cogstack-nifi.<namespace>.svc.cluster.local; override with a full DNS name.
   host: ""
   port: 8443
   tlsName: nifi

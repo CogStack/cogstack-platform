@@ -5,7 +5,7 @@ metadata:
   name: cogstack-nifi
 
 spec:
-  serviceName: cogstack-nifi
+  serviceName: cogstack-nifi-headless
   replicas: {{ .Values.replicaCount }}
   persistentVolumeClaimRetentionPolicy:
     whenDeleted: Retain

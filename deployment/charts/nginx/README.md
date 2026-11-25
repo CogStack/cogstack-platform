@@ -20,7 +20,7 @@ certificate Secret names with `tls.rootCASecret` and `tls.existingSecret`.
 The chart references these inputs rather than creating them from host files.
 
 By default, the proxy connects to
-`cogstack-nifi-web.<release-namespace>.svc.cluster.local:8443`, which matches the
+`cogstack-nifi.<release-namespace>.svc.cluster.local:8443`, which matches the
 Service from `deployment/charts/nifi`. Set `nifi.host` and `nifi.port`
 for another upstream. `nifi.tlsName` must match the upstream certificate's TLS
 name; it defaults to `nifi`.

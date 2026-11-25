@@ -1,8 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: cogstack-nifi
+  name: cogstack-nifi-headless
 spec:
+  type: ClusterIP
   clusterIP: None
   selector:
     app: cogstack-nifi
@@ -13,7 +14,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: cogstack-nifi-web
+  name: cogstack-nifi
 spec:
   type: ClusterIP
   selector:

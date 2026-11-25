@@ -43,7 +43,7 @@ required by the deployment.
 For local access:
 
 ```bash
-kubectl -n cogstack port-forward svc/cogstack-nifi-web 8443:8443
+kubectl -n cogstack port-forward svc/cogstack-nifi 8443:8443
 ```
 
 Open `https://localhost:8443/nifi/` using the deployment's trusted CA and
@@ -86,7 +86,11 @@ passing it to Helm; Helm does not expand `${VARIABLE}` placeholders.
 
 ## Resource names
 
-The chart currently uses fixed `cogstack-nifi` workload and headless Service names
-and a `cogstack-nifi-web` web Service. Use separate namespaces for independent
-deployments. Increasing `replicaCount` also requires appropriate NiFi cluster
+The `cogstack-nifi` StatefulSet uses `cogstack-nifi-headless` for pod DNS.
+Clients connect to the `cogstack-nifi` ClusterIP Service. Use separate namespaces
+for independent deployments. Increasing `replicaCount` requires NiFi cluster
 configuration, node identities and certificates in the supplied runtime inputs.
+
+Upgrades from the previous Service names require recreating the StatefulSet and
+the old `cogstack-nifi` headless Service. Keep the existing PVCs for the recreated
+StatefulSet.

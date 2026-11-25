@@ -85,7 +85,7 @@ trap 'exit 143' TERM
 # === Add deployment-specific SANs to the template defaults
 names=("${NIFI_UPSTREAM_TLS_NAME:-}" "${NIFI_HEALTHCHECK_HOST:-}")
 if [[ -n "${KUBE_NAMESPACE:-}" ]]; then
-    names+=("cogstack-nifi-web.${KUBE_NAMESPACE}.svc.${CLUSTER_DOMAIN:-cluster.local}")
+    names+=("cogstack-nifi.${KUBE_NAMESPACE}.svc.${CLUSTER_DOMAIN:-cluster.local}")
 fi
 
 {
