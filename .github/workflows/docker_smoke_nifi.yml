@@ -1,4 +1,4 @@
-name: smoke-nifi-services
+name: docker_smoke_nifi
 
 on:
   push:
@@ -6,7 +6,11 @@ on:
     paths: &paths
       - 'apps/nifi/**'
       - 'apps/nginx/**'
-      - '.github/workflows/smoke_nifi_services.yml'
+      - 'deployment/Makefile'
+      - 'deployment/env/*_dev.env'
+      - 'deployment/scripts/security/**'
+      - 'deployment/security/templates/**'
+      - '.github/workflows/docker_smoke_nifi.yml'
       - '!**/*.md'
       - '!**/README*'
   pull_request:
@@ -33,7 +37,7 @@ jobs:
     env:
       COMPOSE_FILE: docker-compose.base.yml:docker-compose.dev.yml
       COMPOSE_PROJECT_NAME: nifi-smoke
-      CERT_DIR: ../../../deployment/security/certificates
+      SECURITY_DIR: ${{ github.workspace }}/deployment/security
 
     steps:
       - uses: actions/checkout@v7
@@ -46,38 +50,11 @@ jobs:
 
       - name: Generate smoke fixtures
         run: |
-          scratch_dir="$(mktemp -d)"
-          trap 'rm -rf "$scratch_dir"' EXIT
-          mkdir -p "$CERT_DIR"/{root,nifi,nginx} ../env
-          ca_cert="$CERT_DIR/root/root-ca.pem"
           password="$(openssl rand -hex 16)"
+          ROOT_CERTIFICATE_KEYSTORE_PASSWORD="$password" KEYSTORE_PASSWORD="$password" TRUSTSTORE_PASSWORD="$password" \
+            make -C ../../../deployment certs
 
-          openssl req -x509 -newkey rsa:2048 -nodes -days 1 -subj '/CN=NiFi smoke CA' \
-            -addext 'basicConstraints=critical,CA:TRUE' \
-            -addext 'keyUsage=critical,keyCertSign,cRLSign' \
-            -keyout "$scratch_dir/ca.key" -out "$ca_cert"
-
-          issue_cert() {
-            local subject="$1" san="$2" key="$3" cert="$4"
-            openssl req -new -newkey rsa:2048 -nodes -subj "/CN=$subject" \
-              -keyout "$key" -out "$scratch_dir/leaf.csr"
-            openssl x509 -req -days 1 -in "$scratch_dir/leaf.csr" \
-              -CA "$ca_cert" -CAkey "$scratch_dir/ca.key" \
-              -CAserial "$scratch_dir/ca.srl" -CAcreateserial \
-              -extfile <(printf 'subjectAltName=%s\nextendedKeyUsage=serverAuth\n' "$san") -out "$cert"
-          }
-          issue_cert nifi DNS:nifi "$scratch_dir/nifi.key" "$scratch_dir/nifi.pem"
-          issue_cert 127.0.0.1 IP:127.0.0.1 "$CERT_DIR/nginx/tls.key" "$CERT_DIR/nginx/tls.crt"
-
-          openssl pkcs12 -export -name nifi -inkey "$scratch_dir/nifi.key" \
-            -in "$scratch_dir/nifi.pem" -certfile "$ca_cert" \
-            -out "$scratch_dir/nifi.p12" -passout "pass:$password"
-          keytool -importkeystore -noprompt \
-            -srckeystore "$scratch_dir/nifi.p12" -srcstoretype PKCS12 -srcstorepass "$password" \
-            -destkeystore "$CERT_DIR/nifi/nifi-keystore.jks" -deststoretype JKS -deststorepass "$password"
-          keytool -importcert -noprompt -alias root-ca -file "$ca_cert" \
-            -keystore "$CERT_DIR/nifi/nifi-truststore.jks" -storetype JKS -storepass "$password"
-
+          mkdir -p ../env
           touch ../env/general.env
           cat > ../env/nifi.env <<EOF
           NIFI_DOCKER_CPU_MIN=1
@@ -88,11 +65,7 @@ jobs:
           SINGLE_USER_CREDENTIALS_USERNAME=smoke
           SINGLE_USER_CREDENTIALS_PASSWORD=$password
           NIFI_SENSITIVE_PROPS_KEY=$(openssl rand -hex 16)
-          KEYSTORE_PATH=/security/certificates/nifi/nifi-keystore.jks
-          KEYSTORE_TYPE=JKS
           KEYSTORE_PASSWORD=$password
-          TRUSTSTORE_PATH=/security/certificates/nifi/nifi-truststore.jks
-          TRUSTSTORE_TYPE=JKS
           TRUSTSTORE_PASSWORD=$password
           EOF
 
@@ -108,7 +81,7 @@ jobs:
           make start-nifi-dev-build
           source ./export_env_vars.sh
           url=https://127.0.0.1:8443
-          request=(curl --silent --show-error --noproxy '*' --cacert "$CERT_DIR/root/root-ca.pem" --connect-timeout 5 --max-time 20)
+          request=(curl --silent --show-error --noproxy '*' --cacert "$SECURITY_DIR/certificates/root/root-ca.pem" --connect-timeout 5 --max-time 20)
 
           for route in / /nifi/; do
             code="$("${request[@]}" --fail --retry 30 --retry-all-errors --retry-delay 10 --retry-max-time 600 \
