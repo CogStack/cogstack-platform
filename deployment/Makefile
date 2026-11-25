@@ -61,8 +61,48 @@ certs-opensearch-nodes: ## Generate OpenSearch node certificates for NODES="node
 
 # ======================================================================================================================================================
 
-.PHONY: helm-values-nifi helm-values-nginx helm-values-opensearch helm-values-opensearch-dashboards
+.PHONY: k3s-load-certs k3s-load-certs-all k3s-load-certs-root-ca k3s-load-certs-nifi k3s-load-certs-nginx k3s-load-certs-opensearch
 
+k3s-load-certs: k3s-load-certs-all ## Alias for k3s-load-certs-all
+k3s-load-certs-all: ## Load all TLS Secrets for NiFi, NGINX and OpenSearch
+k3s-load-certs-root-ca: ## Load the public CA and NiFi truststore into cogstack-root-ca
+k3s-load-certs-nifi: ## Load the NiFi keystore into nifi-tls
+k3s-load-certs-nginx: ## Load the NGINX certificate and key into nginx-tls
+k3s-load-certs-opensearch: ## Load the shared node certificate into opensearch-node-tls
+
+k3s-load-certs-all k3s-load-certs-root-ca k3s-load-certs-nifi k3s-load-certs-nginx k3s-load-certs-opensearch:
+	@set -eo pipefail; \
+	. ./env/general.env; \
+	namespace="$${KUBE_NAMESPACE:?Set KUBE_NAMESPACE in env/general.env}"; \
+	certs="$${SECURITY_DIR:-security}/certificates"; \
+	services=$(@:k3s-load-certs-%=%); \
+	if [ "$$services" = all ]; then services="root-ca nifi nginx opensearch"; fi; \
+	manifests=(); \
+	for service in $$services; do \
+		case "$$service" in \
+			root-ca) secret=(generic cogstack-root-ca \
+				--from-file="ca.crt=$$certs/root/root-ca.pem" \
+				--from-file="truststore.jks=$$certs/nifi/nifi-truststore.jks");; \
+			nifi) secret=(generic nifi-tls \
+				--from-file="nifi-keystore.jks=$$certs/nifi/nifi-keystore.jks");; \
+			nginx) secret=(tls nginx-tls \
+				--cert="$$certs/nginx/tls.crt" --key="$$certs/nginx/tls.key");; \
+			opensearch) secret=(generic opensearch-node-tls \
+				--from-file="node.crt=$$certs/opensearch/opensearch-shared.crt" \
+				--from-file="node.key=$$certs/opensearch/opensearch-shared.key" \
+				--from-file="ca.crt=$$certs/opensearch/elastic-stack-ca.crt.pem");; \
+		esac; \
+		manifest=$$(kubectl -n "$$namespace" create secret "$${secret[@]}" --dry-run=client -o yaml); \
+		manifests+=("$$manifest"); \
+	done; \
+	printf -- '---\n%s\n' "$${manifests[@]}" | \
+		kubectl -n "$$namespace" apply --server-side --field-manager=cogstack-certificates -f -
+
+# ======================================================================================================================================================
+
+.PHONY: helm-values-all helm-values-nifi helm-values-nginx helm-values-opensearch helm-values-opensearch-dashboards
+
+helm-values-all: helm-values-nifi helm-values-nginx helm-values-opensearch helm-values-opensearch-dashboards ## Render all four charts' environment-based values
 helm-values-nifi: ## Render NiFi values.yaml from env/nifi.env
 helm-values-nginx: ## Render NGINX values.yaml from env/nifi.env and optional env/nginx.env
 helm-values-opensearch: ## Render OpenSearch values.yaml from env/opensearch.env
