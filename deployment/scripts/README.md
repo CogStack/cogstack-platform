@@ -11,8 +11,11 @@ is 1,460 days for the root CA and OpenSearch certificates and 397 days for
 NiFi and NGINX. The root CA, NiFi and OpenSearch node generators also use
 Java's `keytool`. `SECURITY_DIR` defaults to `deployment/security/`.
 
-For local development, load the [sample store passwords](../env/certificates_dev.env)
-before running the root CA and NiFi generators.
+The generators prompt for missing passwords with hidden input in a terminal.
+Export the required variables before running from CI or with redirected input.
+
+To use [sample store passwords](../env/certificates_dev.env) for local development,
+load them before running the root CA and NiFi generators.
 
 ```bash
 set -a
@@ -20,8 +23,7 @@ source deployment/env/certificates_dev.env
 set +a
 ```
 
-If you need a root CA, export `ROOT_CERTIFICATE_KEYSTORE_PASSWORD` and run this
-from the repository root.
+The root CA generator uses `ROOT_CERTIFICATE_KEYSTORE_PASSWORD`.
 
 ```bash
 ./deployment/scripts/security/create_root_ca_cert.sh
@@ -29,7 +31,7 @@ from the repository root.
 
 ### NiFi
 
-Export the `KEYSTORE_PASSWORD` and `TRUSTSTORE_PASSWORD` that NiFi will use.
+Use the `KEYSTORE_PASSWORD` and `TRUSTSTORE_PASSWORD` that NiFi will use.
 The legacy `NIFI_KEYSTORE_PASSWORD` and `NIFI_TRUSTSTORE_PASSWORD` names are
 also accepted.
 
@@ -76,7 +78,7 @@ It runs without a store password or `keytool`.
 
 ### OpenSearch
 
-Export `OS_CERTIFICATE_PASSWORD` for the Java and PKCS#12 stores. Pass the node
+Use `OS_CERTIFICATE_PASSWORD` for the Java and PKCS#12 stores. Pass the node
 hostnames when generating the node certificates. Generate the Dashboards and
 admin certificates with the second command.
 

@@ -10,7 +10,7 @@
 #
 # Requires:
 #     - Bash, OpenSSL and Java keytool
-#     - ROOT_CERTIFICATE_KEYSTORE_PASSWORD in the environment
+#     - ROOT_CERTIFICATE_KEYSTORE_PASSWORD (prompted when unset)
 #     - ../../security/templates/ssl-extensions-x509.cnf relative to this script
 #
 # Output:
@@ -53,10 +53,6 @@ CRT_FILE="$ROOT_DIR/$CA_NAME.crt"
 CSR_FILE="$ROOT_DIR/$CA_NAME.csr"
 TRUSTSTORE_FILE="$ROOT_DIR/$CA_NAME-truststore.jks"
 
-# OpenSSL and keytool read the store password from the environment.
-: "${ROOT_CERTIFICATE_KEYSTORE_PASSWORD:?Set ROOT_CERTIFICATE_KEYSTORE_PASSWORD}"
-export ROOT_CERTIFICATE_KEYSTORE_PASSWORD
-
 # === Protect existing CA material
 # Replacing a CA invalidates trust for certificates issued under the old key.
 for output in "$KEY_FILE" "$PEM_FILE" "$CRT_FILE" "$CSR_FILE" "$P12_FILE" "$JKS_FILE" "$TRUSTSTORE_FILE"; do
@@ -65,6 +61,10 @@ for output in "$KEY_FILE" "$PEM_FILE" "$CRT_FILE" "$CSR_FILE" "$P12_FILE" "$JKS_
         exit 1
     fi
 done
+
+# shellcheck source=password_prompt.sh
+source "$SCRIPT_DIR/password_prompt.sh"
+require_password ROOT_CERTIFICATE_KEYSTORE_PASSWORD
 
 # Build the entire bundle in a private temporary directory. If publication fails,
 # remove the files written by this run and clean up the temporary directory.

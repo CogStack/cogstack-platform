@@ -61,8 +61,9 @@ done
 roles=(admin)
 files=(admin.crt admin.key.pem admin.csr)
 if [[ "$create_dashboards" == true ]]; then
-    : "${OS_CERTIFICATE_PASSWORD:?Set OS_CERTIFICATE_PASSWORD}"
-    export OS_CERTIFICATE_PASSWORD
+    # shellcheck source=password_prompt.sh
+    source "$script_dir/password_prompt.sh"
+    require_password OS_CERTIFICATE_PASSWORD
     roles=(client admin)
     files=(es_kibana_client.pem es_kibana_client.key es_kibana_client.csr es_kibana_client.p12 "${files[@]}")
 

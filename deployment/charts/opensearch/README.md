@@ -8,8 +8,8 @@ The upstream chart supplies the Kubernetes templates. Set overrides under
 
 The chart defaults to a shared node certificate. From the repository root, build
 the chart dependency and generate the node and admin client certificates with
-an existing CA and `OS_CERTIFICATE_PASSWORD` exported. Use an absolute
-`SECURITY_DIR` for a custom output location.
+an existing CA. The generator prompts for `OS_CERTIFICATE_PASSWORD` when unset.
+Use an absolute `SECURITY_DIR` for a custom output location.
 [Cluster prerequisites](https://docs.opensearch.org/latest/opensearch/install/helm/#prerequisites)
 
 ```bash

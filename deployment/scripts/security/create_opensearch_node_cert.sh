@@ -92,8 +92,6 @@ for node in "$@"; do
     done
 done
 
-: "${OS_CERTIFICATE_PASSWORD:?Set OS_CERTIFICATE_PASSWORD}"
-export OS_CERTIFICATE_PASSWORD
 for input in "$ca_cert" "$ca_key"; do
     if [[ ! -f "$input" || ! -r "$input" || ! -s "$input" ]]; then
         printf 'Missing or unreadable CA file %s. Run create_root_ca_cert.sh first.\n' "$input" >&2
@@ -109,6 +107,10 @@ if [[ -e "$ca_alias" || -L "$ca_alias" ]]; then
     fi
     write_ca_alias=false
 fi
+
+# shellcheck source=password_prompt.sh
+source "$script_dir/password_prompt.sh"
+require_password OS_CERTIFICATE_PASSWORD
 
 # Stage all node bundles before writing deployment files. Roll back writes on failure.
 scratch_dir=$(mktemp -d)

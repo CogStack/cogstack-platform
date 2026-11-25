@@ -9,7 +9,7 @@
 #
 # Requires:
 #     - Bash, OpenSSL and Java keytool
-#     - KEYSTORE_PASSWORD and TRUSTSTORE_PASSWORD in the environment
+#     - KEYSTORE_PASSWORD and TRUSTSTORE_PASSWORD (prompted when unset)
 #     - root-ca.pem and root-ca.key under certificates/root/ in SECURITY_DIR
 #
 # Optional environment variables:
@@ -46,10 +46,6 @@ ca_cert="$security_dir/certificates/root/root-ca.pem"
 ca_key="$security_dir/certificates/root/root-ca.key"
 output_dir="$security_dir/certificates/nifi"
 
-export KEYSTORE_PASSWORD="${KEYSTORE_PASSWORD:-${NIFI_KEYSTORE_PASSWORD:-}}"
-export TRUSTSTORE_PASSWORD="${TRUSTSTORE_PASSWORD:-${NIFI_TRUSTSTORE_PASSWORD:-}}"
-: "${KEYSTORE_PASSWORD:?Set KEYSTORE_PASSWORD}" "${TRUSTSTORE_PASSWORD:?Set TRUSTSTORE_PASSWORD}"
-
 for input in "$ca_cert" "$ca_key"; do
     if [[ ! -f "$input" || ! -r "$input" || ! -s "$input" ]]; then
         printf 'Missing or unreadable CA file %s. Run create_root_ca_cert.sh first.\n' "$input" >&2
@@ -64,6 +60,13 @@ for file in "${files[@]}"; do
         exit 1
     fi
 done
+
+KEYSTORE_PASSWORD=${KEYSTORE_PASSWORD:-${NIFI_KEYSTORE_PASSWORD:-}}
+TRUSTSTORE_PASSWORD=${TRUSTSTORE_PASSWORD:-${NIFI_TRUSTSTORE_PASSWORD:-}}
+# shellcheck source=password_prompt.sh
+source "$script_dir/password_prompt.sh"
+require_password KEYSTORE_PASSWORD
+require_password TRUSTSTORE_PASSWORD
 
 # Build the whole bundle before publishing it. Clean up files written by this
 # run if any of the final writes fail.
