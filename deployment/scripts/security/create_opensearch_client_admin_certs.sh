@@ -4,8 +4,9 @@
 # 🔐 Create the OpenSearch Dashboards and admin certificates and keys
 #
 # Usage:
-#     ./create_opensearch_client_admin_certs.sh [--admin-only] [--days DAYS]
+#     ./create_opensearch_client_admin_certs.sh [--admin-only|--dashboards-only] [--days DAYS]
 #     --admin-only skips the Dashboards certificate and PKCS#12 bundle.
+#     --dashboards-only skips the admin client certificate.
 #     DAYS is a positive integer. The default validity is 1,460 days.
 #
 # Requires:
@@ -32,14 +33,13 @@ set -euo pipefail
 umask 077
 
 days=1460
-create_dashboards=true
-if [[ ${1:-} == --admin-only ]]; then
-    create_dashboards=false
-    shift
-fi
+mode=
+case ${1:-} in
+    --admin-only|--dashboards-only) mode=$1; shift ;;
+esac
 if (( $# > 0 )); then
     if [[ $# -ne 2 || "$1" != --days || ! "$2" =~ ^[1-9][0-9]*$ ]]; then
-        printf 'Usage: %s [--admin-only] [--days DAYS] (DAYS must be a positive integer)\n' "$0" >&2
+        printf 'Usage: %s [--admin-only|--dashboards-only] [--days DAYS] (DAYS must be a positive integer)\n' "$0" >&2
         exit 2
     fi
     days=$2
@@ -58,14 +58,14 @@ for input in "$ca_cert" "$ca_key"; do
     fi
 done
 
-roles=(admin)
-files=(admin.crt admin.key.pem admin.csr)
-if [[ "$create_dashboards" == true ]]; then
+roles=()
+files=()
+if [[ "$mode" != --admin-only ]]; then
     # shellcheck source=password_prompt.sh
     source "$script_dir/password_prompt.sh"
     require_password OS_CERTIFICATE_PASSWORD
-    roles=(client admin)
-    files=(es_kibana_client.pem es_kibana_client.key es_kibana_client.csr es_kibana_client.p12 "${files[@]}")
+    roles=(client)
+    files=(es_kibana_client.pem es_kibana_client.key es_kibana_client.csr es_kibana_client.p12)
 
     sans=DNS:opensearch-dashboards,DNS:kibana
     if [[ -n "${OPENSEARCH_DASHBOARDS_DNS_NAMES:-}" ]]; then
@@ -77,6 +77,10 @@ if [[ "$create_dashboards" == true ]]; then
         fi
         sans+=",DNS:${OPENSEARCH_DASHBOARDS_DNS_NAMES//,/,DNS:}"
     fi
+fi
+if [[ "$mode" != --dashboards-only ]]; then
+    roles+=(admin)
+    files+=(admin.crt admin.key.pem admin.csr)
 fi
 
 for file in "${files[@]}"; do
@@ -123,7 +127,7 @@ for role in "${roles[@]}"; do
     openssl verify -CAfile "$ca_cert" "$scratch_dir/$cert" >/dev/null
 done
 
-if [[ "$create_dashboards" == true ]]; then
+if [[ "$mode" != --admin-only ]]; then
     openssl pkcs12 -export -name es_kibana_client -inkey "$scratch_dir/es_kibana_client.key" \
         -in "$scratch_dir/es_kibana_client.pem" -certfile "$ca_cert" -out "$scratch_dir/es_kibana_client.p12" \
         -keypbe AES-256-CBC -certpbe AES-256-CBC -passout env:OS_CERTIFICATE_PASSWORD

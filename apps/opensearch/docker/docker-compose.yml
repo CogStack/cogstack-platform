@@ -1,0 +1,5 @@
+name: opensearch
+
+include:
+  - path: docker-compose.base.yml
+    env_file: ../env/opensearch.env

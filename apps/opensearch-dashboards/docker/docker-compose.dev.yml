@@ -1,0 +1,10 @@
+name: opensearch-dashboards-dev
+
+services:
+  opensearch-dashboards:
+    environment:
+      KIBANA_PASSWORD: ${KIBANA_PASSWORD:-kibanaserver}
+
+networks:
+  cognet:
+    name: opensearch-dev-net

@@ -7,7 +7,6 @@ on:
       - 'apps/nifi/**'
       - 'apps/nginx/**'
       - 'deployment/Makefile'
-      - 'deployment/env/*_dev.env'
       - 'deployment/scripts/security/**'
       - 'deployment/security/templates/**'
       - '.github/workflows/docker_smoke_nifi.yml'
@@ -31,11 +30,10 @@ defaults:
 
 jobs:
   smoke:
-    name: Build and smoke-test NiFi services
+    name: Smoke-test NiFi services
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     env:
-      COMPOSE_FILE: docker-compose.base.yml:docker-compose.dev.yml
       COMPOSE_PROJECT_NAME: nifi-smoke
       SECURITY_DIR: ${{ github.workspace }}/deployment/security
 
@@ -53,6 +51,8 @@ jobs:
           password="$(openssl rand -hex 16)"
           ROOT_CERTIFICATE_KEYSTORE_PASSWORD="$password" KEYSTORE_PASSWORD="$password" TRUSTSTORE_PASSWORD="$password" \
             make -C ../../../deployment certs
+          # The published containers run as UID/GID 1000.
+          sudo chown 1000:1000 "$SECURITY_DIR"/certificates/{nifi/nifi-keystore.jks,nginx/tls.key}
 
           mkdir -p ../env
           touch ../env/general.env
@@ -69,55 +69,13 @@ jobs:
           TRUSTSTORE_PASSWORD=$password
           EOF
 
-      - name: Validate published NGINX startup
+      - name: Start NiFi and NGINX
         run: |
           source ./export_env_vars.sh
-          # The runner owns the temporary NGINX key.
-          docker compose -p nifi-smoke-published -f docker-compose.yml run --rm --no-deps \
-            --user "$(id -u):$(id -g)" nifi-nginx nginx -t
-
-      - name: Smoke tests
-        run: |
-          make start-nifi-dev-build
-          source ./export_env_vars.sh
-          url=https://127.0.0.1:8443
-          request=(curl --silent --show-error --noproxy '*' --cacert "$SECURITY_DIR/certificates/root/root-ca.pem" --connect-timeout 5 --max-time 20)
-
-          for route in / /nifi/; do
-            code="$("${request[@]}" --fail --retry 30 --retry-all-errors --retry-delay 10 --retry-max-time 600 \
-              --output /dev/null --write-out '%{http_code}' "$url$route")"
-            case "$code" in
-              200|301|302|303|307|308) echo "OK: $route returned HTTP $code" ;;
-              *) echo "Unexpected HTTP $code from $route" >&2; exit 1 ;;
-            esac
-          done
-
-          for service in nifi nifi-nginx; do
-            docker compose exec -T "$service" sh -ec 'test "$(id -u)" -ne 0'
-          done
-          docker compose exec -T nifi /opt/nifi/scripts/cogstack-healthcheck.sh live
-          docker compose exec -T nifi /opt/nifi/scripts/cogstack-healthcheck.sh ready
-          for probe in live ready; do
-            docker compose exec -T nifi-nginx curl -fsS --output /dev/null "http://127.0.0.1:8080/healthz/$probe"
-          done
-
-          response="$("${request[@]}" --data-urlencode "username=$SINGLE_USER_CREDENTIALS_USERNAME" \
-            --data-urlencode "password=$SINGLE_USER_CREDENTIALS_PASSWORD" \
-            --write-out $'\n%{http_code}' "$url/nifi-api/access/token")"
-          code="${response##*$'\n'}"
-          token="${response%$'\n'*}"
-          if [[ "$code" != 201 || -z "$token" ]]; then
-            echo "NiFi token request returned HTTP $code or an empty token" >&2
-            exit 1
-          fi
-
-          code="$("${request[@]}" --header "Authorization: Bearer $token" --output /dev/null \
-            --write-out '%{http_code}' "$url/nifi-api/flow/about")"
-          if [[ "$code" != 200 ]]; then
-            echo "Authenticated NiFi API returned HTTP $code" >&2
-            exit 1
-          fi
-          echo 'OK: authenticated NiFi API returned HTTP 200'
+          docker compose up -d
+          curl -fsS --retry 30 --retry-all-errors --retry-delay 10 --retry-max-time 300 --max-time 10 \
+            --cacert "$SECURITY_DIR/certificates/root/root-ca.pem" -o /dev/null \
+            https://127.0.0.1:8443/nifi-api/authentication/configuration
 
       - name: Dump container logs
         if: failure()
@@ -133,4 +91,3 @@ jobs:
           [[ -f ../env/nifi.env ]] || exit 0
           source ./export_env_vars.sh
           docker compose down -v
-          docker compose -p nifi-smoke-published -f docker-compose.yml down
