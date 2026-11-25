@@ -12,3 +12,10 @@ opensearch:
       secretName: opensearch-node-tls
       path: /usr/share/opensearch/config/tls
       defaultMode: 0440
+  resources:
+    requests:
+      cpu: "1"
+      memory: "2Gi"
+    limits:
+      cpu: "1"
+      memory: "2Gi"

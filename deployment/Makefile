@@ -45,6 +45,42 @@ certs-opensearch-nodes: ## Generate OpenSearch node certificates for NODES="node
 
 # ======================================================================================================================================================
 
+.PHONY: helm-values-nifi helm-values-nginx helm-values-opensearch helm-values-opensearch-dashboards
+
+helm-values-nifi: ## Render NiFi values.yaml from env/nifi.env
+helm-values-nginx: ## Render NGINX values.yaml from env/nifi.env and optional env/nginx.env
+helm-values-opensearch: ## Render OpenSearch values.yaml from env/opensearch.env
+helm-values-opensearch-dashboards: ## Render OpenSearch Dashboards values.yaml from env/opensearch-dashboards.env
+
+helm-values-nifi helm-values-nginx helm-values-opensearch helm-values-opensearch-dashboards:
+	@set -e; \
+	service=$(@:helm-values-%=%); \
+	env_file="./env/$$service.env"; \
+	set -a; \
+	if [ "$$service" = nginx ]; then \
+		: "$${NGINX_DOCKER_CPU_MIN:=1}" "$${NGINX_DOCKER_CPU_MAX:=1}" "$${NGINX_DOCKER_RAM:=512M}"; \
+		if [ -f "$$env_file" ] && [ -f ./env/nifi.env ]; then . ./env/nifi.env; fi; \
+		[ -f "$$env_file" ] || env_file=./env/nifi.env; \
+	fi; \
+	. "$$env_file"; \
+	set +a; \
+	chart="charts/$$service"; \
+	template="$$chart/values.env.yaml"; \
+	variables=$$(envsubst --variables "$$(cat "$$template")"); \
+	for name in $$variables; do \
+		value="$${!name:?Set $$name in $$env_file before rendering}"; \
+		if [[ "$$name" == *_DOCKER_RAM && "$$value" =~ ^([0-9]+([.][0-9]+)?)([kmgtp])[bB]?$$ ]]; then \
+			unit=$$(printf '%s' "$${BASH_REMATCH[3]}" | tr kmgtp KMGTP); \
+			export "$$name=$${BASH_REMATCH[1]}$${unit}i"; \
+		fi; \
+	done; \
+	tmp=$$(mktemp -d "$$chart/.values.XXXXXX"); \
+	trap 'rm -rf -- "$$tmp"' EXIT; \
+	envsubst < "$$template" > "$$tmp/values.yaml"; \
+	mv -- "$$tmp/values.yaml" "$$chart/values.yaml"
+
+# ======================================================================================================================================================
+
 help: ## Show deployment commands
 	@printf '%s\n' 'Deployment commands'
 	@awk -F ':.*## ' 'NF == 2 && $$1 ~ /^[[:alnum:]_-]+$$/ { printf "  %-30s %s\n", $$1, $$2 }' "$(lastword $(MAKEFILE_LIST))"

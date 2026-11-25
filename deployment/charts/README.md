@@ -25,8 +25,12 @@ helm template cogstack-nginx deployment/charts/nginx --namespace cogstack
 ```
 
 See each chart's README for the ConfigMaps, Secrets and storage needed before
-installation. `values.env.yaml` files are optional `envsubst` inputs; render
-their environment placeholders before supplying them to Helm.
+installation. Run `make -C deployment helm-values-<chart>` for NiFi, NGINX,
+OpenSearch, or OpenSearch Dashboards to render `values.env.yaml` into
+`values.yaml` using `deployment/env/<chart>.env`. NGINX reads `nifi.env` for
+the upstream connection and applies `nginx.env` when present. The local
+`deployment/env/nifi.env` can link to `apps/nifi/env/nifi.env`. Docker memory
+sizes such as `2g` render as `2Gi`.
 
 ## Validation and releases
 
