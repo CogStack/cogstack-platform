@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
-      SECURITY_DIR: ${{ github.workspace }}/deployment/security
+      SMOKE_PROJECT_SUFFIX: smoke-${{ github.run_id }}-${{ github.run_attempt }}
       KIBANA_PASSWORD: kibanaserver
     steps:
       - uses: actions/checkout@v7
@@ -34,6 +34,9 @@ jobs:
       - name: Start the default stack and log in
         shell: bash
         run: |
+          SECURITY_DIR=$(mktemp -d "$RUNNER_TEMP/opensearch-smoke.XXXXXX")
+          export SECURITY_DIR
+          printf 'SECURITY_DIR=%s\n' "$SECURITY_DIR" >> "$GITHUB_ENV"
           password=$(openssl rand -hex 16)
           export ROOT_CERTIFICATE_KEYSTORE_PASSWORD="$password" OS_CERTIFICATE_PASSWORD="$password"
           make -C deployment certs-root certs-opensearch
@@ -43,7 +46,7 @@ jobs:
           request=(curl -fsS --cacert "$SECURITY_DIR/certificates/root/root-ca.pem" \
             --retry 30 --retry-all-errors --retry-delay 3 --max-time 10)
 
-          search() { docker compose -f apps/opensearch/docker/docker-compose.yml "$@"; }
+          search() { docker compose -p "opensearch-$SMOKE_PROJECT_SUFFIX" -f apps/opensearch/docker/docker-compose.yml "$@"; }
           search up -d
           "${request[@]}" --cert "$certs/admin.crt" --key "$certs/admin.key.pem" \
             -o /dev/null https://localhost:9200/_cluster/health
@@ -52,7 +55,7 @@ jobs:
             -icl -cd config/opensearch-security -cacert config/tls/ca.crt \
             -cert /tmp/admin.crt -key /tmp/admin.key.pem
 
-          docker compose -f apps/opensearch-dashboards/docker/docker-compose.yml up -d
+          docker compose -p "opensearch-dashboards-$SMOKE_PROJECT_SUFFIX" -f apps/opensearch-dashboards/docker/docker-compose.yml up -d
           "${request[@]}" -H 'osd-xsrf: smoke' --json '{"username":"kibanaro","password":"kibanaro"}' \
             https://localhost:5601/auth/login | jq -e '.username == "kibanaro"'
 
@@ -62,7 +65,7 @@ jobs:
           SMOKE_JOB_STATUS: ${{ job.status }}
         run: |
           for app in opensearch-dashboards opensearch; do
-            compose=(docker compose -f "apps/$app/docker/docker-compose.yml")
+            compose=(docker compose -p "$app-$SMOKE_PROJECT_SUFFIX" -f "apps/$app/docker/docker-compose.yml")
             if [[ "$SMOKE_JOB_STATUS" == failure ]]; then
               "${compose[@]}" logs --tail 50 || true
             fi
