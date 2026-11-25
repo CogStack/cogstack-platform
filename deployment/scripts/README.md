@@ -76,7 +76,7 @@ It runs without a store password or `keytool`.
 
 ### OpenSearch
 
-Export `ES_CERTIFICATE_PASSWORD` for the Java and PKCS#12 stores. Pass the node
+Export `OS_CERTIFICATE_PASSWORD` for the Java and PKCS#12 stores. Pass the node
 hostnames when generating the node certificates. Generate the Dashboards and
 admin certificates with the second command.
 

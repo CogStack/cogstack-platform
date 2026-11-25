@@ -37,6 +37,33 @@ kubectl -n search get pvc
 
 ## Configuration and TLS
 
+### K3s with a shared node certificate
+
+Build the chart dependency as shown in Install. With an existing CA and
+`OS_CERTIFICATE_PASSWORD` exported, generate the shared node and separate admin
+client certificates. Use an absolute `SECURITY_DIR` for a custom output location.
+
+```bash
+make -C deployment certs-opensearch
+certs="${SECURITY_DIR:-deployment/security}/certificates/opensearch"
+kubectl create namespace search
+kubectl -n search create secret generic opensearch-node-tls \
+  --from-file=node.crt="$certs/opensearch-shared.crt" \
+  --from-file=node.key="$certs/opensearch-shared.key" \
+  --from-file=ca.crt="$certs/elastic-stack-ca.crt.pem"
+helm upgrade --install opensearch deployment/charts/opensearch -n search \
+  -f deployment/charts/opensearch/values-k3s.yaml
+```
+
+The K3s profile checks the CA and shared node DN on transport connections and
+disables transport hostname verification. Set `KUBE_NAMESPACE` or `CLUSTER_DOMAIN`
+when issuing the certificate if either differs from `search` or `cluster.local`.
+For a fresh cluster, initialize the Security index with your Security plugin
+configuration and the local `admin.crt` and `admin.key.pem`.
+[`securityadmin.sh` instructions](https://docs.opensearch.org/latest/security/configuration/security-admin/)
+
+### Custom values
+
 The [imported OpenSearch config](../../../apps/opensearch/config/opensearch.yml)
 uses the old Compose discovery variables and certificate paths. The default
 install uses upstream config and demo certificates. Prepare a Kubernetes config

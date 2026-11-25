@@ -1,0 +1,27 @@
+opensearch:
+  extraEnvs:
+    - name: DISABLE_INSTALL_DEMO_CONFIG
+      value: "true"
+  secretMounts:
+    - name: node-tls
+      secretName: opensearch-node-tls
+      path: /usr/share/opensearch/config/tls
+      defaultMode: 0440
+  config:
+    opensearch.yml: |
+      cluster.name: opensearch-cluster
+      network.host: 0.0.0.0
+      transport.ssl.enforce_hostname_verification: false
+      plugins.security.ssl.transport.pemcert_filepath: tls/node.crt
+      plugins.security.ssl.transport.pemkey_filepath: tls/node.key
+      plugins.security.ssl.transport.pemtrustedcas_filepath: tls/ca.crt
+      plugins.security.ssl.http.enabled: true
+      plugins.security.ssl.http.pemcert_filepath: tls/node.crt
+      plugins.security.ssl.http.pemkey_filepath: tls/node.key
+      plugins.security.ssl.http.pemtrustedcas_filepath: tls/ca.crt
+      plugins.security.ssl.http.clientauth_mode: OPTIONAL
+      plugins.security.allow_unsafe_democertificates: false
+      plugins.security.nodes_dn:
+        - 'CN=opensearch-shared,OU=cogstack,O=cogstack,L=UK,ST=London,C=UK'
+      plugins.security.authcz.admin_dn:
+        - 'CN=admin,OU=cogstack,O=cogstack,L=UK,ST=London,C=UK'

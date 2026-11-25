@@ -4,12 +4,13 @@
 # 🔐 Create the OpenSearch Dashboards and admin certificates and keys
 #
 # Usage:
-#     ./create_opensearch_client_admin_certs.sh [--days DAYS]
+#     ./create_opensearch_client_admin_certs.sh [--admin-only] [--days DAYS]
+#     --admin-only skips the Dashboards certificate and PKCS#12 bundle.
 #     DAYS is a positive integer. The default validity is 1,460 days.
 #
 # Requires:
 #     - Bash and OpenSSL
-#     - ES_CERTIFICATE_PASSWORD for the encrypted Dashboards PKCS#12 bundle
+#     - OS_CERTIFICATE_PASSWORD for the encrypted Dashboards PKCS#12 bundle
 #     - root-ca.pem and root-ca.key under certificates/root/ in SECURITY_DIR
 #
 # Optional environment variables:
@@ -31,16 +32,18 @@ set -euo pipefail
 umask 077
 
 days=1460
+create_dashboards=true
+if [[ ${1:-} == --admin-only ]]; then
+    create_dashboards=false
+    shift
+fi
 if (( $# > 0 )); then
     if [[ $# -ne 2 || "$1" != --days || ! "$2" =~ ^[1-9][0-9]*$ ]]; then
-        printf 'Usage: %s [--days DAYS] (DAYS must be a positive integer)\n' "$0" >&2
+        printf 'Usage: %s [--admin-only] [--days DAYS] (DAYS must be a positive integer)\n' "$0" >&2
         exit 2
     fi
     days=$2
 fi
-
-: "${ES_CERTIFICATE_PASSWORD:?Set ES_CERTIFICATE_PASSWORD}"
-export ES_CERTIFICATE_PASSWORD
 
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 security_dir=${SECURITY_DIR:-"$script_dir/../../security"}
@@ -55,18 +58,26 @@ for input in "$ca_cert" "$ca_key"; do
     fi
 done
 
-sans=DNS:opensearch-dashboards,DNS:kibana
-if [[ -n "${OPENSEARCH_DASHBOARDS_DNS_NAMES:-}" ]]; then
-    dns_label='[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?'
-    dns_name="$dns_label(\.$dns_label)*"
-    if [[ ! "$OPENSEARCH_DASHBOARDS_DNS_NAMES" =~ ^$dns_name(,$dns_name)*$ ]]; then
-        printf 'OPENSEARCH_DASHBOARDS_DNS_NAMES must contain comma-separated DNS names.\n' >&2
-        exit 2
+roles=(admin)
+files=(admin.crt admin.key.pem admin.csr)
+if [[ "$create_dashboards" == true ]]; then
+    : "${OS_CERTIFICATE_PASSWORD:?Set OS_CERTIFICATE_PASSWORD}"
+    export OS_CERTIFICATE_PASSWORD
+    roles=(client admin)
+    files=(es_kibana_client.pem es_kibana_client.key es_kibana_client.csr es_kibana_client.p12 "${files[@]}")
+
+    sans=DNS:opensearch-dashboards,DNS:kibana
+    if [[ -n "${OPENSEARCH_DASHBOARDS_DNS_NAMES:-}" ]]; then
+        dns_label='[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?'
+        dns_name="$dns_label(\.$dns_label)*"
+        if [[ ! "$OPENSEARCH_DASHBOARDS_DNS_NAMES" =~ ^$dns_name(,$dns_name)*$ ]]; then
+            printf 'OPENSEARCH_DASHBOARDS_DNS_NAMES must contain comma-separated DNS names.\n' >&2
+            exit 2
+        fi
+        sans+=",DNS:${OPENSEARCH_DASHBOARDS_DNS_NAMES//,/,DNS:}"
     fi
-    sans+=",DNS:${OPENSEARCH_DASHBOARDS_DNS_NAMES//,/,DNS:}"
 fi
 
-files=(es_kibana_client.pem es_kibana_client.key es_kibana_client.csr es_kibana_client.p12 admin.crt admin.key.pem admin.csr)
 for file in "${files[@]}"; do
     if [[ -e "$output_dir/$file" || -L "$output_dir/$file" ]]; then
         printf 'Output already exists: %s\n' "$output_dir/$file" >&2
@@ -88,7 +99,7 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 
 subject='/C=UK/ST=London/L=UK/O=cogstack/OU=cogstack'
-for role in client admin; do
+for role in "${roles[@]}"; do
     if [[ "$role" == client ]]; then
         key=es_kibana_client.key
         csr=es_kibana_client.csr
@@ -111,9 +122,11 @@ for role in client admin; do
     openssl verify -CAfile "$ca_cert" "$scratch_dir/$cert" >/dev/null
 done
 
-openssl pkcs12 -export -name es_kibana_client -inkey "$scratch_dir/es_kibana_client.key" \
-    -in "$scratch_dir/es_kibana_client.pem" -certfile "$ca_cert" -out "$scratch_dir/es_kibana_client.p12" \
-    -keypbe AES-256-CBC -certpbe AES-256-CBC -passout env:ES_CERTIFICATE_PASSWORD
+if [[ "$create_dashboards" == true ]]; then
+    openssl pkcs12 -export -name es_kibana_client -inkey "$scratch_dir/es_kibana_client.key" \
+        -in "$scratch_dir/es_kibana_client.pem" -certfile "$ca_cert" -out "$scratch_dir/es_kibana_client.p12" \
+        -keypbe AES-256-CBC -certpbe AES-256-CBC -passout env:OS_CERTIFICATE_PASSWORD
+fi
 
 (umask 022; mkdir -p -- "$output_dir")
 set -o noclobber
@@ -122,6 +135,8 @@ for file in "${files[@]}"; do
         published+=("$output_dir/$file")
         cat -- "$scratch_dir/$file"
     } > "$output_dir/$file"
+    case "$file" in
+        *.crt|*.csr|es_kibana_client.pem) chmod 644 "$output_dir/$file" ;;
+    esac
 done
-chmod 644 "$output_dir"/es_kibana_client.{pem,csr} "$output_dir"/admin.{crt,csr}
-printf 'Created OpenSearch Dashboards and admin certificates under %s\n' "$output_dir"
+printf 'Created OpenSearch client certificates under %s\n' "$output_dir"
