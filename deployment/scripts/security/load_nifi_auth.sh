@@ -20,14 +20,15 @@ if (( ${#NIFI_SINGLE_USER_CREDENTIALS_PASSWORD} < 12 )); then
     printf 'NiFi login password must be at least 12 characters.\n' >&2
     exit 1
 fi
-KEYSTORE_PASSWORD=${KEYSTORE_PASSWORD:-${NIFI_KEYSTORE_PASSWORD:-}}
-TRUSTSTORE_PASSWORD=${TRUSTSTORE_PASSWORD:-${NIFI_TRUSTSTORE_PASSWORD:-}}
 if [[ "$auth_file" -ef "$script_dir/../../env/authentication_dev.env" ]]; then
     # shellcheck source=../../env/certificates_dev.env
     source "$script_dir/../../env/certificates_dev.env"
-    KEYSTORE_PASSWORD=${KEYSTORE_PASSWORD:-${NIFI_KEYSTORE_PASSWORD:-}}
-    TRUSTSTORE_PASSWORD=${TRUSTSTORE_PASSWORD:-${NIFI_TRUSTSTORE_PASSWORD:-}}
+elif [[ "$auth_file" -ef "$script_dir/../../env/authentication.env" ]]; then
+    # shellcheck source=../../env/certificates.env
+    source "$script_dir/../../env/certificates.env"
 fi
+KEYSTORE_PASSWORD=${KEYSTORE_PASSWORD:-${NIFI_KEYSTORE_PASSWORD:-}}
+TRUSTSTORE_PASSWORD=${TRUSTSTORE_PASSWORD:-${NIFI_TRUSTSTORE_PASSWORD:-}}
 require_password KEYSTORE_PASSWORD
 require_password TRUSTSTORE_PASSWORD
 
