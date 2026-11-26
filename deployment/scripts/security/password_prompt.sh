@@ -9,7 +9,7 @@ require_password() {
     fi
 
     if [[ ! -t 0 ]]; then
-        printf 'Set %s in the environment or run this generator in a terminal.\n' "$name" >&2
+        printf 'Set %s in the environment or run this command in a terminal.\n' "$name" >&2
         return 1
     fi
 

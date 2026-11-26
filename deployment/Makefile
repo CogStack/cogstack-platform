@@ -98,6 +98,12 @@ k3s-load-certs-all k3s-load-certs-root-ca k3s-load-certs-nifi k3s-load-certs-ngi
 	printf -- '---\n%s\n' "$${manifests[@]}" | \
 		kubectl -n "$$namespace" apply --server-side --field-manager=cogstack-certificates -f -
 
+.PHONY: k3s-load-auth-nifi
+
+# Uses env/authentication.env. Set NIFI_AUTH_FILE=env/authentication_dev.env for development.
+k3s-load-auth-nifi: ## Prompt for missing credentials and load the NiFi auth Secret
+	@bash scripts/security/load_nifi_auth.sh
+
 # ======================================================================================================================================================
 
 .PHONY: helm-values-all helm-values-nifi helm-values-nginx helm-values-opensearch helm-values-opensearch-dashboards
