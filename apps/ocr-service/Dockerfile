@@ -156,7 +156,7 @@ RUN python${APP_PYTHON_VERSION} -m venv "$VIRTUAL_ENV" && \
 # Byte-compile using venv python
 RUN "$VIRTUAL_ENV/bin/python" -m compileall /ocr_service
 
-# Run as non-root by default for Kubernetes restricted policies.
+# Run as a non-root user by default.
 ARG OCR_SERVICE_UID=10001
 ARG OCR_SERVICE_GID=10001
 RUN groupadd --system --gid "$OCR_SERVICE_GID" ocrsvc && \
