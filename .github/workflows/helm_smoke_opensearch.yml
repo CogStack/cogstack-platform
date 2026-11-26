@@ -7,6 +7,6 @@ permissions:
 
 jobs:
   smoke:
-    uses: ./.github/workflows/helm_smoke.yml
+    uses: ./.github/workflows/helm_smoke_logins.yml
     with:
       stacks: '["opensearch"]'

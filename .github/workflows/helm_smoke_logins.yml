@@ -1,4 +1,4 @@
-name: helm_smoke
+name: helm_smoke_logins
 
 on:
   push:
@@ -14,7 +14,7 @@ on:
       - 'deployment/security/templates/**'
       - 'apps/opensearch/**'
       - '.github/scripts/smoke_nifi_login.sh'
-      - '.github/workflows/helm_smoke.yml'
+      - '.github/workflows/helm_smoke_logins.yml'
   pull_request:
     paths: *paths
   workflow_dispatch:
@@ -75,7 +75,7 @@ jobs:
             --from-literal=SINGLE_USER_CREDENTIALS_PASSWORD="$SMOKE_PASSWORD" \
             --from-literal=INITIAL_ADMIN_IDENTITY="$SINGLE_USER_CREDENTIALS_USERNAME" \
             --from-literal=NIFI_SENSITIVE_PROPS_KEY="$(openssl rand -hex 16)"
-          helm install nifi deployment/charts/nifi --wait --timeout 15m
+          make -C deployment helm-install CHART=nifi HELM_TIMEOUT=15m
 
       - name: NiFi Helm login
         if: matrix.stack == 'nifi'
@@ -88,7 +88,7 @@ jobs:
         if: matrix.stack == 'nifi' || matrix.stack == 'nginx'
         run: |
           kubectl create configmap nginx-env
-          helm install nginx deployment/charts/nginx --wait --timeout 5m
+          make -C deployment helm-install CHART=nginx HELM_TIMEOUT=5m
           kubectl port-forward svc/cogstack-nginx 8443:8443 &
           trap 'kill "$!"' EXIT
           SINGLE_USER_CREDENTIALS_PASSWORD="$SMOKE_PASSWORD" bash .github/scripts/smoke_nifi_login.sh https://127.0.0.1:8443
@@ -97,12 +97,9 @@ jobs:
         if: matrix.stack == 'opensearch'
         run: |
           sudo sysctl -w vm.max_map_count=262144
-          chart=deployment/charts/opensearch
-          helm dependency build "$chart"
-          helm install opensearch "$chart" --wait --timeout 10m \
-            --set-file "opensearch.config.opensearch\\.yml=$chart/config/opensearch.yml"
+          make -C deployment helm-install CHART=opensearch
           KIBANA_PASSWORD="$SMOKE_PASSWORD" OS_ANALYST_PASSWORD="$SMOKE_PASSWORD" \
-            bash "$chart/security/bootstrap.sh" kubectl exec -i opensearch-cluster-master-0 --
+            bash deployment/charts/opensearch/security/bootstrap.sh kubectl exec -i opensearch-cluster-master-0 --
           kubectl port-forward svc/opensearch-cluster-master 9200:9200 &
           trap 'kill "$!"' EXIT
           curl -fsS --noproxy '*' --cacert "$SECURITY_DIR/certificates/root/root-ca.pem" \
@@ -118,8 +115,7 @@ jobs:
             --from-literal=password="$SMOKE_PASSWORD" --from-literal=cookie="$(openssl rand -hex 16)"
           kubectl create secret tls dashboards-tls \
             --cert="$certs/opensearch/es_kibana_client.pem" --key="$certs/opensearch/es_kibana_client.key"
-          helm dependency build deployment/charts/opensearch-dashboards
-          helm install opensearch-dashboards deployment/charts/opensearch-dashboards --wait --timeout 5m -f - <<'YAML'
+          make -C deployment helm-install CHART=opensearch-dashboards HELM_VALUES=- HELM_TIMEOUT=5m <<'YAML'
           opensearch-dashboards:
             opensearchAccount:
               secret: dashboards-auth

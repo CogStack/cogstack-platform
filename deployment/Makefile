@@ -162,6 +162,30 @@ helm-values-nifi helm-values-nginx helm-values-opensearch helm-values-opensearch
 
 # ======================================================================================================================================================
 
+.PHONY: helm-install
+
+helm-install: ## Install or upgrade CHART with optional HELM_VALUES and HELM_TIMEOUT
+	@set -e; \
+	. ./env/general.env; \
+	namespace="$${KUBE_NAMESPACE:?Set KUBE_NAMESPACE in env/general.env}"; \
+	chart="charts/$${CHART:?Set CHART to a directory under deployment/charts}"; \
+	release="$$CHART"; \
+	args=(); \
+	case "$$CHART" in \
+		nifi|nginx) release="cogstack-$$CHART";; \
+		opensearch|opensearch-dashboards) \
+			helm repo add opensearch https://opensearch-project.github.io/helm-charts/; \
+			helm dependency build "$$chart";; \
+	esac; \
+	if [ "$$CHART" = opensearch ]; then \
+		args+=(--set-file "opensearch.config.opensearch\\.yml=$$chart/config/opensearch.yml"); \
+	fi; \
+	if [ -n "$${HELM_VALUES:-}" ]; then args+=(-f "$$HELM_VALUES"); fi; \
+	helm upgrade --install "$$release" "$$chart" -n "$$namespace" \
+		--wait --timeout "$${HELM_TIMEOUT:-10m}" "$${args[@]}"
+
+# ======================================================================================================================================================
+
 help: ## Show deployment commands
 	@printf '%s\n' 'Deployment commands'
 	@awk -F ':.*## ' 'NF == 2 && $$1 ~ /^[[:alnum:]_-]+$$/ { printf "  %-30s %s\n", $$1, $$2 }' "$(lastword $(MAKEFILE_LIST))"
