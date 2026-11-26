@@ -6,22 +6,32 @@ Folder names use component names, such as `medcat-service` and `jupyter-hub`.
 
 ## Kubernetes HTTPS entry point
 
-Deploy the four standalone charts in the same namespace. NGINX exposes HTTPS
-through a LoadBalancer Service on port 443 and forwards to HTTP Services in the
-cluster. On K3s with ServiceLB, disable the bundled Traefik controller to free
-port 443. The cluster must enforce the NiFi NetworkPolicy.
+Deploy the four standalone charts in the same namespace. NGINX serves HTTPS
+for the stack and forwards requests to the application Services over HTTP.
 
-| Chart | Purpose |
-| --- | --- |
-| [`nginx/`](nginx/README.md) | HTTPS reverse proxy and NiFi login. |
-| [`nifi/`](nifi/README.md) | NiFi StatefulSet and persistent storage. |
-| [`opensearch/`](opensearch/README.md) | OpenSearch Security and node transport TLS. |
-| [`opensearch-dashboards/`](opensearch-dashboards/README.md) | Dashboards UI. |
+- **NiFi (`nifi/`)** runs Apache NiFi as a StatefulSet with persistent storage
+  for flow configuration and repositories. A NetworkPolicy restricts its
+  internal HTTP port `8080` to NGINX pods. Users reach the UI at `/nifi/` and the
+  API at `/nifi-api/`. [NiFi chart](nifi/README.md)
+- **NGINX (`nginx/`)** exposes a `LoadBalancer` Service on port `443` and
+  terminates TLS with the `nginx-tls` Secret. It handles NiFi Basic Auth using
+  credentials from `nifi-auth`. [NGINX chart](nginx/README.md)
+- **OpenSearch (`opensearch/`)** runs a StatefulSet with persistent storage.
+  OpenSearch Security controls access to the HTTP REST API on port `9200`, which
+  NGINX exposes at `/opensearch/`. The `opensearch-node-tls` Secret secures node
+  transport on port `9300`. [OpenSearch chart](opensearch/README.md)
+- **OpenSearch Dashboards (`opensearch-dashboards/`)** serves the UI over HTTP
+  on port `5601` behind NGINX at `/dashboards/`. It connects to OpenSearch using
+  the `dashboards-auth` service account Secret. Users sign in with their
+  OpenSearch accounts. [OpenSearch Dashboards chart](opensearch-dashboards/README.md)
+
+### Install the standalone charts
 
 For a new deployment, set `NGINX_TLS_NAMES` to the hostname or IP clients will
 use. Supply your deployment credentials. The OpenSearch loader uses `htpasswd`
-(`apache2-utils` on Debian/Ubuntu or `httpd-tools` on RHEL). Run these commands
-from the repository root.
+(`apache2-utils` on Debian/Ubuntu or `httpd-tools` on RHEL). Follow the host
+prerequisites, then run these commands from the repository root.
+[On-premises deployment guide](../README.md)
 
 ```bash
 make -C deployment setup-k3s-namespace
@@ -45,9 +55,22 @@ See each chart's README for the ConfigMaps, Secrets and storage needed before
 installation. Run `make -C deployment helm-values-<chart>` for NiFi, NGINX,
 OpenSearch, or OpenSearch Dashboards to render `values.env.yaml` into
 `values.yaml` using `deployment/env/<chart>.env`. NGINX reads `nifi.env` for
-its listener port and applies `nginx.env` when present. The local
-`deployment/env/nifi.env` can link to `apps/nifi/env/nifi.env`. Docker memory
-sizes such as `2g` render as `2Gi`.
+its listener port and applies `nginx.env` when present. Docker memory sizes such
+as `2g` render as `2Gi`.
+
+### NiFi environment
+
+`deployment/env/nifi.env` links to `apps/nifi/env/nifi.env`. If the file is
+missing, create it with these defaults for Helm values rendering.
+
+```bash
+NIFI_UID=1000
+NIFI_GID=1000
+NIFI_DOCKER_CPU_MIN=1
+NIFI_DOCKER_CPU_MAX=1
+NIFI_DOCKER_RAM=2G
+NIFI_INTERNAL_PORT_NGINX=8443
+```
 
 ## Validation and releases
 
