@@ -1,0 +1,100 @@
+---
+# Source: nginx/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cogstack-nginx-env
+data:
+  NIFI_UPSTREAM_HOST: "cogstack-nifi.default.svc.cluster.local"
+  NIFI_UPSTREAM_PORT: "8443"
+  NIFI_UPSTREAM_TLS_NAME: "nifi"
+  NIFI_INTERNAL_PORT_NGINX: "8443"
+  NIFI_WEB_PROXY_PORT: "8443"
+
+---
+# Source: nginx/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: cogstack-nginx
+spec:
+  type: ClusterIP
+  selector:
+    app: cogstack-nginx
+  ports:
+    - name: https
+      port: 8443
+      targetPort: 8443
+      protocol: TCP
+
+---
+# Source: nginx/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cogstack-nginx
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cogstack-nginx
+
+  template:
+    metadata:
+      labels:
+        app: cogstack-nginx
+      annotations:
+        checksum/config: 7198c77393f626433efc4ddea8211bab399bd963bcc37e6751bf49d0c01b96bf
+
+    spec:
+      containers:
+        - name: nginx
+          image: "cogstacksystems/nifi-nginx:latest"
+          imagePullPolicy: Always
+
+          ports:
+            - containerPort: 8443
+
+          envFrom:
+            - configMapRef:
+                name: nginx-env
+            - configMapRef:
+                name: nifi-env
+            - configMapRef:
+                name: cogstack-nginx-env
+
+          volumeMounts:
+            - name: tls
+              mountPath: /certificates
+              readOnly: true
+
+          readinessProbe:
+            exec:
+              command: ["/usr/local/bin/cogstack-nginx-healthcheck.sh", "ready"]
+            timeoutSeconds: 10
+
+          resources:
+            limits:
+              cpu: 1
+              memory: 512M
+            requests:
+              cpu: 1
+              memory: 128M
+
+      volumes:
+        - name: tls
+          projected:
+            sources:
+              - secret:
+                  name: cogstack-root-ca
+                  items:
+                    - key: ca.crt
+                      path: root/root-ca.pem
+              - secret:
+                  name: nginx-tls
+                  items:
+                    - key: tls.crt
+                      path: nifi/nifi.pem
+                    - key: tls.key
+                      path: nifi/nifi.key

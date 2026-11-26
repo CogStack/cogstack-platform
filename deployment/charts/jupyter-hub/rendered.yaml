@@ -1,0 +1,3306 @@
+---
+# Source: jupyterhub-helm/charts/jupyterhub/templates/hub/netpol.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: hub
+  labels:
+    component: hub
+    app.kubernetes.io/component: hub
+    app: "jupyterhub"
+    release: "jupyterhub"
+    chart: jupyterhub-4.3.2
+    heritage: Helm
+    app.kubernetes.io/name: "jupyterhub"
+    app.kubernetes.io/instance: "jupyterhub"
+    helm.sh/chart: jupyterhub-4.3.2
+    app.kubernetes.io/managed-by: Helm
+spec:
+  podSelector:
+    matchLabels:
+      component: hub
+      app: "jupyterhub"
+      release: "jupyterhub"
+  policyTypes:
+    - Ingress
+    - Egress
+
+  # IMPORTANT:
+  # NetworkPolicy's ingress "from" and egress "to" rule specifications require
+  # great attention to detail. A quick summary is:
+  #
+  # 1. You can provide "from"/"to" rules that provide access either ports or a
+  #    subset of ports.
+  # 2. You can for each "from"/"to" rule provide any number of
+  #    "sources"/"destinations" of four different kinds.
+  #    - podSelector                        - targets pods with a certain label in the same namespace as the NetworkPolicy
+  #    - namespaceSelector                  - targets all pods running in namespaces with a certain label
+  #    - namespaceSelector and podSelector  - targets pods with a certain label running in namespaces with a certain label
+  #    - ipBlock                            - targets network traffic from/to a set of IP address ranges
+  #
+  # Read more at: https://kubernetes.io/docs/concepts/services-networking/network-policies/#behavior-of-to-and-from-selectors
+  #
+  ingress:
+
+    # allowed pods (hub.jupyter.org/network-access-hub) --> hub
+    - ports:
+        - port: http
+      from:
+        # source 1 - labeled pods
+        - podSelector:
+            matchLabels:
+              hub.jupyter.org/network-access-hub: "true"
+    # depends, but default is nothing --> hub
+    - from:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: prometheus
+      ports:
+      - port: http
+        protocol: TCP
+
+  egress:
+    # hub --> proxy
+    - to:
+        - podSelector:
+            matchLabels:
+              component: proxy
+              app: "jupyterhub"
+              release: "jupyterhub"
+      ports:
+        - port: 8001
+
+    # hub --> singleuser-server
+    - to:
+        - podSelector:
+            matchLabels:
+              component: singleuser-server
+              app: "jupyterhub"
+              release: "jupyterhub"
+      ports:
+        - port: 8888
+    
+    - ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+      to:
+        # Allow outbound connections to DNS ports on the cloud metadata server
+        - ipBlock:
+            cidr: 169.254.169.254/32
+        # Allow outbound connections to DNS ports on pods in the kube-system
+        # namespace
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+        # Allow outbound connections to DNS ports on destinations in the private IP
+        # ranges
+        - ipBlock:
+            cidr: 10.0.0.0/8
+        - ipBlock:
+            cidr: 172.16.0.0/12
+        - ipBlock:
+            cidr: 192.168.0.0/16
+    # Allow outbound connections to non-private IP ranges
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              # As part of this rule:
+              # - don't allow outbound connections to private IPs
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+              # - don't allow outbound connections to the cloud metadata server
+              - 169.254.169.254/32
+    # Allow outbound connections to private IP ranges
+    - to:
+        - ipBlock:
+            cidr: 10.0.0.0/8
+        - ipBlock:
+            cidr: 172.16.0.0/12
+        - ipBlock:
+            cidr: 192.168.0.0/16
+    # Allow outbound connections to the cloud metadata server
+    - to:
+        - ipBlock:
+            cidr: 169.254.169.254/32
+
+---
+# Source: jupyterhub-helm/charts/jupyterhub/templates/proxy/netpol.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: proxy
+  labels:
+    component: proxy
+    app.kubernetes.io/component: proxy
+    app: "jupyterhub"
+    release: "jupyterhub"
+    chart: jupyterhub-4.3.2
+    heritage: Helm
+    app.kubernetes.io/name: "jupyterhub"
+    app.kubernetes.io/instance: "jupyterhub"
+    helm.sh/chart: jupyterhub-4.3.2
+    app.kubernetes.io/managed-by: Helm
+spec:
+  podSelector:
+    matchLabels:
+      component: proxy
+      app: "jupyterhub"
+      release: "jupyterhub"
+  policyTypes:
+    - Ingress
+    - Egress
+
+  # IMPORTANT:
+  # NetworkPolicy's ingress "from" and egress "to" rule specifications require
+  # great attention to detail. A quick summary is:
+  #
+  # 1. You can provide "from"/"to" rules that provide access either ports or a
+  #    subset of ports.
+  # 2. You can for each "from"/"to" rule provide any number of
+  #    "sources"/"destinations" of four different kinds.
+  #    - podSelector                        - targets pods with a certain label in the same namespace as the NetworkPolicy
+  #    - namespaceSelector                  - targets all pods running in namespaces with a certain label
+  #    - namespaceSelector and podSelector  - targets pods with a certain label running in namespaces with a certain label
+  #    - ipBlock                            - targets network traffic from/to a set of IP address ranges
+  #
+  # Read more at: https://kubernetes.io/docs/concepts/services-networking/network-policies/#behavior-of-to-and-from-selectors
+  #
+  ingress:
+    # allow incoming traffic to these ports independent of source
+    - ports:
+      - port: http
+      - port: https
+
+    # allowed pods (hub.jupyter.org/network-access-proxy-http) --> proxy (http/https port)
+    - ports:
+        - port: http
+      from:
+        # source 1 - labeled pods
+        - podSelector:
+            matchLabels:
+              hub.jupyter.org/network-access-proxy-http: "true"
+
+    # allowed pods (hub.jupyter.org/network-access-proxy-api) --> proxy (api port)
+    - ports:
+        - port: api
+      from:
+        # source 1 - labeled pods
+        - podSelector:
+            matchLabels:
+              hub.jupyter.org/network-access-proxy-api: "true"
+
+  egress:
+    # proxy --> hub
+    - to:
+        - podSelector:
+            matchLabels:
+              component: hub
+              app: "jupyterhub"
+              release: "jupyterhub"
+      ports:
+        - port: 8081
+
+    # proxy --> singleuser-server
+    - to:
+        - podSelector:
+            matchLabels:
+              component: singleuser-server
+              app: "jupyterhub"
+              release: "jupyterhub"
+      ports:
+        - port: 8888
+    
+    - ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+      to:
+        # Allow outbound connections to DNS ports on the cloud metadata server
+        - ipBlock:
+            cidr: 169.254.169.254/32
+        # Allow outbound connections to DNS ports on pods in the kube-system
+        # namespace
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+        # Allow outbound connections to DNS ports on destinations in the private IP
+        # ranges
+        - ipBlock:
+            cidr: 10.0.0.0/8
+        - ipBlock:
+            cidr: 172.16.0.0/12
+        - ipBlock:
+            cidr: 192.168.0.0/16
+    # Allow outbound connections to non-private IP ranges
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              # As part of this rule:
+              # - don't allow outbound connections to private IPs
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+              # - don't allow outbound connections to the cloud metadata server
+              - 169.254.169.254/32
+    # Allow outbound connections to private IP ranges
+    - to:
+        - ipBlock:
+            cidr: 10.0.0.0/8
+        - ipBlock:
+            cidr: 172.16.0.0/12
+        - ipBlock:
+            cidr: 192.168.0.0/16
+    # Allow outbound connections to the cloud metadata server
+    - to:
+        - ipBlock:
+            cidr: 169.254.169.254/32
+
+---
+# Source: jupyterhub-helm/charts/jupyterhub/templates/scheduling/user-placeholder/pdb.yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: user-placeholder
+  labels:
+    component: user-placeholder
+    app.kubernetes.io/component: user-placeholder
+    app: "jupyterhub"
+    release: "jupyterhub"
+    chart: jupyterhub-4.3.2
+    heritage: Helm
+    app.kubernetes.io/name: "jupyterhub"
+    app.kubernetes.io/instance: "jupyterhub"
+    helm.sh/chart: jupyterhub-4.3.2
+    app.kubernetes.io/managed-by: Helm
+spec:
+  minAvailable: 0
+  selector:
+    matchLabels:
+      component: user-placeholder
+      app: "jupyterhub"
+      release: "jupyterhub"
+
+---
+# Source: jupyterhub-helm/charts/jupyterhub/templates/scheduling/user-scheduler/pdb.yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: user-scheduler
+  labels:
+    component: user-scheduler
+    app.kubernetes.io/component: user-scheduler
+    app: "jupyterhub"
+    release: "jupyterhub"
+    chart: jupyterhub-4.3.2
+    heritage: Helm
+    app.kubernetes.io/name: "jupyterhub"
+    app.kubernetes.io/instance: "jupyterhub"
+    helm.sh/chart: jupyterhub-4.3.2
+    app.kubernetes.io/managed-by: Helm
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      component: user-scheduler
+      app: "jupyterhub"
+      release: "jupyterhub"
+
+---
+# Source: jupyterhub-helm/charts/jupyterhub/templates/hub/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: hub
+  labels:
+    component: hub
+    app.kubernetes.io/component: hub
+    app: "jupyterhub"
+    release: "jupyterhub"
+    chart: jupyterhub-4.3.2
+    heritage: Helm
+    app.kubernetes.io/name: "jupyterhub"
+    app.kubernetes.io/instance: "jupyterhub"
+    helm.sh/chart: jupyterhub-4.3.2
+    app.kubernetes.io/managed-by: Helm
+
+---
+# Source: jupyterhub-helm/charts/jupyterhub/templates/scheduling/user-scheduler/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: user-scheduler
+  labels:
+    component: user-scheduler
+    app.kubernetes.io/component: user-scheduler
+    app: "jupyterhub"
+    release: "jupyterhub"
+    chart: jupyterhub-4.3.2
+    heritage: Helm
+    app.kubernetes.io/name: "jupyterhub"
+    app.kubernetes.io/instance: "jupyterhub"
+    helm.sh/chart: jupyterhub-4.3.2
+    app.kubernetes.io/managed-by: Helm
+
+---
+# Source: jupyterhub-helm/charts/jupyterhub/templates/hub/secret.yaml
+kind: Secret
+apiVersion: v1
+metadata:
+  name: hub
+  labels:
+    component: hub
+    app.kubernetes.io/component: hub
+    app: "jupyterhub"
+    release: "jupyterhub"
+    chart: jupyterhub-4.3.2
+    heritage: Helm
+    app.kubernetes.io/name: "jupyterhub"
+    app.kubernetes.io/instance: "jupyterhub"
+    helm.sh/chart: jupyterhub-4.3.2
+    app.kubernetes.io/managed-by: Helm
+type: Opaque
+data:
+  values.yaml: "Q2hhcnQ6CiAgQXBwVmVyc2lvbjogNS40LjMKICBOYW1lOiBqdXB5dGVyaHViCiAgVmVyc2lvbjogNC4zLjIKUmVsZWFzZToKICBOYW1lOiBqdXB5dGVyaHViCiAgTmFtZXNwYWNlOiBkZWZhdWx0CiAgU2VydmljZTogSGVsbQpjdWxsOgogIGFkbWluVXNlcnM6IHRydWUKICBjb25jdXJyZW5jeTogMTAKICBlbmFibGVkOiBmYWxzZQogIGV2ZXJ5OiA2MDAKICBtYXhBZ2U6IDAKICByZW1vdmVOYW1lZFNlcnZlcnM6IGZhbHNlCiAgdGltZW91dDogMzYwMAogIHVzZXJzOiBmYWxzZQpjdXN0b206IHt9CmRlYnVnOgogIGVuYWJsZWQ6IGZhbHNlCmZ1bGxuYW1lT3ZlcnJpZGU6ICIiCmdsb2JhbDoKICBzYWZlVG9TaG93VmFsdWVzOiBmYWxzZQpodHRwUm91dGU6CiAgYW5ub3RhdGlvbnM6IHt9CiAgZW5hYmxlZDogZmFsc2UKICBnYXRld2F5OgogICAgbmFtZTogeW91ci1nYXRld2F5CiAgICBuYW1lc3BhY2U6ICIiCiAgaG9zdG5hbWVzOiBbXQpodWI6CiAgYWxsb3dOYW1lZFNlcnZlcnM6IGZhbHNlCiAgYW5ub3RhdGlvbnM6IHt9CiAgYXJnczogW10KICBiYXNlVXJsOiAvCiAgY29tbWFuZDogW10KICBjb25jdXJyZW50U3Bhd25MaW1pdDogNjQKICBjb25maWc6CiAgICBBdXRoZW50aWNhdG9yOgogICAgICBhZG1pbl91c2VyczoKICAgICAgLSBhZG1pbgogICAgRHVtbXlBdXRoZW50aWNhdG9yOgogICAgICBwYXNzd29yZDogU3VwZXJTZWNyZXQKICAgIEp1cHl0ZXJIdWI6CiAgICAgIGFkbWluX2FjY2VzczogdHJ1ZQogICAgICBhdXRoZW50aWNhdG9yX2NsYXNzOiBkdW1teQogICAgS3ViZVNwYXduZXI6CiAgICAgIGZzX2dpZDogMAogICAgICBodHRwX3RpbWVvdXQ6IDEyMAogICAgICBub3RlYm9va19kaXI6IC9ob21lL2pvdnlhbi93b3JrCiAgICAgIHN0YXJ0X3RpbWVvdXQ6IDMwMAogICAgICB1aWQ6IDAKICAgIFNwYXduZXI6CiAgICAgIGRlZmF1bHRfdXJsOiAvbGFiLwogICAgICBub3RlYm9va19kaXI6IC9ob21lL2pvdnlhbi93b3JrCiAgY29uc2VjdXRpdmVGYWlsdXJlTGltaXQ6IDUKICBjb250YWluZXJTZWN1cml0eUNvbnRleHQ6CiAgICBhbGxvd1ByaXZpbGVnZUVzY2FsYXRpb246IGZhbHNlCiAgICBjYXBhYmlsaXRpZXM6CiAgICAgIGRyb3A6CiAgICAgIC0gQUxMCiAgICBydW5Bc0dyb3VwOiAxMDAwCiAgICBydW5Bc1VzZXI6IDEwMDAKICBkYjoKICAgIHB2YzoKICAgICAgYWNjZXNzTW9kZXM6CiAgICAgIC0gUmVhZFdyaXRlT25jZQogICAgICBhbm5vdGF0aW9uczoge30KICAgICAgc2VsZWN0b3I6IHt9CiAgICAgIHN0b3JhZ2U6IDFHaQogICAgdHlwZTogc3FsaXRlLXB2YwogIGRlcGxveW1lbnRTdHJhdGVneToKICAgIHR5cGU6IFJlY3JlYXRlCiAgZXh0cmFDb25maWc6CiAgICAwMC1jdXN0b20tc3Bhd25lcjogfAogICAgICAjIEN1c3RvbSBlbnZpcm9ubWVudCB2YXJpYWJsZXMgZm9yIHVzZXIgcG9kcwogICAgICBjLkt1YmVTcGF3bmVyLmVudmlyb25tZW50ID0gYy5LdWJlU3Bhd25lci5lbnZpcm9ubWVudCBvciB7fQogICAgICBjLkt1YmVTcGF3bmVyLmVudmlyb25tZW50LnVwZGF0ZSh7CiAgICAgICAgJ0dSQU5UX1NVRE8nOiAnMScsCiAgICAgICAgJ0NIT1dOX0hPTUUnOiAneWVzJywKICAgICAgICAnQ0hPV05fSE9NRV9PUFRTJzogJy1SJywKICAgICAgfSkKICAgICAgIyBBbGxvdyByb290IGluIG5vdGVib29rcwogICAgICBjLkt1YmVTcGF3bmVyLmFyZ3MgPSBbJy0tYWxsb3ctcm9vdCddCiAgICAwMC1sb2ctbGV2ZWw6IHwKICAgICAgYy5BcHBsaWNhdGlvbi5sb2dfbGV2ZWwgPSAnREVCVUcnCiAgICAwMS1wcm9tZXRoZXVzLWF1dGhlbnRpY2F0aW9uOiB8CiAgICAgIGMuSnVweXRlckh1Yi5hdXRoZW50aWNhdGVfcHJvbWV0aGV1cyA9IEZhbHNlCiAgZXh0cmFDb250YWluZXJzOiBbXQogIGV4dHJhRW52OiB7fQogIGV4dHJhRmlsZXM6IHt9CiAgZXh0cmFQb2RTcGVjOiB7fQogIGV4dHJhVm9sdW1lTW91bnRzOiBbXQogIGV4dHJhVm9sdW1lczogW10KICBpbWFnZToKICAgIG5hbWU6IGNvZ3N0YWNrc3lzdGVtcy9qdXB5dGVyLWh1YgogICAgcHVsbFBvbGljeTogSWZOb3RQcmVzZW50CiAgICBwdWxsU2VjcmV0czogW10KICAgIHRhZzogMi4zLjYKICBpbml0Q29udGFpbmVyczogW10KICBsYWJlbHM6IHt9CiAgbGlmZWN5Y2xlOiB7fQogIGxpdmVuZXNzUHJvYmU6CiAgICBlbmFibGVkOiB0cnVlCiAgICBmYWlsdXJlVGhyZXNob2xkOiAzMAogICAgaW5pdGlhbERlbGF5U2Vjb25kczogMzAwCiAgICBwZXJpb2RTZWNvbmRzOiAxMAogICAgdGltZW91dFNlY29uZHM6IDMKICBsb2FkUm9sZXM6IHt9CiAgbmV0d29ya1BvbGljeToKICAgIGFsbG93ZWRJbmdyZXNzUG9ydHM6IFtdCiAgICBlZ3Jlc3M6IFtdCiAgICBlZ3Jlc3NBbGxvd1J1bGVzOgogICAgICBjbG91ZE1ldGFkYXRhU2VydmVyOiB0cnVlCiAgICAgIGRuc1BvcnRzQ2xvdWRNZXRhZGF0YVNlcnZlcjogdHJ1ZQogICAgICBkbnNQb3J0c0t1YmVTeXN0ZW1OYW1lc3BhY2U6IHRydWUKICAgICAgZG5zUG9ydHNQcml2YXRlSVBzOiB0cnVlCiAgICAgIG5vblByaXZhdGVJUHM6IHRydWUKICAgICAgcHJpdmF0ZUlQczogdHJ1ZQogICAgZW5hYmxlZDogdHJ1ZQogICAgaW5ncmVzczoKICAgIC0gZnJvbToKICAgICAgLSBwb2RTZWxlY3RvcjoKICAgICAgICAgIG1hdGNoTGFiZWxzOgogICAgICAgICAgICBhcHAua3ViZXJuZXRlcy5pby9uYW1lOiBwcm9tZXRoZXVzCiAgICAgIHBvcnRzOgogICAgICAtIHBvcnQ6IGh0dHAKICAgICAgICBwcm90b2NvbDogVENQCiAgICBpbnRlck5hbWVzcGFjZUFjY2Vzc0xhYmVsczogaWdub3JlCiAgbm9kZVNlbGVjdG9yOiB7fQogIHBkYjoKICAgIGVuYWJsZWQ6IGZhbHNlCiAgICBtaW5BdmFpbGFibGU6IDEKICBwb2RTZWN1cml0eUNvbnRleHQ6CiAgICBmc0dyb3VwOiAxMDAwCiAgICBydW5Bc05vblJvb3Q6IHRydWUKICAgIHNlY2NvbXBQcm9maWxlOgogICAgICB0eXBlOiBSdW50aW1lRGVmYXVsdAogIHJlYWRpbmVzc1Byb2JlOgogICAgZW5hYmxlZDogdHJ1ZQogICAgZmFpbHVyZVRocmVzaG9sZDogMTAwMAogICAgaW5pdGlhbERlbGF5U2Vjb25kczogMAogICAgcGVyaW9kU2Vjb25kczogMgogICAgdGltZW91dFNlY29uZHM6IDEKICByZXNvdXJjZXM6IHt9CiAgc2VydmljZToKICAgIGFubm90YXRpb25zOiB7fQogICAgZXh0cmFQb3J0czogW10KICAgIGlwRmFtaWxpZXM6IFtdCiAgICBpcEZhbWlseVBvbGljeTogUHJlZmVyRHVhbFN0YWNrCiAgICBwb3J0czoge30KICAgIHR5cGU6IENsdXN0ZXJJUAogIHNlcnZpY2VBY2NvdW50OgogICAgYW5ub3RhdGlvbnM6IHt9CiAgICBjcmVhdGU6IHRydWUKICBzZXJ2aWNlczoge30KICB0ZW1wbGF0ZVBhdGhzOiBbXQogIHRlbXBsYXRlVmFyczoge30KICB0b2xlcmF0aW9uczogW10KaW1hZ2VQdWxsU2VjcmV0OgogIGF1dG9tYXRpY1JlZmVyZW5jZUluamVjdGlvbjogdHJ1ZQogIGNyZWF0ZTogZmFsc2UKaW1hZ2VQdWxsU2VjcmV0czogW10KaW5ncmVzczoKICBhbm5vdGF0aW9uczoge30KICBlbmFibGVkOiBmYWxzZQogIGV4dHJhUGF0aHM6IFtdCiAgaG9zdHM6IFtdCiAgcGF0aFR5cGU6IFByZWZpeAogIHRsczogW10KcHJlUHVsbGVyOgogIGFubm90YXRpb25zOiB7fQogIGNvbnRhaW5lclNlY3VyaXR5Q29udGV4dDoKICAgIGFsbG93UHJpdmlsZWdlRXNjYWxhdGlvbjogZmFsc2UKICAgIGNhcGFiaWxpdGllczoKICAgICAgZHJvcDoKICAgICAgLSBBTEwKICAgIHJ1bkFzR3JvdXA6IDY1NTM0CiAgICBydW5Bc05vblJvb3Q6IHRydWUKICAgIHJ1bkFzVXNlcjogNjU1MzQKICAgIHNlY2NvbXBQcm9maWxlOgogICAgICB0eXBlOiBSdW50aW1lRGVmYXVsdAogIGNvbnRpbnVvdXM6CiAgICBkYWVtb25zZXRBbm5vdGF0aW9uczoge30KICAgIGVuYWJsZWQ6IGZhbHNlCiAgICBzZXJ2aWNlQWNjb3VudDoKICAgICAgYW5ub3RhdGlvbnM6IHt9CiAgICAgIGNyZWF0ZTogdHJ1ZQogIGV4dHJhSW1hZ2VzOiB7fQogIGV4dHJhVG9sZXJhdGlvbnM6IFtdCiAgaG9vazoKICAgIGNvbnRhaW5lclNlY3VyaXR5Q29udGV4dDoKICAgICAgYWxsb3dQcml2aWxlZ2VFc2NhbGF0aW9uOiBmYWxzZQogICAgICBjYXBhYmlsaXRpZXM6CiAgICAgICAgZHJvcDoKICAgICAgICAtIEFMTAogICAgICBydW5Bc0dyb3VwOiA2NTUzNAogICAgICBydW5Bc05vblJvb3Q6IHRydWUKICAgICAgcnVuQXNVc2VyOiA2NTUzNAogICAgICBzZWNjb21wUHJvZmlsZToKICAgICAgICB0eXBlOiBSdW50aW1lRGVmYXVsdAogICAgZGFlbW9uc2V0QW5ub3RhdGlvbnM6IHt9CiAgICBlbmFibGVkOiBmYWxzZQogICAgaW1hZ2U6CiAgICAgIG5hbWU6IHF1YXkuaW8vanVweXRlcmh1Yi9rOHMtaW1hZ2UtYXdhaXRlcgogICAgICBwdWxsU2VjcmV0czogW10KICAgICAgdGFnOiA0LjMuMgogICAgbm9kZVNlbGVjdG9yOiB7fQogICAgcG9kU2NoZWR1bGluZ1dhaXREdXJhdGlvbjogMTAKICAgIHB1bGxPbmx5T25DaGFuZ2VzOiB0cnVlCiAgICByZXNvdXJjZXM6IHt9CiAgICBzZXJ2aWNlQWNjb3VudDoKICAgICAgYW5ub3RhdGlvbnM6IHt9CiAgICAgIGNyZWF0ZTogdHJ1ZQogICAgc2VydmljZUFjY291bnRJbWFnZVB1bGxlcjoKICAgICAgYW5ub3RhdGlvbnM6IHt9CiAgICAgIGNyZWF0ZTogdHJ1ZQogICAgdG9sZXJhdGlvbnM6IFtdCiAgbGFiZWxzOiB7fQogIHBhdXNlOgogICAgY29udGFpbmVyU2VjdXJpdHlDb250ZXh0OgogICAgICBhbGxvd1ByaXZpbGVnZUVzY2FsYXRpb246IGZhbHNlCiAgICAgIGNhcGFiaWxpdGllczoKICAgICAgICBkcm9wOgogICAgICAgIC0gQUxMCiAgICAgIHJ1bkFzR3JvdXA6IDY1NTM0CiAgICAgIHJ1bkFzTm9uUm9vdDogdHJ1ZQogICAgICBydW5Bc1VzZXI6IDY1NTM0CiAgICAgIHNlY2NvbXBQcm9maWxlOgogICAgICAgIHR5cGU6IFJ1bnRpbWVEZWZhdWx0CiAgICBpbWFnZToKICAgICAgbmFtZTogcmVnaXN0cnkuazhzLmlvL3BhdXNlCiAgICAgIHB1bGxTZWNyZXRzOiBbXQogICAgICB0YWc6IDMuMTAuMQogIHB1bGxQcm9maWxlTGlzdEltYWdlczogdHJ1ZQogIHJlc291cmNlczoge30KcHJveHk6CiAgYW5ub3RhdGlvbnM6IHt9CiAgY2hwOgogICAgY29udGFpbmVyU2VjdXJpdHlDb250ZXh0OgogICAgICBhbGxvd1ByaXZpbGVnZUVzY2FsYXRpb246IGZhbHNlCiAgICAgIGNhcGFiaWxpdGllczoKICAgICAgICBkcm9wOgogICAgICAgIC0gQUxMCiAgICAgIHJ1bkFzR3JvdXA6IDY1NTM0CiAgICAgIHJ1bkFzTm9uUm9vdDogdHJ1ZQogICAgICBydW5Bc1VzZXI6IDY1NTM0CiAgICAgIHNlY2NvbXBQcm9maWxlOgogICAgICAgIHR5cGU6IFJ1bnRpbWVEZWZhdWx0CiAgICBleHRyYUNvbW1hbmRMaW5lRmxhZ3M6IFtdCiAgICBleHRyYUVudjoge30KICAgIGV4dHJhUG9kU3BlYzoge30KICAgIGltYWdlOgogICAgICBuYW1lOiBxdWF5LmlvL2p1cHl0ZXJodWIvY29uZmlndXJhYmxlLWh0dHAtcHJveHkKICAgICAgcHVsbFNlY3JldHM6IFtdCiAgICAgIHRhZzogNS4xLjAKICAgIGxpdmVuZXNzUHJvYmU6CiAgICAgIGVuYWJsZWQ6IHRydWUKICAgICAgZmFpbHVyZVRocmVzaG9sZDogMzAKICAgICAgaW5pdGlhbERlbGF5U2Vjb25kczogNjAKICAgICAgcGVyaW9kU2Vjb25kczogMTAKICAgICAgdGltZW91dFNlY29uZHM6IDMKICAgIG5ldHdvcmtQb2xpY3k6CiAgICAgIGFsbG93ZWRJbmdyZXNzUG9ydHM6CiAgICAgIC0gaHR0cAogICAgICAtIGh0dHBzCiAgICAgIGVncmVzczogW10KICAgICAgZWdyZXNzQWxsb3dSdWxlczoKICAgICAgICBjbG91ZE1ldGFkYXRhU2VydmVyOiB0cnVlCiAgICAgICAgZG5zUG9ydHNDbG91ZE1ldGFkYXRhU2VydmVyOiB0cnVlCiAgICAgICAgZG5zUG9ydHNLdWJlU3lzdGVtTmFtZXNwYWNlOiB0cnVlCiAgICAgICAgZG5zUG9ydHNQcml2YXRlSVBzOiB0cnVlCiAgICAgICAgbm9uUHJpdmF0ZUlQczogdHJ1ZQogICAgICAgIHByaXZhdGVJUHM6IHRydWUKICAgICAgZW5hYmxlZDogdHJ1ZQogICAgICBpbmdyZXNzOiBbXQogICAgICBpbnRlck5hbWVzcGFjZUFjY2Vzc0xhYmVsczogaWdub3JlCiAgICBub2RlU2VsZWN0b3I6IHt9CiAgICBwZGI6CiAgICAgIGVuYWJsZWQ6IGZhbHNlCiAgICAgIG1pbkF2YWlsYWJsZTogMQogICAgcmVhZGluZXNzUHJvYmU6CiAgICAgIGVuYWJsZWQ6IHRydWUKICAgICAgZmFpbHVyZVRocmVzaG9sZDogMTAwMAogICAgICBpbml0aWFsRGVsYXlTZWNvbmRzOiAwCiAgICAgIHBlcmlvZFNlY29uZHM6IDIKICAgICAgdGltZW91dFNlY29uZHM6IDEKICAgIHJlc291cmNlczoge30KICAgIHRvbGVyYXRpb25zOiBbXQogIGRlcGxveW1lbnRTdHJhdGVneToKICAgIHR5cGU6IFJlY3JlYXRlCiAgaHR0cHM6CiAgICBlbmFibGVkOiBmYWxzZQogICAgaG9zdHM6IFtdCiAgICBsZXRzZW5jcnlwdDoKICAgICAgYWNtZVNlcnZlcjogaHR0cHM6Ly9hY21lLXYwMi5hcGkubGV0c2VuY3J5cHQub3JnL2RpcmVjdG9yeQogICAgbWFudWFsOiB7fQogICAgc2VjcmV0OgogICAgICBjcnQ6IHRscy5jcnQKICAgICAga2V5OiB0bHMua2V5CiAgICB0eXBlOiBsZXRzZW5jcnlwdAogIGxhYmVsczoge30KICBzZWNyZXRTeW5jOgogICAgY29udGFpbmVyU2VjdXJpdHlDb250ZXh0OgogICAgICBhbGxvd1ByaXZpbGVnZUVzY2FsYXRpb246IGZhbHNlCiAgICAgIGNhcGFiaWxpdGllczoKICAgICAgICBkcm9wOgogICAgICAgIC0gQUxMCiAgICAgIHJ1bkFzR3JvdXA6IDY1NTM0CiAgICAgIHJ1bkFzTm9uUm9vdDogdHJ1ZQogICAgICBydW5Bc1VzZXI6IDY1NTM0CiAgICAgIHNlY2NvbXBQcm9maWxlOgogICAgICAgIHR5cGU6IFJ1bnRpbWVEZWZhdWx0CiAgICBpbWFnZToKICAgICAgbmFtZTogcXVheS5pby9qdXB5dGVyaHViL2s4cy1zZWNyZXQtc3luYwogICAgICBwdWxsU2VjcmV0czogW10KICAgICAgdGFnOiA0LjMuMgogICAgcmVzb3VyY2VzOiB7fQogIHNlcnZpY2U6CiAgICBhbm5vdGF0aW9uczoge30KICAgIGRpc2FibGVIdHRwUG9ydDogZmFsc2UKICAgIGV4dGVybmFsSVBzOiBbXQogICAgZXh0cmFQb3J0czogW10KICAgIGlwRmFtaWxpZXM6IFtdCiAgICBpcEZhbWlseVBvbGljeTogUHJlZmVyRHVhbFN0YWNrCiAgICBsYWJlbHM6IHt9CiAgICBsb2FkQmFsYW5jZXJTb3VyY2VSYW5nZXM6IFtdCiAgICBub2RlUG9ydHM6IHt9CiAgICB0eXBlOiBDbHVzdGVySVAKICB0cmFlZmlrOgogICAgY29udGFpbmVyU2VjdXJpdHlDb250ZXh0OgogICAgICBhbGxvd1ByaXZpbGVnZUVzY2FsYXRpb246IGZhbHNlCiAgICAgIGNhcGFiaWxpdGllczoKICAgICAgICBkcm9wOgogICAgICAgIC0gQUxMCiAgICAgIHJ1bkFzR3JvdXA6IDY1NTM0CiAgICAgIHJ1bkFzTm9uUm9vdDogdHJ1ZQogICAgICBydW5Bc1VzZXI6IDY1NTM0CiAgICAgIHNlY2NvbXBQcm9maWxlOgogICAgICAgIHR5cGU6IFJ1bnRpbWVEZWZhdWx0CiAgICBleHRyYUR5bmFtaWNDb25maWc6IHt9CiAgICBleHRyYUVudjoge30KICAgIGV4dHJhSW5pdENvbnRhaW5lcnM6IFtdCiAgICBleHRyYVBvZFNwZWM6IHt9CiAgICBleHRyYVBvcnRzOiBbXQogICAgZXh0cmFTdGF0aWNDb25maWc6IHt9CiAgICBleHRyYVZvbHVtZU1vdW50czogW10KICAgIGV4dHJhVm9sdW1lczogW10KICAgIGhzdHM6CiAgICAgIGluY2x1ZGVTdWJkb21haW5zOiBmYWxzZQogICAgICBtYXhBZ2U6IDE1NzI0ODAwCiAgICAgIHByZWxvYWQ6IGZhbHNlCiAgICBpbWFnZToKICAgICAgbmFtZTogdHJhZWZpawogICAgICBwdWxsU2VjcmV0czogW10KICAgICAgdGFnOiB2My42LjQKICAgIGxhYmVsczoge30KICAgIG5ldHdvcmtQb2xpY3k6CiAgICAgIGFsbG93ZWRJbmdyZXNzUG9ydHM6CiAgICAgIC0gaHR0cAogICAgICAtIGh0dHBzCiAgICAgIGVncmVzczogW10KICAgICAgZWdyZXNzQWxsb3dSdWxlczoKICAgICAgICBjbG91ZE1ldGFkYXRhU2VydmVyOiB0cnVlCiAgICAgICAgZG5zUG9ydHNDbG91ZE1ldGFkYXRhU2VydmVyOiB0cnVlCiAgICAgICAgZG5zUG9ydHNLdWJlU3lzdGVtTmFtZXNwYWNlOiB0cnVlCiAgICAgICAgZG5zUG9ydHNQcml2YXRlSVBzOiB0cnVlCiAgICAgICAgbm9uUHJpdmF0ZUlQczogdHJ1ZQogICAgICAgIHByaXZhdGVJUHM6IHRydWUKICAgICAgZW5hYmxlZDogdHJ1ZQogICAgICBpbmdyZXNzOiBbXQogICAgICBpbnRlck5hbWVzcGFjZUFjY2Vzc0xhYmVsczogaWdub3JlCiAgICBub2RlU2VsZWN0b3I6IHt9CiAgICBwZGI6CiAgICAgIGVuYWJsZWQ6IGZhbHNlCiAgICAgIG1pbkF2YWlsYWJsZTogMQogICAgcmVzb3VyY2VzOiB7fQogICAgc2VydmljZUFjY291bnQ6CiAgICAgIGFubm90YXRpb25zOiB7fQogICAgICBjcmVhdGU6IHRydWUKICAgIHRvbGVyYXRpb25zOiBbXQpyYmFjOgogIGNyZWF0ZTogdHJ1ZQpzY2hlZHVsaW5nOgogIGNvcmVQb2RzOgogICAgbm9kZUFmZmluaXR5OgogICAgICBtYXRjaE5vZGVQdXJwb3NlOiBwcmVmZXIKICAgIHRvbGVyYXRpb25zOgogICAgLSBlZmZlY3Q6IE5vU2NoZWR1bGUKICAgICAga2V5OiBodWIuanVweXRlci5vcmcvZGVkaWNhdGVkCiAgICAgIG9wZXJhdG9yOiBFcXVhbAogICAgICB2YWx1ZTogY29yZQogICAgLSBlZmZlY3Q6IE5vU2NoZWR1bGUKICAgICAga2V5OiBodWIuanVweXRlci5vcmdfZGVkaWNhdGVkCiAgICAgIG9wZXJhdG9yOiBFcXVhbAogICAgICB2YWx1ZTogY29yZQogIHBvZFByaW9yaXR5OgogICAgZGVmYXVsdFByaW9yaXR5OiAwCiAgICBlbmFibGVkOiBmYWxzZQogICAgZ2xvYmFsRGVmYXVsdDogZmFsc2UKICAgIGltYWdlUHVsbGVyUHJpb3JpdHk6IC01CiAgICB1c2VyUGxhY2Vob2xkZXJQcmlvcml0eTogLTEwCiAgdXNlclBsYWNlaG9sZGVyOgogICAgYW5ub3RhdGlvbnM6IHt9CiAgICBjb250YWluZXJTZWN1cml0eUNvbnRleHQ6CiAgICAgIGFsbG93UHJpdmlsZWdlRXNjYWxhdGlvbjogZmFsc2UKICAgICAgY2FwYWJpbGl0aWVzOgogICAgICAgIGRyb3A6CiAgICAgICAgLSBBTEwKICAgICAgcnVuQXNHcm91cDogNjU1MzQKICAgICAgcnVuQXNOb25Sb290OiB0cnVlCiAgICAgIHJ1bkFzVXNlcjogNjU1MzQKICAgICAgc2VjY29tcFByb2ZpbGU6CiAgICAgICAgdHlwZTogUnVudGltZURlZmF1bHQKICAgIGVuYWJsZWQ6IHRydWUKICAgIGV4dHJhUG9kU3BlYzoge30KICAgIGltYWdlOgogICAgICBuYW1lOiByZWdpc3RyeS5rOHMuaW8vcGF1c2UKICAgICAgcHVsbFNlY3JldHM6IFtdCiAgICAgIHRhZzogMy4xMC4xCiAgICBsYWJlbHM6IHt9CiAgICByZXBsaWNhczogMAogICAgcmVzb3VyY2VzOiB7fQogIHVzZXJQb2RzOgogICAgbm9kZUFmZmluaXR5OgogICAgICBtYXRjaE5vZGVQdXJwb3NlOiBwcmVmZXIKICAgIHRvbGVyYXRpb25zOgogICAgLSBlZmZlY3Q6IE5vU2NoZWR1bGUKICAgICAga2V5OiBodWIuanVweXRlci5vcmcvZGVkaWNhdGVkCiAgICAgIG9wZXJhdG9yOiBFcXVhbAogICAgICB2YWx1ZTogdXNlcgogICAgLSBlZmZlY3Q6IE5vU2NoZWR1bGUKICAgICAga2V5OiBodWIuanVweXRlci5vcmdfZGVkaWNhdGVkCiAgICAgIG9wZXJhdG9yOiBFcXVhbAogICAgICB2YWx1ZTogdXNlcgogIHVzZXJTY2hlZHVsZXI6CiAgICBhbm5vdGF0aW9uczoge30KICAgIGNvbnRhaW5lclNlY3VyaXR5Q29udGV4dDoKICAgICAgYWxsb3dQcml2aWxlZ2VFc2NhbGF0aW9uOiBmYWxzZQogICAgICBjYXBhYmlsaXRpZXM6CiAgICAgICAgZHJvcDoKICAgICAgICAtIEFMTAogICAgICBydW5Bc0dyb3VwOiA2NTUzNAogICAgICBydW5Bc05vblJvb3Q6IHRydWUKICAgICAgcnVuQXNVc2VyOiA2NTUzNAogICAgICBzZWNjb21wUHJvZmlsZToKICAgICAgICB0eXBlOiBSdW50aW1lRGVmYXVsdAogICAgZW5hYmxlZDogdHJ1ZQogICAgZXh0cmFQb2RTcGVjOiB7fQogICAgaW1hZ2U6CiAgICAgIG5hbWU6IHJlZ2lzdHJ5Lms4cy5pby9rdWJlLXNjaGVkdWxlcgogICAgICBwdWxsU2VjcmV0czogW10KICAgICAgdGFnOiB2MS4zMC4xNAogICAgbGFiZWxzOiB7fQogICAgbG9nTGV2ZWw6IDQKICAgIG5vZGVTZWxlY3Rvcjoge30KICAgIHBkYjoKICAgICAgZW5hYmxlZDogdHJ1ZQogICAgICBtYXhVbmF2YWlsYWJsZTogMQogICAgcGx1Z2luQ29uZmlnOgogICAgLSBhcmdzOgogICAgICAgIHNjb3JpbmdTdHJhdGVneToKICAgICAgICAgIHJlc291cmNlczoKICAgICAgICAgIC0gbmFtZTogY3B1CiAgICAgICAgICAgIHdlaWdodDogMQogICAgICAgICAgLSBuYW1lOiBtZW1vcnkKICAgICAgICAgICAgd2VpZ2h0OiAxCiAgICAgICAgICB0eXBlOiBNb3N0QWxsb2NhdGVkCiAgICAgIG5hbWU6IE5vZGVSZXNvdXJjZXNGaXQKICAgIHBsdWdpbnM6CiAgICAgIHNjb3JlOgogICAgICAgIGRpc2FibGVkOgogICAgICAgIC0gbmFtZTogTm9kZVJlc291cmNlc0JhbGFuY2VkQWxsb2NhdGlvbgogICAgICAgIC0gbmFtZTogTm9kZUFmZmluaXR5CiAgICAgICAgLSBuYW1lOiBJbnRlclBvZEFmZmluaXR5CiAgICAgICAgLSBuYW1lOiBOb2RlUmVzb3VyY2VzRml0CiAgICAgICAgLSBuYW1lOiBJbWFnZUxvY2FsaXR5CiAgICAgICAgZW5hYmxlZDoKICAgICAgICAtIG5hbWU6IE5vZGVBZmZpbml0eQogICAgICAgICAgd2VpZ2h0OiAxNDYzMQogICAgICAgIC0gbmFtZTogSW50ZXJQb2RBZmZpbml0eQogICAgICAgICAgd2VpZ2h0OiAxMzMxCiAgICAgICAgLSBuYW1lOiBOb2RlUmVzb3VyY2VzRml0CiAgICAgICAgICB3ZWlnaHQ6IDEyMQogICAgICAgIC0gbmFtZTogSW1hZ2VMb2NhbGl0eQogICAgICAgICAgd2VpZ2h0OiAxMQogICAgcmVwbGljYXM6IDEKICAgIHJlc291cmNlczoge30KICAgIHNlcnZpY2VBY2NvdW50OgogICAgICBhbm5vdGF0aW9uczoge30KICAgICAgY3JlYXRlOiB0cnVlCiAgICB0b2xlcmF0aW9uczogW10Kc2luZ2xldXNlcjoKICBhbGxvd1ByaXZpbGVnZUVzY2FsYXRpb246IGZhbHNlCiAgY2xvdWRNZXRhZGF0YToKICAgIGJsb2NrV2l0aElwdGFibGVzOiB0cnVlCiAgICBpcDogMTY5LjI1NC4xNjkuMjU0CiAgY21kOgogIC0ganVweXRlcmh1Yi1zaW5nbGV1c2VyCiAgY3B1OiB7fQogIGV2ZW50czogdHJ1ZQogIGV4dHJhQW5ub3RhdGlvbnM6IHt9CiAgZXh0cmFDb250YWluZXJzOiBbXQogIGV4dHJhRW52OiB7fQogIGV4dHJhRmlsZXM6IHt9CiAgZXh0cmFMYWJlbHM6CiAgICBodWIuanVweXRlci5vcmcvbmV0d29yay1hY2Nlc3MtaHViOiAidHJ1ZSIKICBleHRyYU5vZGVBZmZpbml0eToKICAgIHByZWZlcnJlZDogW10KICAgIHJlcXVpcmVkOiBbXQogIGV4dHJhUG9kQWZmaW5pdHk6CiAgICBwcmVmZXJyZWQ6IFtdCiAgICByZXF1aXJlZDogW10KICBleHRyYVBvZEFudGlBZmZpbml0eToKICAgIHByZWZlcnJlZDogW10KICAgIHJlcXVpcmVkOiBbXQogIGV4dHJhUG9kQ29uZmlnOgogICAgc2VjdXJpdHlDb250ZXh0OgogICAgICBydW5Bc0dyb3VwOiAwCiAgICAgIHJ1bkFzVXNlcjogMAogIGV4dHJhUmVzb3VyY2U6CiAgICBndWFyYW50ZWVzOiB7fQogICAgbGltaXRzOiB7fQogIGV4dHJhVG9sZXJhdGlvbnM6IFtdCiAgZnNHaWQ6IDAKICBpbWFnZToKICAgIG5hbWU6IGNvZ3N0YWNrc3lzdGVtcy9qdXB5dGVyLXNpbmdsZXVzZXIKICAgIHB1bGxQb2xpY3k6IElmTm90UHJlc2VudAogICAgcHVsbFNlY3JldHM6IFtdCiAgICB0YWc6IDIuMy42CiAgaW5pdENvbnRhaW5lcnM6IFtdCiAgbGlmZWN5Y2xlSG9va3M6CiAgICBwb3N0U3RhcnQ6CiAgICAgIGV4ZWM6CiAgICAgICAgY29tbWFuZDoKICAgICAgICAtIHNoCiAgICAgICAgLSAtYwogICAgICAgIC0gfAogICAgICAgICAgaWYgWyAhIC1mIC9ob21lL2pvdnlhbi93b3JrLy5ub3RlYm9va3NfaW5pdGlhbGl6ZWQgXTsgdGhlbgogICAgICAgICAgICBlY2hvICJGaXJzdCBydW4gLSBjb3B5aW5nIG5vdGVib29rcyBhbmQgbWVkY2F0LXNjcmlwdHMuLi4iOwogICAgICAgICAgICBjcCAtciAvc3J2L2p1cHl0ZXJodWIvbm90ZWJvb2tzLyogL2hvbWUvam92eWFuL3dvcmsvOwogICAgICAgICAgICBjcCAtciAvc3J2L2p1cHl0ZXJodWIvbWVkY2F0LXNjcmlwdHMgL2hvbWUvam92eWFuL3dvcmsvOwogICAgICAgICAgICB0b3VjaCAvaG9tZS9qb3Z5YW4vd29yay8ubm90ZWJvb2tzX2luaXRpYWxpemVkOwogICAgICAgICAgICBlY2hvICJOb3RlYm9va3MgaW5pdGlhbGl6ZWQgc3VjY2Vzc2Z1bGx5IjsKICAgICAgICAgIGVsc2UKICAgICAgICAgICAgZWNobyAiTm90ZWJvb2tzIGFscmVhZHkgaW5pdGlhbGl6ZWQgLSBza2lwcGluZyI7CiAgICAgICAgICBmaQogIG1lbW9yeToKICAgIGd1YXJhbnRlZTogMUcKICBuZXR3b3JrUG9saWN5OgogICAgYWxsb3dlZEluZ3Jlc3NQb3J0czogW10KICAgIGVncmVzczogW10KICAgIGVncmVzc0FsbG93UnVsZXM6CiAgICAgIGNsb3VkTWV0YWRhdGFTZXJ2ZXI6IGZhbHNlCiAgICAgIGRuc1BvcnRzQ2xvdWRNZXRhZGF0YVNlcnZlcjogdHJ1ZQogICAgICBkbnNQb3J0c0t1YmVTeXN0ZW1OYW1lc3BhY2U6IHRydWUKICAgICAgZG5zUG9ydHNQcml2YXRlSVBzOiB0cnVlCiAgICAgIG5vblByaXZhdGVJUHM6IHRydWUKICAgICAgcHJpdmF0ZUlQczogZmFsc2UKICAgIGVuYWJsZWQ6IGZhbHNlCiAgICBpbmdyZXNzOiBbXQogICAgaW50ZXJOYW1lc3BhY2VBY2Nlc3NMYWJlbHM6IGlnbm9yZQogIG5ldHdvcmtUb29sczoKICAgIGltYWdlOgogICAgICBuYW1lOiBxdWF5LmlvL2p1cHl0ZXJodWIvazhzLW5ldHdvcmstdG9vbHMKICAgICAgcHVsbFNlY3JldHM6IFtdCiAgICAgIHRhZzogNC4zLjIKICAgIHJlc291cmNlczoge30KICBub2RlU2VsZWN0b3I6IHt9CiAgcHJvZmlsZUxpc3Q6IFtdCiAgc3RhcnRUaW1lb3V0OiA2MDAKICBzdG9yYWdlOgogICAgY2FwYWNpdHk6IDVHaQogICAgZHluYW1pYzoKICAgICAgc3RvcmFnZUFjY2Vzc01vZGVzOgogICAgICAtIFJlYWRXcml0ZU9uY2UKICAgICAgdm9sdW1lTmFtZVRlbXBsYXRlOiB2b2x1bWUte3VzZXJfc2VydmVyfQogICAgZXh0cmFMYWJlbHM6IHt9CiAgICBleHRyYVZvbHVtZU1vdW50czoKICAgICAganVweXRlci1leGFtcGxlczoKICAgICAgICBtb3VudFBhdGg6IC9ob21lL2pvdnlhbi93b3JrL2V4YW1wbGVzCiAgICAgICAgbmFtZToganVweXRlci1leGFtcGxlcwogICAgICAgIHJlYWRPbmx5OiB0cnVlCiAgICBleHRyYVZvbHVtZXM6CiAgICAgIGp1cHl0ZXItZXhhbXBsZXM6CiAgICAgICAgY29uZmlnTWFwOgogICAgICAgICAgbmFtZToganVweXRlci1leGFtcGxlcwogICAgICAgIG5hbWU6IGp1cHl0ZXItZXhhbXBsZXMKICAgIGhvbWVNb3VudFBhdGg6IC9ob21lL2pvdnlhbgogICAgc3RhdGljOgogICAgICBzdWJQYXRoOiAne3VzZXJuYW1lfScKICAgIHR5cGU6IGR5bmFtaWMKICB1aWQ6IDA="
+
+  # Any JupyterHub Services api_tokens are exposed in this k8s Secret as a
+  # convinience for external services running in the k8s cluster that could
+  # mount them directly from this k8s Secret.
+
+  # During Helm template rendering, these values that can be autogenerated for
+  # users are set using the following logic:
+  #
+  # 1. Use chart configuration's value
+  # 2. Use k8s Secret's value
+  # 3. Use a new autogenerated value
+  #
+  # hub.config.ConfigurableHTTPProxy.auth_token: for hub to proxy-api authorization (JupyterHub.proxy_auth_token is deprecated)
+  # hub.config.JupyterHub.cookie_secret:         for cookie encryption
+  # hub.config.CryptKeeper.keys:                 for auth state encryption
+  #
+  hub.config.ConfigurableHTTPProxy.auth_token: "U3BSZUdMQWhaUnR3MG8yejlHcVcxU3hGbkJNWkpwaXFTcFJLSzVCOGkyeUwzZFJqSXVwZjlHd2U5ZjlBeWRMUg=="
+  hub.config.JupyterHub.cookie_secret: "ZDUwMjYzZTQyMTYzOWU2MGQ5MmU1N2RiZTk4ODA0NGI2YTVjZDRiMjZiZTIwNGE0YWE3YmRiMGFmZjAwYTYzMQ=="
+  hub.config.CryptKeeper.keys: "Mzg3NzkyMzA2YWE4NmNhZjdlNzJjNzAwYmU2NjlkNWE2NmNlODYzYWZhNzY2YjBmNDdkYzM4OTYyYmE4YzE0Ng=="
+
+---
+# Source: jupyterhub-helm/charts/jupyterhub/templates/hub/configmap.yaml
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: hub
+  labels:
+    component: hub
+    app.kubernetes.io/component: hub
+    app: "jupyterhub"
+    release: "jupyterhub"
+    chart: jupyterhub-4.3.2
+    heritage: Helm
+    app.kubernetes.io/name: "jupyterhub"
+    app.kubernetes.io/instance: "jupyterhub"
+    helm.sh/chart: jupyterhub-4.3.2
+    app.kubernetes.io/managed-by: Helm
+data:
+  fullname: ""
+  fullname-dash: ""
+  hub: "hub"
+  hub-serviceaccount: "hub"
+  hub-existing-secret: ""
+  hub-existing-secret-or-default: "hub"
+  hub-pvc: "hub-db-dir"
+  proxy: "proxy"
+  proxy-api: "proxy-api"
+  proxy-http: "proxy-http"
+  proxy-public: "proxy-public"
+  proxy-public-tls: "proxy-public-tls-acme"
+  proxy-public-manual-tls: "proxy-public-manual-tls"
+  autohttps: "autohttps"
+  autohttps-serviceaccount: "autohttps"
+  user-scheduler-deploy: "user-scheduler"
+  user-scheduler-serviceaccount: "user-scheduler"
+  user-scheduler-lock: "user-scheduler-lock"
+  user-placeholder: "user-placeholder"
+  image-puller-priority: "jupyterhub-image-puller-priority"
+  hook-image-awaiter: "hook-image-awaiter"
+  hook-image-awaiter-serviceaccount: "hook-image-awaiter"
+  hook-image-puller: "hook-image-puller"
+  hook-image-puller-serviceaccount: "hook-image-puller"
+  continuous-image-puller: "continuous-image-puller"
+  continuous-image-puller-serviceaccount: "continuous-image-puller"
+  singleuser: "singleuser"
+  image-pull-secret: "image-pull-secret"
+  ingress: "jupyterhub"
+  priority: "jupyterhub-default-priority"
+  user-placeholder-priority: "jupyterhub-user-placeholder-priority"
+  user-scheduler: "jupyterhub-user-scheduler"
+  jupyterhub_config.py: |
+    # load the config object (satisfies linters)
+    c = get_config()  # noqa
+  
+    import glob
+    import os
+    import re
+    import sys
+  
+    from jupyterhub.utils import url_path_join
+    from kubernetes_asyncio import client
+    from tornado.httpclient import AsyncHTTPClient
+  
+    # Make sure that modules placed in the same directory as the jupyterhub config are added to the pythonpath
+    configuration_directory = os.path.dirname(os.path.realpath(__file__))
+    sys.path.insert(0, configuration_directory)
+  
+    from z2jh import (
+        get_config,
+        get_name,
+        get_name_env,
+        get_secret_value,
+        set_config_if_not_none,
+    )
+  
+  
+    def camelCaseify(s):
+        """convert snake_case to camelCase
+  
+        For the common case where some_value is set from someValue
+        so we don't have to specify the name twice.
+        """
+        return re.sub(r"_([a-z])", lambda m: m.group(1).upper(), s)
+  
+  
+    # Configure JupyterHub to use the curl backend for making HTTP requests,
+    # rather than the pure-python implementations. The default one starts
+    # being too slow to make a large number of requests to the proxy API
+    # at the rate required.
+    AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
+  
+    c.JupyterHub.spawner_class = "kubespawner.KubeSpawner"
+  
+    # Connect to a proxy running in a different pod. Note that *_SERVICE_*
+    # environment variables are set by Kubernetes for Services
+    c.ConfigurableHTTPProxy.api_url = (
+        f'http://{get_name("proxy-api")}:{get_name_env("proxy-api", "_SERVICE_PORT")}'
+    )
+    c.ConfigurableHTTPProxy.should_start = False
+  
+    # Do not shut down user pods when hub is restarted
+    c.JupyterHub.cleanup_servers = False
+  
+    # Check that the proxy has routes appropriately setup
+    c.JupyterHub.last_activity_interval = 60
+  
+    # Don't wait at all before redirecting a spawning user to the progress page
+    c.JupyterHub.tornado_settings = {
+        "slow_spawn_timeout": 0,
+    }
+  
+  
+    # configure the hub db connection
+    db_type = get_config("hub.db.type")
+    if db_type == "sqlite-pvc":
+        c.JupyterHub.db_url = "sqlite:///jupyterhub.sqlite"
+    elif db_type == "sqlite-memory":
+        c.JupyterHub.db_url = "sqlite://"
+    else:
+        set_config_if_not_none(c.JupyterHub, "db_url", "hub.db.url")
+    db_password = get_secret_value("hub.db.password", None)
+    if db_password is not None:
+        if db_type == "mysql":
+            os.environ["MYSQL_PWD"] = db_password
+        elif db_type == "postgres":
+            os.environ["PGPASSWORD"] = db_password
+        else:
+            print(f"Warning: hub.db.password is ignored for hub.db.type={db_type}")
+  
+  
+    # c.JupyterHub configuration from Helm chart's configmap
+    for trait, cfg_key in (
+        ("concurrent_spawn_limit", None),
+        ("active_server_limit", None),
+        ("base_url", None),
+        ("allow_named_servers", None),
+        ("named_server_limit_per_user", None),
+        ("authenticate_prometheus", None),
+        ("redirect_to_server", None),
+        ("shutdown_on_logout", None),
+        ("template_paths", None),
+        ("template_vars", None),
+    ):
+        if cfg_key is None:
+            cfg_key = camelCaseify(trait)
+        set_config_if_not_none(c.JupyterHub, trait, "hub." + cfg_key)
+  
+    # hub_bind_url configures what the JupyterHub process within the hub pod's
+    # container should listen to.
+    hub_container_port = 8081
+    c.JupyterHub.hub_bind_url = f"http://:{hub_container_port}"
+  
+    # hub_connect_url is the URL for connecting to the hub for use by external
+    # JupyterHub services such as the proxy. Note that *_SERVICE_* environment
+    # variables are set by Kubernetes for Services.
+    c.JupyterHub.hub_connect_url = (
+        f'http://{get_name("hub")}:{get_name_env("hub", "_SERVICE_PORT")}'
+    )
+  
+    # implement common labels
+    # This mimics the jupyterhub.commonLabels helper, but declares managed-by to
+    # kubespawner instead of helm.
+    #
+    # The labels app and release are old labels enabled to be deleted in z2jh 5, but
+    # for now retained to avoid a breaking change in z2jh 4 that would force user
+    # server restarts. Restarts would be required because NetworkPolicy resources
+    # must select old/new pods with labels that then needs to be seen on both
+    # old/new pods, and we want these resources to keep functioning for old/new user
+    # server pods during an upgrade.
+    #
+    common_labels = c.KubeSpawner.common_labels = {}
+    common_labels["app.kubernetes.io/name"] = common_labels["app"] = get_config(
+        "nameOverride",
+        default=get_config("Chart.Name", "jupyterhub"),
+    )
+    release = get_config("Release.Name")
+    if release:
+        common_labels["app.kubernetes.io/instance"] = common_labels["release"] = release
+    chart_name = get_config("Chart.Name")
+    chart_version = get_config("Chart.Version")
+    if chart_name and chart_version:
+        common_labels["helm.sh/chart"] = common_labels["chart"] = (
+            f"{chart_name}-{chart_version.replace('+', '_')}"
+        )
+    common_labels["app.kubernetes.io/managed-by"] = "kubespawner"
+  
+    c.KubeSpawner.namespace = os.environ.get("POD_NAMESPACE", "default")
+  
+    # Max number of consecutive failures before the Hub restarts itself
+    set_config_if_not_none(
+        c.Spawner,
+        "consecutive_failure_limit",
+        "hub.consecutiveFailureLimit",
+    )
+  
+    for trait, cfg_key in (
+        ("pod_name_template", None),
+        ("start_timeout", None),
+        ("image_pull_policy", "image.pullPolicy"),
+        # ('image_pull_secrets', 'image.pullSecrets'), # Managed manually below
+        ("events_enabled", "events"),
+        ("extra_labels", None),
+        ("extra_annotations", None),
+        # ("allow_privilege_escalation", None), # Managed manually below
+        ("uid", None),
+        ("fs_gid", None),
+        ("service_account", "serviceAccountName"),
+        ("storage_extra_labels", "storage.extraLabels"),
+        # ("tolerations", "extraTolerations"), # Managed manually below
+        ("node_selector", None),
+        ("node_affinity_required", "extraNodeAffinity.required"),
+        ("node_affinity_preferred", "extraNodeAffinity.preferred"),
+        ("pod_affinity_required", "extraPodAffinity.required"),
+        ("pod_affinity_preferred", "extraPodAffinity.preferred"),
+        ("pod_anti_affinity_required", "extraPodAntiAffinity.required"),
+        ("pod_anti_affinity_preferred", "extraPodAntiAffinity.preferred"),
+        ("lifecycle_hooks", None),
+        ("init_containers", None),
+        ("extra_containers", None),
+        ("mem_limit", "memory.limit"),
+        ("mem_guarantee", "memory.guarantee"),
+        ("cpu_limit", "cpu.limit"),
+        ("cpu_guarantee", "cpu.guarantee"),
+        ("extra_resource_limits", "extraResource.limits"),
+        ("extra_resource_guarantees", "extraResource.guarantees"),
+        ("environment", "extraEnv"),
+        ("profile_list", None),
+        ("extra_pod_config", None),
+    ):
+        if cfg_key is None:
+            cfg_key = camelCaseify(trait)
+        set_config_if_not_none(c.KubeSpawner, trait, "singleuser." + cfg_key)
+  
+    image = get_config("singleuser.image.name")
+    if image:
+        tag = get_config("singleuser.image.tag")
+        if tag:
+            image = f"{image}:{tag}"
+  
+        c.KubeSpawner.image = image
+  
+    # allow_privilege_escalation defaults to False in KubeSpawner 2+. Since its a
+    # property where None, False, and True all are valid values that users of the
+    # Helm chart may want to set, we can't use the set_config_if_not_none helper
+    # function as someone may want to override the default False value to None.
+    #
+    c.KubeSpawner.allow_privilege_escalation = get_config(
+        "singleuser.allowPrivilegeEscalation"
+    )
+  
+    # Combine imagePullSecret.create (single), imagePullSecrets (list), and
+    # singleuser.image.pullSecrets (list).
+    image_pull_secrets = []
+    if get_config("imagePullSecret.automaticReferenceInjection") and get_config(
+        "imagePullSecret.create"
+    ):
+        image_pull_secrets.append(get_name("image-pull-secret"))
+    if get_config("imagePullSecrets"):
+        image_pull_secrets.extend(get_config("imagePullSecrets"))
+    if get_config("singleuser.image.pullSecrets"):
+        image_pull_secrets.extend(get_config("singleuser.image.pullSecrets"))
+    if image_pull_secrets:
+        c.KubeSpawner.image_pull_secrets = image_pull_secrets
+  
+    # scheduling:
+    if get_config("scheduling.userScheduler.enabled"):
+        c.KubeSpawner.scheduler_name = get_name("user-scheduler")
+    if get_config("scheduling.podPriority.enabled"):
+        c.KubeSpawner.priority_class_name = get_name("priority")
+  
+    # add node-purpose affinity
+    match_node_purpose = get_config("scheduling.userPods.nodeAffinity.matchNodePurpose")
+    if match_node_purpose:
+        node_selector = dict(
+            matchExpressions=[
+                dict(
+                    key="hub.jupyter.org/node-purpose",
+                    operator="In",
+                    values=["user"],
+                )
+            ],
+        )
+        if match_node_purpose == "prefer":
+            c.KubeSpawner.node_affinity_preferred.append(
+                dict(
+                    weight=100,
+                    preference=node_selector,
+                ),
+            )
+        elif match_node_purpose == "require":
+            c.KubeSpawner.node_affinity_required.append(node_selector)
+        elif match_node_purpose == "ignore":
+            pass
+        else:
+            raise ValueError(
+                f"Unrecognized value for matchNodePurpose: {match_node_purpose}"
+            )
+  
+    # Combine the common tolerations for user pods with singleuser tolerations
+    scheduling_user_pods_tolerations = get_config("scheduling.userPods.tolerations", [])
+    singleuser_extra_tolerations = get_config("singleuser.extraTolerations", [])
+    tolerations = scheduling_user_pods_tolerations + singleuser_extra_tolerations
+    if tolerations:
+        c.KubeSpawner.tolerations = tolerations
+  
+    volumes = {}
+    volume_mounts = {}
+  
+    # Configure dynamically provisioning pvc
+    storage_type = get_config("singleuser.storage.type")
+    if storage_type == "dynamic":
+        pvc_name_template = get_config("singleuser.storage.dynamic.pvcNameTemplate")
+        if pvc_name_template:
+            c.KubeSpawner.pvc_name_template = pvc_name_template
+        volume_name_template = get_config("singleuser.storage.dynamic.volumeNameTemplate")
+        c.KubeSpawner.storage_pvc_ensure = True
+        set_config_if_not_none(
+            c.KubeSpawner, "storage_class", "singleuser.storage.dynamic.storageClass"
+        )
+        set_config_if_not_none(
+            c.KubeSpawner,
+            "storage_access_modes",
+            "singleuser.storage.dynamic.storageAccessModes",
+        )
+        set_config_if_not_none(
+            c.KubeSpawner, "storage_capacity", "singleuser.storage.capacity"
+        )
+  
+        # Add volumes to singleuser pods
+        volumes = {
+            volume_name_template: {
+                "name": volume_name_template,
+                "persistentVolumeClaim": {"claimName": "{pvc_name}"},
+            }
+        }
+        volume_mounts = {
+            volume_name_template: {
+                "mountPath": get_config("singleuser.storage.homeMountPath"),
+                "name": volume_name_template,
+                "subPath": get_config("singleuser.storage.dynamic.subPath"),
+            }
+        }
+    elif storage_type == "static":
+        pvc_claim_name = get_config("singleuser.storage.static.pvcName")
+        volumes = {
+            "home": {
+                "name": "home",
+                "persistentVolumeClaim": {"claimName": pvc_claim_name},
+            }
+        }
+  
+        volume_mounts = {
+            "home": {
+                "mountPath": get_config("singleuser.storage.homeMountPath"),
+                "name": "home",
+                "subPath": get_config("singleuser.storage.static.subPath"),
+            }
+        }
+  
+    # Inject singleuser.extraFiles as volumes and volumeMounts with data loaded from
+    # the dedicated k8s Secret prepared to hold the extraFiles actual content.
+    extra_files = get_config("singleuser.extraFiles", {})
+    if extra_files:
+        volume = {
+            "name": "files",
+        }
+        items = []
+        for file_key, file_details in extra_files.items():
+            # Each item is a mapping of a key in the k8s Secret to a path in this
+            # abstract volume, the goal is to enable us to set the mode /
+            # permissions only though so we don't change the mapping.
+            item = {
+                "key": file_key,
+                "path": file_key,
+            }
+            if "mode" in file_details:
+                item["mode"] = file_details["mode"]
+            items.append(item)
+        volume["secret"] = {
+            "secretName": get_name("singleuser"),
+            "items": items,
+        }
+        volumes[volume["name"]] = volume
+  
+        for idx, (file_key, file_details) in enumerate(extra_files.items()):
+            volume_mount = {
+                "mountPath": file_details["mountPath"],
+                "subPath": file_key,
+                "name": "files",
+            }
+            volume_mounts[f"{idx}-files"] = volume_mount
+  
+    # Inject extraVolumes / extraVolumeMounts
+    extra_volumes = get_config("singleuser.storage.extraVolumes", default={})
+    if isinstance(extra_volumes, dict):
+        volumes.update(extra_volumes)
+    elif isinstance(extra_volumes, list):
+        for volume in extra_volumes:
+            volumes[volume["name"]] = volume
+  
+    extra_volume_mounts = get_config("singleuser.storage.extraVolumeMounts", default={})
+    if isinstance(extra_volume_mounts, dict):
+        volume_mounts.update(extra_volume_mounts)
+    elif isinstance(extra_volume_mounts, list):
+        # If extraVolumeMounts is a list, we need to add them to the volume_mounts
+        # dictionary with a unique key.
+        # Since volume mount's name is not guaranteed to be unique, we use the index
+        # as part of the key.
+        for idx, volume_mount in enumerate(extra_volume_mounts):
+            volume_mounts[f"{idx}-{volume_mount['name']}"] = volume_mount
+  
+    c.KubeSpawner.volumes = volumes
+    c.KubeSpawner.volume_mounts = volume_mounts
+  
+    c.JupyterHub.services = []
+    c.JupyterHub.load_roles = []
+  
+    # jupyterhub-idle-culler's permissions are scoped to what it needs only, see
+    # https://github.com/jupyterhub/jupyterhub-idle-culler#permissions.
+    #
+    if get_config("cull.enabled", False):
+        jupyterhub_idle_culler_role = {
+            "name": "jupyterhub-idle-culler",
+            "scopes": [
+                "list:users",
+                "read:users:activity",
+                "read:servers",
+                "delete:servers",
+                # "admin:users", # dynamically added if --cull-users is passed
+            ],
+            # assign the role to a jupyterhub service, so it gains these permissions
+            "services": ["jupyterhub-idle-culler"],
+        }
+  
+        cull_cmd = ["python3", "-m", "jupyterhub_idle_culler"]
+        base_url = c.JupyterHub.get("base_url", "/")
+        cull_cmd.append("--url=http://localhost:8081" + url_path_join(base_url, "hub/api"))
+  
+        cull_timeout = get_config("cull.timeout")
+        if cull_timeout:
+            cull_cmd.append(f"--timeout={cull_timeout}")
+  
+        cull_every = get_config("cull.every")
+        if cull_every:
+            cull_cmd.append(f"--cull-every={cull_every}")
+  
+        cull_concurrency = get_config("cull.concurrency")
+        if cull_concurrency:
+            cull_cmd.append(f"--concurrency={cull_concurrency}")
+  
+        if get_config("cull.users"):
+            cull_cmd.append("--cull-users")
+            jupyterhub_idle_culler_role["scopes"].append("admin:users")
+  
+        if not get_config("cull.adminUsers"):
+            cull_cmd.append("--cull-admin-users=false")
+  
+        if get_config("cull.removeNamedServers"):
+            cull_cmd.append("--remove-named-servers")
+  
+        cull_max_age = get_config("cull.maxAge")
+        if cull_max_age:
+            cull_cmd.append(f"--max-age={cull_max_age}")
+  
+        c.JupyterHub.services.append(
+            {
+                "name": "jupyterhub-idle-culler",
+                "command": cull_cmd,
+            }
+        )
+        c.JupyterHub.load_roles.append(jupyterhub_idle_culler_role)
+  
+    for key, service in get_config("hub.services", {}).items():
+        # c.JupyterHub.services is a list of dicts, but
+        # hub.services is a dict of dicts to make the config mergable
+        service.setdefault("name", key)
+  
+        # As the api_token could be exposed in hub.existingSecret, we need to read
+        # it it from there or fall back to the chart managed k8s Secret's value.
+        service.pop("apiToken", None)
+        service["api_token"] = get_secret_value(f"hub.services.{key}.apiToken")
+  
+        c.JupyterHub.services.append(service)
+  
+    for key, role in get_config("hub.loadRoles", {}).items():
+        # c.JupyterHub.load_roles is a list of dicts, but
+        # hub.loadRoles is a dict of dicts to make the config mergable
+        role.setdefault("name", key)
+  
+        c.JupyterHub.load_roles.append(role)
+  
+    # respect explicit null command (distinct from unspecified)
+    # this avoids relying on KubeSpawner.cmd's default being None
+    _unspecified = object()
+    specified_cmd = get_config("singleuser.cmd", _unspecified)
+    if specified_cmd is not _unspecified:
+        c.Spawner.cmd = specified_cmd
+  
+    set_config_if_not_none(c.Spawner, "default_url", "singleuser.defaultUrl")
+  
+    cloud_metadata = get_config("singleuser.cloudMetadata")
+  
+    if cloud_metadata.get("blockWithIptables") == True:
+        # Use iptables to block access to cloud metadata by default
+        network_tools_image_name = get_config("singleuser.networkTools.image.name")
+        network_tools_image_tag = get_config("singleuser.networkTools.image.tag")
+        network_tools_resources = get_config("singleuser.networkTools.resources")
+        ip = cloud_metadata["ip"]
+        ip_block_container = client.V1Container(
+            name="block-cloud-metadata",
+            image=f"{network_tools_image_name}:{network_tools_image_tag}",
+            command=[
+                "iptables",
+                "--append",
+                "OUTPUT",
+                "--protocol",
+                "tcp",
+                "--destination",
+                ip,
+                "--destination-port",
+                "80",
+                "--jump",
+                "DROP",
+            ],
+            security_context=client.V1SecurityContext(
+                privileged=True,
+                run_as_user=0,
+                capabilities=client.V1Capabilities(add=["NET_ADMIN"]),
+            ),
+            resources=network_tools_resources,
+        )
+  
+        c.KubeSpawner.init_containers.append(ip_block_container)
+  
+  
+    if get_config("debug.enabled", False):
+        c.JupyterHub.log_level = "DEBUG"
+        c.Spawner.debug = True
+  
+    # load potentially seeded secrets
+    #
+    # NOTE: ConfigurableHTTPProxy.auth_token is set through an environment variable
+    #       that is set using the chart managed secret.
+    c.JupyterHub.cookie_secret = get_secret_value("hub.config.JupyterHub.cookie_secret")
+    # NOTE: CryptKeeper.keys should be a list of strings, but we have encoded as a
+    #       single string joined with ; in the k8s Secret.
+    #
+    c.CryptKeeper.keys = get_secret_value("hub.config.CryptKeeper.keys").split(";")
+  
+    # load hub.config values, except potentially seeded secrets already loaded
+    for section, cfg in get_config("hub.config", {}).items():
+        if section == "JupyterHub":
+            cfg.pop("proxy_auth_token", None)
+            cfg.pop("cookie_secret", None)
+            cfg.pop("services", None)
+        elif section == "ConfigurableHTTPProxy":
+            cfg.pop("auth_token", None)
+        elif section == "CryptKeeper":
+            cfg.pop("keys", None)
+  
+        if not section[:1].isupper():
+            # traitlets config sections are Configurable class names
+            # that MUST start with upper-case
+            # if it starts with lowercase, it must be a mistake
+            # (e.g. putting `hub.loadRoles` under `hub.config.loadRoles`),
+            # and will have no effect, so warn or raise here
+            print(
+                f"FATAL: Invalid hub.config section name: {section}."
+                " hub.config sections must be Configurable class names (e.g. JupyterHub)."
+                " Maybe misplaced or misspelled config?",
+                file=sys.stderr,
+            )
+            # make this fatal:
+            sys.exit(1)
+  
+        print(f"Loading pass-through config section hub.config.{section}")
+        c[section].update(cfg)
+  
+    # load /usr/local/etc/jupyterhub/jupyterhub_config.d config files
+    config_dir = "/usr/local/etc/jupyterhub/jupyterhub_config.d"
+    if os.path.isdir(config_dir):
+        for file_path in sorted(glob.glob(f"{config_dir}/*.py")):
+            file_name = os.path.basename(file_path)
+            print(f"Loading {config_dir} config: {file_name}")
+            with open(file_path) as f:
+                file_content = f.read()
+            # compiling makes debugging easier: https://stackoverflow.com/a/437857
+            exec(compile(source=file_content, filename=file_name, mode="exec"))
+  
+    # execute hub.extraConfig entries
+    for key, config_py in sorted(get_config("hub.extraConfig", {}).items()):
+        print(f"Loading extra config: {key}")
+        exec(config_py)
+  z2jh.py: |
+    """
+    Utility methods for use in jupyterhub_config.py and dynamic subconfigs.
+  
+    Methods here can be imported by extraConfig in values.yaml
+    """
+  
+    import os
+    from collections.abc import Mapping
+    from functools import lru_cache
+  
+    import yaml
+  
+  
+    # memoize so we only load config once
+    @lru_cache
+    def _load_config():
+        """Load the Helm chart configuration used to render the Helm templates of
+        the chart from a mounted k8s Secret, and merge in values from an optionally
+        mounted secret (hub.existingSecret)."""
+  
+        cfg = {}
+        for source in ("secret/values.yaml", "existing-secret/values.yaml"):
+            path = f"/usr/local/etc/jupyterhub/{source}"
+            if os.path.exists(path):
+                print(f"Loading {path}")
+                with open(path) as f:
+                    values = yaml.safe_load(f)
+                cfg = _merge_dictionaries(cfg, values)
+            else:
+                print(f"No config at {path}")
+        return cfg
+  
+  
+    @lru_cache
+    def _get_config_value(key):
+        """Load value from the k8s ConfigMap given a key."""
+  
+        path = f"/usr/local/etc/jupyterhub/config/{key}"
+        if os.path.exists(path):
+            with open(path) as f:
+                return f.read()
+        else:
+            raise Exception(f"{path} not found!")
+  
+  
+    @lru_cache
+    def get_secret_value(key, default="never-explicitly-set"):
+        """Load value from the user managed k8s Secret or the default k8s Secret
+        given a key."""
+  
+        for source in ("existing-secret", "secret"):
+            path = f"/usr/local/etc/jupyterhub/{source}/{key}"
+            if os.path.exists(path):
+                with open(path) as f:
+                    return f.read()
+        if default != "never-explicitly-set":
+            return default
+        raise Exception(f"{key} not found in either k8s Secret!")
+  
+  
+    def get_name(name):
+        """Returns the fullname of a resource given its short name"""
+        return _get_config_value(name)
+  
+  
+    def get_name_env(name, suffix=""):
+        """Returns the fullname of a resource given its short name along with a
+        suffix, converted to uppercase with dashes replaced with underscores. This
+        is useful to reference named services associated environment variables, such
+        as PROXY_PUBLIC_SERVICE_PORT."""
+        env_key = _get_config_value(name) + suffix
+        env_key = env_key.upper().replace("-", "_")
+        return os.environ[env_key]
+  
+  
+    def _merge_dictionaries(a, b):
+        """Merge two dictionaries recursively.
+  
+        Simplified From https://stackoverflow.com/a/7205107
+        """
+        merged = a.copy()
+        for key in b:
+            if key in a:
+                if isinstance(a[key], Mapping) and isinstance(b[key], Mapping):
+                    merged[key] = _merge_dictionaries(a[key], b[key])
+                else:
+                    merged[key] = b[key]
+            else:
+                merged[key] = b[key]
+        return merged
+  
+  
+    def get_config(key, default=None):
+        """
+        Find a config item of a given name & return it
+  
+        Parses everything as YAML, so lists and dicts are available too
+  
+        get_config("a.b.c") returns config['a']['b']['c']
+        """
+        value = _load_config()
+        # resolve path in yaml
+        for level in key.split("."):
+            if not isinstance(value, dict):
+                # a parent is a scalar or null,
+                # can't resolve full path
+                return default
+            if level not in value:
+                return default
+            else:
+                value = value[level]
+        return value
+  
+  
+    def set_config_if_not_none(cparent, name, key):
+        """
+        Find a config item of a given name, set the corresponding Jupyter
+        configuration item if not None
+        """
+        data = get_config(key)
+        if data is not None:
+            setattr(cparent, name, data)
+  checksum_hook-image-puller: "3a29462d49c0efbd3eb438d883e8f495a408680e5a08aede22fdc6cf229f77b4"
+
+---
+# Source: jupyterhub-helm/charts/jupyterhub/templates/scheduling/user-scheduler/configmap.yaml
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: user-scheduler
+  labels:
+    component: user-scheduler
+    app.kubernetes.io/component: user-scheduler
+    app: "jupyterhub"
+    release: "jupyterhub"
+    chart: jupyterhub-4.3.2
+    heritage: Helm
+    app.kubernetes.io/name: "jupyterhub"
+    app.kubernetes.io/instance: "jupyterhub"
+    helm.sh/chart: jupyterhub-4.3.2
+    app.kubernetes.io/managed-by: Helm
+data:
+  config.yaml: |
+    apiVersion: kubescheduler.config.k8s.io/v1
+    kind: KubeSchedulerConfiguration
+    leaderElection:
+      resourceLock: leases
+      resourceName: user-scheduler-lock
+      resourceNamespace: "default"
+    profiles:
+      - schedulerName: jupyterhub-user-scheduler
+        plugins:
+          score:
+            disabled:
+            - name: NodeResourcesBalancedAllocation
+            - name: NodeAffinity
+            - name: InterPodAffinity
+            - name: NodeResourcesFit
+            - name: ImageLocality
+            enabled:
+            - name: NodeAffinity
+              weight: 14631
+            - name: InterPodAffinity
+              weight: 1331
+            - name: NodeResourcesFit
+              weight: 121
+            - name: ImageLocality
+              weight: 11
+        pluginConfig:
+          - args:
+              scoringStrategy:
+                resources:
+                - name: cpu
+                  weight: 1
+                - name: memory
+                  weight: 1
+                type: MostAllocated
+            name: NodeResourcesFit
+
+---
+# Source: jupyterhub-helm/templates/examples-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jupyter-examples
+data:
+  medcat-opensearch-e2e.ipynb: |
+    {
+      "cells": [
+        {
+          "cell_type": "markdown",
+          "id": "a7844791",
+          "metadata": {},
+          "source": [
+            "# MedCAT + OpenSearch End-to-End Demo\n",
+            "\n",
+            "This is a short, practical walkthrough showing how to turn one clinical note into searchable concepts.\n",
+            "\n",
+            "It is an end to end example of how you can use CogStack to unlock the power of your healthcare data.\n",
+            "\n",
+            "## Overview\n",
+            "\n",
+            "### Who this is for\n",
+            "This is for developers, data engineers, and analysts who want to see a practical example of how CogStack, MedCAT and Opensearch can be integrated to let you perform advanced search on your notes. \n",
+            "\n",
+            "### What this notebook does\n",
+            "1. Index one sample note into `discharge`\n",
+            "2. Search that note back using free text\n",
+            "3. Search that note back even when we have typos\n",
+            "4. Perform Named Entity Resolution (NER) by calling MedCAT Service and index them\n",
+            "5. Search notes by concept\n",
+            "\n",
+            "The goal is to show that this process is straightforward: call one API, index results, and query them.\n",
+            "\n",
+            "### Prerequisites\n",
+            "The best way to run this notebook interactively is to run the CogStack Community Edition with Helm. Look at https://docs.cogstack.org/ to get started."
+          ]
+        },
+        {
+          "cell_type": "markdown",
+          "id": "875a64db",
+          "metadata": {},
+          "source": [
+            "## Initialisation: Define the inputs and services\n",
+            "\n",
+            "### Input Data\n",
+            "We define a short input for this tutorial. This represents your free text patient data, for example a discharge summary or long doctors note.\n",
+            "\n",
+            "The sample sentence contains concepts that the example demo packs used by medcat service have been trained for. \n",
+            "\n",
+            "### Service definitions\n",
+            "We will setup a client for OpenSearch, and define the HTTP endpoint for medcat service.\n",
+            "\n",
+            "If using the cogstack community edition helm chart, these should all be setup for you automatically using kubernetes services and env vars. Otherwise change these accordingly."
+          ]
+        },
+        {
+          "cell_type": "code",
+          "execution_count": null,
+          "id": "17deaa5c",
+          "metadata": {},
+          "outputs": [
+            {
+              "name": "stderr",
+              "output_type": "stream",
+              "text": [
+                "/opt/conda/envs/py311/lib/python3.11/site-packages/opensearchpy/connection/http_urllib3.py:214: UserWarning: Connecting to https://opensearch-cluster-master:9200 using SSL with verify_certs=False is insecure.\n",
+                "  warnings.warn(\n"
+              ]
+            }
+          ],
+          "source": [
+            "import os\n",
+            "from datetime import datetime, timezone\n",
+            "from urllib.parse import urlparse\n",
+            "\n",
+            "import pandas as pd\n",
+            "import requests\n",
+            "import urllib3\n",
+            "from IPython.display import display\n",
+            "from opensearchpy import OpenSearch\n",
+            "\n",
+            "# The sample note that we will work with\n",
+            "sample_text = \"John was diagnosed with Kidney Failure\"\n",
+            "\n",
+            "# Service URLs from environment variables\n",
+            "medcat_base_url = os.getenv(\"MEDCAT_SERVICE_URL\", \"http://cogstack-medcat-service:5000\").rstrip(\"/\")\n",
+            "medcat_url = medcat_base_url + \"/api/process\"\n",
+            "\n",
+            "opensearch_url = os.getenv(\"OPENSEARCH_URL\", \"https://opensearch-cluster-master:9200\")\n",
+            "opensearch_username = os.getenv(\"OPENSEARCH_USERNAME\", \"admin\")\n",
+            "opensearch_password = os.getenv(\"OPENSEARCH_PASSWORD\", \"opensearch-312$A\")\n",
+            "\n",
+            "parsed = urlparse(opensearch_url)\n",
+            "\n",
+            "urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)\n",
+            "\n",
+            "host_cfg = {\n",
+            "    \"host\": parsed.hostname,\n",
+            "    \"port\": parsed.port or (443 if parsed.scheme == \"https\" else 80),\n",
+            "}\n",
+            "if parsed.path and parsed.path != \"/\":\n",
+            "    host_cfg[\"url_prefix\"] = parsed.path.lstrip(\"/\")\n",
+            "\n",
+            "client = OpenSearch(\n",
+            "    hosts=[host_cfg],\n",
+            "    http_auth=(opensearch_username, opensearch_password),\n",
+            "    use_ssl=(parsed.scheme == \"https\"),\n",
+            "    verify_certs=False,\n",
+            ")\n",
+            "\n",
+            "# Hardcoded demo indices\n",
+            "discharge_index = \"discharge\"\n",
+            "annotations_index = \"discharge_annotations\"\n",
+            "\n",
+            "# Static demo note id used across all steps\n",
+            "note_id = \"demo-note-kidney-failure-001\"\n",
+            "subject_id = 1"
+          ]
+        },
+        {
+          "cell_type": "markdown",
+          "id": "19340174",
+          "metadata": {},
+          "source": [
+            "## 1) Index the note into OpenSearch\n",
+            "\n",
+            "We write the note into `discharge`, then immediately run a free-text query (`kidney failure`) to prove it is searchable."
+          ]
+        },
+        {
+          "cell_type": "code",
+          "execution_count": 68,
+          "id": "3eb85731",
+          "metadata": {},
+          "outputs": [
+            {
+              "data": {
+                "text/plain": [
+                  "{'_index': 'discharge',\n",
+                  " '_id': 'demo-note-kidney-failure-001',\n",
+                  " '_version': 10,\n",
+                  " 'result': 'updated',\n",
+                  " 'forced_refresh': True,\n",
+                  " '_shards': {'total': 2, 'successful': 1, 'failed': 0},\n",
+                  " '_seq_no': 1009,\n",
+                  " '_primary_term': 1}"
+                ]
+              },
+              "execution_count": 68,
+              "metadata": {},
+              "output_type": "execute_result"
+            }
+          ],
+          "source": [
+            "note_doc = {\n",
+            "    \"note_id\": note_id,\n",
+            "    \"subject_id\": subject_id,\n",
+            "    \"text\": sample_text,\n",
+            "    \"storetime\": datetime.now(timezone.utc).strftime(\"%Y-%m-%d %H:%M:%S\"),\n",
+            "}\n",
+            "\n",
+            "client.index(index=discharge_index, id=note_id, body=note_doc, refresh=True)\n"
+          ]
+        },
+        {
+          "cell_type": "markdown",
+          "id": "edad8661",
+          "metadata": {},
+          "source": [
+            "## 2) Search that note back using free text\n",
+            "\n",
+            "This query uses `match` search, so we can find notes by important words (for example `John kidney`) without requiring an exact full-string match.\n",
+            "\n",
+            "In a traditional relational query, you would usually rely on exact equality or simple wildcard `LIKE` patterns. Here, OpenSearch handles tokenized full-text search for us."
+          ]
+        },
+        {
+          "cell_type": "code",
+          "execution_count": 69,
+          "id": "25613475",
+          "metadata": {},
+          "outputs": [
+            {
+              "name": "stdout",
+              "output_type": "stream",
+              "text": [
+                "Free-text query used: John kidney\n",
+                "This still returns the note even though it is not an exact full sentence match.\n",
+                "Results from OpenSearch free-text search:\n"
+              ]
+            },
+            {
+              "data": {
+                "text/html": [
+                  "<div>\n",
+                  "<style scoped>\n",
+                  "    .dataframe tbody tr th:only-of-type {\n",
+                  "        vertical-align: middle;\n",
+                  "    }\n",
+                  "\n",
+                  "    .dataframe tbody tr th {\n",
+                  "        vertical-align: top;\n",
+                  "    }\n",
+                  "\n",
+                  "    .dataframe thead th {\n",
+                  "        text-align: right;\n",
+                  "    }\n",
+                  "</style>\n",
+                  "<table border=\"1\" class=\"dataframe\">\n",
+                  "  <thead>\n",
+                  "    <tr style=\"text-align: right;\">\n",
+                  "      <th></th>\n",
+                  "      <th>note_id</th>\n",
+                  "      <th>subject_id</th>\n",
+                  "      <th>text</th>\n",
+                  "      <th>storetime</th>\n",
+                  "    </tr>\n",
+                  "  </thead>\n",
+                  "  <tbody>\n",
+                  "    <tr>\n",
+                  "      <th>0</th>\n",
+                  "      <td>demo-note-kidney-failure-001</td>\n",
+                  "      <td>1</td>\n",
+                  "      <td>John was diagnosed with Kidney Failure</td>\n",
+                  "      <td>2026-03-26 17:49:59</td>\n",
+                  "    </tr>\n",
+                  "  </tbody>\n",
+                  "</table>\n",
+                  "</div>"
+                ],
+                "text/plain": [
+                  "                        note_id  subject_id  \\\n",
+                  "0  demo-note-kidney-failure-001           1   \n",
+                  "\n",
+                  "                                     text            storetime  \n",
+                  "0  John was diagnosed with Kidney Failure  2026-03-26 17:49:59  "
+                ]
+              },
+              "metadata": {},
+              "output_type": "display_data"
+            }
+          ],
+          "source": [
+            "query_text = \"John kidney\"\n",
+            "free_text_resp = client.search(\n",
+            "    index=discharge_index,\n",
+            "    body={\"query\": {\"match\": {\"text\": query_text}}},\n",
+            ")\n",
+            "hits = free_text_resp[\"hits\"][\"hits\"]\n",
+            "print(f\"Free-text query used: {query_text}\")\n",
+            "print(\"This still returns the note even though it is not an exact full sentence match.\")\n",
+            "print(\"Results from OpenSearch free-text search:\")\n",
+            "display(pd.DataFrame([hits[0][\"_source\"]]))"
+          ]
+        },
+        {
+          "cell_type": "markdown",
+          "id": "c8aaa960",
+          "metadata": {},
+          "source": [
+            "## 3) Fuzzy full-text search (not exact matching)\n",
+            "\n",
+            "Now we intentionally misspell the query (`kidny falur`) and still retrieve results.\n",
+            "\n",
+            "This demonstrates why OpenSearch is useful for user-entered text and typo-tolerant retrieval."
+          ]
+        },
+        {
+          "cell_type": "code",
+          "execution_count": 70,
+          "id": "595a313e",
+          "metadata": {},
+          "outputs": [
+            {
+              "name": "stdout",
+              "output_type": "stream",
+              "text": [
+                "Fuzzy query: kidny falur\n",
+                "fuzzy_hits=1\n"
+              ]
+            },
+            {
+              "data": {
+                "text/html": [
+                  "<div>\n",
+                  "<style scoped>\n",
+                  "    .dataframe tbody tr th:only-of-type {\n",
+                  "        vertical-align: middle;\n",
+                  "    }\n",
+                  "\n",
+                  "    .dataframe tbody tr th {\n",
+                  "        vertical-align: top;\n",
+                  "    }\n",
+                  "\n",
+                  "    .dataframe thead th {\n",
+                  "        text-align: right;\n",
+                  "    }\n",
+                  "</style>\n",
+                  "<table border=\"1\" class=\"dataframe\">\n",
+                  "  <thead>\n",
+                  "    <tr style=\"text-align: right;\">\n",
+                  "      <th></th>\n",
+                  "      <th>note_id</th>\n",
+                  "      <th>subject_id</th>\n",
+                  "      <th>text</th>\n",
+                  "      <th>storetime</th>\n",
+                  "    </tr>\n",
+                  "  </thead>\n",
+                  "  <tbody>\n",
+                  "    <tr>\n",
+                  "      <th>0</th>\n",
+                  "      <td>demo-note-kidney-failure-001</td>\n",
+                  "      <td>1</td>\n",
+                  "      <td>John was diagnosed with Kidney Failure</td>\n",
+                  "      <td>2026-03-26 17:49:59</td>\n",
+                  "    </tr>\n",
+                  "  </tbody>\n",
+                  "</table>\n",
+                  "</div>"
+                ],
+                "text/plain": [
+                  "                        note_id  subject_id  \\\n",
+                  "0  demo-note-kidney-failure-001           1   \n",
+                  "\n",
+                  "                                     text            storetime  \n",
+                  "0  John was diagnosed with Kidney Failure  2026-03-26 17:49:59  "
+                ]
+              },
+              "metadata": {},
+              "output_type": "display_data"
+            }
+          ],
+          "source": [
+            "fuzzy_query = \"kidny falur\"\n",
+            "fuzzy_resp = client.search(\n",
+            "    index=discharge_index,\n",
+            "    body={\n",
+            "        \"query\": {\n",
+            "            \"match\": {\n",
+            "                \"text\": {\n",
+            "                    \"query\": fuzzy_query,\n",
+            "                    \"fuzziness\": \"AUTO\"\n",
+            "                }\n",
+            "            }\n",
+            "        }\n",
+            "    },\n",
+            ")\n",
+            "\n",
+            "fuzzy_hits = fuzzy_resp[\"hits\"][\"hits\"]\n",
+            "print(f\"Fuzzy query: {fuzzy_query}\")\n",
+            "print(f\"fuzzy_hits={len(fuzzy_hits)}\")\n",
+            "display(pd.DataFrame(pd.DataFrame([hits[0][\"_source\"]])))"
+          ]
+        },
+        {
+          "cell_type": "markdown",
+          "id": "690cd9a2",
+          "metadata": {},
+          "source": [
+            "## 4) Perform Named Entity Resolution with MedCAT\n",
+            "\n",
+            "We can see that we are able to search with free text, and fuzzy match. However, what happens if we want to search accross notes using common terminology?\n",
+            "\n",
+            "We can solve this by using named entity resolution (NER) and NLP.\n",
+            "\n",
+            "To do this we will call MedCAT at `/api/process` with the same note text.\n",
+            "\n",
+            "MedCAT returns structured entities (for example CUI and concept name). This is named entity resolution in one API call."
+          ]
+        },
+        {
+          "cell_type": "code",
+          "execution_count": 71,
+          "id": "f1428daf",
+          "metadata": {},
+          "outputs": [
+            {
+              "name": "stdout",
+              "output_type": "stream",
+              "text": [
+                "annotations_found=1\n",
+                "Results from MedCAT named entity extraction:\n"
+              ]
+            },
+            {
+              "data": {
+                "text/html": [
+                  "<div>\n",
+                  "<style scoped>\n",
+                  "    .dataframe tbody tr th:only-of-type {\n",
+                  "        vertical-align: middle;\n",
+                  "    }\n",
+                  "\n",
+                  "    .dataframe tbody tr th {\n",
+                  "        vertical-align: top;\n",
+                  "    }\n",
+                  "\n",
+                  "    .dataframe thead th {\n",
+                  "        text-align: right;\n",
+                  "    }\n",
+                  "</style>\n",
+                  "<table border=\"1\" class=\"dataframe\">\n",
+                  "  <thead>\n",
+                  "    <tr style=\"text-align: right;\">\n",
+                  "      <th></th>\n",
+                  "      <th>pretty_name</th>\n",
+                  "      <th>cui</th>\n",
+                  "      <th>type_ids</th>\n",
+                  "      <th>source_value</th>\n",
+                  "      <th>detected_name</th>\n",
+                  "      <th>acc</th>\n",
+                  "      <th>context_similarity</th>\n",
+                  "      <th>start</th>\n",
+                  "      <th>end</th>\n",
+                  "      <th>id</th>\n",
+                  "      <th>meta_anns</th>\n",
+                  "      <th>context_left</th>\n",
+                  "      <th>context_center</th>\n",
+                  "      <th>context_right</th>\n",
+                  "    </tr>\n",
+                  "  </thead>\n",
+                  "  <tbody>\n",
+                  "    <tr>\n",
+                  "      <th>0</th>\n",
+                  "      <td>Kidney Failure</td>\n",
+                  "      <td>1</td>\n",
+                  "      <td>[T047]</td>\n",
+                  "      <td>Kidney Failure</td>\n",
+                  "      <td>kidney~failure</td>\n",
+                  "      <td>1</td>\n",
+                  "      <td>1</td>\n",
+                  "      <td>24</td>\n",
+                  "      <td>38</td>\n",
+                  "      <td>0</td>\n",
+                  "      <td>{}</td>\n",
+                  "      <td>[]</td>\n",
+                  "      <td>[]</td>\n",
+                  "      <td>[]</td>\n",
+                  "    </tr>\n",
+                  "  </tbody>\n",
+                  "</table>\n",
+                  "</div>"
+                ],
+                "text/plain": [
+                  "      pretty_name cui type_ids    source_value   detected_name  acc  \\\n",
+                  "0  Kidney Failure   1   [T047]  Kidney Failure  kidney~failure    1   \n",
+                  "\n",
+                  "   context_similarity  start  end  id meta_anns context_left context_center  \\\n",
+                  "0                   1     24   38   0        {}           []             []   \n",
+                  "\n",
+                  "  context_right  \n",
+                  "0            []  "
+                ]
+              },
+              "metadata": {},
+              "output_type": "display_data"
+            }
+          ],
+          "source": [
+            "medcat_payload = {\"content\": {\"text\": sample_text}}\n",
+            "medcat_result = requests.post(medcat_url, json=medcat_payload, timeout=30).json()\n",
+            "raw_annotations = medcat_result.get(\"result\", {}).get(\"annotations\", [])\n",
+            "\n",
+            "annotations = [\n",
+            "    next(iter(ann.values())) if isinstance(ann, dict) and len(ann) == 1 else ann\n",
+            "    for ann in raw_annotations\n",
+            "    if isinstance(ann, dict)\n",
+            "]\n",
+            "\n",
+            "print(f\"annotations_found={len(annotations)}\")\n",
+            "print(\"Results from MedCAT named entity extraction:\")\n",
+            "display(pd.DataFrame(annotations))"
+          ]
+        },
+        {
+          "cell_type": "markdown",
+          "id": "1dc6dbf6",
+          "metadata": {},
+          "source": [
+            "### 4.1) Index MedCAT entities into OpenSearch\n",
+            "\n",
+            "Here we take each MedCAT entity and store it in OpenSearch in the `discharge_annotations` index\n",
+            "\n",
+            "We prefix MedCAT fields with `nlp.` and add `meta.note_id` / `meta.subject_id` so each entity stays linked to its source note."
+          ]
+        },
+        {
+          "cell_type": "code",
+          "execution_count": 72,
+          "id": "86152c7b",
+          "metadata": {},
+          "outputs": [
+            {
+              "name": "stdout",
+              "output_type": "stream",
+              "text": [
+                "indexed_annotations=1\n"
+              ]
+            }
+          ],
+          "source": [
+            "indexed = 0\n",
+            "now_ts = datetime.now(timezone.utc).isoformat()\n",
+            "\n",
+            "for i, ann in enumerate(annotations):\n",
+            "    nlp_fields = {f\"nlp.{k}\": v for k, v in ann.items()}\n",
+            "\n",
+            "    ann_doc = {\n",
+            "        **nlp_fields,\n",
+            "        \"meta.note_id\": note_id,\n",
+            "        \"meta.subject_id\": subject_id,\n",
+            "        \"timestamp\": now_ts,\n",
+            "    }\n",
+            "\n",
+            "    client.index(\n",
+            "        index=annotations_index,\n",
+            "        id=f\"{note_id}-ann-{i}\",\n",
+            "        body=ann_doc,\n",
+            "        refresh=False,\n",
+            "    )\n",
+            "    indexed += 1\n",
+            "\n",
+            "client.indices.refresh(index=annotations_index)\n",
+            "print(f\"indexed_annotations={indexed}\")"
+          ]
+        },
+        {
+          "cell_type": "markdown",
+          "id": "f0067cc1",
+          "metadata": {},
+          "source": [
+            "## 5) Search by concept\n",
+            "\n",
+            "Finally, we query `discharge_annotations` using the extracted concept (`nlp.cui` / `nlp.pretty_name`).\n",
+            "\n",
+            "This is the main value: instead of searching raw strings, we can retrieve notes by normalized clinical concepts."
+          ]
+        },
+        {
+          "cell_type": "code",
+          "execution_count": 73,
+          "id": "3a6edeb8",
+          "metadata": {},
+          "outputs": [
+            {
+              "name": "stdout",
+              "output_type": "stream",
+              "text": [
+                "Concept CUI search used: 1\n",
+                "concept_hits=1\n"
+              ]
+            },
+            {
+              "data": {
+                "text/html": [
+                  "<div>\n",
+                  "<style scoped>\n",
+                  "    .dataframe tbody tr th:only-of-type {\n",
+                  "        vertical-align: middle;\n",
+                  "    }\n",
+                  "\n",
+                  "    .dataframe tbody tr th {\n",
+                  "        vertical-align: top;\n",
+                  "    }\n",
+                  "\n",
+                  "    .dataframe thead th {\n",
+                  "        text-align: right;\n",
+                  "    }\n",
+                  "</style>\n",
+                  "<table border=\"1\" class=\"dataframe\">\n",
+                  "  <thead>\n",
+                  "    <tr style=\"text-align: right;\">\n",
+                  "      <th></th>\n",
+                  "      <th>nlp.pretty_name</th>\n",
+                  "      <th>nlp.cui</th>\n",
+                  "      <th>nlp.type_ids</th>\n",
+                  "      <th>nlp.source_value</th>\n",
+                  "      <th>nlp.detected_name</th>\n",
+                  "      <th>nlp.acc</th>\n",
+                  "      <th>nlp.context_similarity</th>\n",
+                  "      <th>nlp.start</th>\n",
+                  "      <th>nlp.end</th>\n",
+                  "      <th>nlp.id</th>\n",
+                  "      <th>nlp.meta_anns</th>\n",
+                  "      <th>nlp.context_left</th>\n",
+                  "      <th>nlp.context_center</th>\n",
+                  "      <th>nlp.context_right</th>\n",
+                  "      <th>meta.note_id</th>\n",
+                  "      <th>meta.subject_id</th>\n",
+                  "      <th>timestamp</th>\n",
+                  "    </tr>\n",
+                  "  </thead>\n",
+                  "  <tbody>\n",
+                  "    <tr>\n",
+                  "      <th>0</th>\n",
+                  "      <td>Kidney Failure</td>\n",
+                  "      <td>1</td>\n",
+                  "      <td>[T047]</td>\n",
+                  "      <td>Kidney Failure</td>\n",
+                  "      <td>kidney~failure</td>\n",
+                  "      <td>1</td>\n",
+                  "      <td>1</td>\n",
+                  "      <td>24</td>\n",
+                  "      <td>38</td>\n",
+                  "      <td>0</td>\n",
+                  "      <td>{}</td>\n",
+                  "      <td>[]</td>\n",
+                  "      <td>[]</td>\n",
+                  "      <td>[]</td>\n",
+                  "      <td>demo-note-kidney-failure-001</td>\n",
+                  "      <td>1</td>\n",
+                  "      <td>2026-03-26T17:50:17.140165+00:00</td>\n",
+                  "    </tr>\n",
+                  "  </tbody>\n",
+                  "</table>\n",
+                  "</div>"
+                ],
+                "text/plain": [
+                  "  nlp.pretty_name nlp.cui nlp.type_ids nlp.source_value nlp.detected_name  \\\n",
+                  "0  Kidney Failure       1       [T047]   Kidney Failure    kidney~failure   \n",
+                  "\n",
+                  "   nlp.acc  nlp.context_similarity  nlp.start  nlp.end  nlp.id nlp.meta_anns  \\\n",
+                  "0        1                       1         24       38       0            {}   \n",
+                  "\n",
+                  "  nlp.context_left nlp.context_center nlp.context_right  \\\n",
+                  "0               []                 []                []   \n",
+                  "\n",
+                  "                   meta.note_id  meta.subject_id  \\\n",
+                  "0  demo-note-kidney-failure-001                1   \n",
+                  "\n",
+                  "                          timestamp  \n",
+                  "0  2026-03-26T17:50:17.140165+00:00  "
+                ]
+              },
+              "metadata": {},
+              "output_type": "display_data"
+            }
+          ],
+          "source": [
+            "concept_cui = str(annotations[0].get(\"cui\", \"\"))\n",
+            "\n",
+            "concept_query = {\n",
+            "    \"query\": {\n",
+            "        \"term\": {\n",
+            "            \"nlp.cui.keyword\": concept_cui\n",
+            "        }\n",
+            "    }\n",
+            "}\n",
+            "\n",
+            "concept_resp = client.search(index=annotations_index, body=concept_query)\n",
+            "concept_hits = concept_resp[\"hits\"][\"hits\"]\n",
+            "\n",
+            "print(f\"Concept CUI search used: {concept_cui}\")\n",
+            "print(f\"concept_hits={len(concept_hits)}\")\n",
+            "\n",
+            "display(pd.DataFrame([h.get(\"_source\", {}) for h in concept_hits]))"
+          ]
+        },
+        {
+          "cell_type": "markdown",
+          "id": "28cf3ed2",
+          "metadata": {},
+          "source": [
+            "## Summary\n",
+            "\n",
+            "You have now seen the full end-to-end CogStack flow in a few simple steps:\n",
+            "- index notes into OpenSearch\n",
+            "- run free-text and fuzzy search over clinical text\n",
+            "- call MedCAT to perform named entity resolution\n",
+            "- index entity outputs\n",
+            "- retrieve notes by normalized concept (CUI)\n",
+            "\n",
+            "This is the core building block for turning unstructured clinical text into searchable, analysable, and operational data.\n",
+            "\n",
+            "## What to do next\n",
+            "- **Visualise the data with OpenSearch Dashboards**  \n",
+            "  If you've setup with the CogStack Community Edition and are running on localhost, visit http://localhost:5601/ to now see reports and drill down on this data with the UI\n",
+            "\n",
+            "- **Scale this into production ETL**  \n",
+            "  Use these exact blocks in your pipelines: ingest note text -> index to OpenSearch -> call MedCAT -> index annotations -> query/serve downstream applications.\n",
+            "\n",
+            "- **Use a real MedCAT model**  \n",
+            "  Replace the demo model with a domain-appropriate model pack and configuration: [MedCAT v2 README](https://github.com/CogStack/cogstack-nlp/blob/main/medcat-v2/README.md).\n",
+            "\n",
+            "- **Explore the platform docs and examples**  \n",
+            "  See full docs at [docs.cogstack.org](https://docs.cogstack.org/) and repositories/examples at [github.com/CogStack](https://github.com/CogStack).\n",
+            "\n",
+            "- **Add supervised learning with MedCAT Trainer (MLOps)**  \n",
+            "  Set up a training and feedback loop to improve extraction quality over time using MedCAT Trainer (annotation -> train -> evaluate -> redeploy)."
+          ]
+        }
+      ],
+      "metadata": {
+        "kernelspec": {
+          "display_name": "Python 3 (ipykernel)",
+          "language": "python",
+          "name": "python3"
+        },
+        "language_info": {
+          "codemirror_mode": {
+            "name": "ipython",
+            "version": 3
+          },
+          "file_extension": ".py",
+          "mimetype": "text/x-python",
+          "name": "python",
+          "nbconvert_exporter": "python",
+          "pygments_lexer": "ipython3",
+          "version": "3.11.14"
+        }
+      },
+      "nbformat": 4,
+      "nbformat_minor": 5
+    }
+  medcat-service-tutorial.ipynb: |
+    {
+        "cells": [
+            {
+                "cell_type": "markdown",
+                "id": "3dd024b0-46cb-4410-8e33-89dbf2557b3f",
+                "metadata": {},
+                "source": [
+                    "# Cogstack Services Tutorial\n",
+                    "\n",
+                    "This is a step-by-step walkthrough that shows how to call two CogStack services over HTTP:\n",
+                    "MedCAT (entity extraction) and AnonCAT (de-identification).\n",
+                    "\n",
+                    "## Overview\n",
+                    "\n",
+                    "### Who it is for:\n",
+                    "This is for developers, data engineers, and analysts who want a quick, practical example of how\n",
+                    "to integrate MedCAT/AnonCAT into a Python workflow (and later into a notebook-based analysis).\n",
+                    "\n",
+                    "### What it will do:\n",
+                    "1) Define a sample clinical sentence and the service URLs.\n",
+                    "2) Extract Entities, by calling the medcat-service API\n",
+                    "3) Print the extracted entity annotations from the MedCAT response.\n",
+                    "4) Deidentify text by calling the anoncat-service API\n",
+                    "5) Print the de-identified text (and show the full JSON response for inspection).\n",
+                    "\n",
+                    "### Prerequisites\n",
+                    "The best way to run this notebook interactively is to run the CogStack Community Edition with Helm. Look at https://docs.cogstack.org/ to get started."
+                ]
+            },
+            {
+                "cell_type": "markdown",
+                "id": "de9fd984-d6bd-4717-a5a0-4a34b233f594",
+                "metadata": {},
+                "source": [
+                    "## Initialisation: Define the inputs and services\n",
+                    "We pick a single sample sentence and the two HTTP endpoints we will call.\n",
+                    "\n",
+                    "The sample sentence contains concepts that the example demo packs used by medcat service have been trained for. \n",
+                    "\n",
+                    "For the service URLs, if using the cogstack community edition helm chart, these should all be setup for you automatically using kubernetes services and env vars. Otherwise change these accordingly."
+                ]
+            },
+            {
+                "cell_type": "code",
+                "execution_count": null,
+                "id": "a5f15845-5a0f-414e-9db7-f414d12bde48",
+                "metadata": {},
+                "outputs": [],
+                "source": [
+                    "import json\n",
+                    "import os\n",
+                    "import requests\n",
+                    "\n",
+                    "sample_text = \"John was diagnosed with Kidney Failure\"\n",
+                    "\n",
+                    "medcat_base_url = os.getenv(\n",
+                    "    \"MEDCAT_SERVICE_URL\", \"http://cogstack-medcat-service:5000\"\n",
+                    ").rstrip(\"/\")\n",
+                    "\n",
+                    "anoncat_base_url = os.getenv(\n",
+                    "    \"ANONCAT_SERVICE_URL\", \"http://cogstack-ce-anoncat-service:5000\"\n",
+                    ").rstrip(\"/\")\n",
+                    "\n",
+                    "medcat_url = medcat_base_url + \"/api/process\"\n",
+                    "anoncat_url = anoncat_base_url + \"/api/process\""
+                ]
+            },
+            {
+                "cell_type": "markdown",
+                "id": "b9b954ee-66e4-424b-b0f8-5602fe86ffa7",
+                "metadata": {},
+                "source": [
+                    "## Perform Named Entity Resolution by calling MedCAT service\n",
+                    "We can now use medcat service to extract entities from our note. \n",
+                    "\n",
+                    "We will send `sample_text` to MedCAT’s `/api/process` route where the payload is shaped as: `{\"content\": {\"text\": sample_text}}`\n",
+                    "\n",
+                    "We can then parse the JSON response and pull out: `medcat_result.get(\"result\").get(\"annotations\")`.\n"
+                ]
+            },
+            {
+                "cell_type": "code",
+                "execution_count": 6,
+                "id": "13a2405f-502d-4fff-9c0c-11fb7341ca3a",
+                "metadata": {},
+                "outputs": [
+                    {
+                        "name": "stdout",
+                        "output_type": "stream",
+                        "text": [
+                            "=== MedCAT: entities ===\n",
+                            "[\n",
+                            "  {\n",
+                            "    \"0\": {\n",
+                            "      \"pretty_name\": \"Kidney Failure\",\n",
+                            "      \"cui\": \"1\",\n",
+                            "      \"type_ids\": [\n",
+                            "        \"T047\"\n",
+                            "      ],\n",
+                            "      \"source_value\": \"Kidney Failure\",\n",
+                            "      \"detected_name\": \"kidney~failure\",\n",
+                            "      \"acc\": 1,\n",
+                            "      \"context_similarity\": 1,\n",
+                            "      \"start\": 24,\n",
+                            "      \"end\": 38,\n",
+                            "      \"id\": 0,\n",
+                            "      \"meta_anns\": {},\n",
+                            "      \"context_left\": [],\n",
+                            "      \"context_center\": [],\n",
+                            "      \"context_right\": []\n",
+                            "    }\n",
+                            "  }\n",
+                            "]\n"
+                        ]
+                    }
+                ],
+                "source": [
+                    "medcat_payload = {\"content\": {\"text\": sample_text}}\n",
+                    "\n",
+                    "medcat_result = requests.post(medcat_url, json=medcat_payload).json()\n",
+                    "medcat_annotations = medcat_result.get(\"result\").get(\"annotations\")\n",
+                    "\n",
+                    "print(\"=== MedCAT: entities ===\")\n",
+                    "print(json.dumps(medcat_annotations, indent=2))"
+                ]
+            },
+            {
+                "cell_type": "markdown",
+                "id": "95a2f603-f107-4266-9bd8-ae64fd6e7692",
+                "metadata": {},
+                "source": [
+                    "From the above results, we can see that the service has detected \"Kidney Failure\" in the text with a cui of \"1\".\n",
+                    "\n",
+                    "We can see the raw JSON response from medcat by printing it"
+                ]
+            },
+            {
+                "cell_type": "code",
+                "execution_count": 7,
+                "id": "aad682db-df27-4520-b18d-58007594053f",
+                "metadata": {},
+                "outputs": [
+                    {
+                        "name": "stdout",
+                        "output_type": "stream",
+                        "text": [
+                            "=== MedCAT Service: Raw results ===\n",
+                            "{\n",
+                            "  \"medcat_info\": {\n",
+                            "    \"service_app_name\": \"MedCAT\",\n",
+                            "    \"service_language\": \"en\",\n",
+                            "    \"service_version\": \"2.4.0.dev0\",\n",
+                            "    \"service_model\": \"unknown\",\n",
+                            "    \"model_card_info\": {\n",
+                            "      \"ontologies\": \"None\",\n",
+                            "      \"meta_cat_model_names\": [],\n",
+                            "      \"rel_cat_model_names\": [],\n",
+                            "      \"model_last_modified_on\": \"2025-07-14T12:36:10.286051\"\n",
+                            "    }\n",
+                            "  },\n",
+                            "  \"result\": {\n",
+                            "    \"text\": \"John was diagnosed with Kidney Failure\",\n",
+                            "    \"annotations\": [\n",
+                            "      {\n",
+                            "        \"0\": {\n",
+                            "          \"pretty_name\": \"Kidney Failure\",\n",
+                            "          \"cui\": \"1\",\n",
+                            "          \"type_ids\": [\n",
+                            "            \"T047\"\n",
+                            "          ],\n",
+                            "          \"source_value\": \"Kidney Failure\",\n",
+                            "          \"detected_name\": \"kidney~failure\",\n",
+                            "          \"acc\": 1,\n",
+                            "          \"context_similarity\": 1,\n",
+                            "          \"start\": 24,\n",
+                            "          \"end\": 38,\n",
+                            "          \"id\": 0,\n",
+                            "          \"meta_anns\": {},\n",
+                            "          \"context_left\": [],\n",
+                            "          \"context_center\": [],\n",
+                            "          \"context_right\": []\n",
+                            "        }\n",
+                            "      }\n",
+                            "    ],\n",
+                            "    \"success\": true,\n",
+                            "    \"timestamp\": \"2026-03-18T16:08:44.595+00:00\",\n",
+                            "    \"elapsed_time\": 0.003085773,\n",
+                            "    \"footer\": null\n",
+                            "  }\n",
+                            "}\n"
+                        ]
+                    }
+                ],
+                "source": [
+                    "print(\"=== MedCAT Service: Raw results ===\")\n",
+                    "print(json.dumps(medcat_result, indent=2))"
+                ]
+            },
+            {
+                "cell_type": "markdown",
+                "id": "c4a7dfdb-730f-4390-94eb-31055ecae914",
+                "metadata": {},
+                "source": [
+                    "## Perform deidentificaition by using AnonCAT sercice\n",
+                    "\n",
+                    "We can also use AnonCat service to deidentify our notes.\n",
+                    "\n",
+                    "The process for this is the same as medcat, the only difference is we are will call a different endpoint. We will send `sample_text` to MedCAT’s `/api/process` route where the payload is shaped as: `{\"content\": {\"text\": sample_text}}`.\n",
+                    "\n",
+                    "We can then parse the JSON response and pull out the text which should be anonymised"
+                ]
+            },
+            {
+                "cell_type": "code",
+                "execution_count": 14,
+                "id": "e2e0cba5-3c08-4c1f-869f-f8012b0a9282",
+                "metadata": {},
+                "outputs": [
+                    {
+                        "name": "stdout",
+                        "output_type": "stream",
+                        "text": [
+                            "=== AnonCAT: Deidentification result ===\n",
+                            "The input was 'John was diagnosed with Kidney Failure'. The output was '[PATIENT] diagnosed with Kidney Failure'\n"
+                        ]
+                    }
+                ],
+                "source": [
+                    "anoncat_payload = {\"content\": {\"text\": sample_text}}\n",
+                    "anoncat_result = requests.post(anoncat_url, json=anoncat_payload).json()\n",
+                    "\n",
+                    "deidentified_text = anoncat_result.get(\"result\").get(\"text\")\n",
+                    "\n",
+                    "print(\"=== AnonCAT: Deidentification result ===\")\n",
+                    "print(f\"The input was '{sample_text}'. The output was '{deidentified_text}'\")"
+                ]
+            },
+            {
+                "cell_type": "markdown",
+                "id": "e4a9c7ce-4255-4ddc-a704-34663298a8a0",
+                "metadata": {},
+                "source": [
+                    "From the above result, we can see that it has found that the note had the name \"John\", which it's replaced with the placeholder `[PATIENT]`. This has anonymised the note. Note we could alternatively change the service to redact the text, and return `[***]`, which we can do by configuring the service values and redeploying. \n",
+                    "\n",
+                    "We can see the raw JSON response from medcat by printing it. Note that it is the same format as medcat, just instead of finding medical concepts, it has found the patient name."
+                ]
+            },
+            {
+                "cell_type": "code",
+                "execution_count": 13,
+                "id": "e792e179-fc8a-4e76-aa19-efb0a3e01241",
+                "metadata": {},
+                "outputs": [
+                    {
+                        "name": "stdout",
+                        "output_type": "stream",
+                        "text": [
+                            "=== AnonCAT: Deidentification result ===\n",
+                            "{\n",
+                            "  \"medcat_info\": {\n",
+                            "    \"service_app_name\": \"MedCAT\",\n",
+                            "    \"service_language\": \"en\",\n",
+                            "    \"service_version\": \"2.4.0.dev0\",\n",
+                            "    \"service_model\": \"unknown\",\n",
+                            "    \"model_card_info\": {\n",
+                            "      \"ontologies\": [],\n",
+                            "      \"meta_cat_model_names\": [],\n",
+                            "      \"rel_cat_model_names\": [],\n",
+                            "      \"model_last_modified_on\": \"2025-08-15T15:14:34.047031\"\n",
+                            "    }\n",
+                            "  },\n",
+                            "  \"result\": {\n",
+                            "    \"text\": \"[PATIENT] diagnosed with Kidney Failure\",\n",
+                            "    \"annotations\": [\n",
+                            "      {\n",
+                            "        \"0\": {\n",
+                            "          \"pretty_name\": \"PATIENT\",\n",
+                            "          \"cui\": \"PATIENT\",\n",
+                            "          \"type_ids\": [],\n",
+                            "          \"source_value\": \"John was\",\n",
+                            "          \"detected_name\": \"\",\n",
+                            "          \"acc\": 0.9922866225242615,\n",
+                            "          \"context_similarity\": 0.9922866225242615,\n",
+                            "          \"start\": 0,\n",
+                            "          \"end\": 8,\n",
+                            "          \"id\": 0,\n",
+                            "          \"meta_anns\": {},\n",
+                            "          \"context_left\": [],\n",
+                            "          \"context_center\": [],\n",
+                            "          \"context_right\": []\n",
+                            "        }\n",
+                            "      }\n",
+                            "    ],\n",
+                            "    \"success\": true,\n",
+                            "    \"timestamp\": \"2026-03-18T16:09:41.266+00:00\",\n",
+                            "    \"elapsed_time\": 0.011446122,\n",
+                            "    \"footer\": null\n",
+                            "  }\n",
+                            "}\n"
+                        ]
+                    }
+                ],
+                "source": [
+                    "print(\"=== AnonCAT: Deidentification result ===\")\n",
+                    "print(json.dumps(anoncat_result, indent=2))\n"
+                ]
+            },
+            {
+                "cell_type": "markdown",
+                "id": "aed034c8-7630-48f8-b382-f220f4eddfa8",
+                "metadata": {},
+                "source": [
+                    "## Summary\n",
+                    "This is the end of this tutorial.\n",
+                    "\n",
+                    "We can see by calling the model services, we are able to get entities and deidentify text just by calling two http APIs. \n",
+                    "\n",
+                    "## What next?\n",
+                    "There's two options of where to go next:\n",
+                    "1. Setup a data pipeline, that can call these services and write results into OpenSearch\n",
+                    "2. Use MedCAT Trainer and setup a MLOps flow for training a model, and redeploying the services with the new model."
+                ]
+            }
+        ],
+        "metadata": {
+            "kernelspec": {
+                "display_name": "Python 3 (ipykernel)",
+                "language": "python",
+                "name": "python3"
+            },
+            "language_info": {
+                "codemirror_mode": {
+                    "name": "ipython",
+                    "version": 3
+                },
+                "file_extension": ".py",
+                "mimetype": "text/x-python",
+                "name": "python",
+                "nbconvert_exporter": "python",
+                "pygments_lexer": "ipython3",
+                "version": "3.11.14"
+            }
+        },
+        "nbformat": 4,
+        "nbformat_minor": 5
+    }
+  ocr-service-tutorial.ipynb: |
+    {
+      "cells": [
+        {
+          "cell_type": "markdown",
+          "id": "a1c4e8f2-1b3d-4c9a-9e2f-ocr-tutorial-intro",
+          "metadata": {},
+          "source": [
+            "# OCR Service Tutorial\n",
+            "\n",
+            "This is a step-by-step walkthrough that shows how to call the CogStack OCR service over HTTP:\n",
+            "OCR of scanned files, and text extraction from a Word document.\n",
+            "\n",
+            "OCR is optical character recognition. Use this when you have images or scanned in documents containing text. The OCR service is also able to work with machine readable documents that do not need OCR, like word documents or pdfs containing text. This tutorial will show how it can parse both in the same way.\n",
+            "\n",
+            "## Overview\n",
+            "\n",
+            "### Who is this tutorial for:\n",
+            "This is for developers, data engineers, and analysts who want a quick, practical example of how\n",
+            "to integrate OCR Service into a Python workflow (and later into a notebook-based analysis).\n",
+            "\n",
+            "### What will the tutorial do:\n",
+            "1) Define sample files and the service URL.\n",
+            "2) OCR a PNG of a scanned document, by calling the ocr-service API\n",
+            "3) Extract text from a Word document\n",
+            "4) OCR a scanned PDF\n",
+            "\n",
+            "### Prerequisites\n",
+            "The best way to run this notebook interactively is to run the CogStack Community Edition with Helm. Look at https://docs.cogstack.org/ to get started."
+          ]
+        },
+        {
+          "cell_type": "markdown",
+          "id": "b2d5f9a3-2c4e-4d0b-8f31-ocr-tutorial-init-md",
+          "metadata": {},
+          "source": [
+            "## Initialisation: Define the inputs and services\n",
+            "We pick three sample files and the HTTP endpoint we will call.\n",
+            "\n",
+            "The samples are a PNG of a scanned document, a Word document that already contains text, and a scanned PDF:\n",
+            "- [pat_id_1.png](https://github.com/CogStack/cogstack-platform/blob/ocr-service-v1.1.3/apps/ocr-service/ocr_service/tests/resources/docs/generic/pat_id_1.png)\n",
+            "- [pat_id_1.docx](https://github.com/CogStack/cogstack-platform/blob/ocr-service-v1.1.3/apps/ocr-service/ocr_service/tests/resources/docs/generic/pat_id_1.docx)\n",
+            "- [pat_id_1.pdf](https://github.com/CogStack/cogstack-platform/blob/ocr-service-v1.1.3/apps/ocr-service/ocr_service/tests/resources/docs/generic/pat_id_1.pdf)\n",
+            "\n",
+            "For the service URL, if using the cogstack community edition helm chart, this should be setup for you automatically using kubernetes services and env vars. Otherwise change it accordingly."
+          ]
+        },
+        {
+          "cell_type": "code",
+          "execution_count": null,
+          "id": "c3e6a0b4-3d5f-4e1c-9a42-ocr-tutorial-init-code",
+          "metadata": {},
+          "outputs": [],
+          "source": [
+            "import json\n",
+            "import os\n",
+            "\n",
+            "import requests\n",
+            "\n",
+            "ocr_base_url = os.getenv(\n",
+            "    \"OCR_SERVICE_URL\", \"http://cogstack-ocr-service:8090\"\n",
+            ").rstrip(\"/\")\n",
+            "\n",
+            "ocr_url = ocr_base_url + \"/api/process\"\n",
+            "\n",
+            "base_url = \"https://raw.githubusercontent.com/CogStack/cogstack-platform/ocr-service-v1.1.3/apps/ocr-service/ocr_service/tests/resources/docs\"\n",
+            "os.makedirs(\"data/ocr-service-tutorial\", exist_ok=True)\n",
+            "\n",
+            "open(\"data/ocr-service-tutorial/pat_id_1.png\", \"wb\").write(requests.get(f\"{base_url}/generic/pat_id_1.png\").content)\n",
+            "open(\"data/ocr-service-tutorial/pat_id_1.docx\", \"wb\").write(requests.get(f\"{base_url}/generic/pat_id_1.docx\").content)\n",
+            "open(\"data/ocr-service-tutorial/pat_id_1.pdf\", \"wb\").write(requests.get(f\"{base_url}/generic/pat_id_1.pdf\").content)"
+          ]
+        },
+        {
+          "cell_type": "markdown",
+          "id": "a7c0e4f8-7b93-4250-de86-ocr-tutorial-png-md",
+          "metadata": {},
+          "source": [
+            "## OCR a scanned document\n",
+            "We can now use ocr service to read text from an image of a page.\n",
+            "\n",
+            "We have a PNG file that represents a scanned document. It does not already contain text, so the service will need to OCR it."
+          ]
+        },
+        {
+          "cell_type": "markdown",
+          "id": "b8d1f5a9-8c04-4361-ef97-ocr-tutorial-png-display",
+          "metadata": {},
+          "source": [
+            "The scanned document is a PNG file, that looks like this:\n",
+            "\n",
+            "![Scanned document](https://raw.githubusercontent.com/CogStack/cogstack-platform/ocr-service-v1.1.3/apps/ocr-service/ocr_service/tests/resources/docs/generic/pat_id_1.png)"
+          ]
+        },
+        {
+          "cell_type": "markdown",
+          "id": "c9e2a6b0-9d15-4472-fa08-ocr-tutorial-png-ocr-md",
+          "metadata": {},
+          "source": [
+            "We will send this image to the ocr service and print the text it recovers."
+          ]
+        },
+        {
+          "cell_type": "code",
+          "execution_count": null,
+          "id": "d0f3b7c1-0e26-4583-ab19-ocr-tutorial-png-ocr-code",
+          "metadata": {},
+          "outputs": [],
+          "source": [
+            "with open(\"data/ocr-service-tutorial/pat_id_1.png\", \"rb\") as f:\n",
+            "    png_result = requests.post(ocr_url, files={\"file\": (\"pat_id_1.png\", f)}).json()\n",
+            "\n",
+            "print(\"=== OCR Service: PNG ===\")\n",
+            "print(png_result.get(\"result\").get(\"text\"))"
+          ]
+        },
+        {
+          "cell_type": "markdown",
+          "id": "e1a4c8d2-1f37-4694-bc20-ocr-tutorial-png-commentary",
+          "metadata": {},
+          "source": [
+            "From the above result, we can see that the service has recovered the clinical note from the scanned image. The wording can differ slightly, because the service is reading an image of the page.\n",
+            "\n",
+            "We can see the raw JSON response from ocr service by printing it"
+          ]
+        },
+        {
+          "cell_type": "code",
+          "execution_count": null,
+          "id": "f2b5d9e3-2a48-4705-cd31-ocr-tutorial-raw-json",
+          "metadata": {},
+          "outputs": [],
+          "source": [
+            "print(\"=== OCR Service: Raw results ===\")\n",
+            "print(json.dumps(png_result, indent=2))"
+          ]
+        },
+        {
+          "cell_type": "markdown",
+          "id": "d4f7b1c5-4e60-4f2d-ab53-ocr-tutorial-docx-md",
+          "metadata": {},
+          "source": [
+            "## Extract text from a Word document\n",
+            "We can also use ocr service to extract text from a Word file.\n",
+            "\n",
+            "This document already contains text, so the service can read it without OCR."
+          ]
+        },
+        {
+          "cell_type": "code",
+          "execution_count": null,
+          "id": "e5a8c2d6-5f71-403e-bc64-ocr-tutorial-docx-code",
+          "metadata": {},
+          "outputs": [],
+          "source": [
+            "with open(\"data/ocr-service-tutorial/pat_id_1.docx\", \"rb\") as f:\n",
+            "    docx_result = requests.post(ocr_url, files={\"file\": (\"pat_id_1.docx\", f)}).json()\n",
+            "\n",
+            "print(\"=== OCR Service: Word document ===\")\n",
+            "print(docx_result.get(\"result\").get(\"text\"))"
+          ]
+        },
+        {
+          "cell_type": "markdown",
+          "id": "f6b9d3e7-6a82-414f-cd75-ocr-tutorial-docx-commentary",
+          "metadata": {},
+          "source": [
+            "From the above result, we can see that the service has extracted the clinical note from the Word document."
+          ]
+        },
+        {
+          "cell_type": "markdown",
+          "id": "a3c7e8f4-7b93-4250-de86-ocr-tutorial-pdf-md",
+          "metadata": {},
+          "source": [
+            "## OCR a scanned PDF\n",
+            "A scanned PDF is the same idea as the PNG: the pages are images, so the service uses OCR to recover the text."
+          ]
+        },
+        {
+          "cell_type": "code",
+          "execution_count": null,
+          "id": "b4d8f9a5-8c04-4361-ef97-ocr-tutorial-pdf-code",
+          "metadata": {},
+          "outputs": [],
+          "source": [
+            "with open(\"data/ocr-service-tutorial/pat_id_1.pdf\", \"rb\") as f:\n",
+            "    pdf_result = requests.post(ocr_url, files={\"file\": (\"pat_id_1.pdf\", f)}).json()\n",
+            "\n",
+            "print(\"=== OCR Service: scanned PDF ===\")\n",
+            "print(pdf_result.get(\"result\").get(\"text\"))"
+          ]
+        },
+        {
+          "cell_type": "markdown",
+          "id": "c5e0a6b6-9d15-4472-fa08-ocr-tutorial-pdf-commentary",
+          "metadata": {},
+          "source": [
+            "From the above result, we can see that the service has recovered text from the scanned PDF."
+          ]
+        },
+        {
+          "cell_type": "markdown",
+          "id": "e1a4c8d2-1f37-4694-bc21-ocr-tutorial-summary",
+          "metadata": {},
+          "source": [
+            "## Summary\n",
+            "This is the end of this tutorial.\n",
+            "\n",
+            "We can see by calling the OCR service, we are able to extract text from images, Word files, and scanned PDFs just by calling one HTTP API.\n",
+            "\n",
+            "## What next?\n",
+            "Take the extracted text and follow the MedCAT + OpenSearch end-to-end tutorial (`medcat-opensearch-e2e.ipynb`). That shows how to ingest the text into OpenSearch and run MedCAT on top."
+          ]
+        }
+      ],
+      "metadata": {
+        "kernelspec": {
+          "display_name": "Python 3 (ipykernel)",
+          "language": "python",
+          "name": "python3"
+        },
+        "language_info": {
+          "codemirror_mode": {
+            "name": "ipython",
+            "version": 3
+          },
+          "file_extension": ".py",
+          "mimetype": "text/x-python",
+          "name": "python",
+          "nbconvert_exporter": "python",
+          "pygments_lexer": "ipython3",
+          "version": "3.11.14"
+        }
+      },
+      "nbformat": 4,
+      "nbformat_minor": 5
+    }
+
+---
+# Source: jupyterhub-helm/charts/jupyterhub/templates/hub/pvc.yaml
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: hub-db-dir
+  labels:
+    component: hub
+    app.kubernetes.io/component: hub
+    app: "jupyterhub"
+    release: "jupyterhub"
+    chart: jupyterhub-4.3.2
+    heritage: Helm
+    app.kubernetes.io/name: "jupyterhub"
+    app.kubernetes.io/instance: "jupyterhub"
+    helm.sh/chart: jupyterhub-4.3.2
+    app.kubernetes.io/managed-by: Helm
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: "1Gi"
+
+---
+# Source: jupyterhub-helm/charts/jupyterhub/templates/scheduling/user-scheduler/rbac.yaml
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: jupyterhub-user-scheduler
+  labels:
+    component: user-scheduler
+    app.kubernetes.io/component: user-scheduler
+    app: "jupyterhub"
+    release: "jupyterhub"
+    chart: jupyterhub-4.3.2
+    heritage: Helm
+    app.kubernetes.io/name: "jupyterhub"
+    app.kubernetes.io/instance: "jupyterhub"
+    helm.sh/chart: jupyterhub-4.3.2
+    app.kubernetes.io/managed-by: Helm
+rules:
+  # Copied from the system:kube-scheduler ClusterRole of the k8s version
+  # matching the kube-scheduler binary we use. A modification has been made to
+  # resourceName fields to remain relevant for how we have named our resources
+  # in this Helm chart.
+  #
+  # NOTE: These rules have been:
+  #       - unchanged between 1.12 and 1.15
+  #       - changed in 1.16
+  #       - changed in 1.17
+  #       - unchanged between 1.18 and 1.20
+  #       - changed in 1.21: get/list/watch permission for namespace,
+  #                          csidrivers, csistoragecapacities was added.
+  #       - unchanged between 1.22 and 1.27
+  #       - changed in 1.28: permissions to get/update lock endpoint resource
+  #                          removed
+  #       - unchanged between 1.28 and 1.30
+  #       - (1.31 is known to bring some changes below)
+  #
+  # ref: https://github.com/kubernetes/kubernetes/blob/v1.30.0/plugin/pkg/auth/authorizer/rbac/bootstrappolicy/testdata/cluster-roles.yaml#L721-L862
+  - apiGroups:
+    - ""
+    - events.k8s.io
+    resources:
+    - events
+    verbs:
+    - create
+    - patch
+    - update
+  - apiGroups:
+    - coordination.k8s.io
+    resources:
+    - leases
+    verbs:
+    - create
+  - apiGroups:
+    - coordination.k8s.io
+    resourceNames:
+    - user-scheduler-lock
+    resources:
+    - leases
+    verbs:
+    - get
+    - update
+  - apiGroups:
+    - ""
+    resources:
+    - nodes
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - ""
+    resources:
+    - pods
+    verbs:
+    - delete
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - ""
+    resources:
+    - bindings
+    - pods/binding
+    verbs:
+    - create
+  - apiGroups:
+    - ""
+    resources:
+    - pods/status
+    verbs:
+    - patch
+    - update
+  - apiGroups:
+    - ""
+    resources:
+    - replicationcontrollers
+    - services
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - apps
+    - extensions
+    resources:
+    - replicasets
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - apps
+    resources:
+    - statefulsets
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - policy
+    resources:
+    - poddisruptionbudgets
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - ""
+    resources:
+    - persistentvolumeclaims
+    - persistentvolumes
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - authentication.k8s.io
+    resources:
+    - tokenreviews
+    verbs:
+    - create
+  - apiGroups:
+    - authorization.k8s.io
+    resources:
+    - subjectaccessreviews
+    verbs:
+    - create
+  - apiGroups:
+    - storage.k8s.io
+    resources:
+    - csinodes
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - ""
+    resources:
+    - namespaces
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - storage.k8s.io
+    resources:
+    - csidrivers
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - storage.k8s.io
+    resources:
+    - csistoragecapacities
+    verbs:
+    - get
+    - list
+    - watch
+
+  # Copied from the system:volume-scheduler ClusterRole of the k8s version
+  # matching the kube-scheduler binary we use.
+  #
+  # NOTE: These rules have not changed between 1.12 and 1.29.
+  #
+  # ref: https://github.com/kubernetes/kubernetes/blob/v1.29.0/plugin/pkg/auth/authorizer/rbac/bootstrappolicy/testdata/cluster-roles.yaml#L1283-L1310
+  - apiGroups:
+    - ""
+    resources:
+    - persistentvolumes
+    verbs:
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - storage.k8s.io
+    resources:
+    - storageclasses
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - ""
+    resources:
+    - persistentvolumeclaims
+    verbs:
+    - get
+    - list
+    - patch
+    - update
+    - watch
+
+---
+# Source: jupyterhub-helm/charts/jupyterhub/templates/scheduling/user-scheduler/rbac.yaml
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: jupyterhub-user-scheduler
+  labels:
+    component: user-scheduler
+    app.kubernetes.io/component: user-scheduler
+    app: "jupyterhub"
+    release: "jupyterhub"
+    chart: jupyterhub-4.3.2
+    heritage: Helm
+    app.kubernetes.io/name: "jupyterhub"
+    app.kubernetes.io/instance: "jupyterhub"
+    helm.sh/chart: jupyterhub-4.3.2
+    app.kubernetes.io/managed-by: Helm
+subjects:
+  - kind: ServiceAccount
+    name: user-scheduler
+    namespace: "default"
+roleRef:
+  kind: ClusterRole
+  name: jupyterhub-user-scheduler
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# Source: jupyterhub-helm/charts/jupyterhub/templates/hub/rbac.yaml
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: hub
+  labels:
+    component: hub
+    app.kubernetes.io/component: hub
+    app: "jupyterhub"
+    release: "jupyterhub"
+    chart: jupyterhub-4.3.2
+    heritage: Helm
+    app.kubernetes.io/name: "jupyterhub"
+    app.kubernetes.io/instance: "jupyterhub"
+    helm.sh/chart: jupyterhub-4.3.2
+    app.kubernetes.io/managed-by: Helm
+rules:
+  - apiGroups: [""]       # "" indicates the core API group
+    resources: ["pods", "persistentvolumeclaims", "secrets", "services"]
+    verbs: ["get", "watch", "list", "create", "delete"]
+  - apiGroups: [""]       # "" indicates the core API group
+    resources: ["events"]
+    verbs: ["get", "watch", "list"]
+
+---
+# Source: jupyterhub-helm/charts/jupyterhub/templates/hub/rbac.yaml
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: hub
+  labels:
+    component: hub
+    app.kubernetes.io/component: hub
+    app: "jupyterhub"
+    release: "jupyterhub"
+    chart: jupyterhub-4.3.2
+    heritage: Helm
+    app.kubernetes.io/name: "jupyterhub"
+    app.kubernetes.io/instance: "jupyterhub"
+    helm.sh/chart: jupyterhub-4.3.2
+    app.kubernetes.io/managed-by: Helm
+subjects:
+  - kind: ServiceAccount
+    name: hub
+    namespace: "default"
+roleRef:
+  kind: Role
+  name: hub
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# Source: jupyterhub-helm/charts/jupyterhub/templates/hub/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: hub
+  labels:
+    component: hub
+    app.kubernetes.io/component: hub
+    app: "jupyterhub"
+    release: "jupyterhub"
+    chart: jupyterhub-4.3.2
+    heritage: Helm
+    app.kubernetes.io/name: "jupyterhub"
+    app.kubernetes.io/instance: "jupyterhub"
+    helm.sh/chart: jupyterhub-4.3.2
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: /hub/metrics
+    prometheus.io/port: "8081"
+spec:
+  type: ClusterIP
+  selector:
+    component: hub
+    app: "jupyterhub"
+    release: "jupyterhub"
+  ports:
+    - name: hub
+      port: 8081
+      targetPort: http
+  ipFamilyPolicy: PreferDualStack
+
+---
+# Source: jupyterhub-helm/charts/jupyterhub/templates/proxy/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: proxy-api
+  labels:
+    component: proxy-api
+    app.kubernetes.io/component: proxy-api
+    app: "jupyterhub"
+    release: "jupyterhub"
+    chart: jupyterhub-4.3.2
+    heritage: Helm
+    app.kubernetes.io/name: "jupyterhub"
+    app.kubernetes.io/instance: "jupyterhub"
+    helm.sh/chart: jupyterhub-4.3.2
+    app.kubernetes.io/managed-by: Helm
+spec:
+  selector:
+    component: proxy
+    app: "jupyterhub"
+    release: "jupyterhub"
+  ports:
+    - port: 8001
+      targetPort: api
+  ipFamilyPolicy: PreferDualStack
+
+---
+# Source: jupyterhub-helm/charts/jupyterhub/templates/proxy/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: proxy-public
+  labels:
+    component: proxy-public
+    app.kubernetes.io/component: proxy-public
+    app: "jupyterhub"
+    release: "jupyterhub"
+    chart: jupyterhub-4.3.2
+    heritage: Helm
+    app.kubernetes.io/name: "jupyterhub"
+    app.kubernetes.io/instance: "jupyterhub"
+    helm.sh/chart: jupyterhub-4.3.2
+    app.kubernetes.io/managed-by: Helm
+spec:
+  selector:
+    # This service will target the autohttps pod if autohttps is configured, and
+    # the proxy pod if not. When autohttps is configured, the service proxy-http
+    # will be around to target the proxy pod directly.
+    component: proxy
+    app: "jupyterhub"
+    release: "jupyterhub"
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+  type: ClusterIP
+  ipFamilyPolicy: PreferDualStack
+
+---
+# Source: jupyterhub-helm/charts/jupyterhub/templates/hub/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hub
+  labels:
+    component: hub
+    app.kubernetes.io/component: hub
+    app: "jupyterhub"
+    release: "jupyterhub"
+    chart: jupyterhub-4.3.2
+    heritage: Helm
+    app.kubernetes.io/name: "jupyterhub"
+    app.kubernetes.io/instance: "jupyterhub"
+    helm.sh/chart: jupyterhub-4.3.2
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: hub
+      app: "jupyterhub"
+      release: "jupyterhub"
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        component: hub
+        app.kubernetes.io/component: hub
+        app: "jupyterhub"
+        release: "jupyterhub"
+        app.kubernetes.io/name: "jupyterhub"
+        app.kubernetes.io/instance: "jupyterhub"
+        hub.jupyter.org/network-access-proxy-api: "true"
+        hub.jupyter.org/network-access-proxy-http: "true"
+        hub.jupyter.org/network-access-singleuser: "true"
+      annotations:
+        checksum/config-map: 81b48c55a7b330eda771120f454a582848e700fefb6dafe778f600cfd08e78d2
+        checksum/secret: e38444a4cdbdd3330865dedc43a0ce114136c686d432eeb88922baa44d9e282b
+    spec:
+      tolerations:
+        - effect: NoSchedule
+          key: hub.jupyter.org/dedicated
+          operator: Equal
+          value: core
+        - effect: NoSchedule
+          key: hub.jupyter.org_dedicated
+          operator: Equal
+          value: core
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: hub.jupyter.org/node-purpose
+                    operator: In
+                    values: [core]
+      volumes:
+        - name: config
+          configMap:
+            name: hub
+        - name: secret
+          secret:
+            secretName: hub
+        - name: pvc
+          persistentVolumeClaim:
+            claimName: hub-db-dir
+      serviceAccountName: hub
+      securityContext:
+        fsGroup: 1000
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: hub
+          image: cogstacksystems/jupyter-hub:2.3.6
+          args:
+            - jupyterhub
+            - --config
+            - /usr/local/etc/jupyterhub/jupyterhub_config.py
+            - --upgrade-db
+          volumeMounts:
+            - mountPath: /usr/local/etc/jupyterhub/jupyterhub_config.py
+              subPath: jupyterhub_config.py
+              name: config
+            - mountPath: /usr/local/etc/jupyterhub/z2jh.py
+              subPath: z2jh.py
+              name: config
+            - mountPath: /usr/local/etc/jupyterhub/config/
+              name: config
+            - mountPath: /usr/local/etc/jupyterhub/secret/
+              name: secret
+            - mountPath: /srv/jupyterhub
+              name: pvc
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsGroup: 1000
+            runAsUser: 1000
+          env:
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: HELM_RELEASE_NAME
+              value: "jupyterhub"
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: CONFIGPROXY_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hub
+                  key: hub.config.ConfigurableHTTPProxy.auth_token
+          ports:
+            - name: http
+              containerPort: 8081
+          livenessProbe:
+            initialDelaySeconds: 300
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 30
+            httpGet:
+              path: /hub/health
+              port: http
+          readinessProbe:
+            initialDelaySeconds: 0
+            periodSeconds: 2
+            timeoutSeconds: 1
+            failureThreshold: 1000
+            httpGet:
+              path: /hub/health
+              port: http
+
+---
+# Source: jupyterhub-helm/charts/jupyterhub/templates/proxy/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: proxy
+  labels:
+    component: proxy
+    app.kubernetes.io/component: proxy
+    app: "jupyterhub"
+    release: "jupyterhub"
+    chart: jupyterhub-4.3.2
+    heritage: Helm
+    app.kubernetes.io/name: "jupyterhub"
+    app.kubernetes.io/instance: "jupyterhub"
+    helm.sh/chart: jupyterhub-4.3.2
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: proxy
+      app: "jupyterhub"
+      release: "jupyterhub"
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        component: proxy
+        app.kubernetes.io/component: proxy
+        app: "jupyterhub"
+        release: "jupyterhub"
+        app.kubernetes.io/name: "jupyterhub"
+        app.kubernetes.io/instance: "jupyterhub"
+        hub.jupyter.org/network-access-hub: "true"
+        hub.jupyter.org/network-access-singleuser: "true"
+      annotations:
+        # We want to restart proxy only if the auth token changes
+        # Other changes to the hub config should not restart.
+        # We truncate to 4 chars to avoid leaking auth token info,
+        # since someone could brute force the hash to obtain the token
+        #
+        # Note that if auth_token has to be generated at random, it will be
+        # generated at random here separately from being generated at random in
+        # the k8s Secret template. This will cause this annotation to change to
+        # match the k8s Secret during the first upgrade following an auth_token
+        # was generated.
+        checksum/auth-token: "f487"
+        checksum/proxy-secret: "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    spec:
+      terminationGracePeriodSeconds: 60
+      tolerations:
+        - effect: NoSchedule
+          key: hub.jupyter.org/dedicated
+          operator: Equal
+          value: core
+        - effect: NoSchedule
+          key: hub.jupyter.org_dedicated
+          operator: Equal
+          value: core
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: hub.jupyter.org/node-purpose
+                    operator: In
+                    values: [core]
+      containers:
+        - name: chp
+          image: quay.io/jupyterhub/configurable-http-proxy:5.1.0
+          command:
+            - configurable-http-proxy
+            - "--ip="
+            - "--api-ip="
+            - --api-port=8001
+            - --default-target=http://hub:$(HUB_SERVICE_PORT)
+            - --error-target=http://hub:$(HUB_SERVICE_PORT)/hub/error
+            - --port=8000
+          env:
+            - name: CONFIGPROXY_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  # NOTE: References the chart managed k8s Secret even if
+                  #       hub.existingSecret is specified to avoid using the
+                  #       lookup function on the user managed k8s Secret.
+                  name: hub
+                  key: hub.config.ConfigurableHTTPProxy.auth_token
+          ports:
+            - name: http
+              containerPort: 8000
+            - name: api
+              containerPort: 8001
+          livenessProbe:
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 30
+            httpGet:
+              path: /_chp_healthz
+              port: http
+              scheme: HTTP
+          readinessProbe:
+            initialDelaySeconds: 0
+            periodSeconds: 2
+            timeoutSeconds: 1
+            failureThreshold: 1000
+            httpGet:
+              path: /_chp_healthz
+              port: http
+              scheme: HTTP
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsGroup: 65534
+            runAsNonRoot: true
+            runAsUser: 65534
+            seccompProfile:
+              type: RuntimeDefault
+
+---
+# Source: jupyterhub-helm/charts/jupyterhub/templates/scheduling/user-scheduler/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-scheduler
+  labels:
+    component: user-scheduler
+    app.kubernetes.io/component: user-scheduler
+    app: "jupyterhub"
+    release: "jupyterhub"
+    chart: jupyterhub-4.3.2
+    heritage: Helm
+    app.kubernetes.io/name: "jupyterhub"
+    app.kubernetes.io/instance: "jupyterhub"
+    helm.sh/chart: jupyterhub-4.3.2
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: user-scheduler
+      app: "jupyterhub"
+      release: "jupyterhub"
+  template:
+    metadata:
+      labels:
+        component: user-scheduler
+        app.kubernetes.io/component: user-scheduler
+        app: "jupyterhub"
+        release: "jupyterhub"
+        app.kubernetes.io/name: "jupyterhub"
+        app.kubernetes.io/instance: "jupyterhub"
+      annotations:
+        checksum/config-map: 36c25274eed5aef39282e1b50932c2231c61179a94c08d13ad9ad01017c60c6c
+    spec:
+      
+      serviceAccountName: user-scheduler
+      tolerations:
+        - effect: NoSchedule
+          key: hub.jupyter.org/dedicated
+          operator: Equal
+          value: core
+        - effect: NoSchedule
+          key: hub.jupyter.org_dedicated
+          operator: Equal
+          value: core
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: hub.jupyter.org/node-purpose
+                    operator: In
+                    values: [core]
+      volumes:
+        - name: config
+          configMap:
+            name: user-scheduler
+      containers:
+        - name: kube-scheduler
+          image: registry.k8s.io/kube-scheduler:v1.30.14
+          command:
+            - /usr/local/bin/kube-scheduler
+            # NOTE: --authentication-skip-lookup=true is used to avoid a
+            #       seemingly harmless error, if we need to not skip
+            #       "authentication lookup" in the future, see the linked issue.
+            #
+            # ref: https://github.com/jupyterhub/zero-to-jupyterhub-k8s/issues/1894
+            - --config=/etc/user-scheduler/config.yaml
+            - --authentication-skip-lookup=true
+            - --v=4
+          volumeMounts:
+            - mountPath: /etc/user-scheduler
+              name: config
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              scheme: HTTPS
+              port: 10259
+            initialDelaySeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              scheme: HTTPS
+              port: 10259
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsGroup: 65534
+            runAsNonRoot: true
+            runAsUser: 65534
+            seccompProfile:
+              type: RuntimeDefault
+
+---
+# Source: jupyterhub-helm/charts/jupyterhub/templates/scheduling/user-placeholder/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: user-placeholder
+  labels:
+    component: user-placeholder
+    app.kubernetes.io/component: user-placeholder
+    app: "jupyterhub"
+    release: "jupyterhub"
+    chart: jupyterhub-4.3.2
+    heritage: Helm
+    app.kubernetes.io/name: "jupyterhub"
+    app.kubernetes.io/instance: "jupyterhub"
+    helm.sh/chart: jupyterhub-4.3.2
+    app.kubernetes.io/managed-by: Helm
+spec:
+  podManagementPolicy: Parallel
+  replicas: 0
+  selector:
+    matchLabels:
+      component: user-placeholder
+      app: "jupyterhub"
+      release: "jupyterhub"
+  serviceName: user-placeholder
+  template:
+    metadata:
+      labels:
+        component: user-placeholder
+        app.kubernetes.io/component: user-placeholder
+        app: "jupyterhub"
+        release: "jupyterhub"
+        app.kubernetes.io/name: "jupyterhub"
+        app.kubernetes.io/instance: "jupyterhub"
+    spec:
+      schedulerName: jupyterhub-user-scheduler
+      tolerations:
+        - effect: NoSchedule
+          key: hub.jupyter.org/dedicated
+          operator: Equal
+          value: user
+        - effect: NoSchedule
+          key: hub.jupyter.org_dedicated
+          operator: Equal
+          value: user
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: hub.jupyter.org/node-purpose
+                    operator: In
+                    values: [user]
+      terminationGracePeriodSeconds: 0
+      automountServiceAccountToken: false
+      containers:
+        - name: pause
+          image: registry.k8s.io/pause:3.10.1
+          resources:
+            requests:
+              memory: 1G
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsGroup: 65534
+            runAsNonRoot: true
+            runAsUser: 65534
+            seccompProfile:
+              type: RuntimeDefault

@@ -1,0 +1,250 @@
+---
+# Source: nifi/templates/tls-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cogstack-nifi-tls-env
+data:
+  AUTH: tls
+  NIFI_SECURITY_USER_AUTHORIZER: managed-authorizer
+  NIFI_SECURITY_USER_LOGIN_IDENTITY_PROVIDER: single-user-provider
+  NIFI_WEB_HTTPS_PORT: "8443"
+  # Kubernetes uses /certificates; Compose retains /security/certificates.
+  NIFI_KEYSTORE_PATH: /certificates/nifi/nifi-keystore.jks
+  NIFI_TRUSTSTORE_PATH: /certificates/nifi/nifi-truststore.jks
+  NIFI_HEALTHCHECK_CA_FILE: /certificates/root/root-ca.pem
+  KEYSTORE_PATH: /certificates/nifi/nifi-keystore.jks
+  TRUSTSTORE_PATH: /certificates/nifi/nifi-truststore.jks
+  KEYSTORE_TYPE: JKS
+  TRUSTSTORE_TYPE: JKS
+
+---
+# Source: nifi/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: cogstack-nifi-headless
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app: cogstack-nifi
+  ports:
+    - name: https
+      port: 8443
+
+---
+# Source: nifi/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: cogstack-nifi
+spec:
+  type: ClusterIP
+  selector:
+    app: cogstack-nifi
+  ports:
+    - name: https
+      port: 8443
+      targetPort: 8443
+
+---
+# Source: nifi/templates/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: cogstack-nifi
+
+spec:
+  serviceName: cogstack-nifi-headless
+  replicas: 1
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+  selector:
+    matchLabels:
+      app: cogstack-nifi
+  template:
+    metadata:
+      labels:
+        app: cogstack-nifi
+      annotations:
+        checksum/tls-config: 732afaede6adefc82e876f12b7f82e17d6fd4ecf10cc7a820b811e63bc62db43
+    spec:
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      terminationGracePeriodSeconds: 120
+      initContainers:
+        - name: initialize-conf
+          image: "cogstacksystems/nifi:latest"
+          imagePullPolicy: Always
+          securityContext:
+            allowPrivilegeEscalation: false
+          resources:
+            limits:
+              cpu: "1"
+              memory: 2G
+            requests:
+              cpu: "1"
+              memory: 2G
+          command: ["/bin/sh", "-ec"]
+          args:
+            - |
+              marker=/mnt/conf/.nifi-bootstrap-incomplete
+              complete=/mnt/conf/.nifi-bootstrap-complete
+              if [ -e "$marker" ]; then
+                echo "Interrupted conf initialization; restore the conf PVC before starting NiFi." >&2
+                exit 1
+              fi
+              test -w /mnt/conf || { echo "The conf PVC is not writable by the configured NiFi UID/GID." >&2; exit 1; }
+              if [ ! -f "$complete" ]; then
+                if [ -n "$(find /mnt/conf -mindepth 1 -maxdepth 1 ! -name lost+found -print -quit)" ]; then
+                  echo "Unverified non-empty conf PVC; verify or restore its configuration before creating .nifi-bootstrap-complete." >&2
+                  exit 1
+                fi
+                touch "$marker"
+                sync -f /mnt/conf
+                find "$NIFI_HOME/conf" -mindepth 1 -maxdepth 1 \
+                  -exec cp -R --preserve=mode,timestamps -t /mnt/conf -- {} +
+              fi
+              for file in nifi.properties bootstrap.conf state-management.xml authorizers.xml login-identity-providers.xml logback.xml; do
+                if [ ! -s "/mnt/conf/$file" ] || [ ! -r "/mnt/conf/$file" ] || [ ! -w "/mnt/conf/$file" ]; then
+                  echo "Missing, empty or inaccessible NiFi configuration file: $file" >&2
+                  exit 1
+                fi
+              done
+              if [ -e "$marker" ]; then
+                sync -f /mnt/conf
+                mv "$marker" "$complete"
+                sync -f /mnt/conf
+              fi
+          volumeMounts:
+            - name: conf
+              mountPath: /mnt/conf
+      containers:
+        - name: nifi
+          securityContext:
+            allowPrivilegeEscalation: false
+          envFrom:
+            - configMapRef:
+                name: nifi-env
+            - configMapRef:
+                name: cogstack-nifi-tls-env
+            # Login/password variables and matching INITIAL_ADMIN_IDENTITY only; no certificate files.
+            - secretRef:
+                name: nifi-auth
+
+          volumeMounts:
+            - name: tls
+              mountPath: /certificates
+              readOnly: true
+            - name: flowfile-repository
+              mountPath: /opt/nifi/nifi-current/flowfile_repository
+            - name: content-repository
+              mountPath: /opt/nifi/nifi-current/content_repository
+            - name: provenance-repository
+              mountPath: /opt/nifi/nifi-current/provenance_repository
+            - name: database-repository
+              mountPath: /opt/nifi/nifi-current/database_repository
+            - name: state
+              mountPath: /opt/nifi/nifi-current/state
+            - name: conf
+              mountPath: /opt/nifi/nifi-current/conf
+
+          image: "cogstacksystems/nifi:latest"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8443
+          startupProbe:
+            exec:
+              command: ["/opt/nifi/scripts/cogstack-healthcheck.sh", "startup"]
+            timeoutSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            exec:
+              command: ["/opt/nifi/scripts/cogstack-healthcheck.sh", "ready"]
+            timeoutSeconds: 10
+          resources:
+            limits:
+              cpu: "1"
+              memory: 2G
+            requests:
+              cpu: "1"
+              memory: 2G
+
+      volumes:
+        - name: tls
+          projected:
+            sources:
+              - secret:
+                  name: cogstack-root-ca
+                  items:
+                    - key: ca.crt
+                      path: root/root-ca.pem
+                    - key: truststore.jks
+                      path: nifi/nifi-truststore.jks
+              - secret:
+                  name: nifi-tls
+                  items:
+                    - key: nifi-keystore.jks
+                      path: nifi/nifi-keystore.jks
+
+  volumeClaimTemplates:
+    - metadata:
+        name: flowfile-repository
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        volumeMode: Filesystem
+        resources:
+          requests:
+            storage: "20Gi"
+    - metadata:
+        name: content-repository
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        volumeMode: Filesystem
+        resources:
+          requests:
+            storage: "100Gi"
+    - metadata:
+        name: provenance-repository
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        volumeMode: Filesystem
+        resources:
+          requests:
+            storage: "50Gi"
+    - metadata:
+        name: database-repository
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        volumeMode: Filesystem
+        resources:
+          requests:
+            storage: "5Gi"
+    - metadata:
+        name: state
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        volumeMode: Filesystem
+        resources:
+          requests:
+            storage: "5Gi"
+    - metadata:
+        name: conf
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        volumeMode: Filesystem
+        resources:
+          requests:
+            storage: "5Gi"

@@ -1,0 +1,141 @@
+---
+# Source: opensearch-dashboards/charts/opensearch-dashboards/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: opensearch-dashboards-dashboards
+  labels:
+    helm.sh/chart: opensearch-dashboards-3.9.0
+    app.kubernetes.io/name: opensearch-dashboards
+    app.kubernetes.io/instance: opensearch-dashboards
+    app.kubernetes.io/version: "3.9.0"
+    app.kubernetes.io/managed-by: Helm
+---
+# Source: opensearch-dashboards/charts/opensearch-dashboards/templates/rolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    helm.sh/chart: opensearch-dashboards-3.9.0
+    app.kubernetes.io/name: opensearch-dashboards
+    app.kubernetes.io/instance: opensearch-dashboards
+    app.kubernetes.io/version: "3.9.0"
+    app.kubernetes.io/managed-by: Helm
+  name: opensearch-dashboards-dashboards-rolebinding
+roleRef:
+  kind: Role
+  name: opensearch-dashboards-dashboards
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+- kind: ServiceAccount
+  name: opensearch-dashboards-dashboards
+  namespace: default
+
+---
+# Source: opensearch-dashboards/charts/opensearch-dashboards/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: opensearch-dashboards
+  labels:
+    helm.sh/chart: opensearch-dashboards-3.9.0
+    app.kubernetes.io/name: opensearch-dashboards
+    app.kubernetes.io/instance: opensearch-dashboards
+    app.kubernetes.io/version: "3.9.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5601
+    protocol: TCP
+    name: http
+    targetPort: 5601
+  - name: metrics
+    protocol: TCP
+    port: 9601
+  selector:
+    app.kubernetes.io/name: opensearch-dashboards
+    app.kubernetes.io/instance: opensearch-dashboards
+
+---
+# Source: opensearch-dashboards/charts/opensearch-dashboards/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opensearch-dashboards
+  labels:
+    helm.sh/chart: opensearch-dashboards-3.9.0
+    app.kubernetes.io/name: opensearch-dashboards
+    app.kubernetes.io/instance: opensearch-dashboards
+    app.kubernetes.io/version: "3.9.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: opensearch-dashboards
+      app.kubernetes.io/instance: opensearch-dashboards
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: opensearch-dashboards
+        app.kubernetes.io/instance: opensearch-dashboards
+      annotations:
+    spec:
+      securityContext:
+        {}
+      serviceAccountName: opensearch-dashboards-dashboards
+      volumes:
+      containers:
+      - name: dashboards
+        securityContext:
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: true
+          runAsUser: 1000
+        image: "opensearchproject/opensearch-dashboards:3.9.0"
+        imagePullPolicy: "IfNotPresent"
+        readinessProbe:
+          failureThreshold: 10
+          initialDelaySeconds: 10
+          periodSeconds: 20
+          successThreshold: 1
+          tcpSocket:
+            port: 5601
+          timeoutSeconds: 5
+        livenessProbe:
+          failureThreshold: 10
+          initialDelaySeconds: 10
+          periodSeconds: 20
+          successThreshold: 1
+          tcpSocket:
+            port: 5601
+          timeoutSeconds: 5
+        startupProbe:
+          failureThreshold: 20
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          tcpSocket:
+            port: 5601
+          timeoutSeconds: 5
+        env:
+        - name: OPENSEARCH_HOSTS
+          value: "https://opensearch-cluster-master:9200"
+        - name: SERVER_HOST
+          value: "0.0.0.0"
+        ports:
+        - containerPort: 5601
+          name: http
+          protocol: TCP
+        resources:
+          limits:
+            cpu: "1"
+            memory: 1Gi
+          requests:
+            cpu: "1"
+            memory: 1Gi
+        volumeMounts:

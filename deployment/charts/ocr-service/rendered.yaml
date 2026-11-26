@@ -1,0 +1,191 @@
+---
+# Source: ocr-service-helm/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: release-name-ocr-service-helm
+  labels:
+    helm.sh/chart: ocr-service-helm-0.1.0
+    app.kubernetes.io/name: ocr-service-helm
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/version: "1.1.1"
+    app.kubernetes.io/managed-by: Helm
+automountServiceAccountToken: true
+
+---
+# Source: ocr-service-helm/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: release-name-ocr-service-helm
+  labels:
+    helm.sh/chart: ocr-service-helm-0.1.0
+    app.kubernetes.io/name: ocr-service-helm
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/version: "1.1.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8090
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: ocr-service-helm
+    app.kubernetes.io/instance: release-name
+
+---
+# Source: ocr-service-helm/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: release-name-ocr-service-helm
+  labels:
+    helm.sh/chart: ocr-service-helm-0.1.0
+    app.kubernetes.io/name: ocr-service-helm
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/version: "1.1.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ocr-service-helm
+      app.kubernetes.io/instance: release-name
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: ocr-service-helm-0.1.0
+        app.kubernetes.io/name: ocr-service-helm
+        app.kubernetes.io/instance: release-name
+        app.kubernetes.io/version: "1.1.1"
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      serviceAccountName: release-name-ocr-service-helm
+      securityContext:
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
+      containers:
+        - name: ocr-service-helm
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: false
+            runAsGroup: 10001
+            runAsNonRoot: true
+            runAsUser: 10001
+          image: "cogstacksystems/ocr-service:1.1.1"
+          imagePullPolicy: IfNotPresent
+          env:
+          - name: "K8S_NODE_NAME"
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: "K8S_POD_NAME"
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: "K8S_POD_NAMESPACE"
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: "K8S_POD_UID"
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.uid
+          - name: "OCR_SERVICE_CONVERTER_THREADS"
+            value: "1"
+          - name: "OCR_SERVICE_CPU_THREADS"
+            value: "1"
+          - name: "OCR_SERVICE_DEBUG_MODE"
+            value: "false"
+          - name: "OCR_SERVICE_GUNICORN_GRACEFUL_TIMEOUT"
+            value: "30"
+          - name: "OCR_SERVICE_GUNICORN_LOG_FILE_PATH"
+            value: "-"
+          - name: "OCR_SERVICE_GUNICORN_LOG_LEVEL"
+            value: "info"
+          - name: "OCR_SERVICE_GUNICORN_MAX_REQUESTS"
+            value: "50000"
+          - name: "OCR_SERVICE_GUNICORN_MAX_REQUESTS_JITTER"
+            value: "5000"
+          - name: "OCR_SERVICE_GUNICORN_TIMEOUT"
+            value: "300"
+          - name: "OCR_SERVICE_HOST"
+            value: "0.0.0.0"
+          - name: "OCR_SERVICE_IMAGE_DPI"
+            value: "200"
+          - name: "OCR_SERVICE_LIBRE_OFFICE_PROCESS_TIMEOUT"
+            value: "20"
+          - name: "OCR_SERVICE_LOG_LEVEL"
+            value: "20"
+          - name: "OCR_SERVICE_OPERATION_MODE"
+            value: "OCR"
+          - name: "OCR_SERVICE_PORT"
+            value: "8090"
+          - name: "OCR_SERVICE_TESSERACT_CUSTOM_CONFIG_FLAGS"
+            value: ""
+          - name: "OCR_SERVICE_TESSERACT_LANG"
+            value: "eng"
+          - name: "OCR_SERVICE_TESSERACT_NICE"
+            value: "-18"
+          - name: "OCR_SERVICE_TESSERACT_TIMEOUT"
+            value: "30"
+          - name: "OCR_SERVICE_WORKER_CLASS"
+            value: "sync"
+          - name: "OCR_TMP_DIR"
+            value: "/ocr_service/tmp"
+          - name: "OCR_WEB_SERVICE_WORKERS"
+            value: "1"
+          ports:
+            - name: http
+              containerPort: 8090
+              protocol: TCP
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /api/ready
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+          volumeMounts:
+            - name: ocr-tmp
+              mountPath: "/ocr_service/tmp"
+      volumes:
+        - name: ocr-tmp
+          emptyDir:
+            sizeLimit: "1Gi"
+---
+# Source: ocr-service-helm/templates/tests/test-connection.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "release-name-ocr-service-helm-test-connection"
+  labels:
+    helm.sh/chart: ocr-service-helm-0.1.0
+    app.kubernetes.io/name: ocr-service-helm
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/version: "1.1.1"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['release-name-ocr-service-helm:8090/api/health', '-U helm-test ocr-service-helm-v0.1.0']
+  restartPolicy: Never
+
