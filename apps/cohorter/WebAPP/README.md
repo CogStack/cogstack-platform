@@ -88,7 +88,7 @@ When neither variable is set (standalone deployment without oauth2-proxy), the `
 
 When deploying with oauth2-proxy, the `OAUTH2_*` defaults are correct and no override is needed unless the oauth2-proxy is mounted at a non-standard prefix.
 
-In Kubernetes these are set as env vars on the webapp container (via helm `cogstack-cohorter.webapp.env`) and are picked up automatically on the next pod restart.
+In Kubernetes set these as env vars on the webapp container; they are picked up automatically on the next pod restart.
 
 ### Run using Docker with random data
 

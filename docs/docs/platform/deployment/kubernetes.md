@@ -1,0 +1,1 @@
+--8<-- "deployment/kubernetes/README.md"

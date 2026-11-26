@@ -186,9 +186,9 @@ with external service, credential, or sample data requirements.
 
 ## Kubernetes
 
-The [NiFi chart](../../deployment/charts/nifi/README.md) and
-[NGINX chart](../../deployment/charts/nginx/README.md) document their ConfigMaps,
-TLS Secrets, and storage. Use those instructions for Helm deployments.
+NiFi is not part of the Kubernetes manifests in
+[deployment/kubernetes](../../deployment/kubernetes/README.md). Run it with
+Docker Compose, or write your own manifests based on that directory.
 
 ## Dependency auditing
 

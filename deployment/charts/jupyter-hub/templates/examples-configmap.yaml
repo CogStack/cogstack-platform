@@ -1,6 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: jupyter-examples
-data:
-{{ (.Files.Glob "examples/*").AsConfig | indent 2 }}

@@ -1,0 +1,165 @@
+# JupyterHub. A single hub pod runs JupyterHub and its HTTP proxy; KubeSpawner
+# starts one pod (with its own 5Gi volume) per user. Demo login: any username,
+# password "SuperSecret"; "admin" is an administrator.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jupyterhub-config
+data:
+  jupyterhub_config.py: |
+    import os
+
+    c.JupyterHub.bind_url = "http://0.0.0.0:8000"
+    c.JupyterHub.hub_bind_url = "http://0.0.0.0:8081"
+    # How user pods reach the hub: the jupyterhub Service below.
+    c.JupyterHub.hub_connect_url = "http://jupyterhub:8081"
+    c.JupyterHub.db_url = "sqlite:////srv/jupyterhub/data/jupyterhub.sqlite"
+    c.JupyterHub.cookie_secret_file = "/srv/jupyterhub/data/jupyterhub_cookie_secret"
+    c.JupyterHub.authenticate_prometheus = False
+
+    c.JupyterHub.authenticator_class = "dummy"
+    c.DummyAuthenticator.password = "SuperSecret"
+    c.Authenticator.admin_users = {"admin"}
+    c.Authenticator.allow_all = True
+
+    c.JupyterHub.spawner_class = "kubespawner.KubeSpawner"
+    c.KubeSpawner.image = "cogstacksystems/jupyter-singleuser:2.2.2"
+    c.KubeSpawner.cmd = ["jupyterhub-singleuser"]
+    c.KubeSpawner.args = ["--allow-root"]
+    c.KubeSpawner.uid = 0
+    c.KubeSpawner.gid = 0
+    c.KubeSpawner.fs_gid = 0
+    c.KubeSpawner.start_timeout = 600  # includes pulling the large image
+    c.KubeSpawner.http_timeout = 120
+    c.Spawner.default_url = "/lab/"
+    c.Spawner.notebook_dir = "/home/jovyan/work"
+    c.KubeSpawner.environment = {
+        "GRANT_SUDO": "1",
+        "CHOWN_HOME": "yes",
+        "CHOWN_HOME_OPTS": "-R",
+        "MEDCAT_SERVICE_URL": "http://medcat-service:5000",
+        "ANONCAT_SERVICE_URL": "http://anoncat-service:5000",
+        "OCR_SERVICE_URL": "http://ocr-service:8090",
+        "OPENSEARCH_URL": "https://opensearch:9200",
+    }
+
+    c.KubeSpawner.storage_pvc_ensure = True
+    c.KubeSpawner.pvc_name_template = "claim-{username}"
+    c.KubeSpawner.storage_capacity = "5Gi"
+    c.KubeSpawner.volumes = [
+        {"name": "home", "persistentVolumeClaim": {"claimName": "claim-{username}"}},
+        {"name": "examples", "configMap": {"name": "jupyter-examples"}},
+    ]
+    c.KubeSpawner.volume_mounts = [
+        {"name": "home", "mountPath": "/home/jovyan"},
+        {"name": "examples", "mountPath": "/home/jovyan/work/examples", "readOnly": True},
+    ]
+    c.KubeSpawner.lifecycle_hooks = {
+        "postStart": {"exec": {"command": ["sh", "-c", """
+            if [ ! -f /home/jovyan/work/.notebooks_initialized ]; then
+              cp -r /srv/jupyterhub/notebooks/* /home/jovyan/work/
+              cp -r /srv/jupyterhub/medcat-scripts /home/jovyan/work/
+              touch /home/jovyan/work/.notebooks_initialized
+            fi
+        """]}}
+    }
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jupyterhub
+---
+# KubeSpawner manages user pods and their volumes in this namespace.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: jupyterhub
+rules:
+  - apiGroups: [""]
+    resources: [pods, persistentvolumeclaims, secrets, services]
+    verbs: [get, watch, list, create, delete]
+  - apiGroups: [""]
+    resources: [events]
+    verbs: [get, watch, list]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: jupyterhub
+subjects:
+  - kind: ServiceAccount
+    name: jupyterhub
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: jupyterhub
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jupyterhub-data
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jupyterhub
+  labels:
+    app: jupyterhub
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: jupyterhub
+  template:
+    metadata:
+      labels:
+        app: jupyterhub
+    spec:
+      serviceAccountName: jupyterhub
+      containers:
+        - name: hub
+          image: cogstacksystems/jupyter-hub:2.2.2
+          command: [jupyterhub, --config, /etc/jupyterhub-k8s/jupyterhub_config.py]
+          ports:
+            - name: http
+              containerPort: 8000
+            - name: hub
+              containerPort: 8081
+          readinessProbe:
+            httpGet:
+              path: /hub/health
+              port: hub
+          volumeMounts:
+            - name: config
+              mountPath: /etc/jupyterhub-k8s
+            - name: data
+              mountPath: /srv/jupyterhub/data
+      volumes:
+        - name: config
+          configMap:
+            name: jupyterhub-config
+        - name: data
+          persistentVolumeClaim:
+            claimName: jupyterhub-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jupyterhub
+spec:
+  selector:
+    app: jupyterhub
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http
+    - name: hub
+      port: 8081
+      targetPort: hub

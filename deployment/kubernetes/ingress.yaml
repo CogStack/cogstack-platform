@@ -1,0 +1,68 @@
+# One host per app under ${DOMAIN}, routed by the cluster's default ingress
+# class. TLS and authentication are left to the ingress controller.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cogstack
+spec:
+  rules:
+    - host: trainer.${DOMAIN}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: medcat-trainer
+                port:
+                  name: http
+    - host: jupyter.${DOMAIN}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: jupyterhub
+                port:
+                  name: http
+    - host: dashboards.${DOMAIN}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: opensearch-dashboards
+                port:
+                  name: http
+    - host: medcat.${DOMAIN}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: medcat-service
+                port:
+                  name: http
+    - host: anoncat.${DOMAIN}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: anoncat-service
+                port:
+                  name: http
+    - host: ocr.${DOMAIN}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ocr-service
+                port:
+                  name: http

@@ -1,0 +1,335 @@
+# MedCAT Trainer: annotation web app. One pod runs the Django API and an nginx
+# front end; Postgres holds the data and Solr (cloud mode, embedded ZooKeeper)
+# backs concept search.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: medcat-trainer-env
+data:
+  CSRF_TRUSTED_ORIGINS: https://trainer.${DOMAIN}
+  DB_ENGINE: postgresql
+  DB_HOST: medcat-trainer-postgres
+  DB_PORT: "5432"
+  DB_NAME: postgres
+  DB_USER: postgres
+  DB_PASSWORD: postgres
+  CONCEPT_SEARCH_SERVICE_HOST: medcat-trainer-solr
+  CONCEPT_SEARCH_SERVICE_PORT: "8983"
+  API_URL: http://localhost:8000/api/
+  MEDCAT_CONFIG_FILE: /home/configs/base.txt
+  PROVISIONING_CONFIG_PATH: /home/configs/provisioning.yaml
+  LOAD_EXAMPLES: "1"
+  REMOTE_MODEL_SERVICE_TYPE: medcat
+  DB_BACKUP_DIR: /home/api/db-backup
+  DEBUG: "1"
+  ENV: non-prod
+  MAX_DATASET_SIZE: "10000"
+  MAX_MEDCAT_MODELS: "2"
+  LOAD_NUM_DOC_PAGES: "10"
+  OPENBLAS_NUM_THREADS: "1"
+  RESUBMIT_ALL_ON_STARTUP: "0"
+  UNIQUE_DOC_NAMES_IN_DATASETS: "True"
+  UWSGI_MAX_FD: "65536"
+  VITE_USE_OIDC: "0"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: medcat-trainer-config
+data:
+  base.txt: |
+    cat.linking.optim = {'type': 'standard', 'lr': 0.1}
+    cat.linking.filter_before_disamb = True
+    cat.general.log_level = 20
+    cat.linking.similarity_threshold = -5
+    cat.linking.similarity_threshold_trainer = -5
+    cat.general.cui_count_limit = 100000000
+    cat.general.full_unlink = False
+    cat.general.spacy_model = 'en_core_web_md'
+  # Example projects created on first start, pointing at the two model services.
+  provisioning.yaml: |
+    projects:
+      - dataset:
+          name: "Example Dataset - psych.csv"
+          url: "https://raw.githubusercontent.com/CogStack/cogstack-nlp/be9825f151da2d3b6faac80d49e5be91a1629c68/medcat-trainer/notebook_docs/example_data/psych.csv"
+          description: "Example psychiatry notes"
+        project:
+          name: "Example Project"
+          description: "Example project for medcat trainer using MedCAT Service"
+          annotationGuidelineLink: "https://docs.google.com/document/d/1xxelBOYbyVzJ7vLlztP2q1Kw9F5Vr1pRwblgrXPS7QM/edit?usp=sharing"
+          useModelService: true
+          modelServiceUrl: http://medcat-service:5000
+      - dataset:
+          name: "Example Dataset - psych.csv - deid"
+          url: "https://raw.githubusercontent.com/CogStack/cogstack-nlp/be9825f151da2d3b6faac80d49e5be91a1629c68/medcat-trainer/notebook_docs/example_data/psych.csv"
+          description: "Example psychiatry notes"
+        project:
+          name: "Example Deid project"
+          description: "Example project for medcat trainer using AnonCAT Service"
+          annotationGuidelineLink: "https://docs.google.com/document/d/1xxelBOYbyVzJ7vLlztP2q1Kw9F5Vr1pRwblgrXPS7QM/edit?usp=sharing"
+          useModelService: true
+          modelServiceUrl: http://anoncat-service:5000
+  supervisord.conf: |
+    [supervisord]
+    nodaemon=true
+    user=root
+    logfile=/var/log/supervisord.log
+    pidfile=/var/run/supervisord.pid
+
+    [program:medcattrainer]
+    command=sh -c "exec /home/scripts/run.sh 2>&1 | sed -u 's/^/[medcattrainer] /'"
+    stdout_logfile=/dev/stdout
+    stdout_logfile_maxbytes=0
+    stderr_logfile=/dev/stderr
+    stderr_logfile_maxbytes=0
+    autorestart=true
+
+    [program:bg-process]
+    command=sh -c "exec /home/scripts/run-bg-process.sh 2>&1 | sed -u 's/^/[bg-process] /'"
+    stdout_logfile=/dev/stdout
+    stdout_logfile_maxbytes=0
+    stderr_logfile=/dev/stderr
+    stderr_logfile_maxbytes=0
+    autorestart=true
+  nginx.conf: |
+    server {
+        listen 8001;
+        charset utf-8;
+        large_client_header_buffers 4 32k;
+        client_max_body_size 4000M;
+        proxy_read_timeout 3000;
+        proxy_send_timeout 3000;
+
+        location /static { alias /home/api/static; }
+        location /media { alias /home/api/media; }
+
+        location /api/concepts/ {
+            proxy_pass http://medcat-trainer-solr:8983/solr/;
+            proxy_set_header Host $host;
+        }
+
+        location / {
+            proxy_pass http://localhost:8000;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+
+        location = /nginx/health/live {
+            access_log off;
+            return 200 'OK';
+        }
+    }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: medcat-trainer-media
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 8Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: medcat-trainer
+  labels:
+    app: medcat-trainer
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: medcat-trainer
+  template:
+    metadata:
+      labels:
+        app: medcat-trainer
+    spec:
+      containers:
+        - name: medcat-trainer
+          image: cogstacksystems/medcat-trainer:3.9.0
+          args: [/usr/bin/supervisord, -c, /etc/supervisord.conf]
+          ports:
+            - name: api
+              containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: medcat-trainer-env
+          startupProbe:
+            httpGet:
+              path: /api/health/startup/?format=json
+              port: api
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /api/health/ready/?format=json
+              port: api
+          livenessProbe:
+            httpGet:
+              path: /api/health/live/?format=json
+              port: api
+            failureThreshold: 30
+          volumeMounts:
+            - name: config
+              mountPath: /home/configs/base.txt
+              subPath: base.txt
+            - name: config
+              mountPath: /home/configs/provisioning.yaml
+              subPath: provisioning.yaml
+            - name: config
+              mountPath: /etc/supervisord.conf
+              subPath: supervisord.conf
+            - name: media
+              mountPath: /home/api/media
+            - name: static
+              mountPath: /home/api/static
+        - name: nginx
+          image: nginx:1.29.1
+          ports:
+            - name: http
+              containerPort: 8001
+          readinessProbe:
+            httpGet:
+              path: /nginx/health/live
+              port: http
+          volumeMounts:
+            - name: config
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: nginx.conf
+            - name: media
+              mountPath: /home/api/media
+            - name: static
+              mountPath: /home/api/static
+      volumes:
+        - name: config
+          configMap:
+            name: medcat-trainer-config
+        - name: media
+          persistentVolumeClaim:
+            claimName: medcat-trainer-media
+        # Static files are rebuilt by the API container on every start.
+        - name: static
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: medcat-trainer
+spec:
+  selector:
+    app: medcat-trainer
+  ports:
+    - name: http
+      port: 8001
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: medcat-trainer-postgres
+spec:
+  serviceName: medcat-trainer-postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: medcat-trainer-postgres
+  template:
+    metadata:
+      labels:
+        app: medcat-trainer-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:17.6
+          ports:
+            - name: postgres
+              containerPort: 5432
+          env:
+            - name: POSTGRES_PASSWORD
+              value: postgres
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          readinessProbe:
+            exec:
+              command: [pg_isready, -U, postgres]
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests:
+            storage: 8Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: medcat-trainer-postgres
+spec:
+  selector:
+    app: medcat-trainer-postgres
+  ports:
+    - name: postgres
+      port: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: medcat-trainer-solr
+spec:
+  serviceName: medcat-trainer-solr
+  replicas: 1
+  selector:
+    matchLabels:
+      app: medcat-trainer-solr
+  template:
+    metadata:
+      labels:
+        app: medcat-trainer-solr
+    spec:
+      securityContext:
+        fsGroup: 8983
+      containers:
+        - name: solr
+          image: solr:9.9.0
+          args: [-cloud]
+          ports:
+            - name: http
+              containerPort: 8983
+          readinessProbe:
+            httpGet:
+              path: /solr/admin/info/system
+              port: http
+            periodSeconds: 10
+          volumeMounts:
+            - name: data
+              mountPath: /var/solr
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: medcat-trainer-solr
+spec:
+  selector:
+    app: medcat-trainer-solr
+  ports:
+    - name: http
+      port: 8983
+      targetPort: http

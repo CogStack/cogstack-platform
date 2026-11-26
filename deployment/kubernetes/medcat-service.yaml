@@ -1,0 +1,58 @@
+# MedCAT Service: clinical concept extraction API, with the example model pack.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: medcat-service
+  labels:
+    app: medcat-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: medcat-service
+  template:
+    metadata:
+      labels:
+        app: medcat-service
+    spec:
+      containers:
+        - name: medcat-service
+          image: cogstacksystems/medcat-service:1.3.2
+          ports:
+            - name: http
+              containerPort: 5000
+          env:
+            - name: APP_MEDCAT_MODEL_PACK
+              value: /cat/models/examples/example-medcat-v2-model-pack.zip
+            - name: APP_ENABLE_DEMO_UI
+              value: "true"
+            - name: APP_ENABLE_METRICS
+              value: "true"
+            - name: SERVER_GUNICORN_MAX_REQUESTS
+              value: "100000"
+          startupProbe:
+            httpGet:
+              path: /api/health/ready
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /api/health/ready
+              port: http
+          livenessProbe:
+            httpGet:
+              path: /api/health/live
+              port: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: medcat-service
+spec:
+  selector:
+    app: medcat-service
+  ports:
+    - name: http
+      port: 5000
+      targetPort: http

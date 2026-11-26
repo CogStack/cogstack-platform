@@ -22,15 +22,15 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 # Add more entries here to copy additional static files into documentation.
 COPY_SPECS = [
     {
-        "sourceFilePath": "deployment/charts/jupyter-hub/examples/medcat-service-tutorial.ipynb",
+        "sourceFilePath": "deployment/kubernetes/files/notebooks/medcat-service-tutorial.ipynb",
         "outputFilePath": "platform/cogstack-ai/medcat-service-tutorial.ipynb",
     },
     {
-        "sourceFilePath": "deployment/charts/jupyter-hub/examples/medcat-opensearch-e2e.ipynb",
+        "sourceFilePath": "deployment/kubernetes/files/notebooks/medcat-opensearch-e2e.ipynb",
         "outputFilePath": "cogstack-ce/tutorial/medcat-opensearch-e2e.ipynb",
     },
     {
-        "sourceFilePath": "deployment/charts/jupyter-hub/examples/ocr-service-tutorial.ipynb",
+        "sourceFilePath": "deployment/kubernetes/files/notebooks/ocr-service-tutorial.ipynb",
         "outputFilePath": "data-engineering/ocr-service-tutorial.ipynb",
     },
 ]

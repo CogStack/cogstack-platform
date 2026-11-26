@@ -8,7 +8,7 @@ To best explain the architecture, we will first walk through each tutorial use c
 
 ## How the tutorials connect the services
 
-The tutorials included in CogStack CE all communicate over http to the deployed services. The chart is setup to automatically add environment variables to jupyter to make it easy to use (`OCR_SERVICE_URL`, `MEDCAT_SERVICE_URL`, `ANONCAT_SERVICE_URL`), by creating configmap in kubernetes.
+The tutorials included in CogStack CE all communicate over http to the deployed services. The JupyterHub manifest automatically adds environment variables to jupyter to make it easy to use (`OCR_SERVICE_URL`, `MEDCAT_SERVICE_URL`, `ANONCAT_SERVICE_URL`), by creating configmap in kubernetes.
 
 ### OCR tutorial
 
@@ -78,28 +78,21 @@ Most CogStack services are Kubernetes Deployments, so they can run multiple inst
 
 OCR Service, MedCAT Service, and AnonCAT Service all are able to scale horizontally, even automatically using a Horizontal Pod Autoscaler. By default we just run 1 instance in the CE.
 
-OpenSearch is a statefulset, so it is able to run multiple instances and should be managed accordingly. By default we run 3 instances in the CogStack CE.
+OpenSearch is a statefulset, so it is able to run multiple instances and should be managed accordingly. By default we run a single instance in the CogStack CE.
 
-### Helm subcharts
+### Kubernetes manifests
 
-Everything in CogStack CE is deployed as Helm subcharts of the [CogStack CE Helm chart](../platform/deployment/helm/charts/ce.md). See the documentation for each chart:
-
-- [MedCAT Service Helm](../platform/deployment/helm/charts/medcat-service.md) (used for both MedCAT and AnonCAT)
-- [OCR Service Helm](../platform/deployment/helm/charts/ocr-service.md)
-- [MedCAT Trainer Helm](../platform/deployment/helm/charts/medcat-trainer.md)
-- [CogStack JupyterHub Helm](../platform/deployment/helm/charts/jupyter-hub.md)
-
-JupyterHub is based on the [official JupyterHub Helm chart](https://hub.jupyter.org/helm-chart/). OpenSearch and OpenSearch Dashboards also come from the [official OpenSearch Helm charts](https://opensearch-project.github.io/helm-charts/). The CogStack wrappers add defaults, images, and example notebooks on top of those upstream charts.
+Everything in CogStack CE is deployed from the plain Kubernetes manifests in [`deployment/kubernetes`](https://github.com/CogStack/cogstack-platform/tree/main/deployment/kubernetes), one file per app. MedCAT Service and AnonCAT both use the MedCAT Service image with different model packs. See [Kubernetes manifests](../platform/deployment/kubernetes.md) for the list of files and how to customise them.
 
 ### Provisioning
 
-Example OpenSearch data and dashboards are created by a Helm post-install hook. That hook runs custom Python defined only in Community Edition to generate synthetic documents, then imports the premade dashboards.
+Example OpenSearch data and dashboards are created by the `opensearch-provisioning` Job. That Job runs custom Python defined only in Community Edition to generate synthetic documents, then imports the premade dashboards.
 
-This CE-only provisioner is the `CogStack CE Provisioner` box in the architecture diagram, it runs a standard python image, with custom code mounted as a configmap. The medcat trainer provisioning is handled by trainer itself, as this is a feature of the trainer helm chart and application.
+This CE-only provisioner is the `CogStack CE Provisioner` box in the architecture diagram, it runs a standard python image, with custom code mounted as a configmap. The medcat trainer provisioning is handled by trainer itself, as this is a feature of the trainer application.
 
 
 ## Next Steps
 
-- View the [CogStack CE Helm chart configuration](../platform/deployment/helm/charts/ce.md) for install options and customisation.
+- View the [Kubernetes manifests](../platform/deployment/kubernetes.md) for install options and customisation.
 - View the cloud deployment examples for running it in [AWS](../platform/deployment/examples/aws-kubernetes-eks.md) or [Azure](../platform/deployment/examples/azure-kubernetes-aks.md)
 

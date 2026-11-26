@@ -1,7 +1,7 @@
 
 # Quickstart
 
-A local setup guide for running k8s locally, and installing with helm
+A local setup guide for running k8s locally, and installing CogStack with plain Kubernetes manifests
 
 
 ## Requirements
@@ -23,42 +23,47 @@ curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikub
 sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
 ```
 
-2. **Install Helm**
-
-Run:
-
-```bash
-curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-```
-
-3. **Start Minikube**
+2. **Start Minikube**
 
 ```bash
 minikube start
 ```
 
-This will create a local Kubernetes cluster.
+This will create a local Kubernetes cluster. You will also need [kubectl](https://kubernetes.io/docs/tasks/tools/) and `envsubst` (part of GNU gettext).
 
-## Deploy CogStack with Helm
+## Deploy CogStack
 
-Run this command to install the MedCAT service Helm chart:
+From a clone of [cogstack-platform](https://github.com/CogStack/cogstack-platform), apply the plain Kubernetes manifests:
 
 ```bash
-helm install my-medcat oci://registry-1.docker.io/cogstacksystems/medcat-service-helm --wait --timeout 10m0s
+export DOMAIN=cogstack.example.org
+kubectl kustomize deployment/kubernetes | envsubst '${DOMAIN}' | kubectl apply -f -
 ```
 
-The `--wait` flag makes Helm wait until all resources are ready, and `--timeout` sets a maximum wait time.
+This deploys CogStack Community Edition into the `cogstack` namespace. The first start downloads several GB of images, so allow up to 15 minutes.
 
 ### Verify deployment
 
 Check that the pods are running:
 
 ```bash
-helm test medcat-service --logs
+kubectl -n cogstack get pods
 ```
 
-You’re now running CogStack locally on Kubernetes! For more detailed usage, see the [Helm tutorial](../helm/tutorial.md).
+Then run the in-cluster acceptance test:
+
+```bash
+kubectl -n cogstack apply -f deployment/kubernetes/tests/acceptance.yaml
+kubectl -n cogstack wait --for=condition=complete job/acceptance --timeout=10m
+kubectl -n cogstack logs job/acceptance
+```
+
+You’re now running CogStack locally on Kubernetes! For more detailed usage, see [Kubernetes manifests](../kubernetes.md).
 
 ### Access the service
 
+Port-forward a service and open it in your browser, for example MedCAT Service at http://localhost:5000:
 
+```bash
+kubectl -n cogstack port-forward svc/medcat-service 5000:5000
+```

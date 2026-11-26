@@ -26,7 +26,6 @@ bash "${script_dir}/install_docker.sh"
 
 if [ "$install_k3s" = "true" ]; then
     bash "${script_dir}/install_k3s.sh"
-    bash "${script_dir}/install_helm.sh"
 fi
 
 echo "Finished installing Docker and utilities."

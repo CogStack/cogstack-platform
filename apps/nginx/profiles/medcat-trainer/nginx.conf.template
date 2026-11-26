@@ -1,4 +1,4 @@
-# Adapted from deployment/charts/medcat-trainer/templates/nginx-configmap.yaml.
+# Adapted from the NGINX ConfigMap of the former MedCAT-trainer Helm chart.
 resolver ${NGINX_LOCAL_RESOLVERS} valid=10s;
 resolver_timeout 3s;
 upstream medcat {

@@ -3,7 +3,7 @@ name: add-to-release-please
 description: >-
   Register a package in release-please by updating release-please-config.json
   and .release-please-manifest.json, and aligning publish workflows to the new
-  tag prefix. Use when adding an app, Helm chart, or package to release-please,
+  tag prefix. Use when adding an app or package to release-please,
   onboarding a new release path, when the user mentions release-please config
   or manifest, or when a Python/uv package needs uv.lock kept in sync for
   --locked installs.
@@ -15,7 +15,7 @@ Register a package so release-please can version it, write changelogs, and creat
 
 ## When to Use
 
-- Adding an app, library, or Helm chart to release-please
+- Adding an app or library to release-please
 - Onboarding a new release path in this monorepo
 - Updating release-please config or manifest for a new package
 
@@ -30,19 +30,17 @@ The path is the package key in both config files (repo-relative directory). Conf
 | Kind | Path examples |
 |---|---|
 | App | `apps/cogstack-cohorter` |
-| Helm chart | `deployment/charts/medcat-service-helm` |
-
-Helm charts in this repo are directories under `deployment/charts/<chart>/` with a `Chart.yaml`. The package key is that directory. See [Helm charts](#helm-charts) before editing.
+| Terraform module | `deployment/terraform/openstack-kubernetes-k3s` |
 
 ### 2. Update `release-please-config.json`
 
-Update `release-please-config.json` with the path. Work out the release-type. It's probably `python`, `helm`, `node`, or `simple`.
+Update `release-please-config.json` with the path. Work out the release-type. It's probably `python`, `node`, or `simple`.
 
 Add under `packages`. Match the file's 4-space indent.
 
 ```json
 "<path>": {
-    "release-type": "<python|node|helm|simple>",
+    "release-type": "<python|node|simple>",
     "component": "<tag-prefix>",
     "changelog-path": "CHANGELOG.md",
     "bump-minor-pre-major": false,
@@ -58,10 +56,9 @@ Add under `packages`. Match the file's 4-space indent.
 |---|---|---|
 | `python` | Root `pyproject.toml` | `$.project.version` |
 | `node` | Root `package.json` | `version` |
-| `helm` | Chart dir with `Chart.yaml` | `version` |
 | `simple` | No single root version file, or nested API + frontend | CHANGELOG only; use `extra-files` for nested bumps |
 
-`component` is the git tag prefix: `{component}-v{version}` (e.g. `cohorter-v0.7.0`). Helm charts retain `helm-charts/<chart>` as their component, independently of their package path under `deployment/charts/`, so the tag remains `helm-charts/<chart>-v<version>`.
+`component` is the git tag prefix: `{component}-v{version}` (e.g. `cohorter-v0.7.0`).
 
 **`extra-files`** (paths relative to the package directory) — e.g. python API + node frontend under `simple`:
 
@@ -100,33 +97,6 @@ When the package directory has a `uv.lock`, add an `extra-files` entry so releas
 
 This is sourced from [release-please#2561](https://github.com/googleapis/release-please/issues/2561)
 
-### Helm charts
-
-Copy an existing chart entry such as `deployment/charts/medcat-service-helm`. Charts here always use `release-type` `helm`, `component` `helm-charts/<chart>`, and these changelog sections. Do not add `extra-files`.
-
-`<chart>` is the directory name (for example `ocr-service-helm`). It must match `name` in `Chart.yaml`, and the chart directory must sit directly under `deployment/charts/`.
-
-```json
-"deployment/charts/<chart>": {
-    "release-type": "helm",
-    "component": "helm-charts/<chart>",
-    "changelog-path": "CHANGELOG.md",
-    "bump-minor-pre-major": false,
-    "bump-patch-for-minor-pre-major": false,
-    "draft": false,
-    "prerelease": false,
-    "changelog-sections": [
-        { "type": "feat", "section": "Features" },
-        { "type": "fix", "section": "Bug Fixes" },
-        { "type": "build", "section": "Dependencies" },
-        { "type": "refactor", "section": "Code Refactoring" },
-        { "type": "revert", "section": "Reverts" }
-    ]
-}
-```
-
-`.github/workflows/build_helm_charts.yml` already discovers every `deployment/charts/*/Chart.yaml` and publishes tags matching `helm-charts/*-v*.*.*`. Do not add a workflow or edit `release_packages.yml` for a chart that fits this layout. Release-please writes `CHANGELOG.md` on the first release.
-
 ### 3. Update `.release-please-manifest.json`
 
 Update `.release-please-manifest.json` by finding the most recent version based on the tags in git.
@@ -134,16 +104,14 @@ Update `.release-please-manifest.json` by finding the most recent version based 
 The manifest value is the **last released** version. The next tag is a bump from that version (`0.1.0` plus a `feat` commit becomes `0.2.0`).
 
 1. `git tag -l '*<name>*' | sort -V`
-2. Take the highest semver; strip the prefix (`helm-charts/medcat-service-helm-v0.6.0` → `0.6.0`)
+2. Take the highest semver; strip the prefix (`cohorter-v0.7.0` → `0.7.0`)
 3. If the user states a version, confirm it against git tags
 4. If tags exist, add `"<path>": "<version>"` (same path key as in the config)
-5. If there are no tags, the package has never been released. Set the manifest to `0.0.0` and set `initial-version` on the package to the first tag you want (for example `"initial-version": "0.1.0"`). `0.0.0` is not treated as a prior release, so the first release is `initial-version` rather than a bump. Without `initial-version`, that first release defaults to `1.0.0`. Do not copy `Chart.yaml` `version` into the manifest for an unreleased chart.
+5. If there are no tags, the package has never been released. Set the manifest to `0.0.0` and set `initial-version` on the package to the first tag you want (for example `"initial-version": "0.1.0"`). `0.0.0` is not treated as a prior release, so the first release is `initial-version` rather than a bump. Without `initial-version`, that first release defaults to `1.0.0`.
 
 ### 4. Update GitHub workflows if the tag format changes
 
-Skip this step for a Helm chart registered as in [Helm charts](#helm-charts). The shared chart workflow already matches `helm-charts/*-v*.*.*`.
-
-For other packages, release-please tags are `{component}-v{version}`. If workflows still match an old prefix that uses a forward slash (e.g. `cogstack-cohorter/v*`):
+Release-please tags are `{component}-v{version}`. If workflows still match an old prefix that uses a forward slash (e.g. `cogstack-cohorter/v*`):
 
 1. `on.push.tags` → `{component}-v*`
 2. Version strip / docker metadata patterns → after `{component}-v`
@@ -157,7 +125,6 @@ rg -n '<old-prefix>|tags:' .github/workflows/<package>*
 
 - [ ] Path chosen (or confirmed with user)
 - [ ] `packages` entry in `release-please-config.json`
-- [ ] Helm charts use the path, `component`, and `changelog-sections` from [Helm charts](#helm-charts)
 - [ ] Python packages with `uv.lock` include the `uv.lock` `extra-files` entry from [Python projects with `uv.lock`](#python-projects-with-uvlock-and-uv--locked)
 - [ ] Manifest entry is the latest git tag, or `0.0.0` plus `initial-version` when the package has never been released
-- [ ] Workflows updated if the tag prefix changed, except Helm charts that already match `helm-charts/*-v*.*.*`
+- [ ] Workflows updated if the tag prefix changed

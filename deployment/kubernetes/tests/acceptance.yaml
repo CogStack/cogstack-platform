@@ -1,0 +1,47 @@
+# In-cluster acceptance test: each service answers, and the example model packs
+# return the expected annotations. Run after a deploy:
+#
+#   kubectl -n cogstack delete job acceptance --ignore-not-found
+#   kubectl -n cogstack apply -f deployment/kubernetes/tests/acceptance.yaml
+#   kubectl -n cogstack wait --for=condition=complete job/acceptance --timeout=10m
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: acceptance
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: test
+          image: curlimages/curl:8.11.1
+          command: [sh, -c]
+          args:
+            - |
+              set -eu
+              failed=0
+
+              check() { # name url
+                if curl -fsS -o /dev/null -m 20 "$2"; then echo "PASS $1 answers"; else echo "FAIL $1 at $2"; failed=1; fi
+              }
+
+              annotate() { # name url expected-pretty-name
+                body=$(curl -sS -m 60 -X POST "$2/api/process" -H 'Content-Type: application/json' \
+                  -d '{"content":{"text":"The patient was diagnosed with Kidney Failure"}}' || true)
+                if echo "$body" | grep -q "\"pretty_name\": *\"$3\""; then
+                  echo "PASS $1 annotated '$3'"
+                else
+                  echo "FAIL $1 did not annotate '$3'. Response: $body"; failed=1
+                fi
+              }
+
+              check medcat-service http://medcat-service:5000/api/health/ready
+              check anoncat-service http://anoncat-service:5000/api/health/ready
+              check ocr-service http://ocr-service:8090/api/health
+              check medcat-trainer http://medcat-trainer:8001/api/health/ready/
+              check jupyterhub http://jupyterhub:8081/hub/health
+              check opensearch-dashboards http://opensearch-dashboards:5601/
+              annotate medcat-service http://medcat-service:5000 "Kidney Failure"
+              annotate anoncat-service http://anoncat-service:5000 "PATIENT"
+              exit $failed

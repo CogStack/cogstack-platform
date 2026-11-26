@@ -1,6 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ include "cogstack-ce-helm.fullname" . }}-opensearch-provisioning-config
-data:
-{{ (.Files.Glob "provisioning/*").AsConfig | indent 2 }}

@@ -2,13 +2,13 @@
 
 This page outlines the basic setup and requirements for running CogStack
 
-See the Quickstart guide for a tutorial that will install a local kubernetes using Minikube, and run an instance of CogStack using Helm.
+See the Quickstart guide for a tutorial that will install a local kubernetes using Minikube, and run an instance of CogStack using plain Kubernetes manifests.
 
 ## Models
 The primary thing you will need to arrange is a trained model to be used for the natural language processing functionality of CogStack. We provide small free models, though to get access to better performing models please contact us
 
 ## Technologies and Tools
-Our recommended deployment method is on **Kubernetes** by using **Helm** charts
+Our recommended deployment method is on **Kubernetes** using the plain manifests in [`deployment/kubernetes`](../kubernetes.md)
 
 These are some of the terms and technologies relevant to deploying CogStack:
 
@@ -17,7 +17,6 @@ These are some of the terms and technologies relevant to deploying CogStack:
 - [Terraform](https://www.terraform.io/downloads)
 - [Kubernetes](https://kubernetes.io/)
 - [kubectl](https://kubernetes.io/docs/tasks/tools/)
-- [Helm](https://helm.sh/docs/intro/install/)
 - [Ansible](https://docs.ansible.com/ansible/latest/index.html)
 - [Portainer](https://www.portainer.io/)
 

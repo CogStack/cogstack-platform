@@ -10,10 +10,11 @@ We create a cluster following the Official Azure Verified Modules patterns in ht
 
 
 ## Usage
-Deployment through terraform is carried out through two terraform commands, to handle the sequencing issues between making a k8s cluster and using it in the cloud.
+Terraform creates the Kubernetes cluster, then `kubectl` applies the CogStack Community Edition manifests from [`deployment/kubernetes`](https://github.com/CogStack/cogstack-platform/tree/main/deployment/kubernetes).
 
 ### Requirements
 - Terraform - [Install Terraform](https://developer.hashicorp.com/terraform/install)
+- [kubectl](https://kubernetes.io/docs/tasks/tools/) and `envsubst` (part of GNU gettext)
 - Azure Credentials for an account and subscription that can create and destroy resources. 
 
 #### Required Permissions
@@ -34,7 +35,7 @@ export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 ```
 
 ### 2. Run Terraform
-Terraform is run on two modules, so we will run one terraform apply in one folder, then another terraform apply in a second folder. 
+Terraform creates the cluster, then `kubectl` applies the CogStack manifests. The commands below assume this example folder is inside a clone of [cogstack-platform](https://github.com/CogStack/cogstack-platform), so the manifests are at `../../../kubernetes`.
 
 Initial provisioning takes around 15 minutes.
 
@@ -46,42 +47,38 @@ terraform apply --auto-approve
 
 AZURE_KUBECONFIG=$(terraform output -raw kubeconfig_file)
 
-# Deploy services to kubernetes
-cd ../kubernetes-deployment
-export TF_VAR_kubeconfig_file=$AZURE_KUBECONFIG
-terraform init
-terraform apply --auto-approve
+# Deploy CogStack with the plain manifests in deployment/kubernetes
+export KUBECONFIG=$AZURE_KUBECONFIG
+export DOMAIN=cogstack.example.org
+kubectl kustomize ../../../kubernetes | envsubst '${DOMAIN}' | kubectl apply -f -
+kubectl -n cogstack get pods -w
 ```
 
 ### 3. Accessing the CogStack Platform
 
 Once the deployment is complete and all services are running, you can access the CogStack platform and its components.
 
-We will use kubernetes port-forwarding to make the services accessible locally.
-
-Run this command:
+Use kubernetes port-forwarding to make the services accessible locally:
 
 ```bash
-terraform output -raw cogstack_notes | bash
+kubectl -n cogstack port-forward svc/medcat-service 5000:5000 &
+kubectl -n cogstack port-forward svc/anoncat-service 5001:5000 &
+kubectl -n cogstack port-forward svc/ocr-service 8090:8090 &
+kubectl -n cogstack port-forward svc/medcat-trainer 8001:8001 &
+kubectl -n cogstack port-forward svc/opensearch 9200:9200 &
+kubectl -n cogstack port-forward svc/opensearch-dashboards 5601:5601 &
+kubectl -n cogstack port-forward svc/jupyterhub 8000:8000 &
 ```
 
-The console will now print all the URLs you can visit to access your CogStack deployment.
+Then visit:
 
-<!-- termynal -->
-```bash
-$ terraform output -raw cogstack_notes | bash
-Forwarding from 127.0.0.1:5001 -> 5000
-Forwarding from [::1]:5001 -> 5000
-Forwarding from 127.0.0.1:5000 -> 5000
-Forwarding from [::1]:5000 -> 5000
-Visit http://127.0.0.1:5000 to use MedCAT Service
-Visit http://127.0.0.1:5001 to use AnonCAT
-Visit http://127.0.0.1:8080 to use MedCAT Trainer
-Visit https://127.0.0.1:9200 to use OpenSearch
-Visit http://127.0.0.1:5601 to use OpenSearch Dashboards
-Visit http://127.0.0.1:8000 to use jupyterhub
-Visit http://127.0.0.1:8000/user/admin/notebooks/medcat-service-tutorial.ipynb to get started with a tutorial
-```
+- MedCAT Service: http://127.0.0.1:5000
+- AnonCAT: http://127.0.0.1:5001
+- OCR Service: http://127.0.0.1:8090
+- MedCAT Trainer: http://127.0.0.1:8001
+- OpenSearch: https://127.0.0.1:9200 (user `admin`, password `opensearch-312$A`)
+- OpenSearch Dashboards: http://127.0.0.1:5601
+- JupyterHub: http://127.0.0.1:8000 (any username, password `SuperSecret`), then open http://127.0.0.1:8000/user/admin/notebooks/medcat-service-tutorial.ipynb to get started with a tutorial
 
 ### 4. Continue with the CogStack Tutorials
 
@@ -99,10 +96,8 @@ You can destroy the infra to save costs when it wont be used for a long time.
 Do note that there is an initial cost every time the EKS infrastructure is created, looks to be around $0.50 at time of writing.
 
 ```bash
-cd ../kubernetes-deployment
-terraform destroy
-
-cd ../aks-cluster
+# From the aks-cluster folder, with KUBECONFIG set as above
+kubectl delete namespace cogstack
 terraform destroy
 ```
 
@@ -132,6 +127,6 @@ az aks get-credentials --resource-group $MY_RESOURCE_GROUP_NAME --name $MY_AKS_C
 You can then interact with kubernetes via the CLI for example:
 
 ```bash
-# Run Medcat service
-helm install medcat-service oci://registry-1.docker.io/cogstacksystems/medcat-service-helm --wait --timeout 10m0s
+# See the CogStack pods
+kubectl -n cogstack get pods
 ```

@@ -15,7 +15,7 @@ CogStack is a self-hosted platform made up of microservices and tools
 
 If you want to get started quickly, check out the [Quickstart](./get-started/quickstart.md) guide to run CogStack locally in just a few simple steps.
 
-Our recommended deployment method is on Kubernetes using Helm charts. This makes installing and managing CogStack easy and consistent. For a detailed walkthrough, see [Helm](./helm/index.md).
+Our recommended deployment method is on Kubernetes using the plain manifests in `deployment/kubernetes`, applied with `kubectl`. What is in the YAML is what gets deployed, so it is easy to read and customise. See [Kubernetes manifests](./kubernetes.md).
 
 You can run Kubernetes anywhere — on your own hardware or through cloud providers like AWS (EKS) or Azure (AKS). To help with this, we provide basic examples using Terraform that will deploy the infrastructure, services, and perform tests using a few terraform commands. These are available in the [Examples](./examples/index.md) section.
 
@@ -24,7 +24,7 @@ Along with kubernetes, it is also possible to run CogStack through docker compos
 ## Deployment Recommendations
 
 - Deploy CogStack on Kubernetes for best scalability and reliability.
-- Use Helm to install and manage your CogStack instances.
+- Keep your copy of the Kubernetes manifests under version control and apply them with `kubectl`.
 - Manage your infrastructure declaratively with Terraform.
 - Keep your Terraform code in your own Git repository and adopt GitOps practices
 

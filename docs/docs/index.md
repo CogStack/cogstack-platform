@@ -76,15 +76,15 @@ Performing Named Entity Recognition and Linking (NER+L), extracting contextual a
 
 MedCAT for NER+L, MetaCAT for contextual attribute extraction and RelCAT for relation extraction.
 
-[:octicons-arrow-right-24: Explore NLP](cogstack-ai/overview.md)
+[:octicons-arrow-right-24: Explore NLP](cogstack-ai/index.md)
 
 ### Deployment
 
 To run CogStack and its tools, the deployment guide helps with running, scaling, observing, dashboarding and alerting.
 
-Helm, Docker Compose and cloud options are all covered in the tutorial.
+Kubernetes, Docker Compose and cloud options are all covered in the tutorial.
 
-[:octicons-arrow-right-24: Explore Deployment](platform/deployment/_index.md)
+[:octicons-arrow-right-24: Explore Deployment](platform/deployment/index.md)
 
 !!! tip
 

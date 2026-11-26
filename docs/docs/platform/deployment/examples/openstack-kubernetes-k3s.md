@@ -20,11 +20,12 @@ This example:
 
 ### Requirements
 - Terraform - [Install Terraform](https://developer.hashicorp.com/terraform/install)
+- [kubectl](https://kubernetes.io/docs/tasks/tools/) and `envsubst` (part of GNU gettext)
 - Openstack Cloud environment
 
 ### 1. Get the configuration files
 
-Get the Terraform files for this example (the ZIP contains all `deployment/examples`; use the `openstack-kubernetes` folder for this guide).
+Get the Terraform files for this example (the ZIP contains all `deployment/examples`; use the `openstack-kubernetes` folder for this guide). The CogStack manifests themselves are not in the ZIP: clone [cogstack-platform](https://github.com/CogStack/cogstack-platform) to get [`deployment/kubernetes`](https://github.com/CogStack/cogstack-platform/tree/main/deployment/kubernetes).
 
 [Download all deployment examples (ZIP)](../../../assets/downloads/deployment-examples.zip){ .md-button }
 
@@ -36,17 +37,13 @@ This terraform configuration provisions VMs and installs k3s.
 
 {{ embed_all_files_in_directory_as_snippets('openstack-kubernetes/k3s-cluster') }}
 
-#### kubernetes-deployment terraform files
-
-This terraform configuration deploys CogStack services to the cluster.
-
-{{ embed_all_files_in_directory_as_snippets('openstack-kubernetes/kubernetes-deployment') }}
-
 ### 2. Add required secrets for your environment
 
 Create a `terraform.tfvars` file, based on `terraform.tfvars.example`, containing the secrets for your environment.
 
 ### 3. Run Terraform
+
+The commands below assume this example folder is inside a clone of [cogstack-platform](https://github.com/CogStack/cogstack-platform), so the manifests are at `../../../kubernetes`.
 
 ```bash
 cd k3s-cluster
@@ -55,22 +52,22 @@ terraform apply --auto-approve
 
 K3S_KUBECONFIG=$(terraform output -raw kubeconfig_file)
 
-# Deploy services to kubernetes
-cd ../kubernetes-deployment
-export TF_VAR_kubeconfig_file=$K3S_KUBECONFIG
-terraform init
-terraform apply --auto-approve
+# Deploy CogStack with the plain manifests in deployment/kubernetes
+export KUBECONFIG=$K3S_KUBECONFIG
+export DOMAIN=cogstack.example.org
+kubectl kustomize ../../../kubernetes | envsubst '${DOMAIN}' | kubectl apply -f -
+kubectl -n cogstack get pods -w
 ```
 
 Initial provisioning takes up to 10 minutes, where time is mostly downloading large docker images
 
 ### 4. Accessing the CogStack Platform
 
-Once the deployment is complete and all services are running, you can access the CogStack platform and its components using the following URLs:
+Once the deployment is complete and all services are running, you can access the CogStack platform and its components.
 
-```bash
-terraform output created_services
-```
+The manifests create an ingress with one host per app (`trainer.`, `jupyter.`, `dashboards.`, `medcat.`, `anoncat.` and `ocr.<DOMAIN>`), served by the cluster's default ingress controller (K3s ships with Traefik). Point DNS for those names at a cluster node to use them.
+
+Alternatively, use `kubectl -n cogstack port-forward`; see the [deployment/kubernetes README](https://github.com/CogStack/cogstack-platform/tree/main/deployment/kubernetes) for the list of services and ports.
 
 ## Optionally use the K8s cluster as normal with the CLI
 After setting up the cluster, it is possible to interact directly with it using the kubectl CLI
@@ -88,11 +85,11 @@ export KUBECONFIG=${K3S_KUBECONFIG}
 You can then interact with kubernetes via the CLI for example:
 
 ```bash
-# Run Medcat service
-helm install my-medcat oci://registry-1.docker.io/cogstacksystems/medcat-service-helm --wait --timeout 10m0s
+# See the CogStack pods
+kubectl -n cogstack get pods
 
 # Find public url
-kubectl get ingress
+kubectl -n cogstack get ingress
 ```
 
 Access the k8s dashboard using

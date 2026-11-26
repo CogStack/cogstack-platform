@@ -1,4 +1,4 @@
-# Deploy the PR's cogstack-ce-helm chart to its own GKE cluster and leave it
+# Deploy the PR's deployment/kubernetes manifests to their own GKE cluster and leave it
 # running at https://<app>.pr-<number>.platform.cogstack.dev for review. The
 # links and a status dot per app are kept at the top of the PR description.
 #
@@ -20,7 +20,7 @@ on:
 permissions: {}
 
 # One deploy or teardown at a time per PR. Runs queue rather than cancel, so a
-# Helm upgrade is never killed half way.
+# deploy is never killed half way.
 concurrency:
   group: gke-pr-${{ github.event.pull_request.number }}
   cancel-in-progress: false
@@ -46,7 +46,7 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           if gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files" --paginate --jq '.[].filename' |
-            grep -qE '^(deployment/charts/|\.github/scripts/|\.github/workflows/gke_)'; then
+            grep -qE '^(deployment/kubernetes/|\.github/scripts/|\.github/workflows/gke_)'; then
             echo "deploy=true" >> "$GITHUB_OUTPUT"
           else
             echo "deploy=false" >> "$GITHUB_OUTPUT"
@@ -85,13 +85,11 @@ jobs:
         with:
           install_components: gke-gcloud-auth-plugin,kubectl
 
+      # Only for Traefik and cert-manager; CogStack itself is plain manifests.
       - name: Set up Helm
         uses: azure/setup-helm@v5.1.0
         with:
           version: v3.17.0
-
-      - name: Install Python deps for chart scripts
-        run: pip install pyyaml
 
       - name: Create or reuse the cluster
         run: .github/scripts/gke/cluster-up.sh "$PR_NUMBER"

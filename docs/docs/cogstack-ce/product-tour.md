@@ -1,6 +1,6 @@
 # CogStack CE Product Tour
 
-This page gives an overview of the deployed apps in the CogStack Helm chart (Community Edition).
+This page gives an overview of the deployed apps in CogStack Community Edition.
 
 In this tour, we will:
 
@@ -14,13 +14,7 @@ In this tour, we will:
 !!! tip
     To follow allong with this tour, you should have the cogstack CE installed and local port-forwarding running.
 
-    If needed, re-run this command to port-forward again:
-
-    ```sh
-    helm get notes cogstack | bash
-    ```
-
-    Running this command will also print all of the URLs for the apps. To follow along with the rest of this tour, you can click the links in your terminal window to open the apps.
+    If needed, re-run the port-forward commands from the [Quickstart](tutorial/quickstart-installation.md#port-forward-and-open-jupyterhub), which also lists the URLs for each app.
 
 ## Product Tour
 
@@ -53,7 +47,7 @@ To learn more about AnonCAT and related services, see [CogStack NLP on GitHub](h
 
 ### Train new Models - MedCAT Trainer
 
-Open MedCAT Trainer at `http://127.0.0.1:8080` and log in with your credentials. You should see it provisioned with two projects corresponding to the two services; open either project to view the documents and start annotating.
+Open MedCAT Trainer at `http://127.0.0.1:8001` and log in with your credentials. You should see it provisioned with two projects corresponding to the two services; open either project to view the documents and start annotating.
 
 For a deeper guide to projects and annotation workflows, see the [MedCATtrainer documentation](https://docs.cogstack.org/projects/medcat-trainer/en/latest/).
 

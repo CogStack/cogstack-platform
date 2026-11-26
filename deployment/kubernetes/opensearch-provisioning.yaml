@@ -1,0 +1,39 @@
+# One-off job: creates the index template, loads 1000 synthetic example
+# documents and imports the example dashboards. The scripts and data come from
+# files/ (see kustomization.yaml). To provision again, delete the job and re-apply.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: opensearch-provisioning
+spec:
+  backoffLimit: 10
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: provisioning
+          image: python:3.14-slim
+          command: [sh, /etc/provisioning/opensearch-provisioning.sh]
+          env:
+            - name: OPENSEARCH_URL
+              value: https://opensearch:9200
+            - name: OPENSEARCH_DASHBOARD_URL
+              value: http://opensearch-dashboards:5601
+            - name: CONFIG_DIR
+              value: /etc/provisioning
+            - name: PROVISION_OPENSEARCH_INDEX_TEMPLATE_ENABLED
+              value: "true"
+            - name: PROVISION_OPENSEARCH_EXAMPLE_DOCUMENTS_ENABLED
+              value: "true"
+            - name: PROVISION_OPENSEARCH_DASHBOARDS_ENABLED
+              value: "true"
+          envFrom:
+            - secretRef:
+                name: opensearch-admin
+          volumeMounts:
+            - name: provisioning
+              mountPath: /etc/provisioning
+      volumes:
+        - name: provisioning
+          configMap:
+            name: opensearch-provisioning

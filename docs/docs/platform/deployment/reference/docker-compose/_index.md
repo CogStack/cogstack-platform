@@ -8,7 +8,7 @@ We use Docker Compose internally during development to run services individually
 
 !!! tip
 
-    We are actively working on moving away from docker compose and VMs as the primary way of doing production deployments. Instead we plan to focus more on deployment with Kubernetes and Helm.
+    We are actively working on moving away from docker compose and VMs as the primary way of doing production deployments. Instead we plan to focus more on deployment with Kubernetes.
 
     Many of the existing project instructions in github for CogStack will still show how to use docker compose to bring up standalone instances.
 
@@ -26,8 +26,8 @@ docker-compose up
 ```
 
 ## Why move to Kuberentes?
-We are aiming to move to Kubernetes and Helm as the primary recommended method of deployment. 
+We are aiming to move to Kubernetes as the primary recommended method of deployment. 
 
 Docker Compose has been great for our existing setups and development, but it doesn’t handle scaling, or orchetrating to multiple nodes without a lot of tooling like Portainer. 
 
-Kubernetes, paired with Helm, provides cloud-native support and after the challenge of getting a k8s cluster, it will make deployment much easier and better. 
+Kubernetes provides cloud-native support and after the challenge of getting a k8s cluster, it will make deployment much easier and better. 

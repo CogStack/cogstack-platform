@@ -1,0 +1,62 @@
+# AnonCAT: the MedCAT Service image in de-identification mode.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: anoncat-service
+  labels:
+    app: anoncat-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: anoncat-service
+  template:
+    metadata:
+      labels:
+        app: anoncat-service
+    spec:
+      containers:
+        - name: anoncat-service
+          image: cogstacksystems/medcat-service:1.3.2
+          ports:
+            - name: http
+              containerPort: 5000
+          env:
+            - name: APP_MEDCAT_MODEL_PACK
+              value: /cat/models/examples/example-deid-model-pack.zip
+            - name: DEID_MODE
+              value: "true"
+            - name: DEID_REDACT
+              value: "false"
+            - name: APP_ENABLE_DEMO_UI
+              value: "true"
+            - name: APP_ENABLE_METRICS
+              value: "true"
+            - name: SERVER_GUNICORN_MAX_REQUESTS
+              value: "100000"
+          startupProbe:
+            httpGet:
+              path: /api/health/ready
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /api/health/ready
+              port: http
+          livenessProbe:
+            httpGet:
+              path: /api/health/live
+              port: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: anoncat-service
+spec:
+  selector:
+    app: anoncat-service
+  ports:
+    - name: http
+      port: 5000
+      targetPort: http

@@ -1,63 +1,64 @@
 # Quickstart
 
-This tutorial installs CogStack CE using Helm, sets up port-forwarding, and opens the bundled JupyterHub in your browser.
+This tutorial installs CogStack CE using the plain Kubernetes manifests in [`deployment/kubernetes`](https://github.com/CogStack/cogstack-platform/tree/main/deployment/kubernetes), sets up port-forwarding, and opens the bundled JupyterHub in your browser.
 
 The install should take around 15 minutes, and by the end of this tutorial you will have a fully working and integrated CogStack environment that you can start using.
 
 ## Prerequisites
 
 - A Kubernetes cluster
-- Helm 3+
-
-You will need a running kubernetes cluster and helm for this to work.
+- `kubectl` (kustomize is built in)
+- `envsubst` (part of GNU gettext)
+- `git`
 
 One easy option to get a local kubernetes is to use minikube, see https://minikube.sigs.k8s.io/docs/start/ for a guide. If you're running docker desktop, it also makes it easy to run one.
-
-Helm can be installed by following https://helm.sh/docs/intro/install/ . To directly quote that page if you just want to be quick, "Yes, you can `curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4 | bash` if you want to live on the edge."
 
 ## 1. Install CogStack CE
 
 Run:
 
 ```sh
-helm install cogstack oci://registry-1.docker.io/cogstacksystems/ce-helm --timeout 15m
+git clone https://github.com/CogStack/cogstack-platform.git
+cd cogstack-platform
+export DOMAIN=cogstack.example.org
+kubectl kustomize deployment/kubernetes | envsubst '${DOMAIN}' | kubectl apply -f -
+kubectl -n cogstack get pods -w
 ```
 
-This command will install Cogstack community edition with all the default values.
+This installs CogStack Community Edition into the `cogstack` namespace with the default settings. `DOMAIN` is only used for the ingress hostnames (`trainer.`, `jupyter.`, `dashboards.`, `medcat.`, `anoncat.` and `ocr.<DOMAIN>`); you can leave it as the example value when using port-forwarding.
 
 !!! warning
     For brand new installations, this might take a while, so expect up to 15 minutes. It needs to download many GB of docker images first and then startup processes.
 
     Once the initial installation is done, then any updates should be significantly faster.
 
-    The defaults are set for a production-ready environment. See [Deployment](../../platform/deployment/index.md) for detailed deployment information and customization options.
+    The defaults (including passwords) are for evaluation. See [Kubernetes manifests](../../platform/deployment/kubernetes.md) for how to customise them.
 
 ## Port-forward and open JupyterHub
 
-1. Set up the port-forwarding endpoints for the services. This has been scripted up in the helm notes for you.
-
-<!-- termynal -->
+1. Set up the port-forwarding endpoints for the services:
 
 ```sh
-$ helm get notes cogstack | bash
-bash: line 1: NOTES:: command not found
-Forwarding from 127.0.0.1:5001 -> 5000
-Forwarding from [::1]:5001 -> 5000
-Forwarding from 127.0.0.1:5000 -> 5000
-Forwarding from [::1]:5000 -> 5000
-# ...
-Visit http://127.0.0.1:5000 to use MedCAT Service
-Visit http://127.0.0.1:5001 to use AnonCAT
-Visit http://127.0.0.1:8080 to use MedCAT Trainer
-Visit https://127.0.0.1:9200 to use OpenSearch
-Visit http://127.0.0.1:5601 to use OpenSearch Dashboards
-Visit http://127.0.0.1:8000 to use jupyterhub
-Visit http://127.0.0.1:8000/user/admin/notebooks/medcat-service-tutorial.ipynb to get started with a tutorial
+kubectl -n cogstack port-forward svc/medcat-service 5000:5000 &
+kubectl -n cogstack port-forward svc/anoncat-service 5001:5000 &
+kubectl -n cogstack port-forward svc/ocr-service 8090:8090 &
+kubectl -n cogstack port-forward svc/medcat-trainer 8001:8001 &
+kubectl -n cogstack port-forward svc/opensearch 9200:9200 &
+kubectl -n cogstack port-forward svc/opensearch-dashboards 5601:5601 &
+kubectl -n cogstack port-forward svc/jupyterhub 8000:8000 &
 ```
 
-This command runs `kubectl port-forward` in the background.
+These run `kubectl port-forward` in the background. The apps are then available at:
 
-If you use a custom namespace or Helm release name, add the namespace or replace `cogstack` in the commands above accordingly.
+| App | URL |
+| --- | --- |
+| MedCAT Service | http://127.0.0.1:5000 |
+| AnonCAT | http://127.0.0.1:5001 |
+| OCR Service | http://127.0.0.1:8090 |
+| MedCAT Trainer | http://127.0.0.1:8001 |
+| OpenSearch | https://127.0.0.1:9200 (user `admin`, password `opensearch-312$A`) |
+| OpenSearch Dashboards | http://127.0.0.1:5601 |
+| JupyterHub | http://127.0.0.1:8000 (any username, password `SuperSecret`) |
 
 2. Open JupyterHub by opening http://127.0.0.1:8000 in a web browser
 

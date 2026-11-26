@@ -91,9 +91,9 @@ Install on every machine before creating or joining a cluster:
 make -C deployment setup-install-pre-requisites
 ```
 
-By default, this installs host utilities, Docker, K3s and Helm. **New K3s installations
+By default, this installs host utilities, Docker and K3s. **New K3s installations
 remain stopped until cluster setup.** Installers skip existing system and Python
-packages, Azure CLI, K3s and Helm, and reuse existing Docker and Azure apt sources
+packages, Azure CLI and K3s, and reuse existing Docker and Azure apt sources
 (`.list` or `.sources`, including custom filenames). They do not run system upgrades
 or autoremove. Installing missing Docker packages on RHEL may remove conflicting
 container packages; review the scripts before running on an existing host.
@@ -163,13 +163,12 @@ bash deployment/scripts/installation_utils/setup_kubernetes_cluster.sh kubeconfi
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `INSTALL_K3S` | `true` | Install K3s and Helm; `false` skips both. |
+| `INSTALL_K3S` | `true` | Install K3s; `false` skips it. |
 
 Individual installers can also be run with `bash`:
 [host utilities](installation_utils/install_host_utils.sh),
 [Docker](installation_utils/install_docker.sh),
-[K3s](installation_utils/install_k3s.sh),
-[Helm](installation_utils/install_helm.sh) and
+[K3s](installation_utils/install_k3s.sh) and
 [PostgreSQL clients](installation_utils/install_db_utils.sh).
 On a new host, install host utilities first.
 [Docker configuration examples](installation_utils/docker_installation_settings/README.md)

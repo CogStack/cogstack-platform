@@ -1,0 +1,37 @@
+# CogStack Community Edition as plain Kubernetes manifests.
+#
+#   export DOMAIN=cogstack.example.org   # apps are served at <app>.${DOMAIN}
+#   kubectl kustomize deployment/kubernetes | envsubst '${DOMAIN}' | kubectl apply -f -
+#
+# Kustomize (built into kubectl) is only used to set the namespace and to turn
+# the files under files/ into ConfigMaps. Everything else is in the .yaml files
+# listed below, as written. Edit them directly.
+namespace: cogstack
+
+resources:
+  - namespace.yaml
+  - medcat-service.yaml
+  - anoncat-service.yaml
+  - ocr-service.yaml
+  - medcat-trainer.yaml
+  - opensearch.yaml
+  - opensearch-dashboards.yaml
+  - opensearch-provisioning.yaml
+  - jupyterhub.yaml
+  - ingress.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+configMapGenerator:
+  - name: opensearch-provisioning
+    files:
+      - files/opensearch-provisioning.sh
+      - files/base_index_settings.json
+      - files/dashboards.ndjson
+      - files/generate_synthetic_bulk_ndjson.py
+  - name: jupyter-examples
+    files:
+      - files/notebooks/medcat-service-tutorial.ipynb
+      - files/notebooks/medcat-opensearch-e2e.ipynb
+      - files/notebooks/ocr-service-tutorial.ipynb

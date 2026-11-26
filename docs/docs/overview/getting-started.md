@@ -20,19 +20,18 @@ Suggested order for reading the docs and getting the most out of CogStack.
 
 **If you care about running CogStack:**
 
-- [Deployment overview](../platform/deployment/index.md) — Ways to deploy (Helm, Docker Compose, cloud examples).
+- [Deployment overview](../platform/deployment/index.md) — Ways to deploy (Kubernetes manifests, Docker Compose, cloud examples).
 - [Quickstart](../platform/deployment/get-started/quickstart.md) — Get a local instance running quickly.
 - [Deployment examples](../platform/deployment/examples/index.md) — Real-world deployment scenarios for AWS, Azure, OpenStack,
 
 
 ## 3. Deploy and operate
 
-- **[Helm tutorial](../platform/deployment/helm/tutorial.md)** — Deploy with Helm step by step.
+- **[Kubernetes manifests](../platform/deployment/kubernetes.md)** — Deploy CogStack CE with `kubectl` and customise it.
 - **[Observability](../platform/observability/index.md)** — Dashboards, telemetry, and alerting for your deployment.
 
 ## 4. Go deeper
 
-- **Helm charts** — [MedCAT Service](../platform/deployment/helm/charts/medcat-service.md) and [MedCAT Trainer](../platform/deployment/helm/charts/medcat-trainer.md).
 - **Examples** — [AWS](../platform/deployment/examples/aws-kubernetes-eks.md), [Azure](../platform/deployment/examples/azure-kubernetes-aks.md), [OpenStack](../platform/deployment/examples/openstack-kubernetes-k3s.md).
 - **Observability** — [Production setup](../platform/observability/setup/production-setup.md), [Telemetry](../platform/observability/setup/telemetry.md), [Alerting](../platform/observability/setup/alerting.md).
 

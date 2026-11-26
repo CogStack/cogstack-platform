@@ -134,39 +134,11 @@ Updating certificates and env settings from the main repo:
     - sometimes it is necessary to grab new certificates if the old ones expired (from the main Cogstack-NiFi repo)
     - from the main repo directory, execute `bash scripts/update_env_cert_from_nifi_repo.sh`
 
-## Deploy with Helm (Kubernetes)
+## Deploy on Kubernetes
 
-This repository includes a Helm chart at [charts/cogstack-jupyterhub](./charts/cogstack-jupyterhub).
-
-To deploy with the same env/config inputs used by Docker Compose, run from the repo root:
-
-```bash
-helm upgrade --install cogstack-jupyterhub ./charts/cogstack-jupyterhub \
-  --namespace cogstack --create-namespace \
-  --set envFiles.useBundled=false \
-  --set hubFiles.useBundled=false \
-  --set securityFiles.useBundled=false \
-  --set-file envFiles.jupyter=env/jupyter.env \
-  --set-file envFiles.general=env/general.env \
-  --set-file hubFiles.jupyterhubConfig=config/jupyterhub_config.py \
-  --set-file hubFiles.userlist=config/userlist \
-  --set-file hubFiles.teamlist=config/teamlist \
-  --set-file securityFiles.cookieSecret=config/jupyterhub_cookie_secret \
-  --set-file securityFiles.tlsKey=security/nifi.key \
-  --set-file securityFiles.tlsCert=security/nifi.pem
-```
-
-For chart values and additional options, see [charts/cogstack-jupyterhub/README.md](./charts/cogstack-jupyterhub/README.md).
-
-### Helm smoke tests
-
-Run local smoke checks for Helm/Kubernetes manifests:
-
-```bash
-bash scripts/helm_k8s_smoke_test.sh
-```
-
-CI chart validation lives in the shared [Helm workflow](../../.github/workflows/build_helm_charts.yml).
+CogStack Community Edition runs JupyterHub on Kubernetes from the plain manifests in
+[deployment/kubernetes](../../deployment/kubernetes/README.md) (`jupyterhub.yaml`).
+Edit that file to change the hub configuration, images or example notebooks.
 
 ## Access and account control
 

@@ -15,15 +15,16 @@ The recommended deployment in AWS is based on using Kubernetes through AWS EKS.
 This example will create a AWS EKS cluster, setup any necessary config, deploy CogStack to the cluster, and test that it is available.
 
 ## Usage
-Deployment through terraform is carried out through two terraform commands, to handle the sequencing issues between making a k8s cluster and using it in AWS.
+Terraform creates the Kubernetes cluster, then `kubectl` applies the CogStack Community Edition manifests from [`deployment/kubernetes`](https://github.com/CogStack/cogstack-platform/tree/main/deployment/kubernetes).
 
 ### Requirements
 - Terraform - [Install Terraform](https://developer.hashicorp.com/terraform/install)
+- [kubectl](https://kubernetes.io/docs/tasks/tools/) and `envsubst` (part of GNU gettext)
 - AWS Credentials for an account that can create and destroy resources.
 
 ### 1. Get the configuration files
 
-All you need to do is get the Terraform files that have been preconfigured for this example (the ZIP contains every `deployment/examples` tree; use the `aws-kubernetes` folder for this guide).
+All you need to do is get the Terraform files that have been preconfigured for this example (the ZIP contains every `deployment/examples` tree; use the `aws-kubernetes` folder for this guide). The CogStack manifests themselves are not in the ZIP: clone [cogstack-platform](https://github.com/CogStack/cogstack-platform) to get [`deployment/kubernetes`](https://github.com/CogStack/cogstack-platform/tree/main/deployment/kubernetes).
 
 [Download all deployment examples (ZIP)](../../../assets/downloads/deployment-examples.zip){ .md-button }
 
@@ -35,12 +36,6 @@ This terraform configuration will create a new AWS EKS cluster.
 
 {{ embed_all_files_in_directory_as_snippets('aws-kubernetes/eks-cluster') }}
 
-#### kubernetes-deployment terraform files
-
-This terraform configuration will use the helm plugin to run services in kubernetes.
-
-{{ embed_all_files_in_directory_as_snippets('aws-kubernetes/kubernetes-deployment') }}
-
 ### 2. Add required secrets for your environment
 This readme uses environment variables for access:
 
@@ -51,7 +46,7 @@ This readme uses environment variables for access:
 If desired, see the official documentation for other ways to provide AWS credentials https://registry.terraform.io/providers/hashicorp/aws/latest/docs#authentication-and-configuration
 
 ### 3. Run Terraform
-Terraform is run on two modules for AWS, so we will run one terraform apply in one folder, then another terraform apply in a second folder. 
+Terraform creates the cluster, then `kubectl` applies the CogStack manifests. The commands below assume this example folder is inside a clone of [cogstack-platform](https://github.com/CogStack/cogstack-platform), so the manifests are at `../../../kubernetes`.
 
 Initial provisioning takes around 15 minutes.
 
@@ -66,11 +61,11 @@ terraform apply --auto-approve
 
 AWS_KUBECONFIG=$(terraform output -raw kubeconfig_file)
 
-# Deploy services to kubernetes
-cd ../kubernetes-deployment
-export TF_VAR_kubeconfig_file=$AWS_KUBECONFIG
-terraform init
-terraform apply --auto-approve
+# Deploy CogStack with the plain manifests in deployment/kubernetes
+export KUBECONFIG=$AWS_KUBECONFIG
+export DOMAIN=cogstack.example.org
+kubectl kustomize ../../../kubernetes | envsubst '${DOMAIN}' | kubectl apply -f -
+kubectl -n cogstack get pods -w
 ```
 
 
@@ -78,31 +73,27 @@ terraform apply --auto-approve
 
 Once the deployment is complete and all services are running, you can access the CogStack platform and its components.
 
-We will use kubernetes port-forwarding to make the services accessible locally.
-
-Run this command:
+Use kubernetes port-forwarding to make the services accessible locally:
 
 ```bash
-terraform output -raw cogstack_notes | bash
+kubectl -n cogstack port-forward svc/medcat-service 5000:5000 &
+kubectl -n cogstack port-forward svc/anoncat-service 5001:5000 &
+kubectl -n cogstack port-forward svc/ocr-service 8090:8090 &
+kubectl -n cogstack port-forward svc/medcat-trainer 8001:8001 &
+kubectl -n cogstack port-forward svc/opensearch 9200:9200 &
+kubectl -n cogstack port-forward svc/opensearch-dashboards 5601:5601 &
+kubectl -n cogstack port-forward svc/jupyterhub 8000:8000 &
 ```
 
-The console will now print all the URLs you can visit to access your CogStack deployment.
+Then visit:
 
-<!-- termynal -->
-```bash
-$ terraform output -raw cogstack_notes | bash
-Forwarding from 127.0.0.1:5001 -> 5000
-Forwarding from [::1]:5001 -> 5000
-Forwarding from 127.0.0.1:5000 -> 5000
-Forwarding from [::1]:5000 -> 5000
-Visit http://127.0.0.1:5000 to use MedCAT Service
-Visit http://127.0.0.1:5001 to use AnonCAT
-Visit http://127.0.0.1:8080 to use MedCAT Trainer
-Visit https://127.0.0.1:9200 to use OpenSearch
-Visit http://127.0.0.1:5601 to use OpenSearch Dashboards
-Visit http://127.0.0.1:8000 to use jupyterhub
-Visit http://127.0.0.1:8000/user/admin/notebooks/medcat-service-tutorial.ipynb to get started with a tutorial
-```
+- MedCAT Service: http://127.0.0.1:5000
+- AnonCAT: http://127.0.0.1:5001
+- OCR Service: http://127.0.0.1:8090
+- MedCAT Trainer: http://127.0.0.1:8001
+- OpenSearch: https://127.0.0.1:9200 (user `admin`, password `opensearch-312$A`)
+- OpenSearch Dashboards: http://127.0.0.1:5601
+- JupyterHub: http://127.0.0.1:8000 (any username, password `SuperSecret`), then open http://127.0.0.1:8000/user/admin/notebooks/medcat-service-tutorial.ipynb to get started with a tutorial
 
 ### Optional - Destroy
 
@@ -111,10 +102,8 @@ You can destroy the infra to save costs when it wont be used for a long time.
 Do note that there is an initial cost every time the EKS infrastructure is created, looks to be around $0.50 at time of writing.
 
 ```bash
-cd ../kubernetes-deployment
-terraform destroy
-
-cd ../eks-cluster
+# From the eks-cluster folder, with KUBECONFIG set as above
+kubectl delete namespace cogstack
 terraform destroy
 ```
 
@@ -138,10 +127,8 @@ Note - alternatively you could use the AWS CLI to set your kubeconfig using `aws
 You can then interact with kubernetes via the CLI 
 
 ```bash
-kubectl get pods
-
-# Run Medcat service
-helm install medcat-service oci://registry-1.docker.io/cogstacksystems/medcat-service-helm --wait --timeout 10m0s
+# See the CogStack pods
+kubectl -n cogstack get pods
 ```
 
 
@@ -150,60 +137,16 @@ helm install medcat-service oci://registry-1.docker.io/cogstacksystems/medcat-se
 
 You can setup public access over the internet to your deployed services.
 
-One way to do this is to use an AWS ALB, along with defining the ingress routes of the helm chart. 
+One way to do this is to use an AWS ALB. The CogStack manifests include an ingress (`ingress.yaml` in [`deployment/kubernetes`](https://github.com/CogStack/cogstack-platform/tree/main/deployment/kubernetes)) with one host per app under `${DOMAIN}`. Install the [AWS Load Balancer Controller](https://kubernetes-sigs.github.io/aws-load-balancer-controller/) (or enable EKS Auto Mode load balancing), then edit your copy of `ingress.yaml` to use it:
 
-See this terraform code for an example
-
-```hcl
-resource "kubernetes_ingress_class" "application_load_balancer" {
-  # An Application Load Balancer  is required in order to create public URLs. 
-  # The load balancer controller creates instances of the ALB when it sees ingress objects with the right annotations.
-  metadata {
-    name = "alb"
-    labels = {
-      "app.kubernetes.io/name" = "LoadBalancerController"
-    }
-  }
-  spec {
-    controller = "eks.amazonaws.com/alb"
-  }
-}
-
-locals {
-  services = {
-    medcat_service = {
-      path_prefix = "medcat-service"
-    }
-  }
-}
-module "cogstack_helm_services" {
-  depends_on            = [kubernetes_ingress_class.application_load_balancer]
-source                = "github.com/CogStack/cogstack-platform-toolkit//deployment/terraform/modules/cogstack-helm-services?ref=terraform-modules-v0.1.0"
-  medcat_service_values = <<EOT
-ingress:
-    annotations:
-        alb.ingress.kubernetes.io/scheme: internet-facing
-        alb.ingress.kubernetes.io/target-type: ip
-        alb.ingress.kubernetes.io/healthcheck-path: /api/health/live
-    className: alb
-    http:
-    - paths:
-        - path: /${local.services.medcat_service.path_prefix}
-          pathType: Prefix
-EOT
-}
-
-locals {
-  medcat_ingress_address = module.cogstack_helm_services.service_urls.medcat_service.ip_address
-}
-output "service_urls" {
-  value = {
-    medcat_service = {
-      example_curl = "curl http://${local.medcat_ingress_address}/${local.services.medcat_service.path_prefix}/api/info"
-      example_ui   = "http://${local.medcat_ingress_address}/${local.services.medcat_service.path_prefix}/docs"
-    }
-  }
-  description = "Public URls to call services on"
-}
-
+```yaml
+metadata:
+  name: cogstack
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+spec:
+  ingressClassName: alb
 ```
+
+Re-run the deploy command, then point DNS for the app hosts at the ALB address shown by `kubectl -n cogstack get ingress cogstack`.

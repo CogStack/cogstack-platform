@@ -1,4 +1,0 @@
-# Note Helm Chart Testing is preconfigured to use any values in the ci folder.
-# https://github.com/helm/chart-testing/blob/b4897a48501b16fc1f4fd9d08197bc884f0fd38c/doc/ct_lint.md
-opensearch:
-  replicas: 1

@@ -1,9 +1,0 @@
-dependencies:
-- name: solr
-  repository: oci://registry-1.docker.io/bitnamicharts
-  version: 9.6.10
-- name: postgresql
-  repository: oci://registry-1.docker.io/bitnamicharts
-  version: 16.7.27
-digest: sha256:a02db326b15b24d92e4c0787792803d7b224babd4f288e28a73d66a7d4506a70
-generated: "2025-09-10T11:29:31.705470067Z"

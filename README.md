@@ -75,5 +75,5 @@ processors, JDBC drivers and flow templates.
 ### Tools
 - Source for the official cogstack documentation. This git repo stores the top level documetation that hosts on https://docs.cogstack.org
 - CogStack deployment instructions and examples
-- Helm Charts for deployments
+- Plain Kubernetes manifests for CogStack Community Edition in [deployment/kubernetes](deployment/kubernetes/README.md)
 - CogStack platform tools eg [Observability](apps/observability).

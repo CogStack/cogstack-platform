@@ -1,0 +1,87 @@
+# OpenSearch, single node, with the image's demo security configuration
+# (HTTPS on 9200, user "admin").
+apiVersion: v1
+kind: Secret
+metadata:
+  name: opensearch-admin
+stringData:
+  OPENSEARCH_USERNAME: admin
+  OPENSEARCH_PASSWORD: opensearch-312$A
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: opensearch
+spec:
+  serviceName: opensearch
+  replicas: 1
+  selector:
+    matchLabels:
+      app: opensearch
+  template:
+    metadata:
+      labels:
+        app: opensearch
+    spec:
+      securityContext:
+        runAsUser: 1000
+        fsGroup: 1000
+      initContainers:
+        # OpenSearch will not start unless vm.max_map_count >= 262144 on the node.
+        - name: sysctl
+          image: busybox:1.37
+          command: [sh, -c, "sysctl -w vm.max_map_count=262144"]
+          securityContext:
+            runAsUser: 0
+            privileged: true
+      containers:
+        - name: opensearch
+          image: opensearchproject/opensearch:3.5.0
+          ports:
+            - name: http
+              containerPort: 9200
+          env:
+            - name: discovery.type
+              value: single-node
+            - name: OPENSEARCH_JAVA_OPTS
+              value: -Xms512m -Xmx512m
+            - name: OPENSEARCH_INITIAL_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: opensearch-admin
+                  key: OPENSEARCH_PASSWORD
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+          startupProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            tcpSocket:
+              port: http
+          volumeMounts:
+            - name: data
+              mountPath: /usr/share/opensearch/data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests:
+            storage: 8Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: opensearch
+spec:
+  selector:
+    app: opensearch
+  ports:
+    - name: http
+      port: 9200
+      targetPort: http

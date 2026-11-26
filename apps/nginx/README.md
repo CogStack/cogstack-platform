@@ -7,7 +7,7 @@ resolver discovery. There is no custom entrypoint or configuration framework.
 Adapted from [CogStack/CogStack-NiFi services/nginx](https://github.com/CogStack/CogStack-NiFi/tree/71b3d483747a504986205addb4d2b17f58f19a0b/services/nginx)
 at `71b3d483747a504986205addb4d2b17f58f19a0b`. NiFi routes are retained;
 startup uses NGINX's existing implementation and the health check invokes curl.
-Trainer routes come from the existing MedCAT-trainer Helm chart. These are
+Trainer routes come from the former MedCAT-trainer Helm chart's NGINX configuration. These are
 modified copies; see `LICENSE`.
 
 Build from the repository root:

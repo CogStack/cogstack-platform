@@ -21,9 +21,10 @@ export CLUSTER_LABEL="purpose=pr-deploy-test"
 export BASIC_AUTH_USER="cogstack"
 export BASIC_AUTH_SECRET="preview-basic-auth-password"
 
-export RELEASE_NAME="cogstack"
+# Namespace set in deployment/kubernetes/kustomization.yaml.
 export RELEASE_NAMESPACE="cogstack"
 
+# Third-party cluster plumbing for the test, installed from upstream Helm charts.
 # Pinned so that an upstream chart release cannot break a required check.
 export TRAEFIK_CHART_VERSION="42.4.1"
 export CERT_MANAGER_CHART_VERSION="v1.21.3"

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Deploy this checkout of cogstack-ce-helm to the PR's cluster, behind HTTPS.
-# Safe to re-run: a later push to the PR upgrades the existing release.
+# Deploy this checkout of deployment/kubernetes to the PR's cluster, behind HTTPS.
+# Safe to re-run: a later push to the PR re-applies the manifests.
 # Usage: deploy.sh <pr-number>   (run cluster-up.sh first)
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -8,7 +8,19 @@ source ./lib.sh
 set_pr "${1:?usage: deploy.sh <pr-number>}"
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
-WORK="$(mktemp -d)"
+
+# wait_job <name> <seconds>: wait for a Job to succeed or fail, print its logs, and fail if it failed.
+wait_job() {
+  local name="$1" deadline=$((SECONDS + $2)) succeeded="" failed=""
+  while ((SECONDS < deadline)); do
+    succeeded="$(kubectl -n "$RELEASE_NAMESPACE" get "job/$name" -o jsonpath='{.status.succeeded}')"
+    failed="$(kubectl -n "$RELEASE_NAMESPACE" get "job/$name" -o jsonpath='{.status.conditions[?(@.type=="Failed")].status}')"
+    [[ -n "$succeeded" || "$failed" == "True" ]] && break
+    sleep 10
+  done
+  kubectl -n "$RELEASE_NAMESPACE" logs "job/$name" --tail=200 || true
+  [[ -n "$succeeded" ]] || { echo "Job $name did not succeed" >&2; return 1; }
+}
 
 log "Installing cert-manager $CERT_MANAGER_CHART_VERSION"
 helm upgrade --install cert-manager oci://quay.io/jetstack/charts/cert-manager \
@@ -52,21 +64,17 @@ log "Requesting the wildcard certificate for *.${DOMAIN}"
 envsubst '${GCP_PROJECT_ID} ${DOMAIN}' < platform.tmpl.yaml | kubectl apply -f -
 kubectl -n traefik wait --for=condition=Ready certificate/wildcard --timeout=15m
 
-log "Deploying cogstack-ce-helm"
-envsubst '${DOMAIN}' < values.tmpl.yaml > "$WORK/values.yaml"
-(cd "$REPO_ROOT/deployment/charts" && "$REPO_ROOT/.github/scripts/helm-recursive-dependency-update.py")
+log "Deploying deployment/kubernetes"
+# Jobs are immutable; remove finished ones so this run recreates them.
+kubectl -n "$RELEASE_NAMESPACE" delete job --all --ignore-not-found
+kubectl kustomize "$REPO_ROOT/deployment/kubernetes" | envsubst '${DOMAIN}' | kubectl apply -f -
 
-# A release left failed or half-applied by an earlier run blocks upgrades; start it clean.
-release_status="$(helm status "$RELEASE_NAME" -n "$RELEASE_NAMESPACE" -o json 2>/dev/null | jq -r '.info.status' || true)"
-if [[ -n "$release_status" && "$release_status" != "deployed" ]]; then
-  log "Release is '$release_status'; uninstalling before reinstall"
-  helm uninstall "$RELEASE_NAME" -n "$RELEASE_NAMESPACE" --wait --timeout 10m
-fi
+log "Waiting for workloads"
+for workload in $(kubectl -n "$RELEASE_NAMESPACE" get deployment,statefulset -o name); do
+  kubectl -n "$RELEASE_NAMESPACE" rollout status "$workload" --timeout 30m
+done
+wait_job opensearch-provisioning 900
 
-helm upgrade --install "$RELEASE_NAME" "$REPO_ROOT/deployment/charts/ce" \
-  --namespace "$RELEASE_NAMESPACE" --create-namespace \
-  -f "$WORK/values.yaml" \
-  --wait --timeout 30m
-
-log "Running helm tests"
-helm test "$RELEASE_NAME" -n "$RELEASE_NAMESPACE" --logs --timeout 15m
+log "Running acceptance tests"
+kubectl -n "$RELEASE_NAMESPACE" apply -f "$REPO_ROOT/deployment/kubernetes/tests/acceptance.yaml"
+wait_job acceptance 600

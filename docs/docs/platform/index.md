@@ -4,7 +4,7 @@ The CogStack platform covers how to deploy, run, and observe CogStack in your en
 
 ## Deployment
 
-Deploy and run CogStack with Helm, Docker Compose, or cloud examples.
+Deploy and run CogStack with Kubernetes manifests, Docker Compose, or cloud examples.
 
 - **[Deployment overview](deployment/index.md)** — Introduction, options, and recommendations.
 - [Quickstart](deployment/get-started/quickstart.md) — Get a local instance running quickly.

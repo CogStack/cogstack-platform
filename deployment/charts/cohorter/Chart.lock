@@ -1,9 +1,0 @@
-dependencies:
-- name: medcat-service-helm
-  repository: oci://registry-1.docker.io/cogstacksystems
-  version: 0.0.1
-- name: ollama
-  repository: https://otwld.github.io/ollama-helm/
-  version: 1.54.0
-digest: sha256:2f820ccc9c3408f6cc72925c0fc7cdce292408489fa88562879d3e8954c52fd9
-generated: "2026-09-17T09:46:14.646158472Z"

@@ -4,7 +4,7 @@ This section walks you through running CogStack CE locally and then using the de
 
 ## Quickstart
 
-- [Tutorial: Quickstart (Helm install + port-forward + open JupyterHub)](./quickstart-installation.md)
+- [Tutorial: Quickstart (install + port-forward + open JupyterHub)](./quickstart-installation.md)
 
 ## Operate JupyterHub
 

@@ -1,0 +1,85 @@
+# OCR Service: text extraction from PDFs, images and office documents.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ocr-service
+  labels:
+    app: ocr-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ocr-service
+  template:
+    metadata:
+      labels:
+        app: ocr-service
+    spec:
+      securityContext:
+        runAsUser: 10001
+        runAsGroup: 10001
+        runAsNonRoot: true
+        fsGroup: 10001
+      containers:
+        - name: ocr-service
+          # No version tags are published for this image; pinned to the multi-arch
+          # "latest" build of 2026-11-22 (main @ 7281f8e) by digest.
+          image: cogstacksystems/ocr-service:latest@sha256:a9043ae26a2346223d1175d268bca7d34485dceee9c475cdf3eb94dbeae82189
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          ports:
+            - name: http
+              containerPort: 8090
+          env:
+            - name: OCR_SERVICE_HOST
+              value: "0.0.0.0"
+            - name: OCR_SERVICE_PORT
+              value: "8090"
+            - name: OCR_SERVICE_OPERATION_MODE
+              value: OCR # or NO_OCR for text-only extraction
+            - name: OCR_SERVICE_TESSERACT_LANG
+              value: eng
+            - name: OCR_WEB_SERVICE_WORKERS
+              value: "1"
+            - name: OCR_SERVICE_CPU_THREADS
+              value: "1"
+            - name: OCR_SERVICE_CONVERTER_THREADS
+              value: "1"
+            - name: OCR_SERVICE_GUNICORN_TIMEOUT
+              value: "300"
+            - name: OCR_TMP_DIR
+              value: /ocr_service/tmp
+          readinessProbe:
+            httpGet:
+              path: /api/ready
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          volumeMounts:
+            - name: tmp
+              mountPath: /ocr_service/tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ocr-service
+spec:
+  selector:
+    app: ocr-service
+  ports:
+    - name: http
+      port: 8090
+      targetPort: http

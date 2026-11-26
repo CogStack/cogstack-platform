@@ -22,7 +22,7 @@ It is installed with a one line command, and comes preconfigured with default da
 
 ## What is included in CogStack CE?
 
-It combines model serving, de-identification, model training, notebook-based analysis, and search tooling into one Helm release.
+It combines model serving, de-identification, model training, notebook-based analysis, and search tooling into one Kubernetes deployment.
 
 | Product | Primary use case |
 | --- | --- |
@@ -42,7 +42,7 @@ For the full installation reference, deployment instructions, and customizations
 
 - [Quickstart](./tutorial/quickstart-installation.md) for the installation
 - [Deployment](../platform/deployment/index.md) for in depth deployment options including how to run on the cloud
-- [CogStack CE Helm chart (install + customization)](../platform/deployment/helm/charts/ce.md)
+- [Kubernetes manifests (install + customization)](../platform/deployment/kubernetes.md)
 
 ## Models
 The default installation comes with basic models that are just for demo purposes. 

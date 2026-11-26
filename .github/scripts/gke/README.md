@@ -1,6 +1,6 @@
 # GKE deployment test
 
-Every pull request that touches the Helm charts is deployed to its own small GKE
+Every pull request that touches the Kubernetes manifests is deployed to its own small GKE
 cluster and left running, so reviewers can open the apps in a browser.
 
 | | |
@@ -17,15 +17,16 @@ every script derives what it needs from the PR number.
 
 1. `cluster-up.sh` creates the cluster, or reuses it if a previous push already did.
 2. `deploy.sh` installs Traefik and cert-manager, points `*.pr-<n>.platform.cogstack.dev`
-   at the load balancer, obtains a wildcard certificate, then installs or upgrades
-   `cogstack-ce-helm` (`deployment/charts/ce`) from the PR and runs `helm test`.
+   at the load balancer, obtains a wildcard certificate, then applies
+   `deployment/kubernetes` from the PR, waits for every workload and runs the
+   acceptance test Job in `deployment/kubernetes/tests`.
 3. `smoke-test.sh` requests every app over public HTTPS.
 4. `pr-status.sh` writes a panel at the top of the PR description: a link and a
    green or red dot per app. It shows "deploying", "failed" and "removed" too,
    and the hourly job re-checks the dots for environments that are still up.
 5. The check goes green and the cluster stays up.
 
-Every route sits behind basic auth, because the charts ship demo passwords and
+Every route sits behind basic auth, because the manifests ship demo passwords and
 the URLs are public.
 
 ## Teardown
@@ -66,6 +67,6 @@ To move the test to another repository:
 ## Limits
 
 - Pull requests from forks and from Dependabot are skipped: they cannot obtain an OIDC token.
-- Pull requests that change nothing under `deployment/charts/`, `.github/scripts/` or
+- Pull requests that change nothing under `deployment/kubernetes/`, `.github/scripts/` or
   `.github/workflows/gke_*` are not deployed; the check is skipped and counts as passing.
-- The charts deploy published images, so this tests the charts, not unreleased application code.
+- The manifests deploy published images, so this tests the manifests, not unreleased application code.
