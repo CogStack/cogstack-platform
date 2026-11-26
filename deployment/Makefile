@@ -136,6 +136,24 @@ k3s-load-auth-opensearch-dashboards: ## Load the OpenSearch Dashboards auth Secr
 k3s-load-auth-opensearch k3s-load-auth-opensearch-dashboards:
 	@bash scripts/security/load_opensearch_auth.sh $(@:k3s-load-auth-%=%)
 
+.PHONY: k3s-delete-auth-all k3s-delete-auth-nifi k3s-delete-auth-opensearch k3s-delete-auth-opensearch-dashboards
+
+k3s-delete-auth-all: k3s-delete-auth-nifi k3s-delete-auth-opensearch k3s-delete-auth-opensearch-dashboards ## Delete the NiFi, OpenSearch, and Dashboards auth Secrets
+k3s-delete-auth-nifi: ## Delete the NiFi login and flow encryption key Secret
+k3s-delete-auth-opensearch: ## Delete the OpenSearch security bootstrap Secret
+k3s-delete-auth-opensearch-dashboards: ## Delete the OpenSearch Dashboards auth Secret
+
+k3s-delete-auth-nifi k3s-delete-auth-opensearch k3s-delete-auth-opensearch-dashboards:
+	@set -e; \
+	. ./env/general.env; \
+	namespace="$${KUBE_NAMESPACE:?Set KUBE_NAMESPACE in env/general.env}"; \
+	case "$(@:k3s-delete-auth-%=%)" in \
+		nifi) secret=nifi-auth;; \
+		opensearch) secret=opensearch-security-bootstrap;; \
+		opensearch-dashboards) secret=dashboards-auth;; \
+	esac; \
+	kubectl -n "$$namespace" delete secret "$$secret" --ignore-not-found
+
 .PHONY: k3s-load-env-all k3s-load-env-nginx k3s-load-env-opensearch
 
 k3s-load-env-all: k3s-load-env-nginx k3s-load-env-opensearch ## Load all runtime environment ConfigMaps
@@ -295,6 +313,7 @@ helm-install-opensearch-stack: ## Install OpenSearch and then Dashboards
 
 .PHONY: helm-uninstall-nifi helm-uninstall-nginx helm-uninstall-nifi-stack
 .PHONY: helm-uninstall-opensearch helm-uninstall-opensearch-dashboards helm-uninstall-opensearch-stack
+.PHONY: helm-delete-opensearch-volumes
 
 # Reinstall in the same namespace with the same StatefulSet names to reuse the retained PVCs.
 helm-uninstall-nifi: ## Uninstall NiFi and retain its PVCs
@@ -316,6 +335,13 @@ helm-uninstall-nifi-stack: helm-uninstall-nginx ## Uninstall NGINX, then NiFi, a
 
 helm-uninstall-opensearch-stack: helm-uninstall-opensearch-dashboards ## Uninstall Dashboards, then OpenSearch, and retain PVCs
 	$(MAKE) helm-uninstall-opensearch
+
+helm-delete-opensearch-volumes: ## Delete OpenSearch data PVCs after uninstalling
+	@set -e; \
+	. ./env/general.env; \
+	namespace="$${KUBE_NAMESPACE:?Set KUBE_NAMESPACE in env/general.env}"; \
+	kubectl -n "$$namespace" delete pvc --ignore-not-found \
+		-l 'app.kubernetes.io/instance=opensearch,app.kubernetes.io/name=opensearch'
 
 # ======================================================================================================================================================
 

@@ -66,20 +66,6 @@ for NiFi, `OPENSEARCH_KIBANA_PASSWORD` for the Dashboards service account, and
 The NiFi loader prompts if its password is empty or still uses the checked-in
 Compose sample.
 
-### NiFi environment
-
-A fresh checkout needs `apps/nifi/env/nifi.env` for the `deployment/env/nifi.env`
-symlink. Create the file with these starter values.
-
-```dotenv
-NIFI_UID=1000
-NIFI_GID=1000
-NIFI_DOCKER_CPU_MIN=1
-NIFI_DOCKER_CPU_MAX=1
-NIFI_DOCKER_RAM=2g
-NIFI_INTERNAL_PORT_NGINX=8443
-```
-
 ## Install the applications
 
 After `make k3s-prepare-all`, choose a stack or install the charts individually.
