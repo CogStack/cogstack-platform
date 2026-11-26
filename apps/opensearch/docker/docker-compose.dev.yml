@@ -1,0 +1,10 @@
+name: opensearch-dev
+
+services:
+  opensearch:
+    environment:
+      OPENSEARCH_ALLOW_DEFAULT_INIT_SECURITYINDEX: 'true'
+
+networks:
+  cognet:
+    name: opensearch-dev-net

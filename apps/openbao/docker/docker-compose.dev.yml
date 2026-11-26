@@ -1,0 +1,8 @@
+services:
+  openbao:
+    # The upstream image starts an in-memory dev server by default.
+    environment:
+      BAO_ADDR: ${OPENBAO_ADDR:?Set OPENBAO_ADDR}
+      BAO_DEV_ROOT_TOKEN_ID:
+    ports:
+      - "127.0.0.1:${OPENBAO_HOST_PORT:?Set OPENBAO_HOST_PORT}:8200"

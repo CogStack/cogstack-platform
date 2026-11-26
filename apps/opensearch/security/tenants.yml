@@ -1,0 +1,6 @@
+_meta:
+  type: tenants
+  config_version: 2
+
+cogstack_tenant:
+  description: CogStack dashboards

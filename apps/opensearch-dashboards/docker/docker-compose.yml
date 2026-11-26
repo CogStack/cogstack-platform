@@ -1,0 +1,5 @@
+name: opensearch-dashboards
+
+include:
+  - path: [docker-compose.base.yml, docker-compose.prod.yml]
+    env_file: ../env/opensearch-dashboards.env

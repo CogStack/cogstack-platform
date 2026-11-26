@@ -5,7 +5,7 @@ metadata:
   name: cogstack-nifi
 
 spec:
-  serviceName: cogstack-nifi
+  serviceName: cogstack-nifi-headless
   replicas: {{ .Values.replicaCount }}
   persistentVolumeClaimRetentionPolicy:
     whenDeleted: Retain
@@ -17,9 +17,19 @@ spec:
     metadata:
       labels:
         app: cogstack-nifi
-      annotations:
-        checksum/tls-config: {{ include (print $.Template.BasePath "/tls-configmap.yaml") . | sha256sum }}
     spec:
+      {{- with .Values.allowedNodes }}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              {{- range . }}
+              - matchFields:
+                  - key: metadata.name
+                    operator: In
+                    values: [{{ . | quote }}]
+              {{- end }}
+      {{- end }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
@@ -69,19 +79,32 @@ spec:
         - name: nifi
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          envFrom:
-            - configMapRef:
-                name: nifi-env
-            - configMapRef:
-                name: cogstack-nifi-tls-env
-            # Login/password variables and matching INITIAL_ADMIN_IDENTITY only; no certificate files.
-            - secretRef:
-                name: nifi-auth
+          env:
+            - name: NIFI_SENSITIVE_PROPS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: nifi-auth
+                  key: NIFI_SENSITIVE_PROPS_KEY
+          command: ["/bin/sh", "-ec"]
+          args:
+            - |
+              # The upstream container entrypoint always configures HTTPS.
+              . /opt/nifi/scripts/common.sh
+              prop_replace 'nifi.web.http.host' '0.0.0.0'
+              prop_replace 'nifi.web.http.port' '{{ .Values.nifi.internalPort | int }}'
+              prop_replace 'nifi.remote.input.secure' 'false'
+              prop_replace 'nifi.security.autoreload.enabled' 'false'
+              sed -i -E \
+                -e 's/^(nifi\.web\.https\.(host|port))=.*/\1=/' \
+                -e 's/^(nifi\.security\.(keystore[^=]*|truststore[^=]*|keyPasswd))=.*/\1=/' \
+                -e 's/^(nifi\.security\.user\.(authorizer|login\.identity\.provider))=.*/\1=/' "$nifi_props_file"
+              prop_replace 'nifi.sensitive.props.key' "$NIFI_SENSITIVE_PROPS_KEY"
+              uncomment 'nifi.python.command' "$nifi_props_file"
+              prop_replace 'nifi.python.extensions.source.directory.default' "$NIFI_HOME/python_extensions"
+              prop_replace 'nifi.nar.library.autoload.directory' "$NIFI_HOME/nar_extensions"
+              exec "$NIFI_HOME/bin/nifi.sh" run
 
           volumeMounts:
-            - name: tls
-              mountPath: /certificates
-              readOnly: true
             {{- range $directory := $directories }}
             - name: {{ $directory | replace "_" "-" }}
               mountPath: /opt/nifi/nifi-current/{{ $directory }}
@@ -90,35 +113,18 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - containerPort: {{ .Values.nifi.internalPort | int }}
+            - name: http
+              containerPort: {{ .Values.nifi.internalPort | int }}
           startupProbe:
-            exec:
-              command: ["/opt/nifi/scripts/cogstack-healthcheck.sh", "startup"]
+            exec: &healthcheck
+              command: ["curl", "-fsS", "--noproxy", "*", "-o", "/dev/null", "http://127.0.0.1:{{ .Values.nifi.internalPort }}/nifi-api/authentication/configuration"]
             timeoutSeconds: 10
             failureThreshold: 30
           readinessProbe:
-            exec:
-              command: ["/opt/nifi/scripts/cogstack-healthcheck.sh", "ready"]
+            exec: *healthcheck
             timeoutSeconds: 10
-          resources: 
+          resources:
             {{- toYaml .Values.resources | nindent 12 }}
-
-      volumes:
-        - name: tls
-          projected:
-            sources:
-              - secret:
-                  name: {{ .Values.certificates.rootCASecret }}
-                  items:
-                    - key: ca.crt
-                      path: root/root-ca.pem
-                    - key: truststore.jks
-                      path: nifi/nifi-truststore.jks
-              - secret:
-                  name: {{ .Values.certificates.existingSecret }}
-                  items:
-                    - key: nifi-keystore.jks
-                      path: nifi/nifi-keystore.jks
 
   volumeClaimTemplates:
     {{- range $directory := $directories }}

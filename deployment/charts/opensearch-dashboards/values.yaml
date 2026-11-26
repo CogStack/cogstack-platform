@@ -1,0 +1,20 @@
+opensearch-dashboards:
+  opensearchHosts: http://opensearch-cluster-master:9200
+  opensearchAccount:
+    secret: dashboards-auth
+  config:
+    opensearch_dashboards.yml:
+      server.ssl.enabled: false
+      server.basePath: /dashboards
+      server.rewriteBasePath: true
+      opensearchDashboards.index: .kibana
+      opensearch.requestHeadersAllowlist: [authorization, securitytenant]
+      opensearch_security.cookie.secure: true
+      opensearch_security.cookie.password: '{{ "$" }}{COOKIE_PASS}'
+  resources:
+    requests:
+      cpu: "1"
+      memory: "1Gi"
+    limits:
+      cpu: "1"
+      memory: "1Gi"

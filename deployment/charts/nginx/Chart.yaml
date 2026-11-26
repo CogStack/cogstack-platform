@@ -1,6 +1,6 @@
 apiVersion: v2
 name: nginx
-description: TLS reverse proxy for CogStack Apache NiFi
+description: TLS reverse proxy for CogStack Kubernetes services
 
 # A chart can be either an 'application' or a 'library' chart.
 #

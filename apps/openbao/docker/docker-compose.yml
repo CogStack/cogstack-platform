@@ -1,0 +1,7 @@
+name: openbao
+
+include:
+  - path:
+      - docker-compose.base.yml
+      - docker-compose.dev.yml
+    env_file: ../env/openbao.env

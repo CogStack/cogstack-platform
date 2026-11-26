@@ -9,7 +9,8 @@
 #
 # Requires:
 #     - Bash, OpenSSL and Java keytool
-#     - KEYSTORE_PASSWORD and TRUSTSTORE_PASSWORD in the environment
+#     - NiFi store passwords from the environment or deployment/env/certificates.env
+#       (prompted when missing)
 #     - root-ca.pem and root-ca.key under certificates/root/ in SECURITY_DIR
 #
 # Optional environment variables:
@@ -40,15 +41,15 @@ if (( $# > 0 )); then
 fi
 
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+if [[ -f "$script_dir/../../env/certificates.env" ]]; then
+    # shellcheck source=../../env/certificates.env
+    source "$script_dir/../../env/certificates.env"
+fi
 security_dir=${SECURITY_DIR:-"$script_dir/../../security"}
 profile="$script_dir/../../security/templates/ssl-extensions-x509.cnf"
 ca_cert="$security_dir/certificates/root/root-ca.pem"
 ca_key="$security_dir/certificates/root/root-ca.key"
 output_dir="$security_dir/certificates/nifi"
-
-export KEYSTORE_PASSWORD="${KEYSTORE_PASSWORD:-${NIFI_KEYSTORE_PASSWORD:-}}"
-export TRUSTSTORE_PASSWORD="${TRUSTSTORE_PASSWORD:-${NIFI_TRUSTSTORE_PASSWORD:-}}"
-: "${KEYSTORE_PASSWORD:?Set KEYSTORE_PASSWORD}" "${TRUSTSTORE_PASSWORD:?Set TRUSTSTORE_PASSWORD}"
 
 for input in "$ca_cert" "$ca_key"; do
     if [[ ! -f "$input" || ! -r "$input" || ! -s "$input" ]]; then
@@ -64,6 +65,13 @@ for file in "${files[@]}"; do
         exit 1
     fi
 done
+
+KEYSTORE_PASSWORD=${KEYSTORE_PASSWORD:-${NIFI_KEYSTORE_PASSWORD:-}}
+TRUSTSTORE_PASSWORD=${TRUSTSTORE_PASSWORD:-${NIFI_TRUSTSTORE_PASSWORD:-}}
+# shellcheck source=password_prompt.sh
+source "$script_dir/password_prompt.sh"
+require_password KEYSTORE_PASSWORD
+require_password TRUSTSTORE_PASSWORD
 
 # Build the whole bundle before publishing it. Clean up files written by this
 # run if any of the final writes fail.
@@ -82,7 +90,7 @@ trap 'exit 143' TERM
 # === Add deployment-specific SANs to the template defaults
 names=("${NIFI_UPSTREAM_TLS_NAME:-}" "${NIFI_HEALTHCHECK_HOST:-}")
 if [[ -n "${KUBE_NAMESPACE:-}" ]]; then
-    names+=("cogstack-nifi-web.${KUBE_NAMESPACE}.svc.${CLUSTER_DOMAIN:-cluster.local}")
+    names+=("cogstack-nifi.${KUBE_NAMESPACE}.svc.${CLUSTER_DOMAIN:-cluster.local}")
 fi
 
 {

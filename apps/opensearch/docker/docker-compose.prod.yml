@@ -1,0 +1,5 @@
+name: opensearch
+
+networks:
+  cognet:
+    external: true

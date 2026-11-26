@@ -11,8 +11,28 @@ is 1,460 days for the root CA and OpenSearch certificates and 397 days for
 NiFi and NGINX. The root CA, NiFi and OpenSearch node generators also use
 Java's `keytool`. `SECURITY_DIR` defaults to `deployment/security/`.
 
-If you need a root CA, export `ROOT_CERTIFICATE_KEYSTORE_PASSWORD` and run this
-from the repository root.
+The generators prompt for missing passwords with hidden input in a terminal.
+For non-interactive runs, provide the required passwords through the environment
+or the generator's configuration.
+
+The Makefile loads `deployment/env/certificates.env` for certificate generation
+and loading. Choose a bundle when generating fresh certificates.
+
+| Target | Certificates |
+| --- | --- |
+| `certs-k3s` | CA, NGINX HTTPS, and OpenSearch transport |
+| `certs-all` | K3s bundle plus the NiFi, OpenSearch admin, and Dashboards certificates for Docker |
+
+For a direct invocation of the root CA generator, load the file to use its
+sample store password.
+
+```bash
+set -a
+source deployment/env/certificates.env
+set +a
+```
+
+The root CA generator uses `ROOT_CERTIFICATE_KEYSTORE_PASSWORD`.
 
 ```bash
 ./deployment/scripts/security/create_root_ca_cert.sh
@@ -20,12 +40,12 @@ from the repository root.
 
 ### NiFi
 
-Export the `KEYSTORE_PASSWORD` and `TRUSTSTORE_PASSWORD` that NiFi will use.
-The legacy `NIFI_KEYSTORE_PASSWORD` and `NIFI_TRUSTSTORE_PASSWORD` names are
-also accepted.
+The NiFi generator reads `NIFI_KEYSTORE_PASSWORD` and `NIFI_TRUSTSTORE_PASSWORD` from
+`deployment/env/certificates.env`. `KEYSTORE_PASSWORD` and
+`TRUSTSTORE_PASSWORD` take precedence when set.
 
 Choose the command for your deployment. The default NiFi certificate covers
-`nifi`, `localhost`, `cogstack-nifi`, `cogstack-nifi-web`, and `127.0.0.1`.
+`nifi`, `localhost`, `cogstack-nifi`, `cogstack-nifi-headless`, and `127.0.0.1`.
 
 ```bash
 ./deployment/scripts/security/create_nifi_certs.sh
@@ -36,14 +56,6 @@ verify. `NIFI_HEALTHCHECK_HOST` also adds a name when supplied.
 
 ```bash
 NIFI_UPSTREAM_TLS_NAME=nifi.internal.example ./deployment/scripts/security/create_nifi_certs.sh
-```
-
-For Kubernetes, set `KUBE_NAMESPACE` to include the web Service's full name.
-For example, `cogstack` adds `cogstack-nifi-web.cogstack.svc.cluster.local`.
-Set `CLUSTER_DOMAIN` if your cluster uses a domain other than `cluster.local`.
-
-```bash
-KUBE_NAMESPACE=cogstack ./deployment/scripts/security/create_nifi_certs.sh
 ```
 
 Each invocation writes `nifi.key`, `nifi.csr`, `nifi.pem`, `nifi.crt` (DER),
@@ -67,7 +79,7 @@ It runs without a store password or `keytool`.
 
 ### OpenSearch
 
-Export `ES_CERTIFICATE_PASSWORD` for the Java and PKCS#12 stores. Pass the node
+Use `OPENSEARCH_CERTIFICATE_PASSWORD` for the Java and PKCS#12 stores. Pass the node
 hostnames when generating the node certificates. Generate the Dashboards and
 admin certificates with the second command.
 
@@ -82,6 +94,9 @@ a Kubernetes Service FQDN. Outputs are under
 `$SECURITY_DIR/certificates/opensearch/`, with each node's hostname as its file
 prefix. Use the issued node and admin subjects in the corresponding OpenSearch
 DN settings.
+
+Kubernetes uses the NGINX certificate and the OpenSearch transport certificate.
+Load them with `make -C deployment k3s-load-certs-all`.
 
 ## Install, initialize and verify
 

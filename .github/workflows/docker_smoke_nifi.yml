@@ -1,0 +1,89 @@
+name: docker_smoke_nifi
+
+on:
+  push:
+    branches: ['**']
+    paths: &paths
+      - 'apps/nifi/**'
+      - 'apps/nginx/**'
+      - 'deployment/Makefile'
+      - 'deployment/make/**'
+      - 'deployment/scripts/security/**'
+      - 'deployment/security/templates/**'
+      - '.github/scripts/smoke_nifi_login.sh'
+      - '.github/workflows/docker_smoke_nifi.yml'
+      - '!**/*.md'
+      - '!**/README*'
+  pull_request:
+    paths: *paths
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+    working-directory: apps/nifi/docker
+
+jobs:
+  smoke:
+    name: Smoke-test NiFi services
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      COMPOSE_PROJECT_NAME: nifi-smoke-${{ github.run_id }}-${{ github.run_attempt }}
+      COGSTACK_GENERAL_ENV_FILE: /dev/null
+      COGSTACK_NIFI_ENV_FILE: /dev/null
+      NIFI_DOCKER_CPU_MIN: '1'
+      NIFI_DOCKER_CPU_MAX: '2'
+      NIFI_DOCKER_RAM: 4g
+      SINGLE_USER_CREDENTIALS_USERNAME: smoke
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Start NiFi and verify login
+        run: |
+          SECURITY_DIR=$(mktemp -d "$RUNNER_TEMP/nifi-smoke.XXXXXX")
+          printf 'SECURITY_DIR=%s\n' "$SECURITY_DIR" >> "$GITHUB_ENV"
+          password="$(openssl rand -hex 16)"
+          NIFI_SENSITIVE_PROPS_KEY=$(openssl rand -hex 16)
+          export SECURITY_DIR NIFI_SENSITIVE_PROPS_KEY
+          export KEYSTORE_PASSWORD="$password" TRUSTSTORE_PASSWORD="$password" SINGLE_USER_CREDENTIALS_PASSWORD="$password"
+          ROOT_CERTIFICATE_KEYSTORE_PASSWORD="$password" make -C ../../../deployment -j1 certs-root certs-nifi certs-nginx
+          # The published containers run as UID/GID 1000.
+          sudo chown 1000:1000 "$SECURITY_DIR"/certificates/{nifi/nifi-keystore.jks,nginx/tls.key}
+
+          docker compose -f docker-compose.yml -f - up -d <<'YAML'
+          services:
+            nifi:
+              environment:
+                NIFI_HEALTHCHECK_HOST: nifi
+                NIFI_WEB_PROXY_HOST: 127.0.0.1:8443
+                NIFI_SENSITIVE_PROPS_KEY: ${NIFI_SENSITIVE_PROPS_KEY}
+          YAML
+          bash ../../../.github/scripts/smoke_nifi_login.sh https://127.0.0.1:8443
+
+      - name: Dump container logs
+        if: failure()
+        run: |
+          [[ -n "${SECURITY_DIR:-}" ]] || exit 0
+          docker compose ps
+          docker compose logs --no-color nifi nifi-nginx
+
+      - name: Shutdown stack
+        if: always()
+        run: |
+          [[ -n "${SECURITY_DIR:-}" ]] || exit 0
+          docker compose down -v

@@ -8,7 +8,7 @@
 #
 # Requires:
 #     - Bash, OpenSSL and Java keytool
-#     - ES_CERTIFICATE_PASSWORD for the PKCS#12 bundle and Java stores
+#     - OPENSEARCH_CERTIFICATE_PASSWORD for the PKCS#12 bundle and Java stores
 #     - root-ca.pem and root-ca.key under certificates/root/ in SECURITY_DIR
 #
 # Optional settings:
@@ -92,8 +92,6 @@ for node in "$@"; do
     done
 done
 
-: "${ES_CERTIFICATE_PASSWORD:?Set ES_CERTIFICATE_PASSWORD}"
-export ES_CERTIFICATE_PASSWORD
 for input in "$ca_cert" "$ca_key"; do
     if [[ ! -f "$input" || ! -r "$input" || ! -s "$input" ]]; then
         printf 'Missing or unreadable CA file %s. Run create_root_ca_cert.sh first.\n' "$input" >&2
@@ -109,6 +107,11 @@ if [[ -e "$ca_alias" || -L "$ca_alias" ]]; then
     fi
     write_ca_alias=false
 fi
+
+# shellcheck source=password_prompt.sh
+source "$script_dir/password_prompt.sh"
+OPENSEARCH_CERTIFICATE_PASSWORD=${OPENSEARCH_CERTIFICATE_PASSWORD:-${OS_CERTIFICATE_PASSWORD:-}}
+require_password OPENSEARCH_CERTIFICATE_PASSWORD
 
 # Stage all node bundles before writing deployment files. Roll back writes on failure.
 scratch_dir=$(mktemp -d)
@@ -150,15 +153,15 @@ for node in "$@"; do
     # Preserve OpenSearch's original aliases and the separate leaf-pinning truststore.
     openssl pkcs12 -export -name "$node" -inkey "$stage.key" -in "$stage.crt" \
         -certfile "$ca_cert" -out "$stage.p12" -keypbe AES-256-CBC -certpbe AES-256-CBC \
-        -passout env:ES_CERTIFICATE_PASSWORD
+        -passout env:OPENSEARCH_CERTIFICATE_PASSWORD
     keytool -importkeystore -noprompt -alias "$node" \
-        -srckeystore "$stage.p12" -srcstoretype PKCS12 -srcstorepass:env ES_CERTIFICATE_PASSWORD \
+        -srckeystore "$stage.p12" -srcstoretype PKCS12 -srcstorepass:env OPENSEARCH_CERTIFICATE_PASSWORD \
         -destkeystore "$stage-keystore.jks" -deststoretype JKS \
-        -deststorepass:env ES_CERTIFICATE_PASSWORD -destkeypass:env ES_CERTIFICATE_PASSWORD
+        -deststorepass:env OPENSEARCH_CERTIFICATE_PASSWORD -destkeypass:env OPENSEARCH_CERTIFICATE_PASSWORD
     keytool -importcert -noprompt -alias root-ca -file "$ca_cert" \
-        -keystore "$stage-keystore.jks" -storetype JKS -storepass:env ES_CERTIFICATE_PASSWORD
+        -keystore "$stage-keystore.jks" -storetype JKS -storepass:env OPENSEARCH_CERTIFICATE_PASSWORD
     keytool -importcert -noprompt -alias "$node" -file "$stage.crt" \
-        -keystore "$stage-truststore.key" -storetype JKS -storepass:env ES_CERTIFICATE_PASSWORD
+        -keystore "$stage-truststore.key" -storetype JKS -storepass:env OPENSEARCH_CERTIFICATE_PASSWORD
 done
 
 # Private files inherit mode 0600, and noclobber protects concurrent writes.

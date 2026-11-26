@@ -1,0 +1,40 @@
+services:
+  opensearch:
+    image: ${OPENSEARCH_DOCKER_IMAGE:?Load ../env/opensearch.env}
+    restart: unless-stopped
+    mem_limit: ${OPENSEARCH_DOCKER_RAM:-2g}
+    shm_size: ${OPENSEARCH_DOCKER_SHM_SIZE:-512m}
+    environment:
+      discovery.type: single-node
+      DISABLE_INSTALL_DEMO_CONFIG: 'true'
+      OPENSEARCH_JAVA_OPTS: ${OPENSEARCH_JAVA_OPTS:--Xms512m -Xmx512m}
+    ports:
+      - '127.0.0.1:${OPENSEARCH_NODE_1_OUTPUT_PORT:-9200}:9200'
+    volumes:
+      - data:/usr/share/opensearch/data
+      - &bind
+        type: bind
+        source: ../config/opensearch.yml
+        target: /usr/share/opensearch/config/opensearch.yml
+        read_only: true
+        bind:
+          create_host_path: false
+      - <<: *bind
+        source: ${SECURITY_DIR:-../../../deployment/security}/certificates/opensearch/opensearch-shared.crt
+        target: /usr/share/opensearch/config/tls/node.crt
+      - <<: *bind
+        source: ${SECURITY_DIR:-../../../deployment/security}/certificates/opensearch/opensearch-shared.key
+        target: /usr/share/opensearch/config/tls/node.key
+      - <<: *bind
+        source: ${SECURITY_DIR:-../../../deployment/security}/certificates/root/root-ca.pem
+        target: /usr/share/opensearch/config/tls/ca.crt
+    networks:
+      cognet:
+        aliases: [opensearch-shared]
+
+volumes:
+  data:
+
+networks:
+  cognet:
+    name: cogstack-net

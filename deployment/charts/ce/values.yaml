@@ -47,7 +47,7 @@ ocr-service:
   # -- OCR service image repository.
   # repository: cogstacksystems/ocr-service
   # -- OCR service image tag.
-  # tag: "1.1.1"
+  # tag: "latest"
 
 medcat-trainer:
   # -- Enable MedCAT Trainer deployment.

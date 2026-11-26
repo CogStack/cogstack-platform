@@ -1,0 +1,82 @@
+name: docker_smoke_opensearch
+
+on:
+  push:
+    branches: ['**']
+    paths: &paths
+      - 'apps/opensearch/**'
+      - 'apps/opensearch-dashboards/**'
+      - 'deployment/Makefile'
+      - 'deployment/make/**'
+      - 'deployment/scripts/security/**'
+      - 'deployment/security/templates/**'
+      - '.github/workflows/docker_smoke_opensearch.yml'
+  pull_request:
+    paths: *paths
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      SMOKE_PROJECT_SUFFIX: smoke-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Start the default stack and verify access
+        shell: bash
+        run: |
+          SECURITY_DIR=$(mktemp -d "$RUNNER_TEMP/opensearch-smoke.XXXXXX")
+          KIBANA_PASSWORD=$(openssl rand -hex 16)
+          OS_NIFI_PASSWORD=$(openssl rand -hex 16)
+          OS_ANALYST_PASSWORD=$(openssl rand -hex 16)
+          export SECURITY_DIR KIBANA_PASSWORD OS_NIFI_PASSWORD OS_ANALYST_PASSWORD
+          printf '::add-mask::%s\n' "$KIBANA_PASSWORD"
+          printf 'SECURITY_DIR=%s\nKIBANA_PASSWORD=%s\n' "$SECURITY_DIR" "$KIBANA_PASSWORD" >> "$GITHUB_ENV"
+          password=$(openssl rand -hex 16)
+          export ROOT_CERTIFICATE_KEYSTORE_PASSWORD="$password" OS_CERTIFICATE_PASSWORD="$password"
+          make -C deployment certs-root certs-opensearch
+          OPENSEARCH_DASHBOARDS_DNS_NAMES=localhost ./deployment/scripts/security/create_opensearch_client_admin_certs.sh --dashboards-only
+          certs="$SECURITY_DIR/certificates/opensearch"
+          sudo chown 1000:1000 "$certs"/{opensearch-shared.key,es_kibana_client.key}
+          request=(curl -sS --noproxy '*' --cacert "$SECURITY_DIR/certificates/root/root-ca.pem" --max-time 10)
+
+          search=(docker compose -p "opensearch-$SMOKE_PROJECT_SUFFIX" -f apps/opensearch/docker/docker-compose.yml)
+          "${search[@]}" up -d
+          bash apps/opensearch/security/bootstrap.sh "${search[@]}" exec -T opensearch
+
+          printf '%s\n' '{"index":{"_id":"smoke"}}' '{"ok":true}' |
+            "${request[@]}" -f -u "nifi:$OS_NIFI_PASSWORD" -H 'Content-Type: application/x-ndjson' \
+              --data-binary @- https://localhost:9200/nifi_smoke/_bulk | jq -e '.errors == false'
+          "${request[@]}" -f -u "cogstack_user:$OS_ANALYST_PASSWORD" \
+            https://localhost:9200/nifi_smoke/_doc/smoke | jq -e '._source.ok == true'
+          status=$("${request[@]}" -u "cogstack_user:$OS_ANALYST_PASSWORD" -o /dev/null -w '%{http_code}' \
+            -X PUT --json '{"ok":false}' https://localhost:9200/nifi_smoke/_doc/smoke)
+          [[ "$status" == 403 ]]
+
+          docker compose -p "opensearch-dashboards-$SMOKE_PROJECT_SUFFIX" -f apps/opensearch-dashboards/docker/docker-compose.yml up -d
+          "${request[@]}" -f --retry 30 --retry-all-errors --retry-delay 3 -H 'osd-xsrf: smoke' \
+            --json "{\"username\":\"cogstack_user\",\"password\":\"$OS_ANALYST_PASSWORD\"}" \
+            https://localhost:5601/auth/login | jq -e '.username == "cogstack_user"'
+
+      - name: Cleanup
+        if: always()
+        env:
+          SMOKE_JOB_STATUS: ${{ job.status }}
+        run: |
+          [[ -n "${SECURITY_DIR:-}" ]] || exit 0
+          for app in opensearch-dashboards opensearch; do
+            compose=(docker compose -p "$app-$SMOKE_PROJECT_SUFFIX" -f "apps/$app/docker/docker-compose.yml")
+            if [[ "$SMOKE_JOB_STATUS" == failure ]]; then
+              "${compose[@]}" logs --tail 50 || true
+            fi
+            "${compose[@]}" down -v
+          done

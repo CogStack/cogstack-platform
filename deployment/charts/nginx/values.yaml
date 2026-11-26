@@ -1,29 +1,31 @@
 replicaCount: 1
 
 image:
-  repository: cogstacksystems/nifi-nginx
+  repository: cogstacksystems/nginx
   tag: "latest"
   pullPolicy: Always
 
 nginx:
   internalPort: 8443
 
+clusterDomain: cluster.local
+
 nifi:
-  # Empty uses cogstack-nifi-web.<namespace>.svc.cluster.local; override with a full DNS name.
   host: ""
-  port: 8443
-  tlsName: nifi
+  port: 8080
+opensearch:
+  host: ""
+  port: 9200
+dashboards:
+  host: ""
+  port: 5601
 
 tls:
-  rootCASecret: cogstack-root-ca
-  # NGINX's own tls.crt/tls.key retain the image's existing /certificates/nifi paths.
   existingSecret: nginx-tls
 
 service:
-  type: ClusterIP
-
-ingress:
-  enabled: false
+  type: LoadBalancer
+  port: 443
 
 resources:
   requests:

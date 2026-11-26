@@ -1,0 +1,34 @@
+services:
+  opensearch-dashboards:
+    image: ${OPENSEARCH_DASHBOARDS_DOCKER_IMAGE:?Load ../env/opensearch-dashboards.env}
+    restart: unless-stopped
+    mem_limit: ${OPENSEARCH_DASHBOARDS_DOCKER_RAM:-1g}
+    environment:
+      OPENSEARCH_DASHBOARDS_SERVER_NAME: ${OPENSEARCH_DASHBOARDS_SERVER_NAME:-cogstack-opensearch-dashboards}
+      OPENSEARCH_HOSTS: '${OPENSEARCH_HOSTS:-["https://opensearch-shared:9200"]}'
+      OPENSEARCHDASHBOARDS_INDEX: ${OPENSEARCHDASHBOARDS_INDEX:-.kibana}
+      KIBANA_USER: ${KIBANA_USER:-kibanaserver}
+    ports:
+      - '127.0.0.1:${OPENSEARCH_DASHBOARDS_SERVER_OUTPUT_PORT:-5601}:5601'
+    volumes:
+      - &bind
+        type: bind
+        source: ../config/opensearch.yml
+        target: /usr/share/opensearch-dashboards/config/opensearch_dashboards.yml
+        read_only: true
+        bind:
+          create_host_path: false
+      - <<: *bind
+        source: ${SECURITY_DIR:-../../../deployment/security}/certificates/opensearch/es_kibana_client.pem
+        target: /certificates/elastic/opensearch/es_kibana_client.pem
+      - <<: *bind
+        source: ${SECURITY_DIR:-../../../deployment/security}/certificates/opensearch/es_kibana_client.key
+        target: /certificates/elastic/opensearch/es_kibana_client.key
+      - <<: *bind
+        source: ${SECURITY_DIR:-../../../deployment/security}/certificates/root/root-ca.pem
+        target: /certificates/elastic/opensearch/elastic-stack-ca.crt.pem
+    networks: [cognet]
+
+networks:
+  cognet:
+    external: true

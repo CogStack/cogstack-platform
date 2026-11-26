@@ -1,0 +1,3 @@
+# The login smoke test provides the Secret and OpenSearch service.
+opensearch-dashboards:
+  replicaCount: 0

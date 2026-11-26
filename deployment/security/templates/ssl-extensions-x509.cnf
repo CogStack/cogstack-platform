@@ -23,7 +23,7 @@ authorityKeyIdentifier = keyid,issuer
 DNS.1 = nifi
 DNS.2 = localhost
 DNS.3 = cogstack-nifi
-DNS.4 = cogstack-nifi-web
+DNS.4 = cogstack-nifi-headless
 IP.1 = 127.0.0.1
 
 [req]

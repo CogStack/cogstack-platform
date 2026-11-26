@@ -13,56 +13,40 @@ production configurations use `cogstacksystems/nifi` and `cogstacksystems/nginx`
 
 From the repository root, create `apps/nifi/env/` and add `general.env` and
 `nifi.env`. Both files are Git-ignored. `general.env` can be empty if you have
-no shared settings. Use the following as a starting point for `nifi.env` and
-replace the example credentials and passwords before starting NiFi.
+no shared settings. Use the following as a starting point for `nifi.env`.
 
 ```dotenv
 NIFI_DOCKER_CPU_MIN=1
 NIFI_DOCKER_CPU_MAX=2
 NIFI_DOCKER_RAM=4g
 
-SINGLE_USER_CREDENTIALS_USERNAME=admin
-SINGLE_USER_CREDENTIALS_PASSWORD='replace-with-a-unique-password'
-NIFI_SENSITIVE_PROPS_KEY='replace-with-a-stable-encryption-key'
-
-KEYSTORE_PATH=/security/certificates/nifi/nifi-keystore.jks
-KEYSTORE_TYPE=JKS
-KEYSTORE_PASSWORD='replace-with-the-keystore-password'
-TRUSTSTORE_PATH=/security/certificates/nifi/nifi-truststore.jks
-TRUSTSTORE_TYPE=JKS
-TRUSTSTORE_PASSWORD='replace-with-the-truststore-password'
-
 NIFI_WEB_PROXY_HOST=localhost:8443
 NIFI_HEALTHCHECK_HOST=nifi
 ```
 
-Use at least 12 characters for the single-user password. Preserve
-`NIFI_SENSITIVE_PROPS_KEY` with the flow configuration so NiFi can decrypt
-saved sensitive properties. For a non-local deployment, set `NIFI_WEB_PROXY_HOST`
-to the browser-facing host and port. If you change `NIFI_EXTERNAL_PORT_NGINX`,
-update that allowlist entry as well. See [Apache's startup script](https://github.com/apache/nifi/blob/rel/nifi-2.12.0/nifi-docker/dockerhub/sh/start.sh)
+Set `KEYSTORE_PASSWORD` and `TRUSTSTORE_PASSWORD` to match the mounted stores.
+Set `SINGLE_USER_CREDENTIALS_USERNAME` and `SINGLE_USER_CREDENTIALS_PASSWORD`
+for the NiFi login. Use at least 12 characters for the single-user password.
+Use `COGSTACK_NIFI_ENV_FILE` to select another deployment's `nifi.env`.
+
+The dev Make targets take their sample store passwords and login from
+[`certificates.env`](../../deployment/env/certificates.env) and
+[`authentication.env`](../../deployment/env/authentication.env).
+Set your own values in `nifi.env` to override the samples.
+
+Preserve `NIFI_SENSITIVE_PROPS_KEY` with the flow configuration so NiFi can
+decrypt saved sensitive properties. For a non-local deployment, set
+`NIFI_WEB_PROXY_HOST` to the browser-facing host and port. If you change
+`NIFI_EXTERNAL_PORT_NGINX`, update that allowlist entry as well. See
+[Apache's startup script](https://github.com/apache/nifi/blob/rel/nifi-2.12.0/nifi-docker/dockerhub/sh/start.sh)
 and [Docker setup guide](https://github.com/apache/nifi/blob/rel/nifi-2.12.0/nifi-docker/dockerhub/README.md)
 for additional settings.
 
 ### TLS certificates
 
-For local development, keep TLS and demo login settings in
-`deployment/env/cert_auth_settings_dev.env`. Set an absolute `SECURITY_DIR`,
-`ROOT_CERTIFICATE_KEYSTORE_PASSWORD`, `KEYSTORE_PASSWORD`, `TRUSTSTORE_PASSWORD`,
-`SINGLE_USER_CREDENTIALS_USERNAME`, and `SINGLE_USER_CREDENTIALS_PASSWORD`.
-Prepare or reuse the TLS bundle from the repository root.
-
-```bash
-make -C apps/nifi/docker setup-nifi-dev-tls
-```
-
-Keep this Git-ignored file at mode `0600`. It can also hold store paths, types,
-and TLS names. `start-nifi-dev` and `start-nifi-dev-build` load it automatically
-when present and mount the bundle's runtime TLS files. The CA signing key and
-its store password stay on the host.
-
-To supply certificates manually, place the following under
-`deployment/security/certificates/`.
+Use the existing certificate generators or supply a TLS bundle. Place the files
+under `deployment/security/certificates/`, or set `SECURITY_DIR` in `nifi.env`
+to the parent of your deployment’s `certificates/` directory.
 
 | Files | Purpose |
 | --- | --- |
@@ -72,10 +56,9 @@ To supply certificates manually, place the following under
 
 Compose mounts the service certificate directories and `root/root-ca.pem` read-only.
 The CA signing key and private bundles stay on the host. Make the mounted files
-readable by their container users. The start targets run `make check-tls`, which
-checks for readable, nonempty regular files. If `root-ca.pem` is a directory from an
-earlier bind mount, replace it with the actual PEM file. Certificate validation
-occurs when the services connect over TLS.
+readable by their container users. The start targets check for readable,
+nonempty files before launching. Certificate validation occurs when the services
+connect over TLS.
 
 ### Start and verify
 
@@ -85,6 +68,7 @@ Run these commands from `apps/nifi/docker/`:
 | --- | --- |
 | `make check-config` | Resolve and validate all three Compose configurations using the env files. |
 | `make start-nifi` | Use `docker-compose.yml` to start published images with a Compose-managed `cogstack-net`. |
+| `make start-nifi-dev` | Start NiFi and NGINX with the dev settings. |
 | `make start-nifi-dev-build` | Apply `docker-compose.dev.yml` over the base, build both images locally, mount editable NiFi resources and dev data, and use `nifi-dev-net`. |
 | `make start-nifi-prod` | Apply `docker-compose.prod.yml` over the base and start published images on an existing `cogstack-net`. |
 

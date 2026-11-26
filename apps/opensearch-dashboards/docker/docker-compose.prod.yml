@@ -1,0 +1,10 @@
+name: opensearch-dashboards
+
+services:
+  opensearch-dashboards:
+    environment:
+      KIBANA_PASSWORD: ${KIBANA_PASSWORD:?Set the Dashboards service account password}
+
+networks:
+  cognet:
+    name: cogstack-net
