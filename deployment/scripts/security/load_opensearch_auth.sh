@@ -46,7 +46,7 @@ require_password OPENSEARCH_KIBANA_PASSWORD
 if [[ "$service" == opensearch ]]; then
     export OPENSEARCH_NIFI_PASSWORD OPENSEARCH_PIPELINE_PASSWORD OPENSEARCH_ANALYST_PASSWORD \
         OS_NIFI_PASSWORD OS_PIPELINE_PASSWORD OS_ANALYST_PASSWORD
-    exec bash "$script_dir/../../charts/opensearch/security/bootstrap.sh" kubectl -n "$namespace" exec -i "$pod" --
+    exec bash "$script_dir/../../../apps/opensearch/security/bootstrap.sh" kubectl -n "$namespace" exec -i "$pod" --
 fi
 
 DASHBOARDS_COOKIE_DATA=$(jq -r '.data.cookie // ""' <<< "$existing")

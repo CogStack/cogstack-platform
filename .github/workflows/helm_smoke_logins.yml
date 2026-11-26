@@ -1,4 +1,4 @@
-name: helm_smoke_logins
+name: kubernetes_smoke_logins
 
 on:
   push:
@@ -50,16 +50,12 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - uses: azure/setup-helm@v5.1.0
-        if: matrix.stack == 'opensearch'
-        with:
-          version: v3.17.0
       - uses: helm/kind-action@v1.15.2
 
       - name: Generate and load certificates
         run: |
           source deployment/env/general.env
-          SECURITY_DIR=$(mktemp -d "$RUNNER_TEMP/helm-smoke.XXXXXX")
+          SECURITY_DIR=$(mktemp -d "$RUNNER_TEMP/k3s-smoke.XXXXXX")
           password=$(openssl rand -hex 16)
           printf '::add-mask::%s\n' "$password"
           printf 'SECURITY_DIR=%s\nSMOKE_PASSWORD=%s\n' "$SECURITY_DIR" "$password" >> "$GITHUB_ENV"
@@ -93,12 +89,13 @@ jobs:
           trap 'kill "$!"' EXIT
           SINGLE_USER_CREDENTIALS_PASSWORD="$SMOKE_PASSWORD" bash .github/scripts/smoke_nifi_login.sh https://127.0.0.1:8443
 
-      - name: OpenSearch Helm authentication
+      - name: OpenSearch authentication
         if: matrix.stack == 'opensearch'
         run: |
           sudo sysctl -w vm.max_map_count=262144
-          make -C deployment helm-install-opensearch
-          OPENSEARCH_KIBANA_PASSWORD="$SMOKE_PASSWORD" OPENSEARCH_ANALYST_PASSWORD="$SMOKE_PASSWORD" \
+          OPENSEARCH_KIBANA_PASSWORD="$SMOKE_PASSWORD" make -C deployment k3s-load-auth-opensearch-dashboards
+          make -C deployment k3s-install-opensearch
+          OPENSEARCH_ANALYST_PASSWORD="$SMOKE_PASSWORD" \
             make -C deployment k3s-bootstrap-opensearch
           kubectl port-forward svc/opensearch-cluster-master 9200:9200 &
           trap 'kill "$!"' EXIT
@@ -107,32 +104,12 @@ jobs:
             -u "cogstack_user:$SMOKE_PASSWORD" https://localhost:9200/_plugins/_security/authinfo |
             jq -e '.user_name == "cogstack_user"'
 
-      - name: OpenSearch Dashboards Helm login
+      - name: OpenSearch Dashboards login
         if: matrix.stack == 'opensearch'
         run: |
           certs="$SECURITY_DIR/certificates"
-          kubectl create secret generic dashboards-auth --from-literal=username=kibanaserver \
-            --from-literal=password="$SMOKE_PASSWORD" --from-literal=cookie="$(openssl rand -hex 16)"
-          kubectl create secret tls dashboards-tls \
-            --cert="$certs/opensearch/es_kibana_client.pem" --key="$certs/opensearch/es_kibana_client.key"
-          make -C deployment helm-install-opensearch-dashboards HELM_VALUES=- HELM_TIMEOUT=5m <<'YAML'
-          opensearch-dashboards:
-            opensearchAccount:
-              secret: dashboards-auth
-            secretMounts:
-              - {name: ca, secretName: cogstack-root-ca, path: /tls/ca}
-              - {name: server-tls, secretName: dashboards-tls, path: /tls/server}
-            config:
-              opensearch_dashboards.yml:
-                opensearchDashboards.index: .kibana
-                opensearch.ssl.certificateAuthorities: [/tls/ca/ca.crt]
-                opensearch.ssl.verificationMode: full
-                opensearch_security.cookie.secure: true
-                opensearch_security.cookie.password: ${COOKIE_PASS}
-                server.ssl.enabled: true
-                server.ssl.certificate: /tls/server/tls.crt
-                server.ssl.key: /tls/server/tls.key
-          YAML
+          make -C deployment k3s-load-certs-opensearch-dashboards
+          make -C deployment k3s-install-opensearch-dashboards K3S_TIMEOUT=5m
           kubectl port-forward svc/opensearch-dashboards 5601:5601 &
           trap 'kill "$!"' EXIT
           curl -fsS --noproxy '*' --cacert "$certs/root/root-ca.pem" --max-time 10 \

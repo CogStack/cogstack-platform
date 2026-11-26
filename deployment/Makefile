@@ -80,15 +80,17 @@ delete-certs-all: ## Delete generated local TLS certificates, keys, and stores
 # ======================================================================================================================================================
 
 .PHONY: k3s-load-certs k3s-load-certs-all k3s-load-certs-root-ca k3s-load-certs-nifi k3s-load-certs-nginx k3s-load-certs-opensearch
+.PHONY: k3s-load-certs-opensearch-dashboards
 
 k3s-load-certs: k3s-load-certs-all ## Alias for k3s-load-certs-all
-k3s-load-certs-all: ## Load all TLS Secrets for NiFi, NGINX and OpenSearch
+k3s-load-certs-all: ## Load NiFi, NGINX, and OpenSearch node TLS Secrets
 k3s-load-certs-root-ca: ## Load the public CA and NiFi truststore into cogstack-root-ca
 k3s-load-certs-nifi: ## Load the NiFi keystore into nifi-tls
 k3s-load-certs-nginx: ## Load the NGINX certificate and key into nginx-tls
 k3s-load-certs-opensearch: ## Load the shared node certificate into opensearch-node-tls
+k3s-load-certs-opensearch-dashboards: ## Load the browser-facing certificate into dashboards-tls
 
-k3s-load-certs-all k3s-load-certs-root-ca k3s-load-certs-nifi k3s-load-certs-nginx k3s-load-certs-opensearch:
+k3s-load-certs-all k3s-load-certs-root-ca k3s-load-certs-nifi k3s-load-certs-nginx k3s-load-certs-opensearch k3s-load-certs-opensearch-dashboards:
 	@set -eo pipefail; \
 	. ./env/general.env; \
 	namespace="$${KUBE_NAMESPACE:?Set KUBE_NAMESPACE in env/general.env}"; \
@@ -109,6 +111,8 @@ k3s-load-certs-all k3s-load-certs-root-ca k3s-load-certs-nifi k3s-load-certs-ngi
 				--from-file="node.crt=$$certs/opensearch/opensearch-shared.crt" \
 				--from-file="node.key=$$certs/opensearch/opensearch-shared.key" \
 				--from-file="ca.crt=$$certs/opensearch/elastic-stack-ca.crt.pem");; \
+		opensearch-dashboards) secret=(tls dashboards-tls \
+			--cert="$$certs/opensearch/es_kibana_client.pem" --key="$$certs/opensearch/es_kibana_client.key");; \
 		esac; \
 		manifest=$$(kubectl -n "$$namespace" create secret "$${secret[@]}" --dry-run=client -o yaml); \
 		manifests+=("$$manifest"); \
@@ -157,60 +161,19 @@ k3s-load-env-nifi k3s-load-env-nginx k3s-load-env-opensearch:
 
 # ======================================================================================================================================================
 
-.PHONY: helm-values-all helm-values-opensearch helm-values-opensearch-dashboards
-
-helm-values-all: helm-values-opensearch helm-values-opensearch-dashboards ## Render the OpenSearch and Dashboards Helm values
-helm-values-opensearch: ## Render OpenSearch values.yaml from env/opensearch.env
-helm-values-opensearch-dashboards: ## Render OpenSearch Dashboards values.yaml from env/opensearch-dashboards.env
-
-helm-values-opensearch helm-values-opensearch-dashboards:
-	@set -e; \
-	service=$(@:helm-values-%=%); \
-	env_file="./env/$$service.env"; \
-	set -a; \
-	. "$$env_file"; \
-	set +a; \
-	if [ "$$service" = opensearch ]; then \
-		export OPENSEARCH_K3S_NODE_AFFINITY='{}'; \
-		IFS=$$' ,\t' read -r -a nodes <<< "$${OPENSEARCH_K3S_BLACKLIST//$$'\n'/ }"; \
-		if (( $${#nodes[@]} )); then \
-			node_label='[a-z0-9]([a-z0-9-]*[a-z0-9])?'; \
-			for node in "$${nodes[@]}"; do \
-				if [[ $${#node} -gt 253 || ! "$$node" =~ ^$$node_label([.]$$node_label)*$$ ]]; then \
-					printf 'Invalid Kubernetes node name in OPENSEARCH_K3S_BLACKLIST: %s\n' "$$node" >&2; \
-					exit 1; \
-				fi; \
-			done; \
-			printf -v fields '{key: metadata.name, operator: NotIn, values: ["%s"]},' "$${nodes[@]}"; \
-			OPENSEARCH_K3S_NODE_AFFINITY="{requiredDuringSchedulingIgnoredDuringExecution: {nodeSelectorTerms: [{matchFields: [$${fields%,}]}]}}"; \
-		fi; \
-	fi; \
-	chart="charts/$$service"; \
-	template="$$chart/values.env.yaml"; \
-	variables=$$(envsubst --variables "$$(cat "$$template")"); \
-	for name in $$variables; do \
-		value="$${!name:?Set $$name in $$env_file before rendering}"; \
-		if [[ "$$name" == *_DOCKER_RAM && "$$value" =~ ^([0-9]+([.][0-9]+)?)([kmgtp])[bB]?$$ ]]; then \
-			unit=$$(printf '%s' "$${BASH_REMATCH[3]}" | tr kmgtp KMGTP); \
-			export "$$name=$${BASH_REMATCH[1]}$${unit}i"; \
-		fi; \
-	done; \
-	tmp=$$(mktemp -d "$$chart/.values.XXXXXX"); \
-	trap 'rm -rf -- "$$tmp"' EXIT; \
-	envsubst < "$$template" > "$$tmp/values.yaml"; \
-	mv -- "$$tmp/values.yaml" "$$chart/values.yaml"
-
-# ======================================================================================================================================================
-
 .PHONY: k3s-install-nifi k3s-install-nginx k3s-install-ocr-service k3s-install-nifi-stack
 .PHONY: k3s-uninstall-nifi k3s-uninstall-nginx k3s-uninstall-ocr-service k3s-uninstall-nifi-stack
+.PHONY: k3s-install-opensearch k3s-install-opensearch-dashboards k3s-install-opensearch-stack k3s-bootstrap-opensearch
+.PHONY: k3s-uninstall-opensearch k3s-uninstall-opensearch-dashboards k3s-uninstall-opensearch-stack
 
 # Install static manifests in the namespace from env/general.env.
 k3s-install-nifi: k3s-load-env-nifi ## Apply the NiFi manifest and wait for readiness
 k3s-install-nginx: k3s-load-env-nginx ## Apply the NGINX manifest and wait for readiness
 k3s-install-ocr-service: ## Apply the OCR Service manifest and wait for readiness
+k3s-install-opensearch: k3s-load-env-opensearch ## Apply the OpenSearch manifest and wait for readiness
+k3s-install-opensearch-dashboards: ## Apply the Dashboards manifest and wait for readiness
 
-k3s-install-nifi k3s-install-nginx k3s-install-ocr-service:
+k3s-install-nifi k3s-install-nginx k3s-install-ocr-service k3s-install-opensearch k3s-install-opensearch-dashboards:
 	@set -e; \
 	. ./env/general.env; \
 	namespace="$${KUBE_NAMESPACE:?Set KUBE_NAMESPACE in env/general.env}"; \
@@ -219,6 +182,8 @@ k3s-install-nifi k3s-install-nginx k3s-install-ocr-service:
 		nifi) workload=statefulset/cogstack-nifi;; \
 		nginx) workload=deployment/cogstack-nginx;; \
 		ocr-service) workload=deployment/ocr-service;; \
+		opensearch) workload=statefulset/opensearch-cluster-master;; \
+		opensearch-dashboards) workload=deployment/opensearch-dashboards;; \
 	esac; \
 	kubectl -n "$$namespace" apply -f "charts/$$service/rendered.yaml"; \
 	kubectl -n "$$namespace" rollout status "$$workload" --timeout="$${K3S_TIMEOUT:-10m}"
@@ -226,11 +191,19 @@ k3s-install-nifi k3s-install-nginx k3s-install-ocr-service:
 k3s-install-nifi-stack: k3s-install-nifi ## Install NiFi and then NGINX from their manifests
 	$(MAKE) k3s-install-nginx
 
+k3s-bootstrap-opensearch: k3s-load-auth-opensearch ## Initialize OpenSearch Security
+
+k3s-install-opensearch-stack: k3s-install-opensearch ## Install OpenSearch and then Dashboards from their manifests
+	@if [ "$${BOOTSTRAP_OPENSEARCH_SECURITY:-1}" = 1 ]; then $(MAKE) k3s-bootstrap-opensearch; fi
+	$(MAKE) k3s-install-opensearch-dashboards
+
 k3s-uninstall-nifi: ## Delete the NiFi workloads and retain their PVCs
 k3s-uninstall-nginx: ## Delete the NGINX workloads
 k3s-uninstall-ocr-service: ## Delete the OCR Service workloads
+k3s-uninstall-opensearch: ## Delete the OpenSearch workloads and retain their PVCs
+k3s-uninstall-opensearch-dashboards: ## Delete the Dashboards workloads
 
-k3s-uninstall-nifi k3s-uninstall-nginx k3s-uninstall-ocr-service:
+k3s-uninstall-nifi k3s-uninstall-nginx k3s-uninstall-ocr-service k3s-uninstall-opensearch k3s-uninstall-opensearch-dashboards:
 	@set -e; \
 	. ./env/general.env; \
 	namespace="$${KUBE_NAMESPACE:?Set KUBE_NAMESPACE in env/general.env}"; \
@@ -241,23 +214,13 @@ k3s-uninstall-nifi k3s-uninstall-nginx k3s-uninstall-ocr-service:
 k3s-uninstall-nifi-stack: k3s-uninstall-nginx ## Uninstall NGINX, then NiFi, and retain PVCs
 	$(MAKE) k3s-uninstall-nifi
 
+k3s-uninstall-opensearch-stack: k3s-uninstall-opensearch-dashboards ## Uninstall Dashboards, then OpenSearch, and retain PVCs
+	$(MAKE) k3s-uninstall-opensearch
+
 # ======================================================================================================================================================
 
 .PHONY: helm-install
-.PHONY: helm-install-opensearch helm-install-opensearch-dashboards helm-install-opensearch-stack k3s-bootstrap-opensearch
 
-# Set KUBE_NAMESPACE in deployment/env/general.env and create the namespace
-# and required Secrets and ConfigMaps. Run these from the repository root.
-# Load dashboards-auth first to share its service account password with bootstrap.
-#   make -C deployment k3s-load-auth-opensearch-dashboards
-#   make -C deployment helm-install-opensearch
-#   make -C deployment k3s-load-auth-opensearch
-#   make -C deployment helm-install-opensearch-dashboards HELM_VALUES=/path/to/dashboards-values.yaml
-# The stack initializes Security on first install. Set BOOTSTRAP_OPENSEARCH_SECURITY=0 to skip bootstrap.
-#   make -C deployment helm-install-opensearch-stack HELM_VALUES=/path/to/dashboards-values.yaml
-# The stack target uses HELM_VALUES for Dashboards.
-# HELM_VALUES accepts an absolute path, a path relative to deployment/, or - for stdin.
-# HELM_TIMEOUT defaults to 10m.
 helm-install: ## Install or upgrade CHART with optional HELM_VALUES and HELM_TIMEOUT
 	@set -e; \
 	. ./env/general.env; \
@@ -265,49 +228,9 @@ helm-install: ## Install or upgrade CHART with optional HELM_VALUES and HELM_TIM
 	chart="charts/$${CHART:?Set CHART to a directory under deployment/charts}"; \
 	release="$$CHART"; \
 	args=(); \
-	case "$$CHART" in \
-		opensearch|opensearch-dashboards) \
-			helm repo add opensearch https://opensearch-project.github.io/helm-charts/; \
-			helm dependency build "$$chart";; \
-	esac; \
-	if [ "$$CHART" = opensearch ]; then \
-		args+=(--set-file "opensearch.config.opensearch\\.yml=$$chart/config/opensearch.yml"); \
-	fi; \
 	if [ -n "$${HELM_VALUES:-}" ]; then args+=(-f "$$HELM_VALUES"); fi; \
 	helm upgrade --install "$$release" "$$chart" -n "$$namespace" \
 		--wait --timeout "$${HELM_TIMEOUT:-10m}" "$${args[@]}"
-
-helm-install-opensearch: k3s-load-env-opensearch ## Load the OpenSearch environment, then install or upgrade OpenSearch
-	$(MAKE) helm-install CHART=opensearch
-
-helm-install-opensearch-dashboards: ## Install or upgrade OpenSearch Dashboards
-	$(MAKE) helm-install CHART=opensearch-dashboards
-
-k3s-bootstrap-opensearch: k3s-load-auth-opensearch ## Alias for k3s-load-auth-opensearch
-
-helm-install-opensearch-stack: ## Install OpenSearch and then Dashboards
-	$(MAKE) helm-install-opensearch HELM_VALUES=
-	@if [ "$${BOOTSTRAP_OPENSEARCH_SECURITY:-1}" = 1 ]; then $(MAKE) k3s-bootstrap-opensearch; fi
-	$(MAKE) helm-install-opensearch-dashboards
-
-# ======================================================================================================================================================
-
-.PHONY: helm-uninstall-opensearch helm-uninstall-opensearch-dashboards helm-uninstall-opensearch-stack
-
-# Reinstall in the same namespace with the same StatefulSet names to reuse the retained PVCs.
-helm-uninstall-opensearch: ## Uninstall OpenSearch and retain its PVCs
-helm-uninstall-opensearch-dashboards: ## Uninstall OpenSearch Dashboards
-
-helm-uninstall-opensearch helm-uninstall-opensearch-dashboards:
-	@set -e; \
-	. ./env/general.env; \
-	namespace="$${KUBE_NAMESPACE:?Set KUBE_NAMESPACE in env/general.env}"; \
-	release=$(@:helm-uninstall-%=%); \
-	helm uninstall "$$release" -n "$$namespace" --ignore-not-found \
-		--cascade foreground --wait --timeout "$${HELM_TIMEOUT:-10m}"
-
-helm-uninstall-opensearch-stack: helm-uninstall-opensearch-dashboards ## Uninstall Dashboards, then OpenSearch, and retain PVCs
-	$(MAKE) helm-uninstall-opensearch
 
 # ======================================================================================================================================================
 

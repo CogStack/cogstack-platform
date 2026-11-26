@@ -11,26 +11,28 @@ metadata:
     app.kubernetes.io/version: "3.9.0"
     app.kubernetes.io/managed-by: Helm
 ---
-# Source: opensearch-dashboards/charts/opensearch-dashboards/templates/rolebinding.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+# Source: opensearch-dashboards/charts/opensearch-dashboards/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
 metadata:
-  labels:
+  name: opensearch-dashboards-config
+  labels: 
     helm.sh/chart: opensearch-dashboards-3.9.0
     app.kubernetes.io/name: opensearch-dashboards
     app.kubernetes.io/instance: opensearch-dashboards
     app.kubernetes.io/version: "3.9.0"
     app.kubernetes.io/managed-by: Helm
-  name: opensearch-dashboards-dashboards-rolebinding
-roleRef:
-  kind: Role
-  name: opensearch-dashboards-dashboards
-  apiGroup: rbac.authorization.k8s.io
-subjects:
-- kind: ServiceAccount
-  name: opensearch-dashboards-dashboards
-  namespace: default
-
+data:
+  opensearch_dashboards.yml: |
+    opensearch.ssl.certificateAuthorities:
+    - /tls/ca/ca.crt
+    opensearch.ssl.verificationMode: full
+    opensearch_security.cookie.password: ${COOKIE_PASS}
+    opensearch_security.cookie.secure: true
+    opensearchDashboards.index: .kibana
+    server.ssl.certificate: /tls/server/tls.crt
+    server.ssl.enabled: true
+    server.ssl.key: /tls/server/tls.key
 ---
 # Source: opensearch-dashboards/charts/opensearch-dashboards/templates/service.yaml
 apiVersion: v1
@@ -83,11 +85,27 @@ spec:
         app.kubernetes.io/name: opensearch-dashboards
         app.kubernetes.io/instance: opensearch-dashboards
       annotations:
+        configchecksum: 560e54f7b0a1bfceca9f158c8259214cdba38c0224504307e1def2edebce4d5
     spec:
       securityContext:
         {}
       serviceAccountName: opensearch-dashboards-dashboards
       volumes:
+        - name: server-tls
+          secret:
+            secretName: dashboards-tls
+        - name: config
+          configMap:
+            name: opensearch-dashboards-config
+        # Currently some extra blocks accept strings
+        # to continue with backwards compatibility this is being kept
+        # whilst also allowing for yaml to be specified too.
+        - name: ca
+          secret:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            secretName: opensearch-node-tls
       containers:
       - name: dashboards
         securityContext:
@@ -127,6 +145,21 @@ spec:
           value: "https://opensearch-cluster-master:9200"
         - name: SERVER_HOST
           value: "0.0.0.0"
+        - name: OPENSEARCH_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: dashboards-auth
+              key: username
+        - name: OPENSEARCH_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: dashboards-auth
+              key: password
+        - name: COOKIE_PASS
+          valueFrom:
+            secretKeyRef:
+              name: dashboards-auth
+              key: cookie
         ports:
         - containerPort: 5601
           name: http
@@ -139,3 +172,14 @@ spec:
             cpu: "1"
             memory: 1Gi
         volumeMounts:
+          - name: server-tls
+            mountPath: /tls/server
+          - name: config
+            mountPath: /usr/share/opensearch-dashboards/config/opensearch_dashboards.yml
+            subPath: opensearch_dashboards.yml
+          # Currently some extra blocks accept strings
+          # to continue with backwards compatibility this is being kept
+          # whilst also allowing for yaml to be specified too.
+          - mountPath: /tls/ca
+            name: ca
+            readOnly: true

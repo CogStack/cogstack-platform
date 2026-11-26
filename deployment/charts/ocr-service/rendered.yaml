@@ -5,11 +5,8 @@ kind: ServiceAccount
 metadata:
   name: ocr-service
   labels:
-    helm.sh/chart: ocr-service-helm-0.1.0
     app.kubernetes.io/name: ocr-service-helm
     app.kubernetes.io/instance: ocr-service
-    app.kubernetes.io/version: "1.1.1"
-    app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 
 ---
@@ -19,11 +16,8 @@ kind: Service
 metadata:
   name: ocr-service
   labels:
-    helm.sh/chart: ocr-service-helm-0.1.0
     app.kubernetes.io/name: ocr-service-helm
     app.kubernetes.io/instance: ocr-service
-    app.kubernetes.io/version: "1.1.1"
-    app.kubernetes.io/managed-by: Helm
 spec:
   type: ClusterIP
   ports:
@@ -42,11 +36,8 @@ kind: Deployment
 metadata:
   name: ocr-service
   labels:
-    helm.sh/chart: ocr-service-helm-0.1.0
     app.kubernetes.io/name: ocr-service-helm
     app.kubernetes.io/instance: ocr-service
-    app.kubernetes.io/version: "1.1.1"
-    app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
   selector:
@@ -56,11 +47,8 @@ spec:
   template:
     metadata:
       labels:
-        helm.sh/chart: ocr-service-helm-0.1.0
         app.kubernetes.io/name: ocr-service-helm
         app.kubernetes.io/instance: ocr-service
-        app.kubernetes.io/version: "1.1.1"
-        app.kubernetes.io/managed-by: Helm
     spec:
       serviceAccountName: ocr-service
       securityContext:
