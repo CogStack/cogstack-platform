@@ -110,7 +110,7 @@ k3s-load-certs-all k3s-load-certs-root-ca k3s-load-certs-nifi k3s-load-certs-ngi
 
 .PHONY: k3s-load-auth-nifi k3s-load-auth-opensearch k3s-load-auth-opensearch-dashboards
 
-# Uses env/authentication.env. Set NIFI_AUTH_FILE=env/authentication_dev.env for development.
+# Uses env/authentication.env. Set NIFI_AUTH_FILE to choose another auth file.
 k3s-load-auth-nifi: ## Prompt for missing credentials and load the NiFi auth Secret
 	@bash scripts/security/load_nifi_auth.sh
 

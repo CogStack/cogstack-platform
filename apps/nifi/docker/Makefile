@@ -3,8 +3,8 @@ SHELL := /usr/bin/env bash
 
 DC_START_CMD := up -d
 DC_STOP_CMD := stop
-COMPOSE_DEV := docker compose --env-file ../../../deployment/env/certificates_dev.env \
-	--env-file ../../../deployment/env/authentication_dev.env \
+COMPOSE_DEV := docker compose --env-file ../../../deployment/env/certificates.env \
+	--env-file ../../../deployment/env/authentication.env \
 	$(if $(wildcard .env),--env-file .env) \
 	-f docker-compose.base.yml -f docker-compose.dev.yml
 COMPOSE_PROD := docker compose -f docker-compose.base.yml -f docker-compose.prod.yml

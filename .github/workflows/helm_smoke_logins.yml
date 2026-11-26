@@ -9,6 +9,8 @@ on:
       - 'deployment/charts/opensearch/**'
       - 'deployment/charts/opensearch-dashboards/**'
       - 'deployment/Makefile'
+      - 'deployment/env/authentication.env'
+      - 'deployment/env/certificates.env'
       - 'deployment/env/general.env'
       - 'deployment/scripts/security/**'
       - 'deployment/security/templates/**'
@@ -71,6 +73,7 @@ jobs:
           kubectl create configmap nifi-env --from-literal=NIFI_WEB_PROXY_HOST=127.0.0.1:8443
           NIFI_SINGLE_USER_CREDENTIALS_USERNAME="$SINGLE_USER_CREDENTIALS_USERNAME" \
             NIFI_SINGLE_USER_CREDENTIALS_PASSWORD="$SMOKE_PASSWORD" \
+            NIFI_SENSITIVE_PROPS_KEY="$(openssl rand -hex 16)" \
             KEYSTORE_PASSWORD="$SMOKE_PASSWORD" TRUSTSTORE_PASSWORD="$SMOKE_PASSWORD" \
             make -C deployment k3s-load-auth-nifi
           make -C deployment helm-install-nifi HELM_TIMEOUT=15m

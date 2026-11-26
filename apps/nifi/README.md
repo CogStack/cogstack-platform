@@ -30,8 +30,8 @@ for the NiFi login. Use at least 12 characters for the single-user password.
 Use `COGSTACK_NIFI_ENV_FILE` to select another deployment's `nifi.env`.
 
 The dev Make targets take their sample store passwords and login from
-[`certificates_dev.env`](../../deployment/env/certificates_dev.env) and
-[`authentication_dev.env`](../../deployment/env/authentication_dev.env).
+[`certificates.env`](../../deployment/env/certificates.env) and
+[`authentication.env`](../../deployment/env/authentication.env).
 Set your own values in `nifi.env` to override the samples.
 
 Preserve `NIFI_SENSITIVE_PROPS_KEY` with the flow configuration so NiFi can

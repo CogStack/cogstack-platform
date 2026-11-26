@@ -20,10 +20,7 @@ if (( ${#NIFI_SINGLE_USER_CREDENTIALS_PASSWORD} < 12 )); then
     printf 'NiFi login password must be at least 12 characters.\n' >&2
     exit 1
 fi
-if [[ "$auth_file" -ef "$script_dir/../../env/authentication_dev.env" ]]; then
-    # shellcheck source=../../env/certificates_dev.env
-    source "$script_dir/../../env/certificates_dev.env"
-elif [[ "$auth_file" -ef "$script_dir/../../env/authentication.env" ]]; then
+if [[ "$auth_file" -ef "$script_dir/../../env/authentication.env" ]]; then
     # shellcheck source=../../env/certificates.env
     source "$script_dir/../../env/certificates.env"
 fi

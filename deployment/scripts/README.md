@@ -14,12 +14,12 @@ Java's `keytool`. `SECURITY_DIR` defaults to `deployment/security/`.
 The generators prompt for missing passwords with hidden input in a terminal.
 Export the required variables before running from CI or with redirected input.
 
-To use [sample store passwords](../env/certificates_dev.env) for local development,
+To use [sample store passwords](../env/certificates.env) for local development,
 load them before running the root CA and NiFi generators.
 
 ```bash
 set -a
-source deployment/env/certificates_dev.env
+source deployment/env/certificates.env
 set +a
 ```
 
