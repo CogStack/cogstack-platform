@@ -16,6 +16,11 @@ Prepare these resources in the release namespace before installing:
 | Secret | `cogstack-root-ca` | `ca.crt` and `truststore.jks`; the public CA and shared truststore. |
 | Secret | `nifi-tls` | `nifi-keystore.jks`; the NiFi node certificate and private key. |
 
+Both `make -C deployment helm-install-nifi` and
+`make -C deployment helm-install-nifi-stack` load `NIFI_WEB_PROXY_HOST` from
+`deployment/env/nifi.env` into the ConfigMap before installing NiFi. Use
+`make -C deployment k3s-load-env-nifi` to apply the ConfigMap on its own.
+
 Set `certificates.rootCASecret` and `certificates.existingSecret` to use different
 certificate Secret names. The environment ConfigMap and authentication Secret
 names are currently fixed in the workload template.

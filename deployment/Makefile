@@ -121,6 +121,17 @@ k3s-load-auth-opensearch-dashboards: ## Load the OpenSearch Dashboards auth Secr
 k3s-load-auth-opensearch k3s-load-auth-opensearch-dashboards:
 	@bash scripts/security/load_opensearch_auth.sh $(@:k3s-load-auth-%=%)
 
+.PHONY: k3s-load-env-nifi
+
+k3s-load-env-nifi: ## Load the NiFi proxy hosts into the nifi-env ConfigMap
+	@set -eo pipefail; \
+	. ./env/general.env; \
+	namespace="$${KUBE_NAMESPACE:?Set KUBE_NAMESPACE in env/general.env}"; \
+	. ./env/nifi.env; \
+	kubectl -n "$$namespace" create configmap nifi-env \
+		--from-literal="NIFI_WEB_PROXY_HOST=$${NIFI_WEB_PROXY_HOST-}" --dry-run=client -o yaml | \
+		kubectl -n "$$namespace" apply --server-side --field-manager=cogstack-env -f -
+
 # ======================================================================================================================================================
 
 .PHONY: helm-values-all helm-values-nifi helm-values-nginx helm-values-opensearch helm-values-opensearch-dashboards
@@ -223,13 +234,13 @@ helm-install: ## Install or upgrade CHART with optional HELM_VALUES and HELM_TIM
 	helm upgrade --install "$$release" "$$chart" -n "$$namespace" \
 		--wait --timeout "$${HELM_TIMEOUT:-10m}" "$${args[@]}"
 
-helm-install-nifi: ## Install or upgrade NiFi
+helm-install-nifi: k3s-load-env-nifi ## Load the NiFi environment, then install or upgrade NiFi
 	$(MAKE) helm-install CHART=nifi
 
 helm-install-nginx: ## Install or upgrade NGINX for NiFi
 	$(MAKE) helm-install CHART=nginx
 
-helm-install-nifi-stack: helm-install-nifi ## Wait for NiFi, then install or upgrade NGINX
+helm-install-nifi-stack: helm-install-nifi ## Load the NiFi environment, then install or upgrade NiFi and NGINX
 	$(MAKE) helm-install-nginx
 
 helm-install-opensearch: ## Install or upgrade OpenSearch
