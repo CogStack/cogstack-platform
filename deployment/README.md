@@ -8,14 +8,7 @@ Run the Makefile commands below from the `deployment/` directory. [Deployment Ma
 > NGINX HTTPS and OpenSearch transport certificates before preparing the charts.
 
 Use a Debian, Ubuntu, or RHEL server with a full repository checkout, systemd,
-network access, Bash, GNU Make, and `sudo`. With K3s ServiceLB, add `traefik`
-to the `disable` list in `/etc/rancher/k3s/config.yaml` on each server before
-setup to free TCP port `443` for NGINX. Run the following on the first server.
-
-```bash
-export KUBECONFIG="$HOME/.kube/config"
-make setup-all
-```
+network access, Bash, GNU Make, and `sudo`.
 
 `setup-all` runs `setup-install-pre-requisites`, `setup-k3s-cluster-init`,
 `setup-k3s-namespace`, and `setup-verify` in order. It installs the host tools,
@@ -58,8 +51,6 @@ absolute path as `NIFI_AUTH_FILE` and `OPENSEARCH_AUTH_FILE`. Set
 `NIFI_SINGLE_USER_CREDENTIALS_USERNAME` and `NIFI_SINGLE_USER_CREDENTIALS_PASSWORD`
 for NiFi, `OPENSEARCH_KIBANA_PASSWORD` for the Dashboards service account, and
 `OPENSEARCH_ANALYST_PASSWORD` to sign in to Dashboards as `cogstack_user`.
-Install `htpasswd` for OpenSearch (`apache2-utils` on Debian or Ubuntu,
-`httpd-tools` on RHEL).
 
 A fresh checkout needs an `apps/nifi/env/nifi.env` file for the `env/nifi.env`
 symlink. [NiFi environment defaults](charts/README.md#nifi-environment)
@@ -85,17 +76,11 @@ With the namespace prepared, choose a stack or install the charts individually.
 | Makefile command | What it installs or upgrades |
 | --- | --- |
 | `make helm-install-nifi-stack` | NiFi, then NGINX for the HTTPS UI and API. |
-| `make helm-install-opensearch-stack BOOTSTRAP_OPENSEARCH_SECURITY=0` | OpenSearch, then Dashboards using the prepared authentication Secrets. |
+| `make helm-install-opensearch-stack` | OpenSearch, then Dashboards using the prepared authentication Secrets. |
 | `make helm-install-nifi` | The NiFi StatefulSet. Use NGINX for HTTPS access. |
 | `make helm-install-nginx` | The HTTPS gateway for the backends you deploy. |
 | `make helm-install-opensearch` | The OpenSearch cluster and its REST API. |
 | `make helm-install-opensearch-dashboards` | Dashboards. Install OpenSearch first. |
-
-`helm-install-opensearch-stack` defaults to `BOOTSTRAP_OPENSEARCH_SECURITY=1`,
-which loads its authentication Secrets. Use `0` after `k3s-prepare-all` to reuse
-those Secrets. Run `make help` for the individual preparation and install targets.
-For single-chart overrides, pass `HELM_VALUES=/absolute/path.yaml` to its
-install command. [Chart configuration and routes](charts/README.md#kubernetes-https-entry-point)
 
 ## Verify and access the applications
 

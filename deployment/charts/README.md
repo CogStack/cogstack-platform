@@ -58,20 +58,6 @@ OpenSearch, or OpenSearch Dashboards to render `values.env.yaml` into
 its listener port and applies `nginx.env` when present. Docker memory sizes such
 as `2g` render as `2Gi`.
 
-### NiFi environment
-
-`deployment/env/nifi.env` links to `apps/nifi/env/nifi.env`. If the file is
-missing, create it with these defaults for Helm values rendering.
-
-```bash
-NIFI_UID=1000
-NIFI_GID=1000
-NIFI_DOCKER_CPU_MIN=1
-NIFI_DOCKER_CPU_MAX=1
-NIFI_DOCKER_RAM=2G
-NIFI_INTERNAL_PORT_NGINX=8443
-```
-
 ## Validation and releases
 
 The shared chart workflow discovers `deployment/charts/*/Chart.yaml` for
