@@ -5,7 +5,7 @@ Dashboards connects to the OpenSearch Service and stores its saved objects in
 OpenSearch.
 
 From the repository root, load the `dashboards-auth` Secret in the namespace set
-in `deployment/env/general.env`. The target uses `KIBANA_PASSWORD` from the
+in `deployment/env/general.env`. The target uses `OPENSEARCH_KIBANA_PASSWORD` from the
 environment, `deployment/env/authentication.env`, or the existing Secret, and
 prompts if it needs a password. It generates a cookie key on first use and
 reuses it on subsequent runs. Load this Secret before the OpenSearch bootstrap

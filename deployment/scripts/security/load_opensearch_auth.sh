@@ -31,19 +31,21 @@ if [[ -f "$auth_file" || -n ${OPENSEARCH_AUTH_FILE:-} ]]; then source "$auth_fil
 # shellcheck source=password_prompt.sh
 source "$script_dir/password_prompt.sh"
 
+OPENSEARCH_KIBANA_PASSWORD=${OPENSEARCH_KIBANA_PASSWORD:-${KIBANA_PASSWORD:-}}
 existing=
-if [[ "$service" == opensearch-dashboards || -z ${KIBANA_PASSWORD:-} ]]; then
+if [[ "$service" == opensearch-dashboards || -z "$OPENSEARCH_KIBANA_PASSWORD" ]]; then
     existing=$(kubectl -n "$namespace" get secret dashboards-auth --ignore-not-found -o json)
 fi
-if [[ -z ${KIBANA_PASSWORD:-} && -n "$existing" ]]; then
+if [[ -z "$OPENSEARCH_KIBANA_PASSWORD" && -n "$existing" ]]; then
     # Append a character so command substitution preserves trailing newlines.
     stored_password=$(jq -j '(.data.password // "" | @base64d) + "."' <<< "$existing")
-    KIBANA_PASSWORD=${stored_password%.}
+    OPENSEARCH_KIBANA_PASSWORD=${stored_password%.}
 fi
-require_password KIBANA_PASSWORD
+require_password OPENSEARCH_KIBANA_PASSWORD
 
 if [[ "$service" == opensearch ]]; then
-    export OS_NIFI_PASSWORD OS_PIPELINE_PASSWORD OS_ANALYST_PASSWORD
+    export OPENSEARCH_NIFI_PASSWORD OPENSEARCH_PIPELINE_PASSWORD OPENSEARCH_ANALYST_PASSWORD \
+        OS_NIFI_PASSWORD OS_PIPELINE_PASSWORD OS_ANALYST_PASSWORD
     exec bash "$script_dir/../../charts/opensearch/security/bootstrap.sh" kubectl -n "$namespace" exec -i "$pod" --
 fi
 
@@ -59,7 +61,7 @@ manifest=$(jq -s '.[0] | {
     metadata: {name: "dashboards-auth", resourceVersion: .metadata.resourceVersion},
     data: {
         username: ("kibanaserver" | @base64),
-        password: (env.KIBANA_PASSWORD | @base64),
+        password: (env.OPENSEARCH_KIBANA_PASSWORD | @base64),
         cookie: env.DASHBOARDS_COOKIE_DATA
     }
 }' <<< "$existing")

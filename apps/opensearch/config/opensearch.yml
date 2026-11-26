@@ -1,5 +1,6 @@
 network.host: '${OPENSEARCH_NETWORK_HOST:0.0.0.0}'
 network.publish_host: '${OPENSEARCH_NETWORK_PUBLISH_HOST:}'
+logger.level: '${OPENSEARCH_LOG_LEVEL:INFO}'
 
 ###### CLUSTER CONFIGURATION ######
 

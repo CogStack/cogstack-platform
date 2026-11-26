@@ -6,14 +6,17 @@ if (( $# == 0 )); then
     printf 'Usage: bash %s <OpenSearch container exec command>\n' "$0" >&2
     exit 2
 fi
-: "${KIBANA_PASSWORD:?Set the Dashboards service account password}"
+OPENSEARCH_KIBANA_PASSWORD=${OPENSEARCH_KIBANA_PASSWORD:-${KIBANA_PASSWORD:-}}
+: "${OPENSEARCH_KIBANA_PASSWORD:?Set the Dashboards service account password}"
 
 policy_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
 certs=$(cd -- "${SECURITY_DIR:-$policy_dir/../../../deployment/security}/certificates/opensearch" && pwd -P)
 scratch=$(mktemp -d)
 trap 'rm -rf -- "$scratch"' EXIT
-printf '%s\0' kibanaserver "$KIBANA_PASSWORD" nifi "${OS_NIFI_PASSWORD:-}" \
-    cogstack_pipeline "${OS_PIPELINE_PASSWORD:-}" cogstack_user "${OS_ANALYST_PASSWORD:-}" > "$scratch/passwords"
+printf '%s\0' kibanaserver "$OPENSEARCH_KIBANA_PASSWORD" \
+    nifi "${OPENSEARCH_NIFI_PASSWORD:-${OS_NIFI_PASSWORD:-}}" \
+    cogstack_pipeline "${OPENSEARCH_PIPELINE_PASSWORD:-${OS_PIPELINE_PASSWORD:-}}" \
+    cogstack_user "${OPENSEARCH_ANALYST_PASSWORD:-${OS_ANALYST_PASSWORD:-}}" > "$scratch/passwords"
 
 bootstrap=$(cat <<'BASH'
 set -euo pipefail

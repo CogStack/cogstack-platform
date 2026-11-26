@@ -15,6 +15,11 @@ Prepare these resources in the release namespace before installing:
 | Secret | `cogstack-root-ca` | `ca.crt`, the public CA for upstream TLS verification. |
 | TLS Secret | `nginx-tls` | `tls.crt` and `tls.key` for the proxy certificate. |
 
+`make -C deployment helm-install-nginx` applies `nginx-env` before invoking Helm.
+Set `NGINX_NIFI_SERVER_NAME`, `NGINX_PROXY_CONTEXT_PATH`, or `NGINX_PROXY_SCHEME`
+in `deployment/env/nginx.env` to override the proxy defaults. Run
+`make -C deployment k3s-load-env-nginx` to apply the ConfigMap separately.
+
 The environment ConfigMap names are currently fixed in the template. Override
 certificate Secret names with `tls.rootCASecret` and `tls.existingSecret`.
 The chart references these inputs rather than creating them from host files.

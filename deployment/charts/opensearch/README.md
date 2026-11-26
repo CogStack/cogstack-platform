@@ -35,6 +35,10 @@ helm upgrade --install opensearch "$chart" -n search \
 ```
 
 Helm loads the bundled [`opensearch.yml`](config/opensearch.yml) through `--set-file`.
+`make -C deployment helm-install-opensearch` applies `OPENSEARCH_LOG_LEVEL`
+from `deployment/env/opensearch.env` before invoking Helm. To apply all three
+runtime ConfigMaps together, run `make -C deployment k3s-load-env-all`.
+
 Transport TLS checks the CA and shared node DN. Set `KUBE_NAMESPACE` or
 `CLUSTER_DOMAIN` when issuing the certificate if either differs from `search`
 or `cluster.local`.
@@ -48,15 +52,16 @@ For K3s, initialize Security after OpenSearch starts. The Make target uses
 make -C deployment k3s-load-auth-opensearch
 ```
 
-Set `KIBANA_PASSWORD` in the environment or in `deployment/env/authentication.env`.
+Set `OPENSEARCH_KIBANA_PASSWORD` in the environment or in `deployment/env/authentication.env`.
 Use `OPENSEARCH_AUTH_FILE` to select a different file. If no password is supplied,
 the target uses `dashboards-auth` if present or prompts in a terminal. The same
 file or environment can supply the optional user passwords below. On an
 initialized cluster the target reports that Security is already initialized.
 
 For direct Helm installs, run the bootstrap script with the following settings.
-Export `KIBANA_PASSWORD` for `kibanaserver`. Set `OS_NIFI_PASSWORD`,
-`OS_PIPELINE_PASSWORD`, or `OS_ANALYST_PASSWORD` to create `nifi`,
+Export `OPENSEARCH_KIBANA_PASSWORD` for `kibanaserver`. Set
+`OPENSEARCH_NIFI_PASSWORD`, `OPENSEARCH_PIPELINE_PASSWORD`, or
+`OPENSEARCH_ANALYST_PASSWORD` to create `nifi`,
 `cogstack_pipeline`, or `cogstack_user`, respectively. Export the absolute
 `SECURITY_DIR` for a packaged chart or custom certificate location. After the
 OpenSearch cluster forms, initialize Security once before starting Dashboards.
