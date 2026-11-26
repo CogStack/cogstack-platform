@@ -121,9 +121,11 @@ RUN $GROOVY_BIN/grape -V install org.apache.avro avro 1.12.0
 # INSTALL NAR extensions 
 WORKDIR /opt/nifi/nifi-current/lib/
 
-# Apache's base image already provides the standard NARs; add only missing extensions.
-RUN set -eux; \
-  base="https://repo.maven.apache.org/maven2/org/apache/nifi"; \
+# Add the extra extensions. Use the last working repository if CI hits a rate limit.
+RUN set -eu; \
+  repository="https://repo.maven.apache.org/maven2"; \
+  fallback="https://maven-central.storage-download.googleapis.com/maven2"; \
+  curl_options=( -fsSL --connect-timeout 20 --retry 2 --retry-connrefused --retry-max-time 120 ); \
   nars=( \
     nifi-snowflake-processors-nar \
     nifi-snowflake-services-nar \
@@ -141,17 +143,18 @@ RUN set -eux; \
     nifi-neo4j-cypher-service-nar \
     nifi-nar-provider-service-api-nar \
   ); \
-  for a in "${nars[@]}"; do \
-     url="${base}/${a}/${NIFI_VERSION}/${a}-${NIFI_VERSION}.nar"; \
-     echo "Downloading $a"; \
-     curl -fsSL \
-       --connect-timeout 20 \
-       --retry 5 \
-       --retry-connrefused \
-       --retry-delay 3 \
-       --retry-max-time 120 \
-       -o "${a}-${NIFI_VERSION}.nar" \
-       "$url"; \
+  for artifact in "${nars[@]}"; do \
+    nar="${artifact}-${NIFI_VERSION}.nar"; \
+    path="org/apache/nifi/${artifact}/${NIFI_VERSION}/${nar}"; \
+    echo "Downloading ${nar} from ${repository}"; \
+    if ! curl "${curl_options[@]}" -o "${nar}.tmp" "${repository}/${path}"; then \
+      echo "Retrying ${nar} from ${fallback}" >&2; \
+      curl "${curl_options[@]}" -o "${nar}.tmp" "${fallback}/${path}"; \
+      previous_repository="${repository}"; \
+      repository="${fallback}"; \
+      fallback="${previous_repository}"; \
+    fi; \
+    mv "${nar}.tmp" "${nar}"; \
   done
 
 ########################################################################################################
