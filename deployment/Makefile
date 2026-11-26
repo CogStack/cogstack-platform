@@ -162,8 +162,24 @@ helm-values-nifi helm-values-nginx helm-values-opensearch helm-values-opensearch
 
 # ======================================================================================================================================================
 
-.PHONY: helm-install
+.PHONY: helm-install helm-install-nifi helm-install-nginx helm-install-nifi-stack
+.PHONY: helm-install-opensearch helm-install-opensearch-dashboards helm-install-opensearch-stack k3s-bootstrap-opensearch
 
+# Set KUBE_NAMESPACE in deployment/env/general.env and create the namespace
+# and required Secrets and ConfigMaps. Run these from the repository root.
+#   make -C deployment helm-install-nifi HELM_TIMEOUT=15m
+#   make -C deployment helm-install-nginx
+#   make -C deployment helm-install-nifi-stack
+#   make -C deployment helm-install-opensearch
+# Export KIBANA_PASSWORD and initialize Security on a fresh OpenSearch cluster.
+#   make -C deployment k3s-bootstrap-opensearch
+#   make -C deployment helm-install-opensearch-dashboards HELM_VALUES=/path/to/dashboards-values.yaml
+# The stack initializes Security on first install. Export KIBANA_PASSWORD to match
+# the Dashboards Secret, or set BOOTSTRAP_OPENSEARCH_SECURITY=0 to skip bootstrap.
+#   make -C deployment helm-install-opensearch-stack HELM_VALUES=/path/to/dashboards-values.yaml
+# The stack target uses HELM_VALUES for Dashboards.
+# HELM_VALUES accepts an absolute path, a path relative to deployment/, or - for stdin.
+# HELM_TIMEOUT defaults to 10m.
 helm-install: ## Install or upgrade CHART with optional HELM_VALUES and HELM_TIMEOUT
 	@set -e; \
 	. ./env/general.env; \
@@ -183,6 +199,67 @@ helm-install: ## Install or upgrade CHART with optional HELM_VALUES and HELM_TIM
 	if [ -n "$${HELM_VALUES:-}" ]; then args+=(-f "$$HELM_VALUES"); fi; \
 	helm upgrade --install "$$release" "$$chart" -n "$$namespace" \
 		--wait --timeout "$${HELM_TIMEOUT:-10m}" "$${args[@]}"
+
+helm-install-nifi: ## Install or upgrade NiFi
+	$(MAKE) helm-install CHART=nifi
+
+helm-install-nginx: ## Install or upgrade NGINX for NiFi
+	$(MAKE) helm-install CHART=nginx
+
+helm-install-nifi-stack: helm-install-nifi ## Wait for NiFi, then install or upgrade NGINX
+	$(MAKE) helm-install-nginx
+
+helm-install-opensearch: ## Install or upgrade OpenSearch
+	$(MAKE) helm-install CHART=opensearch
+
+helm-install-opensearch-dashboards: ## Install or upgrade OpenSearch Dashboards
+	$(MAKE) helm-install CHART=opensearch-dashboards
+
+k3s-bootstrap-opensearch: ## Initialize OpenSearch Security if needed
+	@set -e; \
+	. ./env/general.env; \
+	namespace="$${KUBE_NAMESPACE:?Set KUBE_NAMESPACE in env/general.env}"; \
+	pod=opensearch-cluster-master-0; \
+	status=$$(kubectl -n "$$namespace" exec "$$pod" -- curl -sS --noproxy '*' \
+		--retry 3 --retry-delay 2 --retry-connrefused --max-time 10 \
+		--cacert /usr/share/opensearch/config/tls/ca.crt --output /dev/null \
+		--write-out '%{http_code}' https://localhost:9200/_plugins/_security/health); \
+	case "$$status" in \
+		200) printf '%s\n' 'OpenSearch Security is already initialized.';; \
+		503) bash charts/opensearch/security/bootstrap.sh kubectl -n "$$namespace" exec -i "$$pod" --;; \
+		*) printf 'OpenSearch Security health check returned HTTP %s.\n' "$$status" >&2; exit 1;; \
+	esac
+
+helm-install-opensearch-stack: ## Install OpenSearch and then Dashboards
+	$(MAKE) helm-install-opensearch HELM_VALUES=
+	@if [ "$${BOOTSTRAP_OPENSEARCH_SECURITY:-1}" = 1 ]; then $(MAKE) k3s-bootstrap-opensearch; fi
+	$(MAKE) helm-install-opensearch-dashboards
+
+# ======================================================================================================================================================
+
+.PHONY: helm-uninstall-nifi helm-uninstall-nginx helm-uninstall-nifi-stack
+.PHONY: helm-uninstall-opensearch helm-uninstall-opensearch-dashboards helm-uninstall-opensearch-stack
+
+# Reinstall in the same namespace with the same StatefulSet names to reuse the retained PVCs.
+helm-uninstall-nifi: ## Uninstall NiFi and retain its PVCs
+helm-uninstall-nginx: ## Uninstall NGINX
+helm-uninstall-opensearch: ## Uninstall OpenSearch and retain its PVCs
+helm-uninstall-opensearch-dashboards: ## Uninstall OpenSearch Dashboards
+
+helm-uninstall-nifi helm-uninstall-nginx helm-uninstall-opensearch helm-uninstall-opensearch-dashboards:
+	@set -e; \
+	. ./env/general.env; \
+	namespace="$${KUBE_NAMESPACE:?Set KUBE_NAMESPACE in env/general.env}"; \
+	release=$(@:helm-uninstall-%=%); \
+	case "$$release" in nifi|nginx) release="cogstack-$$release";; esac; \
+	helm uninstall "$$release" -n "$$namespace" --ignore-not-found \
+		--cascade foreground --wait --timeout "$${HELM_TIMEOUT:-10m}"
+
+helm-uninstall-nifi-stack: helm-uninstall-nginx ## Uninstall NGINX, then NiFi, and retain PVCs
+	$(MAKE) helm-uninstall-nifi
+
+helm-uninstall-opensearch-stack: helm-uninstall-opensearch-dashboards ## Uninstall Dashboards, then OpenSearch, and retain PVCs
+	$(MAKE) helm-uninstall-opensearch
 
 # ======================================================================================================================================================
 

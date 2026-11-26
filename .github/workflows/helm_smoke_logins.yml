@@ -75,7 +75,7 @@ jobs:
             --from-literal=SINGLE_USER_CREDENTIALS_PASSWORD="$SMOKE_PASSWORD" \
             --from-literal=INITIAL_ADMIN_IDENTITY="$SINGLE_USER_CREDENTIALS_USERNAME" \
             --from-literal=NIFI_SENSITIVE_PROPS_KEY="$(openssl rand -hex 16)"
-          make -C deployment helm-install CHART=nifi HELM_TIMEOUT=15m
+          make -C deployment helm-install-nifi HELM_TIMEOUT=15m
 
       - name: NiFi Helm login
         if: matrix.stack == 'nifi'
@@ -88,7 +88,7 @@ jobs:
         if: matrix.stack == 'nifi' || matrix.stack == 'nginx'
         run: |
           kubectl create configmap nginx-env
-          make -C deployment helm-install CHART=nginx HELM_TIMEOUT=5m
+          make -C deployment helm-install-nginx HELM_TIMEOUT=5m
           kubectl port-forward svc/cogstack-nginx 8443:8443 &
           trap 'kill "$!"' EXIT
           SINGLE_USER_CREDENTIALS_PASSWORD="$SMOKE_PASSWORD" bash .github/scripts/smoke_nifi_login.sh https://127.0.0.1:8443
@@ -97,9 +97,9 @@ jobs:
         if: matrix.stack == 'opensearch'
         run: |
           sudo sysctl -w vm.max_map_count=262144
-          make -C deployment helm-install CHART=opensearch
+          make -C deployment helm-install-opensearch
           KIBANA_PASSWORD="$SMOKE_PASSWORD" OS_ANALYST_PASSWORD="$SMOKE_PASSWORD" \
-            bash deployment/charts/opensearch/security/bootstrap.sh kubectl exec -i opensearch-cluster-master-0 --
+            make -C deployment k3s-bootstrap-opensearch
           kubectl port-forward svc/opensearch-cluster-master 9200:9200 &
           trap 'kill "$!"' EXIT
           curl -fsS --noproxy '*' --cacert "$SECURITY_DIR/certificates/root/root-ca.pem" \
@@ -115,7 +115,7 @@ jobs:
             --from-literal=password="$SMOKE_PASSWORD" --from-literal=cookie="$(openssl rand -hex 16)"
           kubectl create secret tls dashboards-tls \
             --cert="$certs/opensearch/es_kibana_client.pem" --key="$certs/opensearch/es_kibana_client.key"
-          make -C deployment helm-install CHART=opensearch-dashboards HELM_VALUES=- HELM_TIMEOUT=5m <<'YAML'
+          make -C deployment helm-install-opensearch-dashboards HELM_VALUES=- HELM_TIMEOUT=5m <<'YAML'
           opensearch-dashboards:
             opensearchAccount:
               secret: dashboards-auth
