@@ -190,6 +190,24 @@
                 { "type": "ops", "section": "Operations" }
             ]
         },
+        "apps/cohorter": {
+            "release-type": "simple",
+            "component": "cohorter",
+            "changelog-path": "CHANGELOG.md",
+            "bump-minor-pre-major": false,
+            "bump-patch-for-minor-pre-major": false,
+            "draft": false,
+            "prerelease": false
+        },
+        "apps/nifi": {
+            "release-type": "simple",
+            "component": "nifi",
+            "changelog-path": "CHANGELOG.md",
+            "bump-minor-pre-major": false,
+            "bump-patch-for-minor-pre-major": false,
+            "draft": false,
+            "prerelease": false
+        },
         "apps/ocr-service": {
             "release-type": "python",
             "component": "ocr-service",
