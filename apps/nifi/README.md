@@ -170,9 +170,8 @@ with external service, credential, or sample data requirements.
 
 ## Kubernetes
 
-The [NiFi chart](../../deployment/charts/nifi/README.md) and
-[NGINX chart](../../deployment/charts/nginx/README.md) document their ConfigMaps,
-TLS Secrets, and storage. Use those instructions for Helm deployments.
+The [NiFi and NGINX deployment instructions](../../deployment/charts/README.md#nifi-and-nginx)
+cover the manifests, ConfigMaps, TLS Secrets, and persistent storage.
 
 ## Dependency auditing
 
