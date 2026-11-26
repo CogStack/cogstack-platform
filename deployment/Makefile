@@ -108,11 +108,18 @@ k3s-load-certs-all k3s-load-certs-root-ca k3s-load-certs-nifi k3s-load-certs-ngi
 	printf -- '---\n%s\n' "$${manifests[@]}" | \
 		kubectl -n "$$namespace" apply --server-side --field-manager=cogstack-certificates -f -
 
-.PHONY: k3s-load-auth-nifi
+.PHONY: k3s-load-auth-nifi k3s-load-auth-opensearch k3s-load-auth-opensearch-dashboards
 
 # Uses env/authentication.env. Set NIFI_AUTH_FILE=env/authentication_dev.env for development.
 k3s-load-auth-nifi: ## Prompt for missing credentials and load the NiFi auth Secret
 	@bash scripts/security/load_nifi_auth.sh
+
+# Both targets use env/authentication.env unless OPENSEARCH_AUTH_FILE is set.
+k3s-load-auth-opensearch: ## Load configured users into a fresh OpenSearch cluster
+k3s-load-auth-opensearch-dashboards: ## Load the OpenSearch Dashboards auth Secret
+
+k3s-load-auth-opensearch k3s-load-auth-opensearch-dashboards:
+	@bash scripts/security/load_opensearch_auth.sh $(@:k3s-load-auth-%=%)
 
 # ======================================================================================================================================================
 
@@ -186,12 +193,12 @@ helm-values-nifi helm-values-nginx helm-values-opensearch helm-values-opensearch
 #   make -C deployment helm-install-nifi HELM_TIMEOUT=15m
 #   make -C deployment helm-install-nginx
 #   make -C deployment helm-install-nifi-stack
+# Load dashboards-auth first to share its service account password with bootstrap.
+#   make -C deployment k3s-load-auth-opensearch-dashboards
 #   make -C deployment helm-install-opensearch
-# Export KIBANA_PASSWORD and initialize Security on a fresh OpenSearch cluster.
-#   make -C deployment k3s-bootstrap-opensearch
+#   make -C deployment k3s-load-auth-opensearch
 #   make -C deployment helm-install-opensearch-dashboards HELM_VALUES=/path/to/dashboards-values.yaml
-# The stack initializes Security on first install. Export KIBANA_PASSWORD to match
-# the Dashboards Secret, or set BOOTSTRAP_OPENSEARCH_SECURITY=0 to skip bootstrap.
+# The stack initializes Security on first install. Set BOOTSTRAP_OPENSEARCH_SECURITY=0 to skip bootstrap.
 #   make -C deployment helm-install-opensearch-stack HELM_VALUES=/path/to/dashboards-values.yaml
 # The stack target uses HELM_VALUES for Dashboards.
 # HELM_VALUES accepts an absolute path, a path relative to deployment/, or - for stdin.
@@ -231,20 +238,7 @@ helm-install-opensearch: ## Install or upgrade OpenSearch
 helm-install-opensearch-dashboards: ## Install or upgrade OpenSearch Dashboards
 	$(MAKE) helm-install CHART=opensearch-dashboards
 
-k3s-bootstrap-opensearch: ## Initialize OpenSearch Security if needed
-	@set -e; \
-	. ./env/general.env; \
-	namespace="$${KUBE_NAMESPACE:?Set KUBE_NAMESPACE in env/general.env}"; \
-	pod=opensearch-cluster-master-0; \
-	status=$$(kubectl -n "$$namespace" exec "$$pod" -- curl -sS --noproxy '*' \
-		--retry 3 --retry-delay 2 --retry-connrefused --max-time 10 \
-		--cacert /usr/share/opensearch/config/tls/ca.crt --output /dev/null \
-		--write-out '%{http_code}' https://localhost:9200/_plugins/_security/health); \
-	case "$$status" in \
-		200) printf '%s\n' 'OpenSearch Security is already initialized.';; \
-		503) bash charts/opensearch/security/bootstrap.sh kubectl -n "$$namespace" exec -i "$$pod" --;; \
-		*) printf 'OpenSearch Security health check returned HTTP %s.\n' "$$status" >&2; exit 1;; \
-	esac
+k3s-bootstrap-opensearch: k3s-load-auth-opensearch ## Alias for k3s-load-auth-opensearch
 
 helm-install-opensearch-stack: ## Install OpenSearch and then Dashboards
 	$(MAKE) helm-install-opensearch HELM_VALUES=

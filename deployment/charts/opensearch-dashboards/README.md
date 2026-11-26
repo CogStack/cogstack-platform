@@ -4,11 +4,23 @@ Install this release in the same namespace as [OpenSearch](../opensearch/README.
 Dashboards connects to the OpenSearch Service and stores its saved objects in
 OpenSearch.
 
-For the shared Security policy, set `opensearch-dashboards.opensearchAccount.secret`
-to a Secret in the release namespace with keys `username`, `password`, and `cookie`.
-Use `kibanaserver`, the same password as `KIBANA_PASSWORD` at bootstrap, and a
-random cookie key. Use `opensearchDashboards.index: .kibana` in a fresh deployment
-to match the built-in `kibana_server` role.
+From the repository root, load the `dashboards-auth` Secret in the namespace set
+in `deployment/env/general.env`. The target uses `KIBANA_PASSWORD` from the
+environment, `deployment/env/authentication.env`, or the existing Secret, and
+prompts if it needs a password. It generates a cookie key on first use and
+reuses it on subsequent runs. Load this Secret before the OpenSearch bootstrap
+to share the `kibanaserver` password. If OpenSearch is already initialized, use
+its current `kibanaserver` password.
+
+```bash
+make -C deployment k3s-load-auth-opensearch-dashboards
+```
+
+Set `opensearch-dashboards.opensearchAccount.secret: dashboards-auth` in your Helm
+values. Set `opensearch_security.cookie.password: ${COOKIE_PASS}` in your
+`opensearch_dashboards.yml` to use the cookie key from the Secret. Use
+`opensearchDashboards.index: .kibana` in a fresh deployment to match the built-in
+`kibana_server` role.
 
 ```bash
 helm repo add opensearch https://opensearch-project.github.io/helm-charts/

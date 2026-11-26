@@ -39,6 +39,22 @@ Transport TLS checks the CA and shared node DN. Set `KUBE_NAMESPACE` or
 `CLUSTER_DOMAIN` when issuing the certificate if either differs from `search`
 or `cluster.local`.
 
+### Authentication
+
+For K3s, initialize Security after OpenSearch starts. The Make target uses
+`KUBE_NAMESPACE` from `deployment/env/general.env`.
+
+```bash
+make -C deployment k3s-load-auth-opensearch
+```
+
+Set `KIBANA_PASSWORD` in the environment or in `deployment/env/authentication.env`.
+Use `OPENSEARCH_AUTH_FILE` to select a different file. If no password is supplied,
+the target uses `dashboards-auth` if present or prompts in a terminal. The same
+file or environment can supply the optional user passwords below. On an
+initialized cluster the target reports that Security is already initialized.
+
+For direct Helm installs, run the bootstrap script with the following settings.
 Export `KIBANA_PASSWORD` for `kibanaserver`. Set `OS_NIFI_PASSWORD`,
 `OS_PIPELINE_PASSWORD`, or `OS_ANALYST_PASSWORD` to create `nifi`,
 `cogstack_pipeline`, or `cogstack_user`, respectively. Export the absolute
