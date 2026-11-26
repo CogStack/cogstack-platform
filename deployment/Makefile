@@ -1,7 +1,7 @@
 SHELL := /usr/bin/env bash
 .SHELLFLAGS := -o pipefail -c
 
-.PHONY: setup-install-pre-requisites setup-k3s-cluster-init setup-verify setup-k3s-cluster-remote setup-k3s-namespace help
+.PHONY: setup-all setup-install-pre-requisites setup-k3s-cluster-init setup-verify setup-k3s-cluster-remote setup-k3s-namespace help
 
 setup-install-pre-requisites: ## Install host tools, Docker, K3s, and Helm locally by default
 	bash scripts/installation_utils/install_os_tools_and_software.sh
@@ -21,6 +21,12 @@ setup-k3s-namespace: ## Create the namespace configured in env/general.env
 setup-verify: ## Check local Docker, Docker Compose, and K3s access without sudo
 	bash scripts/installation_utils/verify_docker.sh
 	bash scripts/installation_utils/verify_k3s.sh
+
+setup-all: ## Install prerequisites, initialize K3s, create the namespace, and verify
+	$(MAKE) setup-install-pre-requisites
+	$(MAKE) setup-k3s-cluster-init
+	$(MAKE) setup-k3s-namespace
+	$(MAKE) setup-verify
 
 # ======================================================================================================================================================
 
