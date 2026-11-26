@@ -7,6 +7,7 @@ on:
       - 'apps/nifi/**'
       - 'apps/nginx/**'
       - 'deployment/Makefile'
+      - 'deployment/make/**'
       - 'deployment/scripts/security/**'
       - 'deployment/security/templates/**'
       - '.github/scripts/smoke_nifi_login.sh'

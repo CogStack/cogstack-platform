@@ -9,6 +9,7 @@ on:
       - 'deployment/charts/opensearch/**'
       - 'deployment/charts/opensearch-dashboards/**'
       - 'deployment/Makefile'
+      - 'deployment/make/**'
       - 'deployment/env/authentication.env'
       - 'deployment/env/certificates.env'
       - 'deployment/env/general.env'

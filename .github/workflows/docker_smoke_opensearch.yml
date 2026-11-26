@@ -7,6 +7,7 @@ on:
       - 'apps/opensearch/**'
       - 'apps/opensearch-dashboards/**'
       - 'deployment/Makefile'
+      - 'deployment/make/**'
       - 'deployment/scripts/security/**'
       - 'deployment/security/templates/**'
       - '.github/workflows/docker_smoke_opensearch.yml'
