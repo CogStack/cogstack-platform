@@ -26,9 +26,7 @@ from the repository root.
 ```bash
 make -C deployment setup-k3s-namespace
 make -C deployment -j1 certs-root certs-nginx certs-opensearch-nodes NODES=opensearch-shared
-make -C deployment k3s-load-certs-all k3s-load-auth-nifi
-make -C deployment helm-install-nifi-stack
-make -C deployment helm-install-opensearch-stack
+make -C deployment -j1 k3s-prepare-all helm-install-nifi-stack helm-install-opensearch-stack BOOTSTRAP_OPENSEARCH_SECURITY=0
 ```
 
 Existing deployments must reload `nifi-auth` for NGINX before upgrading.

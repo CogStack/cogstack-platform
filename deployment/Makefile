@@ -115,7 +115,12 @@ k3s-load-certs-all k3s-load-certs-nginx k3s-load-certs-opensearch:
 	printf -- '---\n%s\n' "$${manifests[@]}" | \
 		kubectl -n "$$namespace" apply --server-side --field-manager=cogstack-certificates -f -
 
-.PHONY: k3s-load-auth-nifi k3s-load-auth-opensearch k3s-load-auth-opensearch-dashboards
+.PHONY: k3s-load-auth-all k3s-load-auth-nifi k3s-load-auth-opensearch k3s-load-auth-opensearch-dashboards
+
+k3s-load-auth-all: ## Load the NiFi, Dashboards, and OpenSearch auth Secrets
+	$(MAKE) k3s-load-auth-nifi
+	$(MAKE) k3s-load-auth-opensearch-dashboards
+	$(MAKE) k3s-load-auth-opensearch
 
 # Uses env/authentication.env. Set NIFI_AUTH_FILE to choose another auth file.
 k3s-load-auth-nifi: ## Load the NiFi flow encryption key and NGINX login Secret
@@ -212,6 +217,14 @@ helm-values-nifi helm-values-nginx helm-values-opensearch helm-values-opensearch
 	mv -- "$$tmp/values.yaml" "$$chart/values.yaml"
 
 # ======================================================================================================================================================
+
+.PHONY: k3s-prepare-all
+
+k3s-prepare-all: ## Render Helm values and load TLS, runtime, and auth resources
+	$(MAKE) helm-values-all
+	$(MAKE) k3s-load-certs-all
+	$(MAKE) k3s-load-env-all
+	$(MAKE) k3s-load-auth-all
 
 .PHONY: helm-install helm-install-nifi helm-install-nginx helm-install-nifi-stack
 .PHONY: helm-install-opensearch helm-install-opensearch-dashboards helm-install-opensearch-stack k3s-bootstrap-opensearch
