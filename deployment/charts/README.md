@@ -1,53 +1,37 @@
-# Helm charts
+# Kubernetes deployments
 
-Reusable deployment charts for CogStack. Each chart sits directly under this
-directory and declares its package name in `Chart.yaml`.
-Folder names use component names, such as `medcat-service` and `jupyter-hub`.
+## NiFi and NGINX
 
-## NiFi charts
-
-These charts were migrated from `cogstack_nifi/deploy/kubernetes/charts/`:
-
-| Chart | Purpose |
-| --- | --- |
-| [`nifi/`](nifi/README.md) | NiFi StatefulSet, Services, TLS settings and persistent storage. |
-| [`nginx/`](nginx/README.md) | TLS reverse proxy for the NiFi web Service, with optional Ingress. |
-
-The `nifi/` directory declares `name: nifi` in `Chart.yaml`, so Helm
-packages it as `nifi-<version>.tgz`.
-
-Run from the repository root:
+Set `KUBE_NAMESPACE` in `deployment/env/general.env`. For a new TLS bundle,
+run `make -C deployment certs` from the repository root. Load the certificates
+and NiFi credentials before applying the manifests.
 
 ```bash
-helm lint deployment/charts/nifi deployment/charts/nginx
-helm template cogstack-nifi deployment/charts/nifi --namespace cogstack
-helm template cogstack-nginx deployment/charts/nginx --namespace cogstack
+make -C deployment setup-k3s-namespace
+make -C deployment k3s-load-certs-root-ca k3s-load-certs-nifi k3s-load-certs-nginx
+make -C deployment k3s-load-auth-nifi
+make -C deployment k3s-install-nifi-stack
 ```
 
-See each chart's README for the ConfigMaps, Secrets and storage needed before
-installation. Run `make -C deployment helm-values-<chart>` for NiFi, NGINX,
-OpenSearch, or OpenSearch Dashboards to render `values.env.yaml` into
-`values.yaml` using `deployment/env/<chart>.env`. NGINX reads `nifi.env` for
-the upstream connection and applies `nginx.env` when present. The local
-`deployment/env/nifi.env` can link to `apps/nifi/env/nifi.env`. Docker memory
-sizes such as `2g` render as `2Gi`.
+The install target loads `nifi-env` and `nginx-env`, applies the
+[NiFi](nifi/rendered.yaml) and [NGINX](nginx/rendered.yaml) manifests, and waits
+for rollout. Set `NIFI_WEB_PROXY_HOST` in `deployment/env/nifi.env` or in the
+shell when the file is absent. Use `K3S_TIMEOUT` to change the rollout timeout.
 
-## Validation and releases
+NiFi needs a StorageClass or suitable pre-provisioned volumes. Its configuration
+and repository PVCs are retained when using `make -C deployment k3s-uninstall-nifi-stack`.
+An existing Helm release still tracks its workloads after `kubectl apply`.
+Treat Helm uninstall on those releases as workload deletion.
+
+## OCR Service
+
+Run `make -C deployment k3s-install-ocr-service` to apply the
+[OCR Service manifest](ocr-service/rendered.yaml) and wait for rollout. Set
+`OCR_SERVICE_OPERATION_MODE` to `NO_OCR` in the manifest for text extraction only.
+
+## Helm charts
 
 The shared chart workflow discovers `deployment/charts/*/Chart.yaml` for
-validation and packaging. Release-please registers each chart by its directory
-and uses its configured component for release tags, such as
-`helm-charts/nifi-v0.1.0`. The migrated charts start at `0.1.0` for their
-first platform release.
-
-The NiFi charts include `ci/ci-values.yaml` with zero replicas so chart-testing
-can validate Kubernetes resource installation without deployment-owned
-ConfigMaps and Secrets. Application startup and TLS checks require a separate
-runtime test with those inputs supplied.
-
-To package locally, keep generated archives outside the source tree:
-
-```bash
-helm package deployment/charts/nifi --destination /tmp
-helm package deployment/charts/nginx --destination /tmp
-```
+validation and packaging. Release-please registers published charts by directory.
+Use `make -C deployment helm-values-all` to render the environment-based Helm
+values for OpenSearch and Dashboards.

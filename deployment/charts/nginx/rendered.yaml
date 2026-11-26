@@ -5,7 +5,6 @@ kind: ConfigMap
 metadata:
   name: cogstack-nginx-env
 data:
-  NIFI_UPSTREAM_HOST: "cogstack-nifi.default.svc.cluster.local"
   NIFI_UPSTREAM_PORT: "8443"
   NIFI_UPSTREAM_TLS_NAME: "nifi"
   NIFI_INTERNAL_PORT_NGINX: "8443"
@@ -44,9 +43,6 @@ spec:
     metadata:
       labels:
         app: cogstack-nginx
-      annotations:
-        checksum/config: 7198c77393f626433efc4ddea8211bab399bd963bcc37e6751bf49d0c01b96bf
-
     spec:
       containers:
         - name: nginx
@@ -55,6 +51,14 @@ spec:
 
           ports:
             - containerPort: 8443
+
+          env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: NIFI_UPSTREAM_HOST
+              value: "cogstack-nifi.$(POD_NAMESPACE).svc.cluster.local"
 
           envFrom:
             - configMapRef:

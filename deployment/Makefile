@@ -157,49 +157,32 @@ k3s-load-env-nifi k3s-load-env-nginx k3s-load-env-opensearch:
 
 # ======================================================================================================================================================
 
-.PHONY: helm-values-all helm-values-nifi helm-values-nginx helm-values-opensearch helm-values-opensearch-dashboards
+.PHONY: helm-values-all helm-values-opensearch helm-values-opensearch-dashboards
 
-helm-values-all: helm-values-nifi helm-values-nginx helm-values-opensearch helm-values-opensearch-dashboards ## Render all four charts' environment-based values
-helm-values-nifi: ## Render NiFi values.yaml from env/nifi.env
-helm-values-nginx: ## Render NGINX values.yaml from env/nifi.env and optional env/nginx.env
+helm-values-all: helm-values-opensearch helm-values-opensearch-dashboards ## Render the OpenSearch and Dashboards Helm values
 helm-values-opensearch: ## Render OpenSearch values.yaml from env/opensearch.env
 helm-values-opensearch-dashboards: ## Render OpenSearch Dashboards values.yaml from env/opensearch-dashboards.env
 
-helm-values-nifi helm-values-nginx helm-values-opensearch helm-values-opensearch-dashboards:
+helm-values-opensearch helm-values-opensearch-dashboards:
 	@set -e; \
 	service=$(@:helm-values-%=%); \
 	env_file="./env/$$service.env"; \
 	set -a; \
-	if [ "$$service" = nginx ]; then \
-		: "$${NGINX_DOCKER_CPU_MIN:=1}" "$${NGINX_DOCKER_CPU_MAX:=1}" "$${NGINX_DOCKER_RAM:=512M}"; \
-		if [ -f "$$env_file" ] && [ -f ./env/nifi.env ]; then . ./env/nifi.env; fi; \
-		[ -f "$$env_file" ] || env_file=./env/nifi.env; \
-	fi; \
 	. "$$env_file"; \
 	set +a; \
-	case "$$service" in \
-		nifi) node_setting=NIFI_K3S_WHITELIST; export NIFI_K3S_ALLOWED_NODES='[]';; \
-		opensearch) node_setting=OPENSEARCH_K3S_BLACKLIST; export OPENSEARCH_K3S_NODE_AFFINITY='{}';; \
-		*) node_setting=;; \
-	esac; \
-	if [ -n "$$node_setting" ]; then \
-		node_list="$${!node_setting}"; \
-		IFS=$$' ,\t' read -r -a nodes <<< "$${node_list//$$'\n'/ }"; \
+	if [ "$$service" = opensearch ]; then \
+		export OPENSEARCH_K3S_NODE_AFFINITY='{}'; \
+		IFS=$$' ,\t' read -r -a nodes <<< "$${OPENSEARCH_K3S_BLACKLIST//$$'\n'/ }"; \
 		if (( $${#nodes[@]} )); then \
 			node_label='[a-z0-9]([a-z0-9-]*[a-z0-9])?'; \
 			for node in "$${nodes[@]}"; do \
 				if [[ $${#node} -gt 253 || ! "$$node" =~ ^$$node_label([.]$$node_label)*$$ ]]; then \
-					printf 'Invalid Kubernetes node name in %s: %s\n' "$$node_setting" "$$node" >&2; \
+					printf 'Invalid Kubernetes node name in OPENSEARCH_K3S_BLACKLIST: %s\n' "$$node" >&2; \
 					exit 1; \
 				fi; \
 			done; \
-			if [ "$$service" = nifi ]; then \
-				printf -v names '"%s",' "$${nodes[@]}"; \
-				NIFI_K3S_ALLOWED_NODES="[$${names%,}]"; \
-			else \
-				printf -v fields '{key: metadata.name, operator: NotIn, values: ["%s"]},' "$${nodes[@]}"; \
-				OPENSEARCH_K3S_NODE_AFFINITY="{requiredDuringSchedulingIgnoredDuringExecution: {nodeSelectorTerms: [{matchFields: [$${fields%,}]}]}}"; \
-			fi; \
+			printf -v fields '{key: metadata.name, operator: NotIn, values: ["%s"]},' "$${nodes[@]}"; \
+			OPENSEARCH_K3S_NODE_AFFINITY="{requiredDuringSchedulingIgnoredDuringExecution: {nodeSelectorTerms: [{matchFields: [$${fields%,}]}]}}"; \
 		fi; \
 	fi; \
 	chart="charts/$$service"; \
@@ -219,14 +202,52 @@ helm-values-nifi helm-values-nginx helm-values-opensearch helm-values-opensearch
 
 # ======================================================================================================================================================
 
-.PHONY: helm-install helm-install-nifi helm-install-nginx helm-install-nifi-stack
+.PHONY: k3s-install-nifi k3s-install-nginx k3s-install-ocr-service k3s-install-nifi-stack
+.PHONY: k3s-uninstall-nifi k3s-uninstall-nginx k3s-uninstall-ocr-service k3s-uninstall-nifi-stack
+
+# Install static manifests in the namespace from env/general.env.
+k3s-install-nifi: k3s-load-env-nifi ## Apply the NiFi manifest and wait for readiness
+k3s-install-nginx: k3s-load-env-nginx ## Apply the NGINX manifest and wait for readiness
+k3s-install-ocr-service: ## Apply the OCR Service manifest and wait for readiness
+
+k3s-install-nifi k3s-install-nginx k3s-install-ocr-service:
+	@set -e; \
+	. ./env/general.env; \
+	namespace="$${KUBE_NAMESPACE:?Set KUBE_NAMESPACE in env/general.env}"; \
+	service=$(@:k3s-install-%=%); \
+	case "$$service" in \
+		nifi) workload=statefulset/cogstack-nifi;; \
+		nginx) workload=deployment/cogstack-nginx;; \
+		ocr-service) workload=deployment/ocr-service;; \
+	esac; \
+	kubectl -n "$$namespace" apply -f "charts/$$service/rendered.yaml"; \
+	kubectl -n "$$namespace" rollout status "$$workload" --timeout="$${K3S_TIMEOUT:-10m}"
+
+k3s-install-nifi-stack: k3s-install-nifi ## Install NiFi and then NGINX from their manifests
+	$(MAKE) k3s-install-nginx
+
+k3s-uninstall-nifi: ## Delete the NiFi workloads and retain their PVCs
+k3s-uninstall-nginx: ## Delete the NGINX workloads
+k3s-uninstall-ocr-service: ## Delete the OCR Service workloads
+
+k3s-uninstall-nifi k3s-uninstall-nginx k3s-uninstall-ocr-service:
+	@set -e; \
+	. ./env/general.env; \
+	namespace="$${KUBE_NAMESPACE:?Set KUBE_NAMESPACE in env/general.env}"; \
+	service=$(@:k3s-uninstall-%=%); \
+	kubectl -n "$$namespace" delete -f "charts/$$service/rendered.yaml" \
+		--ignore-not-found --cascade=foreground --wait --timeout="$${K3S_TIMEOUT:-10m}"
+
+k3s-uninstall-nifi-stack: k3s-uninstall-nginx ## Uninstall NGINX, then NiFi, and retain PVCs
+	$(MAKE) k3s-uninstall-nifi
+
+# ======================================================================================================================================================
+
+.PHONY: helm-install
 .PHONY: helm-install-opensearch helm-install-opensearch-dashboards helm-install-opensearch-stack k3s-bootstrap-opensearch
 
 # Set KUBE_NAMESPACE in deployment/env/general.env and create the namespace
 # and required Secrets and ConfigMaps. Run these from the repository root.
-#   make -C deployment helm-install-nifi HELM_TIMEOUT=15m
-#   make -C deployment helm-install-nginx
-#   make -C deployment helm-install-nifi-stack
 # Load dashboards-auth first to share its service account password with bootstrap.
 #   make -C deployment k3s-load-auth-opensearch-dashboards
 #   make -C deployment helm-install-opensearch
@@ -245,7 +266,6 @@ helm-install: ## Install or upgrade CHART with optional HELM_VALUES and HELM_TIM
 	release="$$CHART"; \
 	args=(); \
 	case "$$CHART" in \
-		nifi|nginx) release="cogstack-$$CHART";; \
 		opensearch|opensearch-dashboards) \
 			helm repo add opensearch https://opensearch-project.github.io/helm-charts/; \
 			helm dependency build "$$chart";; \
@@ -256,15 +276,6 @@ helm-install: ## Install or upgrade CHART with optional HELM_VALUES and HELM_TIM
 	if [ -n "$${HELM_VALUES:-}" ]; then args+=(-f "$$HELM_VALUES"); fi; \
 	helm upgrade --install "$$release" "$$chart" -n "$$namespace" \
 		--wait --timeout "$${HELM_TIMEOUT:-10m}" "$${args[@]}"
-
-helm-install-nifi: k3s-load-env-nifi ## Load the NiFi environment, then install or upgrade NiFi
-	$(MAKE) helm-install CHART=nifi
-
-helm-install-nginx: k3s-load-env-nginx ## Load the NGINX environment, then install or upgrade NGINX
-	$(MAKE) helm-install CHART=nginx
-
-helm-install-nifi-stack: helm-install-nifi ## Load the runtime environment and install or upgrade NiFi and NGINX
-	$(MAKE) helm-install-nginx
 
 helm-install-opensearch: k3s-load-env-opensearch ## Load the OpenSearch environment, then install or upgrade OpenSearch
 	$(MAKE) helm-install CHART=opensearch
@@ -281,26 +292,19 @@ helm-install-opensearch-stack: ## Install OpenSearch and then Dashboards
 
 # ======================================================================================================================================================
 
-.PHONY: helm-uninstall-nifi helm-uninstall-nginx helm-uninstall-nifi-stack
 .PHONY: helm-uninstall-opensearch helm-uninstall-opensearch-dashboards helm-uninstall-opensearch-stack
 
 # Reinstall in the same namespace with the same StatefulSet names to reuse the retained PVCs.
-helm-uninstall-nifi: ## Uninstall NiFi and retain its PVCs
-helm-uninstall-nginx: ## Uninstall NGINX
 helm-uninstall-opensearch: ## Uninstall OpenSearch and retain its PVCs
 helm-uninstall-opensearch-dashboards: ## Uninstall OpenSearch Dashboards
 
-helm-uninstall-nifi helm-uninstall-nginx helm-uninstall-opensearch helm-uninstall-opensearch-dashboards:
+helm-uninstall-opensearch helm-uninstall-opensearch-dashboards:
 	@set -e; \
 	. ./env/general.env; \
 	namespace="$${KUBE_NAMESPACE:?Set KUBE_NAMESPACE in env/general.env}"; \
 	release=$(@:helm-uninstall-%=%); \
-	case "$$release" in nifi|nginx) release="cogstack-$$release";; esac; \
 	helm uninstall "$$release" -n "$$namespace" --ignore-not-found \
 		--cascade foreground --wait --timeout "$${HELM_TIMEOUT:-10m}"
-
-helm-uninstall-nifi-stack: helm-uninstall-nginx ## Uninstall NGINX, then NiFi, and retain PVCs
-	$(MAKE) helm-uninstall-nifi
 
 helm-uninstall-opensearch-stack: helm-uninstall-opensearch-dashboards ## Uninstall Dashboards, then OpenSearch, and retain PVCs
 	$(MAKE) helm-uninstall-opensearch
