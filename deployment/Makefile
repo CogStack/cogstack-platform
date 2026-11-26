@@ -30,23 +30,23 @@ setup-all: ## Install prerequisites, initialize K3s, create the namespace, and v
 
 # ======================================================================================================================================================
 
-.PHONY: certs certs-all certs-root certs-nifi certs-nginx certs-opensearch certs-opensearch-nodes delete-certs-all
+.PHONY: certs-all certs-k3s certs-root certs-nifi certs-nginx certs-opensearch certs-opensearch-shared certs-opensearch-nodes delete-certs-all
 
 load_certificates_env = set -e; set -a; if [ -f ./env/certificates.env ]; then . ./env/certificates.env; fi; set +a
+load_certificates_cluster_env = set -e; . ./env/general.env; export CLUSTER_DOMAIN; \
+	namespace="$${KUBE_NAMESPACE:?Set KUBE_NAMESPACE in env/general.env}"
 
-certs: certs-root ## Generate the root CA and NiFi and NGINX certificates
-	$(MAKE) certs-nifi certs-nginx
+certs-k3s: certs-root ## Generate the CA, NGINX HTTPS certificate, and OpenSearch transport certificate
+	$(MAKE) certs-nginx
+	@$(load_certificates_cluster_env); \
+	$(MAKE) certs-opensearch-shared KUBE_NAMESPACE="$$namespace"
 
-certs-all: ## Generate the root CA and NiFi, NGINX, OpenSearch, and Dashboards certificates
-	@set -e; \
-	. ./env/general.env; \
-	namespace="$${KUBE_NAMESPACE:?Set KUBE_NAMESPACE in env/general.env}"; \
-	export CLUSTER_DOMAIN; \
-	$(MAKE) certs KUBE_NAMESPACE="$$namespace"; \
-	$(MAKE) certs-opensearch KUBE_NAMESPACE="$$namespace"
+certs-all: certs-k3s ## Generate the K3s and Docker certificate bundles
+	@$(load_certificates_cluster_env); \
+	$(MAKE) certs-nifi KUBE_NAMESPACE="$$namespace"
 	@$(load_certificates_env); \
 	OPENSEARCH_DASHBOARDS_DNS_NAMES="$${OPENSEARCH_DASHBOARDS_DNS_NAMES:-localhost}" \
-		bash scripts/security/create_opensearch_client_admin_certs.sh --dashboards-only
+		bash scripts/security/create_opensearch_client_admin_certs.sh
 
 certs-root: ## Generate the root CA bundle
 	@$(load_certificates_env); \
@@ -59,14 +59,16 @@ certs-nginx: ## Generate the NGINX certificate with the existing CA
 	@$(load_certificates_env); \
 	bash scripts/security/create_nginx_certs.sh
 
-certs-opensearch: ## Generate the shared OpenSearch node and admin client certificates
+certs-opensearch: certs-opensearch-shared ## Generate the shared OpenSearch node and admin client certificates
+	@$(load_certificates_env); \
+	bash scripts/security/create_opensearch_client_admin_certs.sh --admin-only
+
+certs-opensearch-shared:
 	@$(load_certificates_env); \
 	service=opensearch-cluster-master; \
 	service_dns="$$service.$${KUBE_NAMESPACE:-search}.svc"; \
 	$(MAKE) certs-opensearch-nodes NODES=opensearch-shared \
 		OPENSEARCH_NODE_DNS_NAMES="$${OPENSEARCH_NODE_DNS_NAMES:-localhost,$$service,$$service_dns,$$service_dns.$${CLUSTER_DOMAIN:-cluster.local}}"
-	@$(load_certificates_env); \
-	bash scripts/security/create_opensearch_client_admin_certs.sh --admin-only
 
 certs-opensearch-nodes: ## Generate OpenSearch node certificates for NODES="node1 node2 ..."
 	@$(load_certificates_env); \
@@ -87,7 +89,7 @@ delete-certs-all: ## Delete generated local TLS certificates, keys, and stores
 
 .PHONY: k3s-load-certs k3s-load-certs-all k3s-load-certs-nginx k3s-load-certs-opensearch
 
-k3s-load-certs: k3s-load-certs-all ## Alias for k3s-load-certs-all
+k3s-load-certs: k3s-load-certs-all
 k3s-load-certs-all: ## Load the NGINX HTTPS and OpenSearch transport TLS Secrets
 k3s-load-certs-nginx: ## Load the NGINX certificate and key into nginx-tls
 k3s-load-certs-opensearch: ## Load the shared node certificate into opensearch-node-tls
@@ -95,6 +97,7 @@ k3s-load-certs-opensearch: ## Load the shared node certificate into opensearch-n
 k3s-load-certs-all k3s-load-certs-nginx k3s-load-certs-opensearch:
 	@set -eo pipefail; \
 	. ./env/general.env; \
+	if [ -f ./env/certificates.env ]; then . ./env/certificates.env; fi; \
 	namespace="$${KUBE_NAMESPACE:?Set KUBE_NAMESPACE in env/general.env}"; \
 	certs="$${SECURITY_DIR:-security}/certificates"; \
 	services=$(@:k3s-load-certs-%=%); \
@@ -226,7 +229,7 @@ k3s-prepare-all: ## Render Helm values and load TLS, runtime, and auth resources
 	$(MAKE) k3s-load-env-all
 	$(MAKE) k3s-load-auth-all
 
-.PHONY: helm-install helm-install-nifi helm-install-nginx helm-install-nifi-stack
+.PHONY: helm-install helm-install-all helm-install-nifi helm-install-nginx helm-install-nifi-stack
 .PHONY: helm-install-opensearch helm-install-opensearch-dashboards helm-install-opensearch-stack k3s-bootstrap-opensearch
 
 # Set KUBE_NAMESPACE in deployment/env/general.env and create the namespace
@@ -264,20 +267,20 @@ helm-install: ## Install or upgrade CHART with optional HELM_VALUES and HELM_TIM
 	helm upgrade --install "$$release" "$$chart" -n "$$namespace" \
 		--wait --timeout "$${HELM_TIMEOUT:-10m}" "$${args[@]}"
 
-helm-install-nifi: ## Install or upgrade NiFi
-	$(MAKE) helm-install CHART=nifi
+helm-install-all: k3s-prepare-all ## Prepare and install or upgrade both application stacks
+	$(MAKE) helm-install-nifi-stack
+	$(MAKE) helm-install-opensearch-stack BOOTSTRAP_OPENSEARCH_SECURITY=0
 
+helm-install-nifi: ## Install or upgrade NiFi
 helm-install-nginx: k3s-load-env-nginx ## Load the NGINX environment, then install or upgrade NGINX
-	$(MAKE) helm-install CHART=nginx
+helm-install-opensearch: k3s-load-env-opensearch ## Load the OpenSearch environment, then install or upgrade OpenSearch
+helm-install-opensearch-dashboards: ## Install or upgrade OpenSearch Dashboards
+
+helm-install-nifi helm-install-nginx helm-install-opensearch helm-install-opensearch-dashboards:
+	$(MAKE) helm-install CHART=$(@:helm-install-%=%)
 
 helm-install-nifi-stack: helm-install-nifi ## Load the runtime environment and install or upgrade NiFi and NGINX
 	$(MAKE) helm-install-nginx
-
-helm-install-opensearch: k3s-load-env-opensearch ## Load the OpenSearch environment, then install or upgrade OpenSearch
-	$(MAKE) helm-install CHART=opensearch
-
-helm-install-opensearch-dashboards: ## Install or upgrade OpenSearch Dashboards
-	$(MAKE) helm-install CHART=opensearch-dashboards
 
 k3s-bootstrap-opensearch: k3s-load-auth-opensearch ## Alias for k3s-load-auth-opensearch
 

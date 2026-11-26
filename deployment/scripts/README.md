@@ -15,10 +15,16 @@ The generators prompt for missing passwords with hidden input in a terminal.
 For non-interactive runs, provide the required passwords through the environment
 or the generator's configuration.
 
-`make -C deployment certs`, `make -C deployment certs-all` and the individual
-certificate targets load `deployment/env/certificates.env` automatically. For
-a direct invocation of the root CA generator, load the file to use its sample
-store password.
+The Makefile loads `deployment/env/certificates.env` for certificate generation
+and loading. Choose a bundle when generating fresh certificates.
+
+| Target | Certificates |
+| --- | --- |
+| `certs-k3s` | CA, NGINX HTTPS, and OpenSearch transport |
+| `certs-all` | K3s bundle plus the NiFi, OpenSearch admin, and Dashboards certificates for Docker |
+
+For a direct invocation of the root CA generator, load the file to use its
+sample store password.
 
 ```bash
 set -a

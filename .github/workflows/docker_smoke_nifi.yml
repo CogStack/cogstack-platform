@@ -60,7 +60,7 @@ jobs:
           NIFI_SENSITIVE_PROPS_KEY=$(openssl rand -hex 16)
           export SECURITY_DIR NIFI_SENSITIVE_PROPS_KEY
           export KEYSTORE_PASSWORD="$password" TRUSTSTORE_PASSWORD="$password" SINGLE_USER_CREDENTIALS_PASSWORD="$password"
-          ROOT_CERTIFICATE_KEYSTORE_PASSWORD="$password" make -C ../../../deployment certs
+          ROOT_CERTIFICATE_KEYSTORE_PASSWORD="$password" make -C ../../../deployment -j1 certs-root certs-nifi certs-nginx
           # The published containers run as UID/GID 1000.
           sudo chown 1000:1000 "$SECURITY_DIR"/certificates/{nifi/nifi-keystore.jks,nginx/tls.key}
 
