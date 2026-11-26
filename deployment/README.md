@@ -2,10 +2,26 @@
 
 Run the Makefile commands below from the `deployment/` directory. [Deployment Makefile](Makefile)
 
-## On-premises setup
+## Quickstart after setup
 
-> ⚠️ **Required for a fresh deployment.** Set up K3s and generate or provide the
-> NGINX HTTPS and OpenSearch transport certificates before preparing the charts.
+After `make setup-all` succeeds, set `NGINX_TLS_NAMES` in `env/certificates.env`
+to the hostname or IP clients will use for NGINX. Set the certificate store
+passwords, provide deployment credentials, and create `../apps/nifi/env/nifi.env`
+if it’s missing. [Environment settings](#environment-settings)
+
+```bash
+make certs-all
+make k3s-prepare-all
+```
+
+`certs-all` generates the certificate bundle. `k3s-prepare-all` renders Helm
+values and loads the TLS Secrets, runtime ConfigMaps, and authentication Secrets.
+
+To deploy all four services, run `make certs-all` followed by
+`make helm-install-all`, which runs preparation automatically.
+[Install options](#install-the-applications)
+
+## On-premises setup
 
 Use a Debian, Ubuntu, or RHEL server with a full repository checkout, systemd,
 network access, Bash, GNU Make, and `sudo`.
@@ -23,16 +39,11 @@ Docker, K3s, and Helm, then creates the namespace from `env/general.env`.
 
 ### Generate certificates
 
-Set the store passwords in `env/certificates.env` and use the hostname or IP
-clients will use for NGINX.
-
-```bash
-NGINX_TLS_NAMES=cogstack.example.org make certs-k3s
-```
-
-This generates the CA, NGINX HTTPS certificate, and OpenSearch transport
-certificate. Reuse an existing bundle from `SECURITY_DIR` when available. The
-default directory is `deployment/security`. [Certificate targets](scripts/README.md#certificates)
+Use `make certs-k3s` to generate the CA, NGINX HTTPS certificate, and OpenSearch
+transport certificate for K3s. If you already have a bundle, set
+`SECURITY_DIR` to the directory containing `certificates/` and start with
+`make k3s-prepare-all`. The default directory is `deployment/security`.
+[Certificate targets](scripts/README.md#certificates)
 
 ## Environment settings
 
@@ -46,32 +57,32 @@ default directory is `deployment/security`. [Certificate targets](scripts/README
 | `env/opensearch.env` | `OPENSEARCH_K3S_REPLICA_COUNT`, `OPENSEARCH_K3S_BLACKLIST`, `OPENSEARCH_DOCKER_*` resources, and `OPENSEARCH_LOG_LEVEL`. |
 | `env/opensearch-dashboards.env` | `OPENSEARCH_DASHBOARDS_DOCKER_*` resources. |
 
-Put your passwords in a private copy of `env/authentication.env` and export its
-absolute path as `NIFI_AUTH_FILE` and `OPENSEARCH_AUTH_FILE`. Set
+`k3s-prepare-all` reads login credentials from `env/authentication.env` by
+default. To use a private copy, export its absolute path as `NIFI_AUTH_FILE`
+and `OPENSEARCH_AUTH_FILE`. Set
 `NIFI_SINGLE_USER_CREDENTIALS_USERNAME` and `NIFI_SINGLE_USER_CREDENTIALS_PASSWORD`
 for NiFi, `OPENSEARCH_KIBANA_PASSWORD` for the Dashboards service account, and
 `OPENSEARCH_ANALYST_PASSWORD` to sign in to Dashboards as `cogstack_user`.
+The NiFi loader prompts if its password is empty or still uses the checked-in
+Compose sample.
 
-A fresh checkout needs an `apps/nifi/env/nifi.env` file for the `env/nifi.env`
-symlink. [NiFi environment defaults](charts/README.md#nifi-environment)
+### NiFi environment
 
-## Prepare Kubernetes resources
+A fresh checkout needs `apps/nifi/env/nifi.env` for the `deployment/env/nifi.env`
+symlink. Create the file with these starter values.
 
-After setting the environment and certificates, prepare the full stack before
-running the install commands individually.
-
-```bash
-make k3s-prepare-all
+```dotenv
+NIFI_UID=1000
+NIFI_GID=1000
+NIFI_DOCKER_CPU_MIN=1
+NIFI_DOCKER_CPU_MAX=1
+NIFI_DOCKER_RAM=2g
+NIFI_INTERNAL_PORT_NGINX=8443
 ```
-
-This renders Helm values (`helm-values-all`), loads TLS Secrets
-(`k3s-load-certs-all`), loads runtime ConfigMaps (`k3s-load-env-all`), and loads
-authentication Secrets (`k3s-load-auth-all`). `make helm-install-all` includes
-this preparation and installs all four services.
 
 ## Install the applications
 
-With the namespace prepared, choose a stack or install the charts individually.
+After `make k3s-prepare-all`, choose a stack or install the charts individually.
 
 | Makefile command | What it installs or upgrades |
 | --- | --- |
