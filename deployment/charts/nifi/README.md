@@ -18,7 +18,8 @@ Prepare these resources in the release namespace before installing:
 
 Both `make -C deployment helm-install-nifi` and
 `make -C deployment helm-install-nifi-stack` load `NIFI_WEB_PROXY_HOST` from
-`deployment/env/nifi.env` into the ConfigMap before installing NiFi. Use
+`deployment/env/nifi.env` when present. With a missing env file, set
+`NIFI_WEB_PROXY_HOST` in the shell to supply the proxy hosts. Use
 `make -C deployment k3s-load-env-nifi` to apply the ConfigMap on its own.
 
 Set `certificates.rootCASecret` and `certificates.existingSecret` to use different

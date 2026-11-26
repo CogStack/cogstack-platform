@@ -142,7 +142,7 @@ k3s-load-env-nifi k3s-load-env-nginx k3s-load-env-opensearch:
 	namespace="$${KUBE_NAMESPACE:?Set KUBE_NAMESPACE in env/general.env}"; \
 	service=$(@:k3s-load-env-%=%); \
 	env_file="./env/$$service.env"; \
-	if [[ "$$service" != nginx || -f "$$env_file" ]]; then . "$$env_file"; fi; \
+	if [[ "$$service" == opensearch || -f "$$env_file" ]]; then . "$$env_file"; fi; \
 	args=(); \
 	case "$$service" in \
 		nifi) args+=("--from-literal=NIFI_WEB_PROXY_HOST=$${NIFI_WEB_PROXY_HOST-}");; \
