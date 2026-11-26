@@ -24,7 +24,7 @@ setup-verify: ## Check local Docker, Docker Compose, and K3s access without sudo
 
 # ======================================================================================================================================================
 
-.PHONY: certs certs-all certs-root certs-nifi certs-nginx certs-opensearch certs-opensearch-nodes
+.PHONY: certs certs-all certs-root certs-nifi certs-nginx certs-opensearch certs-opensearch-nodes delete-certs-all
 
 certs: certs-root ## Generate the root CA and NiFi and NGINX certificates
 	$(MAKE) certs-nifi certs-nginx
@@ -58,6 +58,16 @@ certs-opensearch: ## Generate the shared OpenSearch node and admin client certif
 certs-opensearch-nodes: ## Generate OpenSearch node certificates for NODES="node1 node2 ..."
 	@read -r -a nodes <<< "$$NODES"; \
 	bash scripts/security/create_opensearch_node_cert.sh "$${nodes[@]}"
+
+delete-certs-all: ## Delete generated local TLS certificates, keys, and stores
+	@set -e; \
+	certs="$${SECURITY_DIR:-security}/certificates"; \
+	if [ -L "$$certs" ]; then printf 'Certificate directory is a symlink: %s\n' "$$certs" >&2; exit 1; fi; \
+	[ -d "$$certs" ] || exit 0; \
+	CDPATH= cd -- "$$certs"; \
+	find -P . -maxdepth 2 \( -type f -o -type l \) \
+		\( -path './root/*' -o -path './nifi/*' -o -path './nginx/*' -o -path './opensearch/*' \) \
+		\( -name '*.crt' -o -name '*.pem' -o -name '*.key' -o -name '*.csr' -o -name '*.p12' -o -name '*.jks' \) -delete
 
 # ======================================================================================================================================================
 
