@@ -1,0 +1,153 @@
+name: helm_smoke
+
+on:
+  push:
+    branches: ['**']
+    paths: &paths
+      - 'deployment/charts/nifi/**'
+      - 'deployment/charts/nginx/**'
+      - 'deployment/charts/opensearch/**'
+      - 'deployment/charts/opensearch-dashboards/**'
+      - 'deployment/Makefile'
+      - 'deployment/env/general.env'
+      - 'deployment/scripts/security/**'
+      - 'deployment/security/templates/**'
+      - 'apps/opensearch/**'
+      - '.github/scripts/smoke_nifi_login.sh'
+      - '.github/workflows/helm_smoke.yml'
+  pull_request:
+    paths: *paths
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      stacks:
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  smoke:
+    name: Helm smoke (${{ matrix.stack }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        stack: ${{ fromJSON(inputs.stacks || '["nifi","opensearch"]') }}
+    env:
+      SINGLE_USER_CREDENTIALS_USERNAME: smoke
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: azure/setup-helm@v5.1.0
+        with:
+          version: v3.17.0
+      - uses: helm/kind-action@v1.15.2
+
+      - name: Generate and load certificates
+        run: |
+          source deployment/env/general.env
+          SECURITY_DIR=$(mktemp -d "$RUNNER_TEMP/helm-smoke.XXXXXX")
+          password=$(openssl rand -hex 16)
+          printf '::add-mask::%s\n' "$password"
+          printf 'SECURITY_DIR=%s\nSMOKE_PASSWORD=%s\n' "$SECURITY_DIR" "$password" >> "$GITHUB_ENV"
+          export SECURITY_DIR ROOT_CERTIFICATE_KEYSTORE_PASSWORD="$password" OS_CERTIFICATE_PASSWORD="$password"
+          export KEYSTORE_PASSWORD="$password" TRUSTSTORE_PASSWORD="$password"
+          make -C deployment -j1 setup-k3s-namespace certs-all k3s-load-certs-all
+          kubectl config set-context --current --namespace="$KUBE_NAMESPACE"
+
+      - name: Install NiFi
+        if: matrix.stack == 'nifi' || matrix.stack == 'nginx'
+        run: |
+          kubectl create configmap nifi-env --from-literal=NIFI_WEB_PROXY_HOST=127.0.0.1:8443
+          kubectl create secret generic nifi-auth \
+            --from-literal=KEYSTORE_PASSWORD="$SMOKE_PASSWORD" --from-literal=TRUSTSTORE_PASSWORD="$SMOKE_PASSWORD" \
+            --from-literal=SINGLE_USER_CREDENTIALS_USERNAME="$SINGLE_USER_CREDENTIALS_USERNAME" \
+            --from-literal=SINGLE_USER_CREDENTIALS_PASSWORD="$SMOKE_PASSWORD" \
+            --from-literal=INITIAL_ADMIN_IDENTITY="$SINGLE_USER_CREDENTIALS_USERNAME" \
+            --from-literal=NIFI_SENSITIVE_PROPS_KEY="$(openssl rand -hex 16)"
+          helm install nifi deployment/charts/nifi --wait --timeout 15m
+
+      - name: NiFi Helm login
+        if: matrix.stack == 'nifi'
+        run: |
+          kubectl port-forward svc/cogstack-nifi 8443:8443 &
+          trap 'kill "$!"' EXIT
+          SINGLE_USER_CREDENTIALS_PASSWORD="$SMOKE_PASSWORD" bash .github/scripts/smoke_nifi_login.sh https://127.0.0.1:8443
+
+      - name: NGINX Helm proxy login
+        if: matrix.stack == 'nifi' || matrix.stack == 'nginx'
+        run: |
+          kubectl create configmap nginx-env
+          helm install nginx deployment/charts/nginx --wait --timeout 5m
+          kubectl port-forward svc/cogstack-nginx 8443:8443 &
+          trap 'kill "$!"' EXIT
+          SINGLE_USER_CREDENTIALS_PASSWORD="$SMOKE_PASSWORD" bash .github/scripts/smoke_nifi_login.sh https://127.0.0.1:8443
+
+      - name: OpenSearch Helm authentication
+        if: matrix.stack == 'opensearch'
+        run: |
+          sudo sysctl -w vm.max_map_count=262144
+          chart=deployment/charts/opensearch
+          helm dependency build "$chart"
+          helm install opensearch "$chart" --wait --timeout 10m \
+            --set-file "opensearch.config.opensearch\\.yml=$chart/config/opensearch.yml"
+          KIBANA_PASSWORD="$SMOKE_PASSWORD" OS_ANALYST_PASSWORD="$SMOKE_PASSWORD" \
+            bash "$chart/security/bootstrap.sh" kubectl exec -i opensearch-cluster-master-0 --
+          kubectl port-forward svc/opensearch-cluster-master 9200:9200 &
+          trap 'kill "$!"' EXIT
+          curl -fsS --noproxy '*' --cacert "$SECURITY_DIR/certificates/root/root-ca.pem" \
+            --retry 10 --retry-all-errors --retry-delay 2 --max-time 10 \
+            -u "cogstack_user:$SMOKE_PASSWORD" https://localhost:9200/_plugins/_security/authinfo |
+            jq -e '.user_name == "cogstack_user"'
+
+      - name: OpenSearch Dashboards Helm login
+        if: matrix.stack == 'opensearch'
+        run: |
+          certs="$SECURITY_DIR/certificates"
+          kubectl create secret generic dashboards-auth --from-literal=username=kibanaserver \
+            --from-literal=password="$SMOKE_PASSWORD" --from-literal=cookie="$(openssl rand -hex 16)"
+          kubectl create secret tls dashboards-tls \
+            --cert="$certs/opensearch/es_kibana_client.pem" --key="$certs/opensearch/es_kibana_client.key"
+          helm dependency build deployment/charts/opensearch-dashboards
+          helm install opensearch-dashboards deployment/charts/opensearch-dashboards --wait --timeout 5m -f - <<'YAML'
+          opensearch-dashboards:
+            opensearchAccount:
+              secret: dashboards-auth
+            secretMounts:
+              - {name: ca, secretName: cogstack-root-ca, path: /tls/ca}
+              - {name: server-tls, secretName: dashboards-tls, path: /tls/server}
+            config:
+              opensearch_dashboards.yml:
+                opensearchDashboards.index: .kibana
+                opensearch.ssl.certificateAuthorities: [/tls/ca/ca.crt]
+                opensearch.ssl.verificationMode: full
+                opensearch_security.cookie.secure: true
+                opensearch_security.cookie.password: ${COOKIE_PASS}
+                server.ssl.enabled: true
+                server.ssl.certificate: /tls/server/tls.crt
+                server.ssl.key: /tls/server/tls.key
+          YAML
+          kubectl port-forward svc/opensearch-dashboards 5601:5601 &
+          trap 'kill "$!"' EXIT
+          curl -fsS --noproxy '*' --cacert "$certs/root/root-ca.pem" --max-time 10 \
+            --retry 30 --retry-all-errors --retry-delay 3 -H 'osd-xsrf: smoke' \
+            --json "{\"username\":\"cogstack_user\",\"password\":\"$SMOKE_PASSWORD\"}" \
+            https://localhost:5601/auth/login | jq -e '.username == "cogstack_user"'
+
+      - name: Show pod logs on failure
+        if: failure()
+        run: |
+          kubectl get pods,svc,pvc
+          for pod in $(kubectl get pods -o name); do
+            kubectl logs "$pod" --all-containers --tail=100 || true
+          done

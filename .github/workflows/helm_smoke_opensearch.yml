@@ -1,0 +1,12 @@
+name: helm_smoke_opensearch
+
+on: workflow_dispatch
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    uses: ./.github/workflows/helm_smoke.yml
+    with:
+      stacks: '["opensearch"]'
