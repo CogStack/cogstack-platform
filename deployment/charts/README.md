@@ -19,9 +19,9 @@ port 443. The cluster must enforce the NiFi NetworkPolicy.
 | [`opensearch-dashboards/`](opensearch-dashboards/README.md) | Dashboards UI. |
 
 For a new deployment, set `NGINX_TLS_NAMES` to the hostname or IP clients will
-use. Supply your deployment credentials and install `htpasswd` on the machine
-running the loaders (`apache2-utils` on Debian/Ubuntu or `httpd-tools` on RHEL).
-Run these commands from the repository root.
+use. Supply your deployment credentials. The OpenSearch loader uses `htpasswd`
+(`apache2-utils` on Debian/Ubuntu or `httpd-tools` on RHEL). Run these commands
+from the repository root.
 
 ```bash
 make -C deployment setup-k3s-namespace

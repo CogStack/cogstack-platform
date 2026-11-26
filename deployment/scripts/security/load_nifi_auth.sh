@@ -20,15 +20,19 @@ if [[ ${NIFI_SINGLE_USER_CREDENTIALS_PASSWORD:-} == cogstackNiFi ]]; then
     unset NIFI_SINGLE_USER_CREDENTIALS_PASSWORD
 fi
 require_password NIFI_SINGLE_USER_CREDENTIALS_PASSWORD
-if (( ${#NIFI_SINGLE_USER_CREDENTIALS_PASSWORD} < 12 )); then
-    printf 'NiFi login password must be at least 12 characters.\n' >&2
+password=$NIFI_SINGLE_USER_CREDENTIALS_PASSWORD
+if [[ "$password" == *[$'\r\n']* || ${#password} -lt 12 ]] ||
+    (LC_ALL=C; (( ${#password} > 72 ))); then
+    printf 'NiFi login password must be one line, at least 12 characters and at most 72 bytes.\n' >&2
     exit 1
 fi
 if [[ "$NIFI_SINGLE_USER_CREDENTIALS_USERNAME" == *[[:cntrl:]:]* || "$NIFI_SINGLE_USER_CREDENTIALS_USERNAME" == \#* ]]; then
     printf 'NiFi username cannot contain colons or control characters, or start with #.\n' >&2
     exit 1
 fi
-NIFI_HTPASSWD=$(bcrypt_entry "$NIFI_SINGLE_USER_CREDENTIALS_USERNAME" "$NIFI_SINGLE_USER_CREDENTIALS_PASSWORD")
+salt=$(openssl rand -hex 8)
+hash=$(openssl passwd -6 -salt "rounds=100000\$$salt" -stdin <<< "$password")
+NIFI_HTPASSWD="$NIFI_SINGLE_USER_CREDENTIALS_USERNAME:$hash"
 
 existing=$(kubectl -n "$namespace" get secret nifi-auth --ignore-not-found -o json)
 version=$(jq -r '.metadata.resourceVersion' <<< "$existing")

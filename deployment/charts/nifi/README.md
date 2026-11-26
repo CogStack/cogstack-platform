@@ -9,8 +9,8 @@ NGINX handles HTTPS and login for the UI and API. [NGINX chart](../nginx/README.
 Run `make -C deployment k3s-load-auth-nifi` to create or update `nifi-auth` with
 the NiFi flow encryption key and the NGINX `htpasswd` entry. Set
 `NIFI_SINGLE_USER_CREDENTIALS_USERNAME` and `NIFI_SINGLE_USER_CREDENTIALS_PASSWORD`
-in the environment or `deployment/env/authentication.env`. The loader requires
-`htpasswd` and prompts for a deployment password if needed. It preserves the
+in the environment or `deployment/env/authentication.env`. The loader uses
+OpenSSL and prompts for a deployment password if needed. It preserves the
 existing `NIFI_SENSITIVE_PROPS_KEY` when upgrading.
 
 The namespace needs a StorageClass or persistent volumes for the six claims per

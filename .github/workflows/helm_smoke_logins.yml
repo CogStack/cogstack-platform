@@ -58,7 +58,6 @@ jobs:
         env:
           STACK: ${{ matrix.stack }}
         run: |
-          command -v htpasswd >/dev/null || sudo apt-get install -y apache2-utils
           source deployment/env/general.env
           SECURITY_DIR=$(mktemp -d "$RUNNER_TEMP/helm-smoke.XXXXXX")
           password=$(openssl rand -hex 16)
@@ -83,6 +82,7 @@ jobs:
       - name: Install OpenSearch and Dashboards
         if: matrix.stack == 'opensearch'
         run: |
+          command -v htpasswd >/dev/null || sudo apt-get install -y apache2-utils
           sudo sysctl -w vm.max_map_count=262144
           OPENSEARCH_KIBANA_PASSWORD="$SMOKE_PASSWORD" OPENSEARCH_ANALYST_PASSWORD="$SMOKE_PASSWORD" \
             make -C deployment helm-install-opensearch-stack
