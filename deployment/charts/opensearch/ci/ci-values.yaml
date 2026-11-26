@@ -1,6 +1,13 @@
 opensearch:
   replicas: 1
   secretMounts: []
+  securityConfig:
+    internalUsersSecret: ""
+    rolesSecret: ""
+    rolesMappingSecret: ""
+    tenantsSecret: ""
   extraEnvs:
     - name: OPENSEARCH_INITIAL_ADMIN_PASSWORD
       value: "CogStack-Chart-Test9!"
+    - name: plugins.security.ssl.http.enabled
+      value: "false"

@@ -21,3 +21,12 @@ require_password() {
     printf '\n' >&2
     export "$name=$password"
 }
+
+bcrypt_entry() {
+    local user=$1 password=$2 LC_ALL=C
+    if [[ "$password" == *[$'\r\n']* || ${#password} -gt 72 ]]; then
+        printf 'The password for %s must fit on one line and be at most 72 bytes.\n' "$user" >&2
+        return 1
+    fi
+    printf '%s\n' "$password" | htpasswd -nBi -C 10 -- "$user"
+}

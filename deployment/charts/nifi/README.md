@@ -1,35 +1,22 @@
 # CogStack NiFi Helm chart
 
-Deploys the CogStack Apache NiFi image with a StatefulSet, headless and web
-Services, a TLS configuration ConfigMap, and persistent storage for configuration
-and NiFi repositories. Application sources and the Dockerfile live in
-`apps/nifi/`.
+Deploys the CogStack Apache NiFi image with a StatefulSet, cluster-internal HTTP
+Services, and persistent storage for configuration and NiFi repositories.
+NGINX handles HTTPS and login for the UI and API. [NGINX chart](../nginx/README.md)
 
 ## Prerequisites
 
-Prepare these resources in the release namespace before installing:
+Run `make -C deployment k3s-load-auth-nifi` to create or update `nifi-auth` with
+the NiFi flow encryption key and the NGINX `htpasswd` entry. Set
+`NIFI_SINGLE_USER_CREDENTIALS_USERNAME` and `NIFI_SINGLE_USER_CREDENTIALS_PASSWORD`
+in the environment or `deployment/env/authentication.env`. The loader requires
+`htpasswd` and prompts for a deployment password if needed. It preserves the
+existing `NIFI_SENSITIVE_PROPS_KEY` when upgrading.
 
-| Resource | Default name | Required contents |
-| --- | --- | --- |
-| ConfigMap | `nifi-env` | NiFi runtime environment settings for the deployment. |
-| Secret | `nifi-auth` | Apache startup environment variables for login credentials, TLS passwords, the sensitive-properties key and the matching initial admin identity. |
-| Secret | `cogstack-root-ca` | `ca.crt` and `truststore.jks`; the public CA and shared truststore. |
-| Secret | `nifi-tls` | `nifi-keystore.jks`; the NiFi node certificate and private key. |
-
-Both `make -C deployment helm-install-nifi` and
-`make -C deployment helm-install-nifi-stack` load `NIFI_WEB_PROXY_HOST` from
-`deployment/env/nifi.env` when present. With a missing env file, set
-`NIFI_WEB_PROXY_HOST` in the shell to supply the proxy hosts. Use
-`make -C deployment k3s-load-env-nifi` to apply the ConfigMap on its own.
-
-Set `certificates.rootCASecret` and `certificates.existingSecret` to use different
-certificate Secret names. The environment ConfigMap and authentication Secret
-names are currently fixed in the workload template.
-
-The chart references these resources; it does not read host environment files or
-create authentication or certificate Secrets. Keep private CA signing material
-outside the pod. The namespace also needs a StorageClass or suitable
-pre-provisioned persistent volumes for the six per-replica claims.
+The namespace needs a StorageClass or persistent volumes for the six claims per
+replica. NiFi grants full access in HTTP mode. Use a cluster that enforces
+NetworkPolicy so the chart can restrict access to the NGINX pods in the same
+namespace.
 
 ## Render and install
 
@@ -46,14 +33,7 @@ Pass deployment overrides with `-f /path/to/nifi-values.yaml`. The default image
 is `cogstacksystems/nifi:latest`; set `image.tag` to the image release
 required by the deployment.
 
-For local access:
-
-```bash
-kubectl -n cogstack port-forward svc/cogstack-nifi 8443:8443
-```
-
-Open `https://localhost:8443/nifi/` using the deployment's trusted CA and
-credentials.
+Use the NGINX `/nifi/` and `/nifi-api/` routes with HTTP Basic authentication.
 
 ## Persistent configuration and data
 
@@ -80,8 +60,7 @@ StorageClass and access modes. Existing StatefulSet claim templates have
 Kubernetes immutability constraints; plan storage changes and backups separately.
 
 Drivers, schemas and Python processors are bundled by the NiFi image. Startup
-and readiness probes call its `/opt/nifi/scripts/cogstack-healthcheck.sh`
-with the projected public CA.
+and readiness probes use NiFi's loopback HTTP endpoint.
 
 ## Environment-based values
 
@@ -92,10 +71,9 @@ otherwise eligible node.
 
 ## Resource names
 
-The `cogstack-nifi` StatefulSet uses `cogstack-nifi-headless` for pod DNS.
-Clients connect to the `cogstack-nifi` ClusterIP Service. Use separate namespaces
-for independent deployments. Increasing `replicaCount` requires NiFi cluster
-configuration, node identities and certificates in the supplied runtime inputs.
+The `cogstack-nifi` StatefulSet uses `cogstack-nifi-headless` for pod DNS. NGINX
+connects to the `cogstack-nifi` ClusterIP Service on port `8080`. Use separate
+namespaces for independent deployments.
 
 Upgrades from the previous Service names require recreating the StatefulSet and
 the old `cogstack-nifi` headless Service. Keep the existing PVCs for the recreated

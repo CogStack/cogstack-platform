@@ -1,80 +1,40 @@
-# NiFi NGINX Helm chart
+# CogStack NGINX Helm chart
 
-Deploys `cogstacksystems/nifi-nginx` as the TLS reverse proxy for the NiFi web
-Service. It creates a Deployment, a Service, an upstream-settings ConfigMap and
-an optional Ingress.
+This chart exposes NGINX over HTTPS on port `443` through a `LoadBalancer`
+Service. NGINX forwards requests to the cluster-internal HTTP Services in the
+release namespace.
 
-## Prerequisites
-
-Prepare these resources in the release namespace before installing:
-
-| Resource | Default name | Required contents |
+| HTTPS path | Backend | Client authentication |
 | --- | --- | --- |
-| ConfigMap | `nginx-env` | Deployment-specific NGINX environment settings. |
-| ConfigMap | `nifi-env` | Shared NiFi environment settings. |
-| Secret | `cogstack-root-ca` | `ca.crt`, the public CA for upstream TLS verification. |
-| TLS Secret | `nginx-tls` | `tls.crt` and `tls.key` for the proxy certificate. |
+| `/nifi/`, `/nifi-api/` | NiFi on `8080` | NGINX Basic Auth |
+| `/opensearch/` | OpenSearch on `9200` | OpenSearch Security |
+| `/dashboards/` | OpenSearch Dashboards on `5601` | Dashboards login |
 
-`make -C deployment helm-install-nginx` applies `nginx-env` before invoking Helm.
-Set `NGINX_NIFI_SERVER_NAME`, `NGINX_PROXY_CONTEXT_PATH`, or `NGINX_PROXY_SCHEME`
-in `deployment/env/nginx.env` to override the proxy defaults. Run
-`make -C deployment k3s-load-env-nginx` to apply the ConfigMap separately.
+Load `nginx-tls` with `make -C deployment k3s-load-certs-nginx`, or provide a
+TLS Secret and set `tls.existingSecret`. The certificate must cover the hostname
+or IP that clients use. `NGINX_TLS_NAMES` controls the names when generating a
+certificate with `make -C deployment certs-nginx`.
 
-The environment ConfigMap names are currently fixed in the template. Override
-certificate Secret names with `tls.rootCASecret` and `tls.existingSecret`.
-The chart references these inputs rather than creating them from host files.
+For NiFi, run `make -C deployment k3s-load-auth-nifi` to load the password hash
+into `nifi-auth`. NGINX needs the `htpasswd` key in this Secret to grant access
+to NiFi.
 
-By default, the proxy connects to
-`cogstack-nifi.<release-namespace>.svc.cluster.local:8443`, which matches the
-Service from `deployment/charts/nifi`. Set `nifi.host` and `nifi.port`
-for another upstream. `nifi.tlsName` must match the upstream certificate's TLS
-name; it defaults to `nifi`.
-
-## Render and install
-
-Run from the platform repository root:
+On K3s using ServiceLB, disable the bundled Traefik controller on all servers
+with `--disable=traefik` to free port `443` for NGINX.
 
 ```bash
-helm lint ./deployment/charts/nginx
-helm template cogstack-nginx ./deployment/charts/nginx --namespace cogstack
-helm upgrade --install cogstack-nginx ./deployment/charts/nginx \
-  --namespace cogstack --create-namespace
+make -C deployment helm-install-nginx
 ```
 
-Pass deployment overrides with `-f /path/to/nginx-values.yaml`. Set `image.tag`
-to the image release required by the deployment.
+For local access, set `service.type: ClusterIP` and forward the NGINX Service.
 
-## Optional Ingress
-
-Ingress is disabled by default. Example deployment values:
-
-```yaml
-ingress:
-  enabled: true
-  className: nginx
-  annotations:
-    nginx.ingress.kubernetes.io/backend-protocol: HTTPS
-  hosts:
-    - host: nifi.example.org
-      paths:
-        - path: /
-          pathType: Prefix
-  tls:
-    - secretName: nifi-ingress-tls
-      hosts:
-        - nifi.example.org
+```bash
+kubectl -n cogstack port-forward svc/cogstack-nginx 8443:443
 ```
 
-Configure annotations for the selected Ingress controller and provide any
-referenced TLS Secret in the namespace. The chart's Service uses HTTPS on
-`nginx.internalPort`, which defaults to `8443`.
+Use `https://localhost:8443` with the trusted CA for the certificate.
 
-## Environment-based values
-
-`values.yaml` contains reusable defaults. `values.env.yaml` is an optional
-`envsubst` input for deployment ports, upstream TLS name and resource limits.
-Populate all referenced variables and render it to a separate values file before
-passing it to Helm; Helm does not expand `${VARIABLE}` placeholders.
-
-The chart currently uses fixed `cogstack-nginx` resource names. Use separate
-namespaces for independent deployments.
+Override `clusterDomain` if needed, or set `nifi.host`, `opensearch.host`,
+`dashboards.host` and their corresponding `port` values to use other upstreams.
+The optional `nginx-env` ConfigMap, loaded by `helm-install-nginx`, provides
+`NGINX_NIFI_SERVER_NAME` from `deployment/env/nginx.env`.

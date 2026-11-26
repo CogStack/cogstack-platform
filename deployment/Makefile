@@ -79,30 +79,23 @@ delete-certs-all: ## Delete generated local TLS certificates, keys, and stores
 
 # ======================================================================================================================================================
 
-.PHONY: k3s-load-certs k3s-load-certs-all k3s-load-certs-root-ca k3s-load-certs-nifi k3s-load-certs-nginx k3s-load-certs-opensearch
+.PHONY: k3s-load-certs k3s-load-certs-all k3s-load-certs-nginx k3s-load-certs-opensearch
 
 k3s-load-certs: k3s-load-certs-all ## Alias for k3s-load-certs-all
-k3s-load-certs-all: ## Load all TLS Secrets for NiFi, NGINX and OpenSearch
-k3s-load-certs-root-ca: ## Load the public CA and NiFi truststore into cogstack-root-ca
-k3s-load-certs-nifi: ## Load the NiFi keystore into nifi-tls
+k3s-load-certs-all: ## Load the NGINX HTTPS and OpenSearch transport TLS Secrets
 k3s-load-certs-nginx: ## Load the NGINX certificate and key into nginx-tls
 k3s-load-certs-opensearch: ## Load the shared node certificate into opensearch-node-tls
 
-k3s-load-certs-all k3s-load-certs-root-ca k3s-load-certs-nifi k3s-load-certs-nginx k3s-load-certs-opensearch:
+k3s-load-certs-all k3s-load-certs-nginx k3s-load-certs-opensearch:
 	@set -eo pipefail; \
 	. ./env/general.env; \
 	namespace="$${KUBE_NAMESPACE:?Set KUBE_NAMESPACE in env/general.env}"; \
 	certs="$${SECURITY_DIR:-security}/certificates"; \
 	services=$(@:k3s-load-certs-%=%); \
-	if [ "$$services" = all ]; then services="root-ca nifi nginx opensearch"; fi; \
+	if [ "$$services" = all ]; then services="nginx opensearch"; fi; \
 	manifests=(); \
 	for service in $$services; do \
 		case "$$service" in \
-			root-ca) secret=(generic cogstack-root-ca \
-				--from-file="ca.crt=$$certs/root/root-ca.pem" \
-				--from-file="truststore.jks=$$certs/nifi/nifi-truststore.jks");; \
-			nifi) secret=(generic nifi-tls \
-				--from-file="nifi-keystore.jks=$$certs/nifi/nifi-keystore.jks");; \
 			nginx) secret=(tls nginx-tls \
 				--cert="$$certs/nginx/tls.crt" --key="$$certs/nginx/tls.key");; \
 			opensearch) secret=(generic opensearch-node-tls \
@@ -119,24 +112,23 @@ k3s-load-certs-all k3s-load-certs-root-ca k3s-load-certs-nifi k3s-load-certs-ngi
 .PHONY: k3s-load-auth-nifi k3s-load-auth-opensearch k3s-load-auth-opensearch-dashboards
 
 # Uses env/authentication.env. Set NIFI_AUTH_FILE to choose another auth file.
-k3s-load-auth-nifi: ## Prompt for missing credentials and load the NiFi auth Secret
+k3s-load-auth-nifi: ## Load the NiFi flow encryption key and NGINX login Secret
 	@bash scripts/security/load_nifi_auth.sh
 
 # Both targets use env/authentication.env unless OPENSEARCH_AUTH_FILE is set.
-k3s-load-auth-opensearch: ## Load configured users into a fresh OpenSearch cluster
+k3s-load-auth-opensearch: ## Load the bootstrap policy and users before installing OpenSearch
 k3s-load-auth-opensearch-dashboards: ## Load the OpenSearch Dashboards auth Secret
 
 k3s-load-auth-opensearch k3s-load-auth-opensearch-dashboards:
 	@bash scripts/security/load_opensearch_auth.sh $(@:k3s-load-auth-%=%)
 
-.PHONY: k3s-load-env-all k3s-load-env-nifi k3s-load-env-nginx k3s-load-env-opensearch
+.PHONY: k3s-load-env-all k3s-load-env-nginx k3s-load-env-opensearch
 
-k3s-load-env-all: k3s-load-env-nifi k3s-load-env-nginx k3s-load-env-opensearch ## Load all runtime environment ConfigMaps
-k3s-load-env-nifi: ## Load the NiFi proxy hosts into the nifi-env ConfigMap
+k3s-load-env-all: k3s-load-env-nginx k3s-load-env-opensearch ## Load all runtime environment ConfigMaps
 k3s-load-env-nginx: ## Load the NGINX runtime settings into the nginx-env ConfigMap
 k3s-load-env-opensearch: ## Load the OpenSearch log level into the opensearch-env ConfigMap
 
-k3s-load-env-nifi k3s-load-env-nginx k3s-load-env-opensearch:
+k3s-load-env-nginx k3s-load-env-opensearch:
 	@set -eo pipefail; \
 	. ./env/general.env; \
 	namespace="$${KUBE_NAMESPACE:?Set KUBE_NAMESPACE in env/general.env}"; \
@@ -145,11 +137,7 @@ k3s-load-env-nifi k3s-load-env-nginx k3s-load-env-opensearch:
 	if [[ "$$service" == opensearch || -f "$$env_file" ]]; then . "$$env_file"; fi; \
 	args=(); \
 	case "$$service" in \
-		nifi) args+=("--from-literal=NIFI_WEB_PROXY_HOST=$${NIFI_WEB_PROXY_HOST-}");; \
-		nginx) \
-			for name in NGINX_NIFI_SERVER_NAME NGINX_PROXY_CONTEXT_PATH NGINX_PROXY_SCHEME; do \
-				if [[ -n $${!name+x} ]]; then args+=("--from-literal=$$name=$${!name}"); fi; \
-			done;; \
+		nginx) args+=("--from-literal=NGINX_NIFI_SERVER_NAME=$${NGINX_NIFI_SERVER_NAME:-_}");; \
 		opensearch) args+=("--from-literal=OPENSEARCH_LOG_LEVEL=$${OPENSEARCH_LOG_LEVEL:-INFO}");; \
 	esac; \
 	kubectl -n "$$namespace" create configmap "$$service-env" "$${args[@]}" --dry-run=client -o yaml | \
@@ -229,10 +217,10 @@ helm-values-nifi helm-values-nginx helm-values-opensearch helm-values-opensearch
 #   make -C deployment helm-install-nifi-stack
 # Load dashboards-auth first to share its service account password with bootstrap.
 #   make -C deployment k3s-load-auth-opensearch-dashboards
-#   make -C deployment helm-install-opensearch
 #   make -C deployment k3s-load-auth-opensearch
+#   make -C deployment helm-install-opensearch
 #   make -C deployment helm-install-opensearch-dashboards HELM_VALUES=/path/to/dashboards-values.yaml
-# The stack initializes Security on first install. Set BOOTSTRAP_OPENSEARCH_SECURITY=0 to skip bootstrap.
+# Set BOOTSTRAP_OPENSEARCH_SECURITY=0 to use existing auth Secrets.
 #   make -C deployment helm-install-opensearch-stack HELM_VALUES=/path/to/dashboards-values.yaml
 # The stack target uses HELM_VALUES for Dashboards.
 # HELM_VALUES accepts an absolute path, a path relative to deployment/, or - for stdin.
@@ -257,7 +245,7 @@ helm-install: ## Install or upgrade CHART with optional HELM_VALUES and HELM_TIM
 	helm upgrade --install "$$release" "$$chart" -n "$$namespace" \
 		--wait --timeout "$${HELM_TIMEOUT:-10m}" "$${args[@]}"
 
-helm-install-nifi: k3s-load-env-nifi ## Load the NiFi environment, then install or upgrade NiFi
+helm-install-nifi: ## Install or upgrade NiFi
 	$(MAKE) helm-install CHART=nifi
 
 helm-install-nginx: k3s-load-env-nginx ## Load the NGINX environment, then install or upgrade NGINX
@@ -275,8 +263,10 @@ helm-install-opensearch-dashboards: ## Install or upgrade OpenSearch Dashboards
 k3s-bootstrap-opensearch: k3s-load-auth-opensearch ## Alias for k3s-load-auth-opensearch
 
 helm-install-opensearch-stack: ## Install OpenSearch and then Dashboards
+	@if [ "$${BOOTSTRAP_OPENSEARCH_SECURITY:-1}" = 1 ]; then \
+		$(MAKE) k3s-load-auth-opensearch-dashboards && $(MAKE) k3s-bootstrap-opensearch; \
+	fi
 	$(MAKE) helm-install-opensearch HELM_VALUES=
-	@if [ "$${BOOTSTRAP_OPENSEARCH_SECURITY:-1}" = 1 ]; then $(MAKE) k3s-bootstrap-opensearch; fi
 	$(MAKE) helm-install-opensearch-dashboards
 
 # ======================================================================================================================================================

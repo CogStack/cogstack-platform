@@ -1,5 +1,6 @@
 opensearch:
   replicas: 1
+  protocol: http
   antiAffinity: hard
   nodeAffinity: {}
   # Each StatefulSet pod gets its own claim from the cluster's default StorageClass.
@@ -10,6 +11,10 @@ opensearch:
   extraEnvs:
     - name: DISABLE_INSTALL_DEMO_CONFIG
       value: "true"
+    - name: plugins.security.ssl.http.enabled
+      value: "false"
+    - name: plugins.security.allow_default_init_securityindex
+      value: "true"
   envFrom:
     - configMapRef:
         name: opensearch-env
@@ -19,6 +24,11 @@ opensearch:
       secretName: opensearch-node-tls
       path: /usr/share/opensearch/config/tls
       defaultMode: 0440
+  securityConfig:
+    internalUsersSecret: opensearch-security-bootstrap
+    rolesSecret: opensearch-security-bootstrap
+    rolesMappingSecret: opensearch-security-bootstrap
+    tenantsSecret: opensearch-security-bootstrap
   resources:
     requests:
       cpu: "1"

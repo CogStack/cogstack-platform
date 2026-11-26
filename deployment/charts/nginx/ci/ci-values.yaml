@@ -1,3 +1,5 @@
 # CI validates resource installation without deployment-owned ConfigMaps and Secrets.
 # Runtime startup requires those inputs and a separate application smoke test.
 replicaCount: 0
+service:
+  type: ClusterIP

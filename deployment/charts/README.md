@@ -4,19 +4,38 @@ Reusable deployment charts for CogStack. Each chart sits directly under this
 directory and declares its package name in `Chart.yaml`.
 Folder names use component names, such as `medcat-service` and `jupyter-hub`.
 
-## NiFi charts
+## Kubernetes HTTPS entry point
 
-These charts were migrated from `cogstack_nifi/deploy/kubernetes/charts/`:
+Deploy the four standalone charts in the same namespace. NGINX exposes HTTPS
+through a LoadBalancer Service on port 443 and forwards to HTTP Services in the
+cluster. On K3s with ServiceLB, disable the bundled Traefik controller to free
+port 443. The cluster must enforce the NiFi NetworkPolicy.
 
 | Chart | Purpose |
 | --- | --- |
-| [`nifi/`](nifi/README.md) | NiFi StatefulSet, Services, TLS settings and persistent storage. |
-| [`nginx/`](nginx/README.md) | TLS reverse proxy for the NiFi web Service, with optional Ingress. |
+| [`nginx/`](nginx/README.md) | HTTPS reverse proxy and NiFi login. |
+| [`nifi/`](nifi/README.md) | NiFi StatefulSet and persistent storage. |
+| [`opensearch/`](opensearch/README.md) | OpenSearch Security and node transport TLS. |
+| [`opensearch-dashboards/`](opensearch-dashboards/README.md) | Dashboards UI. |
 
-The `nifi/` directory declares `name: nifi` in `Chart.yaml`, so Helm
-packages it as `nifi-<version>.tgz`.
+For a new deployment, set `NGINX_TLS_NAMES` to the hostname or IP clients will
+use. Supply your deployment credentials and install `htpasswd` on the machine
+running the loaders (`apache2-utils` on Debian/Ubuntu or `httpd-tools` on RHEL).
+Run these commands from the repository root.
 
-Run from the repository root:
+```bash
+make -C deployment setup-k3s-namespace
+make -C deployment -j1 certs-root certs-nginx certs-opensearch-nodes NODES=opensearch-shared
+make -C deployment k3s-load-certs-all k3s-load-auth-nifi
+make -C deployment helm-install-nifi-stack
+make -C deployment helm-install-opensearch-stack
+```
+
+Existing deployments must reload `nifi-auth` for NGINX before upgrading.
+OpenSearch upgrades also require the bootstrap Secret and preparation of
+administrative access when using an admin certificate. [OpenSearch upgrade details](opensearch/README.md#install)
+
+## Chart development
 
 ```bash
 helm lint deployment/charts/nifi deployment/charts/nginx
@@ -28,7 +47,7 @@ See each chart's README for the ConfigMaps, Secrets and storage needed before
 installation. Run `make -C deployment helm-values-<chart>` for NiFi, NGINX,
 OpenSearch, or OpenSearch Dashboards to render `values.env.yaml` into
 `values.yaml` using `deployment/env/<chart>.env`. NGINX reads `nifi.env` for
-the upstream connection and applies `nginx.env` when present. The local
+its listener port and applies `nginx.env` when present. The local
 `deployment/env/nifi.env` can link to `apps/nifi/env/nifi.env`. Docker memory
 sizes such as `2g` render as `2Gi`.
 

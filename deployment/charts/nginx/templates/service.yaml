@@ -8,6 +8,6 @@ spec:
     app: cogstack-nginx
   ports:
     - name: https
-      port: {{ .Values.nginx.internalPort }}
-      targetPort: {{ .Values.nginx.internalPort }}
+      port: {{ .Values.service.port }}
+      targetPort: https
       protocol: TCP

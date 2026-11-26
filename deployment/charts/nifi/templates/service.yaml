@@ -8,7 +8,7 @@ spec:
   selector:
     app: cogstack-nifi
   ports:
-    - name: https
+    - name: http
       port: {{ .Values.nifi.internalPort }}
 ---
 apiVersion: v1
@@ -20,6 +20,6 @@ spec:
   selector:
     app: cogstack-nifi
   ports:
-    - name: https
+    - name: http
       port: {{ .Values.nifi.internalPort }}
-      targetPort: {{ .Values.nifi.internalPort }}
+      targetPort: http

@@ -23,42 +23,43 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
 
           ports:
-            - containerPort: {{ .Values.nginx.internalPort }}
+            - name: https
+              containerPort: {{ .Values.nginx.internalPort }}
 
           envFrom:
             - configMapRef:
                 name: nginx-env
-            - configMapRef:
-                name: nifi-env
-            - configMapRef:
-                name: cogstack-nginx-env
+                optional: true
 
           volumeMounts:
+            - name: config
+              mountPath: /etc/nginx/templates/nifi
+              readOnly: true
             - name: tls
               mountPath: /certificates
               readOnly: true
+            - name: nifi-auth
+              mountPath: /etc/nginx/nifi-auth
+              readOnly: true
 
           readinessProbe:
-            exec:
-              command: ["/usr/local/bin/cogstack-nginx-healthcheck.sh", "ready"]
-            timeoutSeconds: 10
+            tcpSocket:
+              port: https
 
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
 
       volumes:
+        - name: config
+          configMap:
+            name: cogstack-nginx-config
         - name: tls
-          projected:
-            sources:
-              - secret:
-                  name: {{ .Values.tls.rootCASecret }}
-                  items:
-                    - key: ca.crt
-                      path: root/root-ca.pem
-              - secret:
-                  name: {{ .Values.tls.existingSecret }}
-                  items:
-                    - key: tls.crt
-                      path: nifi/nifi.pem
-                    - key: tls.key
-                      path: nifi/nifi.key
+          secret:
+            secretName: {{ .Values.tls.existingSecret }}
+        - name: nifi-auth
+          secret:
+            secretName: nifi-auth
+            optional: true
+            items:
+              - key: htpasswd
+                path: htpasswd

@@ -6,72 +6,44 @@ The upstream chart supplies the Kubernetes templates. Set overrides under
 
 ## Install
 
-The chart defaults to a shared node certificate. From the repository root, build
-the chart dependency and generate the node and admin client certificates with
-an existing CA. The generator prompts for `OS_CERTIFICATE_PASSWORD` when unset.
-Use an absolute `SECURITY_DIR` for a custom output location.
+OpenSearch serves HTTP on the internal `opensearch-cluster-master` Service.
+OpenSearch Security requires TLS on its node transport. Generate the shared
+node certificate with an existing CA and load it into the release namespace.
+Use an absolute `SECURITY_DIR` for a custom certificate directory.
 [Cluster prerequisites](https://docs.opensearch.org/latest/opensearch/install/helm/#prerequisites)
 
 ```bash
-chart=deployment/charts/opensearch
-helm repo add opensearch https://opensearch-project.github.io/helm-charts/
-helm dependency build "$chart"
-make -C deployment certs-opensearch
-certs="${SECURITY_DIR:-deployment/security}/certificates/opensearch"
+make -C deployment -j1 certs-opensearch-nodes k3s-load-certs-opensearch NODES=opensearch-shared
+make -C deployment helm-install-opensearch-stack
 ```
 
-For a packaged chart, set `chart=./opensearch` after extracting it and point
-`certs` at your certificate directory. The archive contains the chart dependency,
-the shared OpenSearch config, and the Security policy.
+The stack target prepares the authentication Secrets, then installs OpenSearch
+and Dashboards. It uses `KUBE_NAMESPACE` from `deployment/env/general.env`.
 
-```bash
-kubectl create namespace search
-kubectl -n search create secret generic opensearch-node-tls \
-  --from-file=node.crt="$certs/opensearch-shared.crt" \
-  --from-file=node.key="$certs/opensearch-shared.key" \
-  --from-file=ca.crt="$certs/elastic-stack-ca.crt.pem"
-helm upgrade --install opensearch "$chart" -n search \
-  --set-file "opensearch.config.opensearch\.yml=$chart/config/opensearch.yml"
-```
-
-Helm loads the bundled [`opensearch.yml`](config/opensearch.yml) through `--set-file`.
-`make -C deployment helm-install-opensearch` applies `OPENSEARCH_LOG_LEVEL`
-from `deployment/env/opensearch.env` before invoking Helm. To apply all three
-runtime ConfigMaps together, run `make -C deployment k3s-load-env-all`.
-
-Transport TLS checks the CA and shared node DN. Set `KUBE_NAMESPACE` or
-`CLUSTER_DOMAIN` when issuing the certificate if either differs from `search`
-or `cluster.local`.
-
-### Authentication
-
-For K3s, initialize Security after OpenSearch starts. The Make target uses
-`KUBE_NAMESPACE` from `deployment/env/general.env`.
+To install OpenSearch on its own, prepare the bootstrap Secret before installing.
 
 ```bash
 make -C deployment k3s-load-auth-opensearch
+make -C deployment helm-install-opensearch
 ```
 
-Set `OPENSEARCH_KIBANA_PASSWORD` in the environment or in `deployment/env/authentication.env`.
-Use `OPENSEARCH_AUTH_FILE` to select a different file. If no password is supplied,
-the target uses `dashboards-auth` if present or prompts in a terminal. The same
-file or environment can supply the optional user passwords below. On an
-initialized cluster the target reports that Security is already initialized.
-
-For direct Helm installs, run the bootstrap script with the following settings.
-Export `OPENSEARCH_KIBANA_PASSWORD` for `kibanaserver`. Set
+The loader requires `htpasswd`. Set `OPENSEARCH_KIBANA_PASSWORD` for
+`kibanaserver` in the environment or `deployment/env/authentication.env`. It
+also accepts the password from a preexisting `dashboards-auth` Secret. Set
 `OPENSEARCH_NIFI_PASSWORD`, `OPENSEARCH_PIPELINE_PASSWORD`, or
-`OPENSEARCH_ANALYST_PASSWORD` to create `nifi`,
-`cogstack_pipeline`, or `cogstack_user`, respectively. Export the absolute
-`SECURITY_DIR` for a packaged chart or custom certificate location. After the
-OpenSearch cluster forms, initialize Security once before starting Dashboards.
+`OPENSEARCH_ANALYST_PASSWORD` to create `nifi`, `cogstack_pipeline`, or
+`cogstack_user`. Set `OPENSEARCH_ADMIN_PASSWORD` to create a password-based
+`admin` with the `all_access` role. Use `OPENSEARCH_AUTH_FILE` to select another
+credentials file.
 
-```bash
-bash "$chart/security/bootstrap.sh" kubectl -n search exec -i opensearch-cluster-master-0 --
-```
+OpenSearch uses `opensearch-security-bootstrap` to initialize an empty Security
+index. For an existing cluster that uses an admin certificate, create a
+password-authenticated administrator in the existing Security index before
+switching to HTTP. Use the current `kibanaserver` password when loading the
+Dashboards Secret.
 
-From inside the cluster, clients can use
-`https://opensearch-cluster-master.search.svc:9200`.
+Clients in the release namespace can use `http://opensearch-cluster-master:9200`.
+External clients use the NGINX `/opensearch/` route over HTTPS.
 
 ## Replicas
 
@@ -99,31 +71,31 @@ The StatefulSet creates one 8 GiB PVC per pod and mounts it at
 shows the claim template. The second lists claims after installation.
 
 ```bash
-helm template opensearch deployment/charts/opensearch -n search \
+helm template opensearch deployment/charts/opensearch -n cogstack \
   --show-only charts/opensearch/templates/statefulset.yaml
-kubectl -n search get pvc
+kubectl -n cogstack get pvc
 ```
 
-## Configuration and TLS
+## Configuration
 
-The chart links to the source at `apps/opensearch/config/opensearch.yml`.
-In Docker, mount the source at `/usr/share/opensearch/config/opensearch.yml`.
-Mount the shared certificate, key, and public CA as `node.crt`, `node.key`,
-and `ca.crt` under `/usr/share/opensearch/config/tls`.
+`helm-install-opensearch` loads the bundled configuration with `--set-file` and
+applies `OPENSEARCH_LOG_LEVEL` from `deployment/env/opensearch.env`. The chart
+sets `plugins.security.ssl.http.enabled=false` and enables Security bootstrap
+from the mounted policy through the OpenSearch container's settings environment.
 
 ### Custom values
 
-Pass a prepared file to Helm. The chart creates a ConfigMap and uses it to
-populate the file mounted at `/usr/share/opensearch/config/opensearch.yml`.
+For direct Helm installs, build the dependency and load a config file. The
+release also requires the `opensearch-security-bootstrap` and
+`opensearch-node-tls` Secrets in the same namespace.
 
 ```bash
-helm upgrade --install opensearch deployment/charts/opensearch -n search \
-  --set-file 'opensearch.config.opensearch\.yml=/path/to/kubernetes/opensearch.yml'
+chart=deployment/charts/opensearch
+helm repo add opensearch https://opensearch-project.github.io/helm-charts/
+helm dependency build "$chart"
+helm upgrade --install opensearch "$chart" -n cogstack \
+  --set-file "opensearch.config.opensearch\.yml=$chart/config/opensearch.yml"
 ```
 
-Put TLS keys and certificates in a Kubernetes Secret and mount it using
-`opensearch.secretMounts`. Match the PEM paths in the config to the mount.
-See the [upstream chart settings](https://github.com/opensearch-project/helm-charts/blob/main/charts/opensearch/README.md).
-
-Install Dashboards separately using the
-[standalone Dashboards chart](../opensearch-dashboards/README.md).
+For a packaged chart, set `chart=./opensearch` after extracting it. The archive
+includes the chart dependency, OpenSearch configuration, and Security policy.
