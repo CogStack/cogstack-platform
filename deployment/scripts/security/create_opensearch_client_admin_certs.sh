@@ -11,7 +11,7 @@
 #
 # Requires:
 #     - Bash and OpenSSL
-#     - OS_CERTIFICATE_PASSWORD for the encrypted Dashboards PKCS#12 bundle
+#     - OPENSEARCH_CERTIFICATE_PASSWORD for the encrypted Dashboards PKCS#12 bundle
 #     - root-ca.pem and root-ca.key under certificates/root/ in SECURITY_DIR
 #
 # Optional environment variables:
@@ -63,7 +63,8 @@ files=()
 if [[ "$mode" != --admin-only ]]; then
     # shellcheck source=password_prompt.sh
     source "$script_dir/password_prompt.sh"
-    require_password OS_CERTIFICATE_PASSWORD
+    OPENSEARCH_CERTIFICATE_PASSWORD=${OPENSEARCH_CERTIFICATE_PASSWORD:-${OS_CERTIFICATE_PASSWORD:-}}
+    require_password OPENSEARCH_CERTIFICATE_PASSWORD
     roles=(client)
     files=(es_kibana_client.pem es_kibana_client.key es_kibana_client.csr es_kibana_client.p12)
 
@@ -130,7 +131,7 @@ done
 if [[ "$mode" != --admin-only ]]; then
     openssl pkcs12 -export -name es_kibana_client -inkey "$scratch_dir/es_kibana_client.key" \
         -in "$scratch_dir/es_kibana_client.pem" -certfile "$ca_cert" -out "$scratch_dir/es_kibana_client.p12" \
-        -keypbe AES-256-CBC -certpbe AES-256-CBC -passout env:OS_CERTIFICATE_PASSWORD
+        -keypbe AES-256-CBC -certpbe AES-256-CBC -passout env:OPENSEARCH_CERTIFICATE_PASSWORD
 fi
 
 (umask 022; mkdir -p -- "$output_dir")

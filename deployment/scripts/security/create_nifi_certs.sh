@@ -9,7 +9,8 @@
 #
 # Requires:
 #     - Bash, OpenSSL and Java keytool
-#     - KEYSTORE_PASSWORD and TRUSTSTORE_PASSWORD (prompted when unset)
+#     - NiFi store passwords from the environment or deployment/env/certificates.env
+#       (prompted when missing)
 #     - root-ca.pem and root-ca.key under certificates/root/ in SECURITY_DIR
 #
 # Optional environment variables:
@@ -40,6 +41,10 @@ if (( $# > 0 )); then
 fi
 
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+if [[ -f "$script_dir/../../env/certificates.env" ]]; then
+    # shellcheck source=../../env/certificates.env
+    source "$script_dir/../../env/certificates.env"
+fi
 security_dir=${SECURITY_DIR:-"$script_dir/../../security"}
 profile="$script_dir/../../security/templates/ssl-extensions-x509.cnf"
 ca_cert="$security_dir/certificates/root/root-ca.pem"

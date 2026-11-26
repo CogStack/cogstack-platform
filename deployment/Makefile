@@ -26,6 +26,8 @@ setup-verify: ## Check local Docker, Docker Compose, and K3s access without sudo
 
 .PHONY: certs certs-all certs-root certs-nifi certs-nginx certs-opensearch certs-opensearch-nodes delete-certs-all
 
+load_certificates_env = set -e; set -a; if [ -f ./env/certificates.env ]; then . ./env/certificates.env; fi; set +a
+
 certs: certs-root ## Generate the root CA and NiFi and NGINX certificates
 	$(MAKE) certs-nifi certs-nginx
 
@@ -36,27 +38,33 @@ certs-all: ## Generate the root CA and NiFi, NGINX, OpenSearch, and Dashboards c
 	export CLUSTER_DOMAIN; \
 	$(MAKE) certs KUBE_NAMESPACE="$$namespace"; \
 	$(MAKE) certs-opensearch KUBE_NAMESPACE="$$namespace"
+	@$(load_certificates_env); \
 	OPENSEARCH_DASHBOARDS_DNS_NAMES="$${OPENSEARCH_DASHBOARDS_DNS_NAMES:-localhost}" \
 		bash scripts/security/create_opensearch_client_admin_certs.sh --dashboards-only
 
 certs-root: ## Generate the root CA bundle
+	@$(load_certificates_env); \
 	bash scripts/security/create_root_ca_cert.sh
 
 certs-nifi: ## Generate the NiFi certificate and stores with the existing CA
 	bash scripts/security/create_nifi_certs.sh
 
 certs-nginx: ## Generate the NGINX certificate with the existing CA
+	@$(load_certificates_env); \
 	bash scripts/security/create_nginx_certs.sh
 
 certs-opensearch: ## Generate the shared OpenSearch node and admin client certificates
-	@service=opensearch-cluster-master; \
+	@$(load_certificates_env); \
+	service=opensearch-cluster-master; \
 	service_dns="$$service.$${KUBE_NAMESPACE:-search}.svc"; \
 	$(MAKE) certs-opensearch-nodes NODES=opensearch-shared \
 		OPENSEARCH_NODE_DNS_NAMES="$${OPENSEARCH_NODE_DNS_NAMES:-localhost,$$service,$$service_dns,$$service_dns.$${CLUSTER_DOMAIN:-cluster.local}}"
+	@$(load_certificates_env); \
 	bash scripts/security/create_opensearch_client_admin_certs.sh --admin-only
 
 certs-opensearch-nodes: ## Generate OpenSearch node certificates for NODES="node1 node2 ..."
-	@read -r -a nodes <<< "$$NODES"; \
+	@$(load_certificates_env); \
+	read -r -a nodes <<< "$$NODES"; \
 	bash scripts/security/create_opensearch_node_cert.sh "$${nodes[@]}"
 
 delete-certs-all: ## Delete generated local TLS certificates, keys, and stores

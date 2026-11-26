@@ -12,10 +12,13 @@ NiFi and NGINX. The root CA, NiFi and OpenSearch node generators also use
 Java's `keytool`. `SECURITY_DIR` defaults to `deployment/security/`.
 
 The generators prompt for missing passwords with hidden input in a terminal.
-Export the required variables before running from CI or with redirected input.
+For non-interactive runs, provide the required passwords through the environment
+or the generator's configuration.
 
-To use [sample store passwords](../env/certificates.env) for local development,
-load them before running the root CA and NiFi generators.
+`make -C deployment certs`, `make -C deployment certs-all` and the individual
+certificate targets load `deployment/env/certificates.env` automatically. For
+a direct invocation of the root CA generator, load the file to use its sample
+store password.
 
 ```bash
 set -a
@@ -31,9 +34,10 @@ The root CA generator uses `ROOT_CERTIFICATE_KEYSTORE_PASSWORD`.
 
 ### NiFi
 
-Use the `KEYSTORE_PASSWORD` and `TRUSTSTORE_PASSWORD` that NiFi will use.
-The legacy `NIFI_KEYSTORE_PASSWORD` and `NIFI_TRUSTSTORE_PASSWORD` names are
-also accepted.
+The NiFi generator and the default `k3s-load-auth-nifi` workflow read
+`NIFI_KEYSTORE_PASSWORD` and `NIFI_TRUSTSTORE_PASSWORD` from
+`deployment/env/certificates.env`. `KEYSTORE_PASSWORD` and
+`TRUSTSTORE_PASSWORD` take precedence when set.
 
 Choose the command for your deployment. The default NiFi certificate covers
 `nifi`, `localhost`, `cogstack-nifi`, `cogstack-nifi-headless`, and `127.0.0.1`.
@@ -78,7 +82,7 @@ It runs without a store password or `keytool`.
 
 ### OpenSearch
 
-Use `OS_CERTIFICATE_PASSWORD` for the Java and PKCS#12 stores. Pass the node
+Use `OPENSEARCH_CERTIFICATE_PASSWORD` for the Java and PKCS#12 stores. Pass the node
 hostnames when generating the node certificates. Generate the Dashboards and
 admin certificates with the second command.
 
