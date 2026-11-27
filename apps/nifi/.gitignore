@@ -1,10 +1,9 @@
 # NiFi and Py4J type stubs are maintained source files.
 !typings/**/*.pyi
 
-# Share the K3s example and keep deployment env files private.
+# Keep deployment env files private.
 !/env/
 /env/*
-!/env/nifi.env.example
 
 # Mutable host configuration and processor state.
 conf/flow.json.gz

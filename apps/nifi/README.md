@@ -11,15 +11,19 @@ production configurations use `cogstacksystems/nifi` and `cogstacksystems/nginx`
 
 ### Environment files
 
-From the repository root, create `apps/nifi/env/` and add `general.env` and
-`nifi.env`. Both files are Git-ignored. `general.env` can be empty if you have
-no shared settings. Use the following as a starting point for `nifi.env`.
+Edit `apps/nifi/env/nifi.env` directly. For a new checkout, create it with the
+settings below. This file also supplies NiFi and NGINX settings when rendering
+Helm values. For Docker, create `apps/nifi/env/general.env` for shared settings.
+It can be empty. Both files are Git-ignored.
 
 ```dotenv
 NIFI_DOCKER_CPU_MIN=1
 NIFI_DOCKER_CPU_MAX=2
 NIFI_DOCKER_RAM=4g
 
+NIFI_UID=1000
+NIFI_GID=1000
+NIFI_INTERNAL_PORT_NGINX=8443
 NIFI_WEB_PROXY_HOST=localhost:8443
 NIFI_HEALTHCHECK_HOST=nifi
 ```
