@@ -3,7 +3,7 @@ name: docker_build_nifi
 on:
   push:
     branches: ['**']
-    tags: ['v*.*.*']
+    tags: ['nifi-v*.*.*']
     paths: &paths
       - 'apps/nifi/**'
       - '.github/workflows/docker_build_nifi.yml'
@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   build:
-    if: github.event_name != 'release' || startsWith(github.event.release.tag_name, 'v')
+    if: github.event_name != 'release' || startsWith(github.event.release.tag_name, 'nifi-v')
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
@@ -46,9 +46,9 @@ jobs:
           images: &image cogstacksystems/nifi
           flavor: suffix=-${{ matrix.arch }},onlatest=true
           tags: &tags |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') }}
+            type=semver,pattern={{version}},match=^nifi-v(.*)$
+            type=semver,pattern={{major}}.{{minor}},match=^nifi-v(.*)$
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/nifi-v') }}
             type=ref,event=branch,enable=${{ github.event_name != 'pull_request' }}
             type=sha,format=short
       - uses: docker/build-push-action@v7
