@@ -8,7 +8,7 @@ PostgreSQL, so a search straight after a write still sees it.
 | Workload | Image | Service | Storage |
 | --- | --- | --- | --- |
 | `hapi-fhir` | `hapiproject/hapi:v8.12.0-2` | `hapi-fhir:8080` | none |
-| `hapi-fhir-db` | `postgres:16-alpine` | `hapi-fhir-db:5432` | 10Gi PVC |
+| `hapi-fhir-db` | `postgres:18.6-trixie` | `hapi-fhir-db:5432` | 10Gi PVC |
 | `hapi-fhir-opensearch` | `opensearchproject/opensearch:3.9.0` | `hapi-fhir-opensearch:9200` | 10Gi PVC |
 
 ## No templating

@@ -1,13 +1,15 @@
 # GKE deployment test
 
-Every pull request that touches the Helm charts is deployed to its own small GKE
-cluster and left running, so reviewers can open the apps in a browser.
+Every pull request that touches the deployment is deployed to its own small GKE
+cluster and left running, so reviewers can open the services in a browser. The
+stack is HAPI FHIR, OpenSearch and NiFi, deployed by
+`deployment/scripts/minimum_deployment.sh` and nothing else.
 
 | | |
 |---|---|
 | Workflows | `.github/workflows/gke_deploy_test.yml`, `.github/workflows/gke_teardown.yml` |
-| URLs | `https://<app>.pr-<number>.platform.cogstack.dev` for `trainer`, `jupyter`, `dashboards`, `medcat`, `anoncat`, `ocr` |
-| Login | user `cogstack`; password: `gcloud secrets versions access latest --secret preview-basic-auth-password --project <project>` |
+| URLs | `https://<service>.pr-<number>.platform.cogstack.dev` for `hapi`, `opensearch`, `nifi` |
+| Login | user `admin`, password `admin` |
 | Auth to Google Cloud | GitHub OIDC (Workload Identity Federation). No keys are stored anywhere. |
 
 ## How it works
@@ -17,16 +19,17 @@ every script derives what it needs from the PR number.
 
 1. `cluster-up.sh` creates the cluster, or reuses it if a previous push already did.
 2. `deploy.sh` installs Traefik and cert-manager, points `*.pr-<n>.platform.cogstack.dev`
-   at the load balancer, obtains a wildcard certificate, then installs or upgrades
-   `cogstack-ce-helm` (`deployment/charts/ce`) from the PR and runs `helm test`.
-3. `smoke-test.sh` requests every app over public HTTPS.
+   at the load balancer, obtains a wildcard certificate, then runs
+   `minimum_deployment.sh` from the PR with `INGRESS_DOMAIN` set and waits for
+   the workloads.
+3. `smoke-test.sh` requests every service over public HTTPS.
 4. `pr-status.sh` writes a panel at the top of the PR description: a link and a
    green or red dot per app. It shows "deploying", "failed" and "removed" too,
    and the hourly job re-checks the dots for environments that are still up.
 5. The check goes green and the cluster stays up.
 
-Every route sits behind basic auth, because the charts ship demo passwords and
-the URLs are public.
+Every route asks for the same fixed login. Traefik passes it on, and the
+OpenSearch `admin` user is given the same password, so one login opens all three.
 
 ## Teardown
 
@@ -66,6 +69,6 @@ To move the test to another repository:
 ## Limits
 
 - Pull requests from forks and from Dependabot are skipped: they cannot obtain an OIDC token.
-- Pull requests that change nothing under `deployment/charts/`, `.github/scripts/` or
-  `.github/workflows/gke_*` are not deployed; the check is skipped and counts as passing.
+- Pull requests that change nothing under `deployment/charts/`, `deployment/scripts/`,
+  `deployment/env/`, `.github/scripts/` or `.github/workflows/gke_*` are not deployed; the check is skipped and counts as passing.
 - The charts deploy published images, so this tests the charts, not unreleased application code.

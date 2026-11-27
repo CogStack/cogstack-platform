@@ -25,7 +25,6 @@ POOL="github"
 PROVIDER="github"
 CI_SA="gha-deploy-test@${PROJECT_ID}.iam.gserviceaccount.com"
 NODE_SA="gke-node@${PROJECT_ID}.iam.gserviceaccount.com"
-SECRET="preview-basic-auth-password"
 
 gc() { gcloud --project "$PROJECT_ID" --quiet "$@"; }
 log() { echo "==> $*" >&2; }
@@ -61,7 +60,7 @@ PROJECT_NUMBER="$(gcloud projects describe "$PROJECT_ID" --format='value(project
 log "Enabling APIs"
 gc services enable container.googleapis.com compute.googleapis.com dns.googleapis.com \
   iam.googleapis.com iamcredentials.googleapis.com sts.googleapis.com \
-  secretmanager.googleapis.com cloudresourcemanager.googleapis.com
+  cloudresourcemanager.googleapis.com
 
 log "DNS zone for $BASE_DOMAIN"
 gc dns managed-zones describe "$DNS_ZONE_NAME" >/dev/null 2>&1 ||
@@ -101,14 +100,6 @@ fi
 gc iam service-accounts add-iam-policy-binding "$CI_SA" --role roles/iam.workloadIdentityUser \
   --member "principalSet://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${POOL}/*" >/dev/null
 
-log "Basic auth password"
-if ! gc secrets describe "$SECRET" >/dev/null 2>&1; then
-  gc secrets create "$SECRET" --replication-policy automatic >/dev/null
-  openssl rand -hex 16 | tr -d '\n' | gc secrets versions add "$SECRET" --data-file=- >/dev/null
-fi
-gc secrets add-iam-policy-binding "$SECRET" --member "serviceAccount:${CI_SA}" \
-  --role roles/secretmanager.secretAccessor >/dev/null
-
 # cert-manager in every PR cluster proves domain ownership by writing DNS records.
 # The Kubernetes identity pool only exists once the project has had a cluster.
 log "cert-manager DNS access"
@@ -131,7 +122,4 @@ $(for repo in "$@"; do
   echo "     gh variable set GCP_WORKLOAD_IDENTITY_PROVIDER -R ${repo} -b ${provider_name}"
   echo "     gh variable set GCP_SERVICE_ACCOUNT -R ${repo} -b ${CI_SA}"
 done)
-
-3. Password for the PR environments (user "cogstack"):
-     gcloud secrets versions access latest --secret ${SECRET} --project ${PROJECT_ID}
 EOF

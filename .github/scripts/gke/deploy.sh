@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Deploy this checkout of cogstack-ce-helm to the PR's cluster, behind HTTPS.
-# Safe to re-run: a later push to the PR upgrades the existing release.
+# Deploy this checkout's minimum stack (HAPI FHIR, OpenSearch, NiFi) to the PR's
+# cluster, behind HTTPS, with deployment/scripts/minimum_deployment.sh.
+# Safe to re-run: a later push to the PR applies the manifests again.
 # Usage: deploy.sh <pr-number>   (run cluster-up.sh first)
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -42,31 +43,23 @@ else
 fi
 
 log "Configuring basic auth"
-password="$(gc secrets versions access latest --secret "$BASIC_AUTH_SECRET")"
-[[ -n "${GITHUB_ACTIONS:-}" ]] && echo "::add-mask::${password}"
 kubectl -n traefik create secret generic basic-auth-users \
-  --from-literal=users="${BASIC_AUTH_USER}:$(openssl passwd -apr1 "$password")" \
+  --from-literal=users="${BASIC_AUTH_USER}:$(openssl passwd -apr1 "$BASIC_AUTH_PASSWORD")" \
   --dry-run=client -o yaml | kubectl apply -f -
 
 log "Requesting the wildcard certificate for *.${DOMAIN}"
 envsubst '${GCP_PROJECT_ID} ${DOMAIN}' < platform.tmpl.yaml | kubectl apply -f -
 kubectl -n traefik wait --for=condition=Ready certificate/wildcard --timeout=15m
 
-log "Deploying cogstack-ce-helm"
-envsubst '${DOMAIN}' < values.tmpl.yaml > "$WORK/values.yaml"
-(cd "$REPO_ROOT/deployment/charts" && "$REPO_ROOT/.github/scripts/helm-recursive-dependency-update.py")
+log "Deploying the minimum stack"
+# The script takes its OpenSearch users from this file instead of the passwords
+# committed in deployment/env/authentication.env.
+printf 'OPENSEARCH_ADMIN_PASSWORD=%s\nOPENSEARCH_KIBANA_PASSWORD=%s\n' \
+  "$BASIC_AUTH_PASSWORD" "$(openssl rand -hex 16)" > "$WORK/authentication.env"
+OPENSEARCH_AUTH_FILE="$WORK/authentication.env" INGRESS_DOMAIN="$DOMAIN" \
+  bash "$REPO_ROOT/deployment/scripts/minimum_deployment.sh"
 
-# A release left failed or half-applied by an earlier run blocks upgrades; start it clean.
-release_status="$(helm status "$RELEASE_NAME" -n "$RELEASE_NAMESPACE" -o json 2>/dev/null | jq -r '.info.status' || true)"
-if [[ -n "$release_status" && "$release_status" != "deployed" ]]; then
-  log "Release is '$release_status'; uninstalling before reinstall"
-  helm uninstall "$RELEASE_NAME" -n "$RELEASE_NAMESPACE" --wait --timeout 10m
-fi
-
-helm upgrade --install "$RELEASE_NAME" "$REPO_ROOT/deployment/charts/ce" \
-  --namespace "$RELEASE_NAMESPACE" --create-namespace \
-  -f "$WORK/values.yaml" \
-  --wait --timeout 30m
-
-log "Running helm tests"
-helm test "$RELEASE_NAME" -n "$RELEASE_NAMESPACE" --logs --timeout 15m
+log "Waiting for the workloads"
+for workload in $(kubectl -n "$NAMESPACE" get deployment,statefulset -o name); do
+  kubectl -n "$NAMESPACE" rollout status "$workload" --timeout=20m
+done

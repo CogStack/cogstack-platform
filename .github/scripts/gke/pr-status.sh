@@ -6,7 +6,7 @@
 # Usage: pr-status.sh <pr-number> <deploying|live|failed|removed>
 #   live       probes every app over public HTTPS and shows a dot per app
 #   the others only change the headline
-# Needs GH_TOKEN, and GH_REPO or GITHUB_REPOSITORY. "live" also needs gcloud.
+# Needs GH_TOKEN, and GH_REPO or GITHUB_REPOSITORY.
 set -uo pipefail
 cd "$(dirname "$0")" || exit 1
 source ./lib.sh
@@ -27,12 +27,9 @@ now="$(date -u '+%Y-%m-%d %H:%M UTC')"
 
 app_title() {
   case "$1" in
-    trainer) echo "MedCAT Trainer" ;;
-    jupyter) echo "JupyterHub" ;;
-    dashboards) echo "OpenSearch Dashboards" ;;
-    medcat) echo "MedCAT Service (API)" ;;
-    anoncat) echo "AnonCAT Service (API)" ;;
-    ocr) echo "OCR Service (API)" ;;
+    hapi) echo "HAPI FHIR (API)" ;;
+    opensearch) echo "OpenSearch (API)" ;;
+    nifi) echo "NiFi" ;;
     *) echo "$1" ;;
   esac
 }
@@ -62,15 +59,13 @@ app_title() {
       echo "<sub>Updated ${now}${run_link}</sub>"
       ;;
     live)
-      password="$(gc secrets versions access latest --secret "$BASIC_AUTH_SECRET")"
-      [[ -n "${GITHUB_ACTIONS:-}" ]] && echo "::add-mask::${password}" >&2
       rows=""
       down=0
       total=0
       for app in $APPS; do
         name="${app%%:*}"
         url="https://${name}.${DOMAIN}${app#*:}"
-        code="$(curl -s -L -o /dev/null -m 20 -w '%{http_code}' -u "${BASIC_AUTH_USER}:${password}" "$url" || true)"
+        code="$(curl -s -L -o /dev/null -m 20 -w '%{http_code}' -u "${BASIC_AUTH_USER}:${BASIC_AUTH_PASSWORD}" "$url" || true)"
         total=$((total + 1))
         if [[ "$code" =~ ^2 ]]; then
           dot="🟢"
@@ -90,8 +85,7 @@ app_title() {
       echo "|---|---|---|"
       printf '%s' "$rows"
       echo
-      echo "**Sign in** with user \`${BASIC_AUTH_USER}\`. Get the password with:"
-      echo "\`gcloud secrets versions access latest --secret ${BASIC_AUTH_SECRET} --project ${GCP_PROJECT_ID}\`"
+      echo "**Sign in** with user \`${BASIC_AUTH_USER}\` and password \`${BASIC_AUTH_PASSWORD}\`."
       echo
       echo "<sub>Commit \`${commit}\` · checked ${now} · removed when the PR closes or after ${MAX_AGE_HOURS:-24} hours${run_link}</sub>"
       ;;

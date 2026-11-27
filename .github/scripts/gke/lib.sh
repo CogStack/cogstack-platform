@@ -18,11 +18,15 @@ export NODE_SERVICE_ACCOUNT="gke-node@${GCP_PROJECT_ID}.iam.gserviceaccount.com"
 # Label carried by every cluster this test creates; the reaper selects on it.
 export CLUSTER_LABEL="purpose=pr-deploy-test"
 
-export BASIC_AUTH_USER="cogstack"
-export BASIC_AUTH_SECRET="preview-basic-auth-password"
+# Traefik asks for this login on every route and passes it on, and deploy.sh
+# gives the same password to the OpenSearch user of the same name. One login
+# therefore opens all three services.
+export BASIC_AUTH_USER="admin"
+export BASIC_AUTH_PASSWORD="admin"
 
-export RELEASE_NAME="cogstack"
-export RELEASE_NAMESPACE="cogstack"
+# The namespace minimum_deployment.sh deploys to.
+NAMESPACE="$(source ../../../deployment/env/general.env && echo "$KUBE_NAMESPACE")"
+export NAMESPACE
 
 # Pinned so that an upstream chart release cannot break a required check.
 export TRAEFIK_CHART_VERSION="42.4.1"
@@ -30,7 +34,7 @@ export CERT_MANAGER_CHART_VERSION="v1.21.3"
 
 # Apps exposed per PR as <name>.pr-<number>.<BASE_DOMAIN>, with the path the
 # smoke test requests.
-export APPS="trainer:/ jupyter:/ dashboards:/ medcat:/api/health/live anoncat:/api/health/live ocr:/api/health"
+export APPS="hapi:/fhir/metadata opensearch:/ nifi:/nifi/"
 
 # set_pr <number>: derive the per-PR names.
 set_pr() {

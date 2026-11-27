@@ -7,9 +7,6 @@ cd "$(dirname "$0")"
 source ./lib.sh
 set_pr "${1:?usage: smoke-test.sh <pr-number>}"
 
-password="$(gc secrets versions access latest --secret "$BASIC_AUTH_SECRET")"
-[[ -n "${GITHUB_ACTIONS:-}" ]] && echo "::add-mask::${password}"
-
 status() { curl -sS -o /dev/null -m 20 -w '%{http_code}' "$@" || true; }
 
 failed=0
@@ -19,7 +16,7 @@ for app in $APPS; do
   # New DNS names and certificates take a little while to be visible everywhere.
   for _ in $(seq 1 30); do
     anon="$(status "$url")"
-    authed="$(status -L -u "${BASIC_AUTH_USER}:${password}" "$url")"
+    authed="$(status -L -u "${BASIC_AUTH_USER}:${BASIC_AUTH_PASSWORD}" "$url")"
     if [[ "$anon" == "401" && "$authed" =~ ^2 ]]; then
       ok=1
       break
