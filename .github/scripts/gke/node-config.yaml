@@ -1,5 +1,0 @@
-# GKE node settings for PR clusters. OpenSearch refuses to start with the
-# default vm.max_map_count of 65530.
-linuxConfig:
-  sysctl:
-    vm.max_map_count: 262144
