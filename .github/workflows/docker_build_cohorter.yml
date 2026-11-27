@@ -63,6 +63,7 @@ jobs:
             type=ref,event=tag
             type=ref,event=pr
             type=sha
+            type=match,pattern=^cohorter-v(\d+\.\d+\.\d+)$,group=1
 
       - name: Build and push Docker image
         id: push
