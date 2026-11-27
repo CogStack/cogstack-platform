@@ -22,7 +22,7 @@ export CLUSTER_LABEL="purpose=pr-deploy-test"
 # gives the same password to the OpenSearch user of the same name. One login
 # therefore opens all three services.
 export BASIC_AUTH_USER="admin"
-export BASIC_AUTH_SECRET="preview-basic-auth-password"
+export BASIC_AUTH_PASSWORD="admin"
 
 # The namespace minimum_deployment.sh deploys to.
 NAMESPACE="$(source ../../../deployment/env/general.env && echo "$KUBE_NAMESPACE")"

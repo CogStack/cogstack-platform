@@ -43,10 +43,8 @@ else
 fi
 
 log "Configuring basic auth"
-password="$(gc secrets versions access latest --secret "$BASIC_AUTH_SECRET")"
-[[ -n "${GITHUB_ACTIONS:-}" ]] && echo "::add-mask::${password}"
 kubectl -n traefik create secret generic basic-auth-users \
-  --from-literal=users="${BASIC_AUTH_USER}:$(openssl passwd -apr1 "$password")" \
+  --from-literal=users="${BASIC_AUTH_USER}:$(openssl passwd -apr1 "$BASIC_AUTH_PASSWORD")" \
   --dry-run=client -o yaml | kubectl apply -f -
 
 log "Requesting the wildcard certificate for *.${DOMAIN}"
@@ -57,7 +55,7 @@ log "Deploying the minimum stack"
 # The script takes its OpenSearch users from this file instead of the passwords
 # committed in deployment/env/authentication.env.
 printf 'OPENSEARCH_ADMIN_PASSWORD=%s\nOPENSEARCH_KIBANA_PASSWORD=%s\n' \
-  "$password" "$(openssl rand -hex 16)" > "$WORK/authentication.env"
+  "$BASIC_AUTH_PASSWORD" "$(openssl rand -hex 16)" > "$WORK/authentication.env"
 OPENSEARCH_AUTH_FILE="$WORK/authentication.env" INGRESS_DOMAIN="$DOMAIN" \
   bash "$REPO_ROOT/deployment/scripts/minimum_deployment.sh"
 

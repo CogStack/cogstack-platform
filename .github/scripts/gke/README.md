@@ -9,7 +9,7 @@ stack is HAPI FHIR, OpenSearch and NiFi, deployed by
 |---|---|
 | Workflows | `.github/workflows/gke_deploy_test.yml`, `.github/workflows/gke_teardown.yml` |
 | URLs | `https://<service>.pr-<number>.platform.cogstack.dev` for `hapi`, `opensearch`, `nifi` |
-| Login | user `admin`; password: `gcloud secrets versions access latest --secret preview-basic-auth-password --project <project>` |
+| Login | user `admin`, password `admin` |
 | Auth to Google Cloud | GitHub OIDC (Workload Identity Federation). No keys are stored anywhere. |
 
 ## How it works
@@ -28,9 +28,8 @@ every script derives what it needs from the PR number.
    and the hourly job re-checks the dots for environments that are still up.
 5. The check goes green and the cluster stays up.
 
-Every route sits behind basic auth, because HAPI FHIR and NiFi have no login
-and the URLs are public. Traefik passes the login on, and the OpenSearch `admin`
-user is given the same password, so one login opens all three.
+Every route asks for the same fixed login. Traefik passes it on, and the
+OpenSearch `admin` user is given the same password, so one login opens all three.
 
 ## Teardown
 
