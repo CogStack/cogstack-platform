@@ -38,9 +38,8 @@ Use the NGINX `/nifi/` and `/nifi-api/` routes with HTTP Basic authentication.
 ## Persistent configuration and data
 
 The chart creates six PVCs per replica. Set their sizes in
-`apps/nifi/env/nifi.env` using Kubernetes quantities such as `200Gi`. For a new
-deployment, copy the example to that path. [NiFi env example](../../../apps/nifi/env/nifi.env.example)
-[Environment-based values](#environment-based-values)
+`apps/nifi/env/nifi.env` using Kubernetes quantities such as `200Gi`.
+[NiFi environment settings](../../../apps/nifi/README.md#environment-files)
 
 | Volume | Environment variable | Size per replica |
 | --- | --- | --- |
@@ -73,9 +72,9 @@ and readiness probes use NiFi's loopback HTTP endpoint.
 ## Environment-based values
 
 Run `make -C deployment helm-values-nifi` to render `values.env.yaml` using
-`deployment/env/nifi.env`. Set `NIFI_K3S_WHITELIST` to comma-separated names
-from `kubectl get nodes` to populate `allowedNodes`. An empty list allows any
-otherwise eligible node.
+`deployment/env/nifi.env`, which links to `apps/nifi/env/nifi.env`. Set
+`NIFI_K3S_WHITELIST` to comma-separated names from `kubectl get nodes` to
+populate `allowedNodes`. An empty list allows any otherwise eligible node.
 
 ## Resource names
 

@@ -11,15 +11,19 @@ production configurations use `cogstacksystems/nifi` and `cogstacksystems/nginx`
 
 ### Environment files
 
-From the repository root, create `apps/nifi/env/` and add `general.env` and
-`nifi.env`. Both files are Git-ignored. `general.env` can be empty if you have
-no shared settings. Use the following as a starting point for `nifi.env`.
+Edit `apps/nifi/env/nifi.env` directly. For a new checkout, create it with the
+settings below. This file also supplies NiFi and NGINX settings when rendering
+Helm values. For Docker, create `apps/nifi/env/general.env` for shared settings.
+It can be empty. Both files are Git-ignored.
 
 ```dotenv
 NIFI_DOCKER_CPU_MIN=1
 NIFI_DOCKER_CPU_MAX=2
 NIFI_DOCKER_RAM=4g
 
+NIFI_UID=1000
+NIFI_GID=1000
+NIFI_INTERNAL_PORT_NGINX=8443
 NIFI_WEB_PROXY_HOST=localhost:8443
 NIFI_HEALTHCHECK_HOST=nifi
 ```
@@ -44,9 +48,26 @@ for additional settings.
 
 ### TLS certificates
 
-Use the existing certificate generators or supply a TLS bundle. Place the files
-under `deployment/security/certificates/`, or set `SECURITY_DIR` in `nifi.env`
-to the parent of your deployment’s `certificates/` directory.
+Compose uses `deployment/security/certificates/` by default. To select a bundle,
+set `SECURITY_DIR` in `apps/nifi/env/general.env` to the absolute path of the
+directory containing `certificates/`.
+
+```dotenv
+SECURITY_DIR=/path/to/cogstack_platform/deployment/security
+```
+
+The Make targets load this file before running Compose. For direct Compose
+commands, source `./export_env_vars.sh` from `apps/nifi/docker/` first.
+
+For a fresh local bundle, configure the store passwords in
+[`certificates.env`](../../deployment/env/certificates.env) and run the
+deployment targets from the repository root:
+
+```bash
+make -C deployment -j1 certs-root certs-nifi certs-nginx
+```
+
+The bundle needs these files under `certificates/`.
 
 | Files | Purpose |
 | --- | --- |
