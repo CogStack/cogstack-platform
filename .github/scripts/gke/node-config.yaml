@@ -1,0 +1,9 @@
+# Node system configuration for PR clusters, passed to
+# `gcloud container clusters create --system-config-from-file`.
+# https://docs.cloud.google.com/kubernetes-engine/docs/how-to/node-system-config
+#
+# OpenSearch refuses to start below 262144; GKE nodes default to 65530.
+# GKE accepts 65536 to 2147483647, and the value must be a string.
+linuxConfig:
+  sysctl:
+    vm.max_map_count: '262144'

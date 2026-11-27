@@ -27,12 +27,9 @@ now="$(date -u '+%Y-%m-%d %H:%M UTC')"
 
 app_title() {
   case "$1" in
-    trainer) echo "MedCAT Trainer" ;;
-    jupyter) echo "JupyterHub" ;;
-    dashboards) echo "OpenSearch Dashboards" ;;
-    medcat) echo "MedCAT Service (API)" ;;
-    anoncat) echo "AnonCAT Service (API)" ;;
-    ocr) echo "OCR Service (API)" ;;
+    hapi) echo "HAPI FHIR (API)" ;;
+    opensearch) echo "OpenSearch (API)" ;;
+    nifi) echo "NiFi" ;;
     *) echo "$1" ;;
   esac
 }

@@ -132,6 +132,6 @@ $(for repo in "$@"; do
   echo "     gh variable set GCP_SERVICE_ACCOUNT -R ${repo} -b ${CI_SA}"
 done)
 
-3. Password for the PR environments (user "cogstack"):
+3. Password for the PR environments (user "admin"):
      gcloud secrets versions access latest --secret ${SECRET} --project ${PROJECT_ID}
 EOF

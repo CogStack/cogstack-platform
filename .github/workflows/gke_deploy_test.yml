@@ -1,8 +1,9 @@
-# Deploy the PR's cogstack-ce-helm chart to its own GKE cluster and leave it
-# running at https://<app>.pr-<number>.platform.cogstack.dev for review. The
-# links and a status dot per app are kept at the top of the PR description.
+# Deploy the PR's minimum stack (HAPI FHIR, OpenSearch, NiFi) to its own GKE
+# cluster with deployment/scripts/minimum_deployment.sh and leave it running at
+# https://<service>.pr-<number>.platform.cogstack.dev for review. The links and
+# a status dot per service are kept at the top of the PR description.
 #
-# - The first run for a PR creates the cluster; later pushes upgrade the release.
+# - The first run for a PR creates the cluster; later pushes apply the manifests again.
 # - The cluster is removed by gke_teardown.yml (PR closed, manual, or too old).
 # - Authentication to Google Cloud is GitHub OIDC; there are no stored keys.
 # - Nothing here names a repository. The test runs wherever the three GCP_*
@@ -46,7 +47,7 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           if gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files" --paginate --jq '.[].filename' |
-            grep -qE '^(deployment/charts/|\.github/scripts/|\.github/workflows/gke_)'; then
+            grep -qE '^(deployment/(charts|scripts|env)/|\.github/scripts/|\.github/workflows/gke_)'; then
             echo "deploy=true" >> "$GITHUB_OUTPUT"
           else
             echo "deploy=false" >> "$GITHUB_OUTPUT"
@@ -90,8 +91,8 @@ jobs:
         with:
           version: v3.17.0
 
-      - name: Install Python deps for chart scripts
-        run: pip install pyyaml
+      - name: Install htpasswd
+        run: command -v htpasswd || { sudo apt-get update && sudo apt-get install -y apache2-utils; }
 
       - name: Create or reuse the cluster
         run: .github/scripts/gke/cluster-up.sh "$PR_NUMBER"

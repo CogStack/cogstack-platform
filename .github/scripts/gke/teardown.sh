@@ -13,8 +13,7 @@ if [[ -n "$status" ]]; then
   # cluster alone leaves the load balancer and the volume disks behind, billing.
   if [[ "$status" == "RUNNING" || "$status" == "RECONCILING" ]] && get_credentials; then
     log "Removing workloads, volumes and the load balancer"
-    helm uninstall "$RELEASE_NAME" -n "$RELEASE_NAMESPACE" --wait --timeout 10m || true
-    kubectl delete namespace "$RELEASE_NAMESPACE" --ignore-not-found --timeout=10m || true
+    kubectl delete namespace "$NAMESPACE" --ignore-not-found --timeout=10m || true
     helm uninstall traefik -n traefik --wait --timeout 10m || true
     kubectl -n traefik delete svc --all --ignore-not-found --timeout=10m || true
   else
