@@ -65,16 +65,27 @@ on three nodes to tolerate one node failure.
 
 ## Storage
 
-The StatefulSet creates one 8 GiB PVC per pod and mounts it at
-`/usr/share/opensearch/data`. Set `opensearch.persistence.size` and
-`opensearch.persistence.storageClass` before installing. The first command
-shows the claim template. The second lists claims after installation.
+The StatefulSet creates one PVC per replica and mounts it at
+`/usr/share/opensearch/data`. Set `OPENSEARCH_K3S_VOLUME_SIZE` in
+`apps/opensearch/env/opensearch.env` to a Kubernetes quantity such as `100Gi`.
+The default is `8Gi`. Set `OPENSEARCH_K3S_STORAGE_CLASS` to a named StorageClass
+or leave it empty to use the cluster default.
+
+Render the values and inspect the claim template before installing.
 
 ```bash
+make -C deployment helm-values-opensearch
 helm template opensearch deployment/charts/opensearch -n cogstack \
   --show-only charts/opensearch/templates/statefulset.yaml
-kubectl -n cogstack get pvc
 ```
+
+After installing, list claims with `kubectl -n cogstack get pvc`. For direct
+Helm installs, set `opensearch.persistence.size` and
+`opensearch.persistence.storageClass` in your values file.
+
+Kubernetes treats the StatefulSet claim template as immutable. To grow an
+existing volume, update its PVC's storage request if the StorageClass supports
+expansion. [PVC expansion](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#expanding-persistent-volumes-claims)
 
 ## Configuration
 

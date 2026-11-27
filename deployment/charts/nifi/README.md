@@ -37,14 +37,22 @@ Use the NGINX `/nifi/` and `/nifi-api/` routes with HTTP Basic authentication.
 
 ## Persistent configuration and data
 
-The chart creates one claim per replica for each of:
+The chart creates six PVCs per replica. Set their sizes in
+`apps/nifi/env/nifi.env` using Kubernetes quantities such as `200Gi`. For a new
+deployment, copy the example to that path. [NiFi env example](../../../apps/nifi/env/nifi.env.example)
+[Environment-based values](#environment-based-values)
 
-- `flowfile_repository`
-- `content_repository`
-- `provenance_repository`
-- `database_repository`
-- `state`
-- `conf`
+| Volume | Environment variable | Size per replica |
+| --- | --- | --- |
+| `flowfile_repository` | `NIFI_K3S_FLOWFILE_VOLUME_SIZE` | `20Gi` |
+| `content_repository` | `NIFI_K3S_CONTENT_VOLUME_SIZE` | `100Gi` |
+| `provenance_repository` | `NIFI_K3S_PROVENANCE_VOLUME_SIZE` | `50Gi` |
+| `database_repository` | `NIFI_K3S_DATABASE_VOLUME_SIZE` | `5Gi` |
+| `state` | `NIFI_K3S_STATE_VOLUME_SIZE` | `5Gi` |
+| `conf` | `NIFI_K3S_CONF_VOLUME_SIZE` | `5Gi` |
+
+Set `NIFI_K3S_STORAGE_CLASS` to a named StorageClass for the claims or leave
+it blank to use the cluster default.
 
 The initialization container seeds an empty configuration claim from
 `$NIFI_HOME/conf` in the image, validates the required files and records a

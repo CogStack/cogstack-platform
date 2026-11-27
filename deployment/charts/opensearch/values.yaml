@@ -3,10 +3,11 @@ opensearch:
   protocol: http
   antiAffinity: hard
   nodeAffinity: {}
-  # Each StatefulSet pod gets its own claim from the cluster's default StorageClass.
+  # Each StatefulSet pod gets its own claim. An empty storageClass uses the cluster default.
   persistence:
     enabled: true
-    size: 8Gi
+    size: "8Gi"
+    storageClass: ""
   # Supply opensearch.yml with --set-file as shown in the README.
   extraEnvs:
     - name: DISABLE_INSTALL_DEMO_CONFIG
