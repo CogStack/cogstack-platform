@@ -165,6 +165,23 @@
                 { "type": "revert", "section": "Reverts" }
             ]
         },
+        "deployment/charts/hapi-fhir": {
+            "release-type": "helm",
+            "component": "helm-charts/hapi-fhir",
+            "initial-version": "0.1.0",
+            "changelog-path": "CHANGELOG.md",
+            "bump-minor-pre-major": false,
+            "bump-patch-for-minor-pre-major": false,
+            "draft": false,
+            "prerelease": false,
+            "changelog-sections": [
+                { "type": "feat", "section": "Features" },
+                { "type": "fix", "section": "Bug Fixes" },
+                { "type": "build", "section": "Dependencies" },
+                { "type": "refactor", "section": "Code Refactoring" },
+                { "type": "revert", "section": "Reverts" }
+            ]
+        },
         "deployment/terraform/openstack-kubernetes-k3s": {
             "release-type": "simple",
             "component": "terraform-modules/openstack-kubernetes-k3s",

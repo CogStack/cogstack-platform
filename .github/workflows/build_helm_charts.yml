@@ -103,7 +103,10 @@ jobs:
       - name: Run chart-testing (install)
         if: steps.list-changed.outputs.changed == 'true'
         working-directory: .
-        run: ct install --config .github/linters/ct.yaml
+        # hapi-fhir is linted but not installed: it has no templating, so it cannot be
+        # scaled to zero for CI, and its pods need the hapi-fhir-db Secret, which is
+        # created outside the chart.
+        run: ct install --config .github/linters/ct.yaml --excluded-charts hapi-fhir
 
   helm-publish:
     runs-on: ubuntu-latest
