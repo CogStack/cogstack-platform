@@ -19,6 +19,7 @@ case "$status" in
       --disk-size 50 \
       --service-account "$NODE_SERVICE_ACCOUNT" \
       --workload-pool "${GCP_PROJECT_ID}.svc.id.goog" \
+      --system-config-from-file node-config.yaml \
       --labels "${CLUSTER_LABEL},pr=${PR_NUMBER}"
     ;;
   RUNNING | RECONCILING)
