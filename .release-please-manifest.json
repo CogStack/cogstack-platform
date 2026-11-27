@@ -8,7 +8,7 @@
     "deployment/charts/ocr-service": "0.1.0",
     "deployment/charts/nifi": "0.1.0",
     "deployment/charts/nginx": "0.0.0",
-    "deployment/charts/hapi-fhir": "0.0.0",
+    "deployment/charts/hapi-fhir": "0.1.0",
     "deployment/terraform/openstack-kubernetes-k3s": "0.1.4",
     "apps/cohorter": "0.0.1",
     "apps/nifi": "2.1.0",
