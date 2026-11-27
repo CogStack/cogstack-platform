@@ -1,0 +1,159 @@
+---
+# Source: nginx/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cogstack-nginx-config
+data:
+  nginx.conf.template: |
+    resolver ${NGINX_LOCAL_RESOLVERS} valid=10s;
+    resolver_timeout 3s;
+    
+    upstream nifi {
+        zone nifi 64k;
+        server cogstack-nifi.default.svc.cluster.local:8080 resolve;
+    }
+    upstream opensearch {
+        zone opensearch 64k;
+        server opensearch-cluster-master.default.svc.cluster.local:9200 resolve;
+    }
+    upstream dashboards {
+        zone dashboards 64k;
+        server opensearch-dashboards.default.svc.cluster.local:5601 resolve;
+    }
+    
+    map $request_port $nifi_public_port {
+        "" 443;
+        default $request_port;
+    }
+    
+    server {
+        listen 8443 ssl;
+        server_name ${NGINX_NIFI_SERVER_NAME};
+        ssl_certificate /certificates/tls.crt;
+        ssl_certificate_key /certificates/tls.key;
+        ssl_protocols TLSv1.2 TLSv1.3;
+        absolute_redirect off;
+    
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For $remote_addr;
+    
+        location = / { return 302 /nifi/; }
+        location = /nifi { return 308 /nifi/; }
+    
+        location /opensearch/ {
+            client_max_body_size 100m;
+            proxy_pass http://opensearch/;
+        }
+    
+        location /dashboards/ {
+            proxy_pass http://dashboards;
+        }
+    
+        location / {
+            auth_basic "NiFi";
+            auth_basic_user_file /etc/nginx/nifi-auth/htpasswd;
+            proxy_set_header Authorization "";
+            proxy_set_header Host $http_host;
+            proxy_set_header X-ProxyHost $host;
+            proxy_set_header X-ProxyPort $nifi_public_port;
+            proxy_set_header X-ProxyScheme $scheme;
+            proxy_set_header X-ProxyContextPath "";
+            proxy_set_header X-Forwarded-Context "";
+            proxy_set_header X-Forwarded-Prefix "";
+            proxy_set_header X-Forwarded-For $remote_addr;
+            proxy_redirect http://$http_host/ /;
+            proxy_pass http://nifi;
+        }
+    }
+    
+
+---
+# Source: nginx/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: cogstack-nginx
+spec:
+  type: LoadBalancer
+  selector:
+    app: cogstack-nginx
+  ports:
+    - name: https
+      port: 443
+      targetPort: https
+      protocol: TCP
+
+---
+# Source: nginx/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cogstack-nginx
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cogstack-nginx
+
+  template:
+    metadata:
+      labels:
+        app: cogstack-nginx
+      annotations:
+        checksum/config: 31b6ee535d8b5fbef67ff3a68ebfb63239bed379853c1bb666f6aaf0089c7caf
+
+    spec:
+      containers:
+        - name: nginx
+          image: "cogstacksystems/nginx:latest"
+          imagePullPolicy: Always
+
+          ports:
+            - name: https
+              containerPort: 8443
+
+          envFrom:
+            - configMapRef:
+                name: nginx-env
+                optional: true
+
+          volumeMounts:
+            - name: config
+              mountPath: /etc/nginx/templates/nifi
+              readOnly: true
+            - name: tls
+              mountPath: /certificates
+              readOnly: true
+            - name: nifi-auth
+              mountPath: /etc/nginx/nifi-auth
+              readOnly: true
+
+          readinessProbe:
+            tcpSocket:
+              port: https
+
+          resources:
+            limits:
+              cpu: 1
+              memory: 512M
+            requests:
+              cpu: 1
+              memory: 128M
+
+      volumes:
+        - name: config
+          configMap:
+            name: cogstack-nginx-config
+        - name: tls
+          secret:
+            secretName: nginx-tls
+        - name: nifi-auth
+          secret:
+            secretName: nifi-auth
+            optional: true
+            items:
+              - key: htpasswd
+                path: htpasswd

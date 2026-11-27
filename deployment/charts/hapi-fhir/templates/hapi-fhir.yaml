@@ -1,0 +1,181 @@
+# HAPI FHIR JPA server (R4).
+# The ConfigMap is merged on top of the application.yaml in the image.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hapi-fhir-config
+data:
+  application.yaml: |
+    spring:
+      # No spring.elasticsearch block: it would make HAPI start its Elasticsearch Java
+      # client (used only for $lastn), which OpenSearch rejects with 406. Hibernate
+      # Search has its own client, configured under backend below, and that one works
+      # with OpenSearch. Its backend type is still called elasticsearch.
+      datasource:
+        hikari:
+          maximum-pool-size: 30
+      jpa:
+        properties:
+          hibernate:
+            search:
+              enabled: true
+              schema_management:
+                strategy: CREATE
+              backend:
+                type: elasticsearch
+                hosts: hapi-fhir-opensearch:9200
+                protocol: http
+                layout:
+                  strategy: ca.uhn.fhir.jpa.search.elastic.IndexNamePrefixLayoutStrategy
+                analysis:
+                  configurer: ca.uhn.fhir.jpa.search.HapiHSearchAnalysisConfigurers$HapiElasticsearchAnalysisConfigurer
+                scroll_timeout: 60
+                dynamic_mapping: true
+                schema_management:
+                  settings_file: ca/uhn/fhir/jpa/elastic/index-settings.json
+                  minimal_required_status: YELLOW
+                  minimal_required_status_wait_timeout: 10000
+    hapi:
+      fhir:
+        # _text / _content indexing (off by default since HAPI FHIR 8.0)
+        search_index_full_text_enabled: true
+        # false: OpenSearch answers only _text / _content, and every other search stays
+        # in PostgreSQL, so a search straight after a write still sees it.
+        # true also indexes and answers ordinary search parameters in
+        # OpenSearch, which lags a write by its refresh interval.
+        advanced_lucene_indexing: false
+        store_resource_in_lucene_index_enabled: false
+        # Never reuse a cached search: timings measure the search, not the cache.
+        reuse_cached_search_results_millis: 0
+        allow_contains_searches: true
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hapi-fhir
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate          # a new version migrates the schema — never two versions at once
+  selector:
+    matchLabels:
+      app: hapi-fhir
+  template:
+    metadata:
+      labels:
+        app: hapi-fhir
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: wait-for-db
+          image: postgres:16-alpine
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              until pg_isready -h hapi-fhir-db -p 5432 -U fhir; do
+                echo "waiting for postgres..."; sleep 5;
+              done
+        - name: wait-for-opensearch
+          image: postgres:16-alpine   # for its busybox wget; the HAPI image has no shell
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              until wget -q -O /dev/null "http://hapi-fhir-opensearch:9200/_cluster/health?wait_for_status=yellow&timeout=5s"; do
+                echo "waiting for opensearch..."; sleep 5;
+              done
+      containers:
+        - name: hapi-fhir
+          # distroless flavour
+          # (Docker Hub tags carry a -N release suffix; bare v8.12.0 does not exist)
+          image: hapiproject/hapi:v8.12.0-2
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: http-metrics
+              containerPort: 8081
+          env:
+            # --- FHIR version: R4 (hapi-fhir-structures-r4) ---
+            - name: HAPI_FHIR_FHIR_VERSION
+              value: R4
+            # --- database wiring (mirrors the hapi-fhir-jpaserver chart) ---
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://hapi-fhir-db:5432/fhir
+            - name: SPRING_DATASOURCE_USERNAME
+              value: fhir
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hapi-fhir-db
+                  key: POSTGRES_PASSWORD
+            - name: SPRING_DATASOURCE_DRIVERCLASSNAME
+              value: org.postgresql.Driver
+            - name: spring.jpa.properties.hibernate.dialect
+              value: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
+            # --- OpenSearch and search settings: the hapi-fhir-config ConfigMap ---
+            - name: SPRING_CONFIG_ADDITIONAL_LOCATION
+              value: file:/config/
+            - name: HAPI_FHIR_USE_APACHE_ADDRESS_STRATEGY
+              value: "true"
+            - name: MANAGEMENT_SERVER_PORT
+              value: "8081"
+            - name: MANAGEMENT_ENDPOINT_HEALTH_PROBES_ADD_ADDITIONAL_PATHS
+              value: "true"
+            - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+              value: "health,prometheus"
+          startupProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            failureThreshold: 30
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            periodSeconds: 20
+            timeoutSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /livez
+              port: http
+            periodSeconds: 20
+            timeoutSeconds: 10
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: lucene
+              mountPath: /app/target
+            - name: config
+              mountPath: /config
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: hapi-fhir-config
+        - name: tmp
+          emptyDir: {}
+        - name: lucene
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hapi-fhir
+spec:
+  selector:
+    app: hapi-fhir
+  ports:
+    - port: 8080
+      targetPort: http
