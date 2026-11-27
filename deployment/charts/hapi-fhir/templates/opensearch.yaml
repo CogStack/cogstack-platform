@@ -41,6 +41,16 @@ spec:
             allowPrivilegeEscalation: false
             capabilities:
               drop: ["ALL"]
+          # No authentication: reachable only inside the cluster (ClusterIP Service,
+          # no Ingress or HTTPRoute). The security plugin is uninstalled before
+          # OpenSearch starts, so there are no certificates, users or demo
+          # configuration. The image's entrypoint then starts OpenSearch as usual.
+          command:
+            - bash
+            - -ec
+            - |
+              bin/opensearch-plugin remove --purge opensearch-security
+              exec ./opensearch-docker-entrypoint.sh
           ports:
             - name: http
               containerPort: 9200
@@ -49,13 +59,6 @@ spec:
               value: single-node
             - name: cluster.name
               value: hapi-fhir
-            # No authentication: reachable only inside the cluster (ClusterIP Service,
-            # no Ingress or HTTPRoute). The security plugin is off, so no demo
-            # certificates or users are installed either.
-            - name: DISABLE_SECURITY_PLUGIN
-              value: "true"
-            - name: DISABLE_INSTALL_DEMO_CONFIG
-              value: "true"
             # The nodes keep the default vm.max_map_count, too low for mmap'd indices.
             - name: node.store.allow_mmap
               value: "false"

@@ -49,8 +49,9 @@ first start takes a few minutes.
 
 The chart creates only ClusterIP Services. It has no Ingress or HTTPRoute,
 because a hostname cannot be set without templating. PostgreSQL and
-OpenSearch are meant to stay inside the cluster; OpenSearch runs with its
-security plugin off, so without authentication.
+OpenSearch are meant to stay inside the cluster; the OpenSearch container
+uninstalls its security plugin at startup, so it runs without authentication
+and needs no certificates.
 
 ```bash
 kubectl -n cogstack port-forward svc/hapi-fhir 8080:8080
