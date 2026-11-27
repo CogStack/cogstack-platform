@@ -1,7 +1,7 @@
 # CogStack HAPI FHIR Helm chart
 
 A [HAPI FHIR](https://hapifhir.io/) JPA server (FHIR R4) with PostgreSQL as the
-resource store and a single-node Elasticsearch as its full-text index, which is
+resource store and a single-node OpenSearch as its full-text index, which is
 what answers `_text` and `_content` searches. Every other search stays in
 PostgreSQL, so a search straight after a write still sees it.
 
@@ -9,7 +9,7 @@ PostgreSQL, so a search straight after a write still sees it.
 | --- | --- | --- | --- |
 | `hapi-fhir` | `hapiproject/hapi:v8.12.0-2` | `hapi-fhir:8080` | none |
 | `hapi-fhir-db` | `postgres:16-alpine` | `hapi-fhir-db:5432` | 10Gi PVC |
-| `hapi-fhir-es` | `docker.elastic.co/elasticsearch/elasticsearch:8.19.19` | `hapi-fhir-es:9200` | 10Gi PVC |
+| `hapi-fhir-opensearch` | `opensearchproject/opensearch:3.9.0` | `hapi-fhir-opensearch:9200` | 10Gi PVC |
 
 ## No templating
 
@@ -42,15 +42,15 @@ helm upgrade --install hapi-fhir deployment/charts/hapi-fhir -n cogstack \
   --wait --timeout 15m
 ```
 
-HAPI waits for PostgreSQL and Elasticsearch, then migrates its schema. The
+HAPI waits for PostgreSQL and OpenSearch, then migrates its schema. The
 first start takes a few minutes.
 
 ## Access
 
 The chart creates only ClusterIP Services. It has no Ingress or HTTPRoute,
 because a hostname cannot be set without templating. PostgreSQL and
-Elasticsearch are meant to stay inside the cluster; Elasticsearch runs without
-authentication.
+OpenSearch are meant to stay inside the cluster; OpenSearch runs with its
+security plugin off, so without authentication.
 
 ```bash
 kubectl -n cogstack port-forward svc/hapi-fhir 8080:8080
@@ -59,13 +59,13 @@ curl 'http://localhost:8080/fhir/Patient?_text=x&_summary=count'
 ```
 
 The second request answers `400` (`HAPI-1192`) if HAPI is not using
-Elasticsearch.
+OpenSearch.
 
 To publish the server, route your own Ingress or Gateway API HTTPRoute to the
 `hapi-fhir` Service on port `8080`. HAPI builds its links from the
 `X-Forwarded-*` headers the proxy sends.
 
-If resources were stored before Elasticsearch was attached, index them once:
+If resources were stored before OpenSearch was attached, index them once:
 
 ```bash
 curl -X POST 'http://localhost:8080/fhir/$reindex' \
@@ -73,9 +73,23 @@ curl -X POST 'http://localhost:8080/fhir/$reindex' \
   -d '{"resourceType":"Parameters"}'
 ```
 
+## OpenSearch and HAPI
+
+HAPI reaches OpenSearch through Hibernate Search, whose backend type is named
+`elasticsearch` in the configuration. Two things follow from using OpenSearch
+there.
+
+- **No `spring.elasticsearch` settings.** They make HAPI start its Elasticsearch
+  Java client, which OpenSearch rejects with `406 Not Acceptable`, and HAPI then
+  fails to start. That client serves only the `$lastn` operation, so `$lastn`
+  is not available with this chart.
+- **A version warning at startup.** Hibernate Search 7.2 in HAPI v8.12.0 logs
+  `HSEARCH400085: Unknown Elasticsearch version running on the cluster:
+  'opensearch:3.9.0'`. Indexing, `_text`, `_content` and `$reindex` work.
+
 ## Sizing
 
-Elasticsearch runs with a 512 MB heap and a 1200Mi memory limit, and uses
+OpenSearch runs with a 512 MB heap and a 1200Mi memory limit, and uses
 `node.store.allow_mmap=false` so the nodes need no `vm.max_map_count` change.
 PostgreSQL is tuned for about 2 GB of memory. These suit a small shared
 cluster; edit the manifests for anything larger.

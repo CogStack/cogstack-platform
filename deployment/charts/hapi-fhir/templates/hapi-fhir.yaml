@@ -7,11 +7,10 @@ metadata:
 data:
   application.yaml: |
     spring:
-      autoconfigure:
-        # The image excludes the Elasticsearch REST client auto-configuration; re-enable it.
-        exclude: ""
-      elasticsearch:
-        uris: http://hapi-fhir-es:9200
+      # No spring.elasticsearch block: it would make HAPI start its Elasticsearch Java
+      # client (used only for $lastn), which OpenSearch rejects with 406. Hibernate
+      # Search has its own client, configured under backend below, and that one works
+      # with OpenSearch. Its backend type is still called elasticsearch.
       datasource:
         hikari:
           maximum-pool-size: 30
@@ -24,7 +23,7 @@ data:
                 strategy: CREATE
               backend:
                 type: elasticsearch
-                hosts: hapi-fhir-es:9200
+                hosts: hapi-fhir-opensearch:9200
                 protocol: http
                 layout:
                   strategy: ca.uhn.fhir.jpa.search.elastic.IndexNamePrefixLayoutStrategy
@@ -40,10 +39,10 @@ data:
       fhir:
         # _text / _content indexing (off by default since HAPI FHIR 8.0)
         search_index_full_text_enabled: true
-        # false: Elasticsearch answers only _text / _content, and every other search stays
+        # false: OpenSearch answers only _text / _content, and every other search stays
         # in PostgreSQL, so a search straight after a write still sees it.
         # true also indexes and answers ordinary search parameters in
-        # Elasticsearch, which lags a write by its refresh interval.
+        # OpenSearch, which lags a write by its refresh interval.
         advanced_lucene_indexing: false
         store_resource_in_lucene_index_enabled: false
         # Never reuse a cached search: timings measure the search, not the cache.
@@ -82,13 +81,13 @@ spec:
               until pg_isready -h hapi-fhir-db -p 5432 -U fhir; do
                 echo "waiting for postgres..."; sleep 5;
               done
-        - name: wait-for-es
+        - name: wait-for-opensearch
           image: postgres:16-alpine   # for its busybox wget; the HAPI image has no shell
           command: ["/bin/sh", "-c"]
           args:
             - |
-              until wget -q -O /dev/null "http://hapi-fhir-es:9200/_cluster/health?wait_for_status=yellow&timeout=5s"; do
-                echo "waiting for elasticsearch..."; sleep 5;
+              until wget -q -O /dev/null "http://hapi-fhir-opensearch:9200/_cluster/health?wait_for_status=yellow&timeout=5s"; do
+                echo "waiting for opensearch..."; sleep 5;
               done
       containers:
         - name: hapi-fhir
@@ -123,7 +122,7 @@ spec:
               value: org.postgresql.Driver
             - name: spring.jpa.properties.hibernate.dialect
               value: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
-            # --- Elasticsearch and search settings: the hapi-fhir-config ConfigMap ---
+            # --- OpenSearch and search settings: the hapi-fhir-config ConfigMap ---
             - name: SPRING_CONFIG_ADDITIONAL_LOCATION
               value: file:/config/
             - name: HAPI_FHIR_USE_APACHE_ADDRESS_STRATEGY

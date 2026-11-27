@@ -1,9 +1,10 @@
-# Elasticsearch (single node): the Hibernate Search index next to PostgreSQL, which is
-# what answers _text and _content.
+# OpenSearch (single node): the Hibernate Search index next to PostgreSQL, which is
+# what answers _text and _content. Hibernate Search reaches it through its
+# Elasticsearch-compatible backend.
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: hapi-fhir-es
+  name: hapi-fhir-opensearch
 spec:
   accessModes: ["ReadWriteOnce"]
   resources:
@@ -13,18 +14,18 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: hapi-fhir-es
+  name: hapi-fhir-opensearch
 spec:
   replicas: 1
   strategy:
     type: Recreate          # single RWO volume — never two pods at once
   selector:
     matchLabels:
-      app: hapi-fhir-es
+      app: hapi-fhir-opensearch
   template:
     metadata:
       labels:
-        app: hapi-fhir-es
+        app: hapi-fhir-opensearch
     spec:
       securityContext:
         runAsNonRoot: true
@@ -34,8 +35,8 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       containers:
-        - name: elasticsearch
-          image: docker.elastic.co/elasticsearch/elasticsearch:8.19.19
+        - name: opensearch
+          image: opensearchproject/opensearch:3.9.0
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -49,17 +50,18 @@ spec:
             - name: cluster.name
               value: hapi-fhir
             # No authentication: reachable only inside the cluster (ClusterIP Service,
-            # no HTTPRoute).
-            - name: xpack.security.enabled
-              value: "false"
-            - name: xpack.ml.enabled
-              value: "false"
+            # no Ingress or HTTPRoute). The security plugin is off, so no demo
+            # certificates or users are installed either.
+            - name: DISABLE_SECURITY_PLUGIN
+              value: "true"
+            - name: DISABLE_INSTALL_DEMO_CONFIG
+              value: "true"
             # The nodes keep the default vm.max_map_count, too low for mmap'd indices.
             - name: node.store.allow_mmap
               value: "false"
-            # Deliberately small, with the limit below: the cluster has little spare
-            # memory, and search timings are meant to show where this saturates.
-            - name: ES_JAVA_OPTS
+            # Deliberately small, with the limit below, for a cluster with little spare
+            # memory.
+            - name: OPENSEARCH_JAVA_OPTS
               value: "-Xms512m -Xmx512m"
           resources:
             limits:
@@ -78,19 +80,19 @@ spec:
             timeoutSeconds: 10
           volumeMounts:
             - name: data
-              mountPath: /usr/share/elasticsearch/data
+              mountPath: /usr/share/opensearch/data
       volumes:
         - name: data
           persistentVolumeClaim:
-            claimName: hapi-fhir-es
+            claimName: hapi-fhir-opensearch
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: hapi-fhir-es
+  name: hapi-fhir-opensearch
 spec:
   selector:
-    app: hapi-fhir-es
+    app: hapi-fhir-opensearch
   ports:
     - port: 9200
       targetPort: http

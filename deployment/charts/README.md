@@ -45,8 +45,8 @@ administrative access when using an admin certificate. [OpenSearch upgrade detai
 
 ## HAPI FHIR
 
-`hapi-fhir/` runs a HAPI FHIR JPA server (R4) with PostgreSQL and a single-node
-Elasticsearch for full-text search. Its manifests are plain Kubernetes YAML with
+`hapi-fhir/` runs a HAPI FHIR JPA server (R4) with PostgreSQL and its own single-node
+OpenSearch for full-text search. Its manifests are plain Kubernetes YAML with
 no Helm templating and no values. It needs the `hapi-fhir-db` Secret before
 installation. [HAPI FHIR chart](hapi-fhir/README.md)
 

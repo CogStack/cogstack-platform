@@ -1,6 +1,6 @@
 apiVersion: v2
 name: hapi-fhir
-description: HAPI FHIR JPA server (R4) with PostgreSQL and Elasticsearch full-text search
+description: HAPI FHIR JPA server (R4) with PostgreSQL and OpenSearch full-text search
 type: application
 version: 0.1.0
 appVersion: "v8.12.0-2"
