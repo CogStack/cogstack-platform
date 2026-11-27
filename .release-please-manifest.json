@@ -11,7 +11,7 @@
     "deployment/charts/hapi-fhir": "0.0.0",
     "deployment/terraform/openstack-kubernetes-k3s": "0.1.4",
     "apps/cohorter": "0.0.1",
-    "apps/nifi": "2.0.6",
+    "apps/nifi": "2.1.0",
     "apps/ocr-service": "1.1.4",
     "apps/jupyter-hub": "2.3.12"
 }
