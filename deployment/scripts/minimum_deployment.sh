@@ -12,6 +12,11 @@
 # that are missing. OpenSearch users and their passwords come from
 # deployment/env/authentication.env.
 #
+# Set INGRESS_DOMAIN to publish the three services through the cluster's default
+# ingress controller, at hapi.<domain>, opensearch.<domain> and nifi.<domain>:
+#
+#     INGRESS_DOMAIN=example.org bash deployment/scripts/minimum_deployment.sh
+#
 # Requirements: kubectl, helm, openssl, htpasswd.
 set -euo pipefail
 
@@ -71,7 +76,41 @@ kubectl -n "$ns" apply -f rendered/opensearch.yaml
 helm template cogstack-nifi charts/nifi > rendered/nifi.yaml
 kubectl -n "$ns" apply -f rendered/nifi.yaml
 
-# --- 3. Status -----------------------------------------------------------------
+# --- 3. Ingress ----------------------------------------------------------------
+# HAPI FHIR and NiFi have no login of their own, so the ingress controller must
+# add one if the address is public. Where NetworkPolicy is enforced, NiFi's
+# policy admits only NGINX pods and the nifi host will not answer.
+ingress() { # ingress <host prefix> <service> <port>
+    cat <<EOF
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: $1
+spec:
+  rules:
+    - host: $1.$INGRESS_DOMAIN
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: $2
+                port:
+                  number: $3
+EOF
+}
+if [[ -n "${INGRESS_DOMAIN:-}" ]]; then
+    {
+        ingress hapi hapi-fhir 8080
+        ingress opensearch opensearch-cluster-master 9200
+        ingress nifi cogstack-nifi 8080
+    } > rendered/ingress.yaml
+    kubectl -n "$ns" apply -f rendered/ingress.yaml
+fi
+
+# --- 4. Status -----------------------------------------------------------------
 kubectl -n "$ns" get pods
 cat <<EOF
 
