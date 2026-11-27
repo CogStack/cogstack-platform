@@ -6,8 +6,8 @@ Run the Makefile commands below from the `deployment/` directory. [Deployment Ma
 
 After `make setup-all` succeeds, set `NGINX_TLS_NAMES` in `env/certificates.env`
 to the hostname or IP clients will use for NGINX. Set the certificate store
-passwords, provide deployment credentials, and create `../apps/nifi/env/nifi.env`
-if it’s missing. [Environment settings](#environment-settings)
+passwords, provide deployment credentials, and copy `../apps/nifi/env/nifi.env.example`
+to `../apps/nifi/env/nifi.env` if it’s missing. [Environment settings](#environment-settings)
 
 ```bash
 make certs-all
@@ -52,9 +52,9 @@ transport certificate for K3s. If you already have a bundle, set
 | `env/general.env` | `KUBE_NAMESPACE` (default `cogstack`) and `CLUSTER_DOMAIN`. |
 | `env/certificates.env` | `SECURITY_DIR`, `NGINX_TLS_NAMES`, and certificate store passwords. |
 | `env/authentication.env` | NiFi login and OpenSearch account passwords. |
-| `env/nifi.env` | `NIFI_UID`, `NIFI_GID`, `NIFI_DOCKER_*` resources, `NIFI_K3S_WHITELIST`, and `NIFI_INTERNAL_PORT_NGINX`. |
+| `env/nifi.env` | `NIFI_UID`, `NIFI_GID`, `NIFI_DOCKER_*` resources, `NIFI_INTERNAL_PORT_NGINX`, `NIFI_K3S_WHITELIST`, `NIFI_K3S_STORAGE_CLASS`, and `NIFI_K3S_*_VOLUME_SIZE`. [NiFi storage settings](charts/nifi/README.md#persistent-configuration-and-data) |
 | `env/nginx.env` (optional) | `NGINX_DOCKER_*` resource overrides and `NGINX_NIFI_SERVER_NAME`. |
-| `env/opensearch.env` | `OPENSEARCH_K3S_REPLICA_COUNT`, `OPENSEARCH_K3S_BLACKLIST`, `OPENSEARCH_DOCKER_*` resources, and `OPENSEARCH_LOG_LEVEL`. |
+| `env/opensearch.env` | `OPENSEARCH_K3S_REPLICA_COUNT`, `OPENSEARCH_K3S_BLACKLIST`, `OPENSEARCH_K3S_VOLUME_SIZE`, `OPENSEARCH_K3S_STORAGE_CLASS`, `OPENSEARCH_DOCKER_*` resources, and `OPENSEARCH_LOG_LEVEL`. |
 | `env/opensearch-dashboards.env` | `OPENSEARCH_DASHBOARDS_DOCKER_*` resources. |
 
 `k3s-prepare-all` reads login credentials from `env/authentication.env` by

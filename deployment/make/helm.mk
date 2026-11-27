@@ -21,8 +21,23 @@ helm-values-nifi helm-values-nginx helm-values-opensearch helm-values-opensearch
 	. "$$env_file"; \
 	set +a; \
 	case "$$service" in \
-		nifi) node_setting=NIFI_K3S_WHITELIST; export NIFI_K3S_ALLOWED_NODES='[]';; \
-		opensearch) node_setting=OPENSEARCH_K3S_BLACKLIST; export OPENSEARCH_K3S_NODE_AFFINITY='{}';; \
+		nifi) \
+			node_setting=NIFI_K3S_WHITELIST; \
+			export NIFI_K3S_ALLOWED_NODES='[]'; \
+			export NIFI_K3S_FLOWFILE_VOLUME_SIZE="$${NIFI_K3S_FLOWFILE_VOLUME_SIZE:-20Gi}"; \
+			export NIFI_K3S_CONTENT_VOLUME_SIZE="$${NIFI_K3S_CONTENT_VOLUME_SIZE:-100Gi}"; \
+			export NIFI_K3S_PROVENANCE_VOLUME_SIZE="$${NIFI_K3S_PROVENANCE_VOLUME_SIZE:-50Gi}"; \
+			export NIFI_K3S_DATABASE_VOLUME_SIZE="$${NIFI_K3S_DATABASE_VOLUME_SIZE:-5Gi}"; \
+			export NIFI_K3S_STATE_VOLUME_SIZE="$${NIFI_K3S_STATE_VOLUME_SIZE:-5Gi}"; \
+			export NIFI_K3S_CONF_VOLUME_SIZE="$${NIFI_K3S_CONF_VOLUME_SIZE:-5Gi}"; \
+			export NIFI_K3S_STORAGE_CLASS_YAML=null; \
+			if [ -n "$${NIFI_K3S_STORAGE_CLASS:-}" ]; then \
+				printf -v NIFI_K3S_STORAGE_CLASS_YAML '"%s"' "$$NIFI_K3S_STORAGE_CLASS"; \
+			fi;; \
+		opensearch) \
+			node_setting=OPENSEARCH_K3S_BLACKLIST; \
+			export OPENSEARCH_K3S_NODE_AFFINITY='{}'; \
+			export OPENSEARCH_K3S_VOLUME_SIZE="$${OPENSEARCH_K3S_VOLUME_SIZE:-8Gi}";; \
 		*) node_setting=;; \
 	esac; \
 	if [ -n "$$node_setting" ]; then \
@@ -49,6 +64,7 @@ helm-values-nifi helm-values-nginx helm-values-opensearch helm-values-opensearch
 	template="$$chart/values.env.yaml"; \
 	variables=$$(envsubst --variables "$$(cat "$$template")"); \
 	for name in $$variables; do \
+		if [ "$$name" = OPENSEARCH_K3S_STORAGE_CLASS ]; then continue; fi; \
 		value="$${!name:?Set $$name in $$env_file before rendering}"; \
 		if [[ "$$name" == *_DOCKER_RAM && "$$value" =~ ^([0-9]+([.][0-9]+)?)([kmgtp])[bB]?$$ ]]; then \
 			unit=$$(printf '%s' "$${BASH_REMATCH[3]}" | tr kmgtp KMGTP); \
