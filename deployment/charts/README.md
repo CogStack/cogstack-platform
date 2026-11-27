@@ -43,6 +43,13 @@ Existing deployments must reload `nifi-auth` for NGINX before upgrading.
 OpenSearch upgrades also require the bootstrap Secret and preparation of
 administrative access when using an admin certificate. [OpenSearch upgrade details](opensearch/README.md#install)
 
+## HAPI FHIR
+
+`hapi-fhir/` runs a HAPI FHIR JPA server (R4) with PostgreSQL and a single-node
+Elasticsearch for full-text search. Its manifests are plain Kubernetes YAML with
+no Helm templating and no values. It needs the `hapi-fhir-db` Secret before
+installation. [HAPI FHIR chart](hapi-fhir/README.md)
+
 ## Chart development
 
 ```bash
@@ -70,6 +77,9 @@ The NiFi charts include `ci/ci-values.yaml` with zero replicas so chart-testing
 can validate Kubernetes resource installation without deployment-owned
 ConfigMaps and Secrets. Application startup and TLS checks require a separate
 runtime test with those inputs supplied.
+
+The HAPI FHIR chart has no values, so it cannot be scaled to zero. CI lints it
+and skips the install test, because its pods need the `hapi-fhir-db` Secret.
 
 To package locally, keep generated archives outside the source tree:
 

@@ -1,0 +1,96 @@
+# Elasticsearch (single node): the Hibernate Search index next to PostgreSQL, which is
+# what answers _text and _content.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hapi-fhir-es
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hapi-fhir-es
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate          # single RWO volume — never two pods at once
+  selector:
+    matchLabels:
+      app: hapi-fhir-es
+  template:
+    metadata:
+      labels:
+        app: hapi-fhir-es
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: elasticsearch
+          image: docker.elastic.co/elasticsearch/elasticsearch:8.19.19
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          ports:
+            - name: http
+              containerPort: 9200
+          env:
+            - name: discovery.type
+              value: single-node
+            - name: cluster.name
+              value: hapi-fhir
+            # No authentication: reachable only inside the cluster (ClusterIP Service,
+            # no HTTPRoute).
+            - name: xpack.security.enabled
+              value: "false"
+            - name: xpack.ml.enabled
+              value: "false"
+            # The nodes keep the default vm.max_map_count, too low for mmap'd indices.
+            - name: node.store.allow_mmap
+              value: "false"
+            # Deliberately small, with the limit below: the cluster has little spare
+            # memory, and search timings are meant to show where this saturates.
+            - name: ES_JAVA_OPTS
+              value: "-Xms512m -Xmx512m"
+          resources:
+            limits:
+              memory: 1200Mi
+          startupProbe:
+            httpGet:
+              path: /_cluster/health?wait_for_status=yellow&timeout=1s
+              port: http
+            failureThreshold: 60
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /_cluster/health?wait_for_status=yellow&timeout=1s
+              port: http
+            periodSeconds: 20
+            timeoutSeconds: 10
+          volumeMounts:
+            - name: data
+              mountPath: /usr/share/elasticsearch/data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: hapi-fhir-es
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hapi-fhir-es
+spec:
+  selector:
+    app: hapi-fhir-es
+  ports:
+    - port: 9200
+      targetPort: http

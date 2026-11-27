@@ -1,0 +1,3 @@
+# This chart has no values. Everything under templates/ is plain Kubernetes YAML with
+# no Helm templating: what is in the file is what gets applied. Helm only packages,
+# versions, installs and removes it. To change something, edit the manifests.

@@ -1,0 +1,90 @@
+# PostgreSQL: the FHIR resource store.
+# The hapi-fhir-db Secret (key POSTGRES_PASSWORD) is not part of the chart; create it
+# before installing (see the chart README).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hapi-fhir-db
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hapi-fhir-db
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate          # single RWO volume — never two pods at once
+  selector:
+    matchLabels:
+      app: hapi-fhir-db
+  template:
+    metadata:
+      labels:
+        app: hapi-fhir-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          # Modest tuning for a single small node.
+          args:
+            - -c
+            - shared_buffers=512MB
+            - -c
+            - effective_cache_size=1500MB
+            - -c
+            - work_mem=32MB
+            - -c
+            - maintenance_work_mem=256MB
+            - -c
+            - max_connections=100
+            - -c
+            - shared_preload_libraries=pg_stat_statements
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: fhir
+            - name: POSTGRES_USER
+              value: fhir
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hapi-fhir-db
+                  key: POSTGRES_PASSWORD
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "fhir", "-d", "fhir"]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            - name: shm
+              mountPath: /dev/shm
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: hapi-fhir-db
+        # The container default of 64Mi is too small for parallel queries.
+        - name: shm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hapi-fhir-db
+spec:
+  selector:
+    app: hapi-fhir-db
+  ports:
+    - port: 5432
+      targetPort: 5432
