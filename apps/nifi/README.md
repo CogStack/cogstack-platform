@@ -48,9 +48,26 @@ for additional settings.
 
 ### TLS certificates
 
-Use the existing certificate generators or supply a TLS bundle. Place the files
-under `deployment/security/certificates/`, or set `SECURITY_DIR` in `nifi.env`
-to the parent of your deployment’s `certificates/` directory.
+Compose uses `deployment/security/certificates/` by default. To select a bundle,
+set `SECURITY_DIR` in `apps/nifi/env/general.env` to the absolute path of the
+directory containing `certificates/`.
+
+```dotenv
+SECURITY_DIR=/path/to/cogstack_platform/deployment/security
+```
+
+The Make targets load this file before running Compose. For direct Compose
+commands, source `./export_env_vars.sh` from `apps/nifi/docker/` first.
+
+For a fresh local bundle, configure the store passwords in
+[`certificates.env`](../../deployment/env/certificates.env) and run the
+deployment targets from the repository root:
+
+```bash
+make -C deployment -j1 certs-root certs-nifi certs-nginx
+```
+
+The bundle needs these files under `certificates/`.
 
 | Files | Purpose |
 | --- | --- |
