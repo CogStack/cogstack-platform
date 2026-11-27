@@ -6,7 +6,7 @@
     "deployment/charts/observability": "0.4.1",
     "deployment/charts/jupyter-hub": "0.5.0",
     "deployment/charts/ocr-service": "0.1.0",
-    "deployment/charts/nifi": "0.0.0",
+    "deployment/charts/nifi": "0.1.0",
     "deployment/charts/nginx": "0.0.0",
     "deployment/charts/hapi-fhir": "0.0.0",
     "deployment/terraform/openstack-kubernetes-k3s": "0.1.4",
