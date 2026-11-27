@@ -79,6 +79,12 @@ After `make k3s-prepare-all`, choose a stack or install the charts individually.
 | `make helm-install-opensearch` | The OpenSearch cluster and its REST API. |
 | `make helm-install-opensearch-dashboards` | Dashboards. Install OpenSearch first. |
 
+### Standalone JupyterHub
+
+Run `make helm-install-jupyter-hub` with the namespace from `env/general.env`
+in place. Use `make setup-k3s-namespace` to create the namespace if needed.
+[JupyterHub chart values](charts/jupyter-hub/values.yaml)
+
 ## Verify and access the applications
 
 Replace `cogstack` with your `KUBE_NAMESPACE` if you changed it.

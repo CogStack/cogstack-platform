@@ -78,6 +78,7 @@ helm-values-nifi helm-values-nginx helm-values-opensearch helm-values-opensearch
 
 .PHONY: helm-install helm-install-all helm-install-nifi helm-install-nginx helm-install-nifi-stack
 .PHONY: helm-install-opensearch helm-install-opensearch-dashboards helm-install-opensearch-stack
+.PHONY: helm-install-jupyter-hub
 
 # Set KUBE_NAMESPACE in deployment/env/general.env and create the namespace
 # and required Secrets and ConfigMaps. Run these from the repository root.
@@ -106,6 +107,9 @@ helm-install: ## Install or upgrade CHART with optional HELM_VALUES and HELM_TIM
 		opensearch|opensearch-dashboards) \
 			helm repo add opensearch https://opensearch-project.github.io/helm-charts/; \
 			helm dependency build "$$chart";; \
+		jupyter-hub) \
+			helm repo add jupyterhub https://hub.jupyter.org/helm-chart/; \
+			helm dependency build "$$chart";; \
 	esac; \
 	if [ "$$CHART" = opensearch ]; then \
 		args+=(--set-file "opensearch.config.opensearch\\.yml=$$chart/config/opensearch.yml"); \
@@ -122,8 +126,10 @@ helm-install-nifi: ## Install or upgrade NiFi
 helm-install-nginx: k3s-load-env-nginx ## Load the NGINX environment, then install or upgrade NGINX
 helm-install-opensearch: k3s-load-env-opensearch ## Load the OpenSearch environment, then install or upgrade OpenSearch
 helm-install-opensearch-dashboards: ## Install or upgrade OpenSearch Dashboards
+helm-install-jupyter-hub: ## Install or upgrade standalone JupyterHub
 
-helm-install-nifi helm-install-nginx helm-install-opensearch helm-install-opensearch-dashboards:
+helm-install-nifi helm-install-nginx helm-install-opensearch \
+helm-install-opensearch-dashboards helm-install-jupyter-hub:
 	$(MAKE) helm-install CHART=$(@:helm-install-%=%)
 
 helm-install-nifi-stack: helm-install-nifi ## Load the runtime environment and install or upgrade NiFi and NGINX

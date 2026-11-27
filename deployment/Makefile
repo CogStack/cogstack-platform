@@ -2,7 +2,7 @@ SHELL := /usr/bin/env bash
 .SHELLFLAGS := -o pipefail -c
 .DEFAULT_GOAL := setup-install-pre-requisites
 
-include $(addprefix $(dir $(lastword $(MAKEFILE_LIST)))make/,setup.mk certs.mk k3s.mk helm.mk)
+include $(addprefix $(dir $(lastword $(MAKEFILE_LIST)))make/,setup.mk certs.mk k3s.mk charts.mk)
 
 .PHONY: help
 
