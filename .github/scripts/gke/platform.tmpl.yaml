@@ -36,5 +36,5 @@ metadata:
 spec:
   basicAuth:
     secret: basic-auth-users
-    # Do not pass the browser's Basic credentials on to the apps.
-    removeHeader: true
+    # OpenSearch needs the credentials too; see BASIC_AUTH_USER in lib.sh.
+    removeHeader: false
